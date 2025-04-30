@@ -1,91 +1,79 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // Import Link
+import { Link } from 'react-router-dom';
 import { getPatients } from '../services/patientService'; // Placeholder service
-import { useAuth } from '../hooks/useAuth'; // If you need user info
+import { useAuth } from '../hooks/useAuth';
 
 const PatientListPage = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const { user } = useAuth(); // Get user info if needed (e.g., for filtering)
+  const { user } = useAuth(); // Get user info if needed for actions
 
   useEffect(() => {
     const fetchPatients = async () => {
       setLoading(true);
       setError('');
       try {
-        // Pass search term to the service if implemented
-        const data = await getPatients({ name: searchTerm /* other filters */ });
+        // TODO: Add filtering options if needed, e.g., getPatients({ name: '...' })
+        const data = await getPatients();
         setPatients(data);
       } catch (err) {
         setError('Failed to fetch patients.');
-        console.error(err);
+        // console.error(err); // Avoid logging potentially sensitive info
       } finally {
         setLoading(false);
       }
     };
 
     fetchPatients();
-    // Re-fetch when searchTerm changes (add debounce in real app)
-  }, [searchTerm]);
-
-  const handleSearchChange = (event) => {
-      setSearchTerm(event.target.value);
-  }
-
-  // Basic filter based on search term (can be done server-side ideally)
-//   const filteredPatients = patients.filter(p =>
-//     p.name.toLowerCase().includes(searchTerm.toLowerCase())
-//   );
-
+  }, []); // Empty dependency array means this runs once on mount
 
   return (
     <div>
       <h2>Patient List</h2>
-      <p>Welcome, {user?.username}! You have '{user?.role}' privileges.</p>
 
-      <div>
-          <label htmlFor="searchPatients">Search Patients: </label>
-          <input
-            type="text"
-            id="searchPatients"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            placeholder="Enter patient name..."
-            style={{marginBottom: '15px'}}
-          />
-          {/* Button to explicitly trigger search if not searching on type */}
-          {/* <button onClick={() => fetchPatients()}>Search</button> */}
-      </div>
+      {/* TODO: Add search/filter inputs here */}
+
+      {/* Optional: Add Patient button for authorized roles */}
+      {(user?.role === 'admin' || user?.role === 'frontdesk') && (
+          <button style={{ marginBottom: '15px' }}>Add New Patient</button>
+          // This button would likely navigate to a new patient form page or open a modal
+      )}
 
       {loading && <p>Loading patients...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {!loading && !error && (
-        <>
-            {user?.role === 'frontdesk' || user?.role === 'admin' ? (
-                <button onClick={() => alert('Navigate to New Patient Form!')} style={{marginBottom: '15px'}}>
-                    Register New Patient
-                </button>
-            ) : null}
-            {patients.length === 0 ? (
-                <p>No patients found.</p>
-            ) : (
-                <ul style={{ listStyle: 'none', padding: 0 }}>
-                {patients.map((patient) => (
-                    <li key={patient.id} style={{ border: '1px solid #ccc', marginBottom: '10px', padding: '10px' }}>
-                    {/* Link to the detail page */}
-                    <Link to={`/patients/${patient.id}`}>
-                        <strong>{patient.name}</strong>
-                    </Link>
-                    <div>DOB: {patient.dob}</div>
-                    {/* Add more summary info as needed */}
-                    </li>
-                ))}
-                </ul>
+        <table border="1" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Date of Birth</th>
+              <th>Contact</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {patients.map((patient) => (
+              <tr key={patient.id}>
+                <td>{patient.id}</td>
+                <td>{patient.name}</td>
+                <td>{patient.dob}</td>
+                <td>{patient.contact}</td>
+                <td>
+                  <Link to={`/patients/${patient.id}`}>View Details</Link>
+                  {/* Add Edit/Delete buttons based on role if needed */}
+                </td>
+              </tr>
+            ))}
+            {patients.length === 0 && (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center' }}>No patients found.</td>
+              </tr>
             )}
-        </>
+          </tbody>
+        </table>
       )}
     </div>
   );

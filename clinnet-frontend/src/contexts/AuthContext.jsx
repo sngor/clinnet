@@ -1,66 +1,65 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { login as apiLogin, logout as apiLogout, checkAuthStatus } from '../services/authService'; // Placeholder service
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import * as authService from '../services/authService'; // Assuming authService exports login, logout, checkAuthStatus
 
-export const AuthContext = createContext(null);
+const AuthContext = createContext(defaultContextValue);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // null: checking, false: not logged in, object: logged in
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Add loading state for initial auth check
 
+  // Check auth status on initial load
   useEffect(() => {
-    // Check auth status when the app loads (e.g., check for a token)
-    const verifyAuth = async () => {
-        setLoading(true);
-        try {
-            // In a real app, you'd check a token validity with the backend
-            const currentUser = await checkAuthStatus(); // Simulates API call
-            if (currentUser) {
-                setUser(currentUser); // User object { username, role, id, etc. }
-            } else {
-                setUser(false); // Explicitly set to false if not authenticated
-            }
-        } catch (error) {
-            console.error("Auth check failed:", error);
-            setUser(false); // Set to false on error
-        } finally {
-            setLoading(false);
-        }
+    const checkLoggedIn = async () => {
+      setLoading(true);
+      try {
+        const currentUser = await authService.checkAuthStatus();
+        setUser(currentUser); // Set user if token is valid
+      } catch (error) {
+        // console.error("Auth check failed:", error); // Keep this commented out or handle appropriately
+        setUser(null); // Ensure user is null if check fails
+      } finally {
+        setLoading(false);
+      }
     };
-    verifyAuth();
+    checkLoggedIn();
   }, []);
 
   const login = async (username, password) => {
     try {
-      const userData = await apiLogin(username, password); // Call the API service
-      setUser(userData); // Store user data { username, role }
-      return true; // Indicate success
+      const loggedInUser = await authService.login(username, password);
+      if (loggedInUser) {
+        setUser(loggedInUser); // Set user state upon successful login
+        return true; // Indicate success
+      }
+      // If login service doesn't throw but returns falsy for failure
+      throw new Error('Login failed: Invalid credentials or server error.');
     } catch (error) {
-      console.error("Login failed:", error);
-      setUser(false); // Ensure user is marked as not logged in on failure
-      throw error; // Re-throw error to be handled in LoginPage
+      // console.error("Login error in context:", error); // Keep commented out or handle
+      setUser(null); // Ensure user is null on login failure
+      // Re-throw the error so the LoginPage can catch it and display a message
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
-        await apiLogout(); // Call backend if needed (e.g., invalidate token)
-    } catch(error) {
-        console.error("Logout failed:", error);
-        // Decide if you still want to clear frontend state even if backend fails
+      await authService.logout();
+    } catch (error) {
+      // console.error("Logout error:", error); // Optional: log logout errors
     } finally {
-        setUser(false); // Clear user state on frontend
-        // Optionally redirect using useNavigate in the component calling logout
+      setUser(null); // Clear user state regardless of API call success
     }
   };
 
-  // Don't render children until initial auth check is complete
-  if (loading) {
-      return <div>Loading authentication status...</div>; // Or a proper spinner
-  }
+  // Provide loading state along with user and auth functions
+  const value = { user, login, logout, loading };
 
+  // Don't render children until initial auth check is complete
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;

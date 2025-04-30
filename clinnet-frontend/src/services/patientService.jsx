@@ -2,6 +2,10 @@
 // import axios from 'axios';
 // const API_URL = 'http://localhost:8000/api/patients/';
 
+// Import DOMPurify for sanitizing user input
+// DOMPurify is a library that helps prevent XSS attacks by sanitizing HTML and preventing script injection
+import DOMPurify from 'dompurify';
+
 // Dummy data
 const dummyPatients = [
     { id: 1, name: 'Alice Wonderland', dob: '1990-05-15', contact: '555-1234', insurance: 'BlueCross A123' },
@@ -9,9 +13,6 @@ const dummyPatients = [
     { id: 3, name: 'Charlie Chaplin', dob: '1978-03-10', contact: '555-9900', insurance: 'Cigna C789' },
 ];
 
-// Import DOMPurify for sanitizing user input
-// DOMPurify is a library that helps prevent XSS attacks by sanitizing HTML and preventing script injection
-import DOMPurify from 'dompurify';
 
 export const getPatients = async (filters = {}) => {
     console.log('Simulating fetching patients with filters:', DOMPurify.sanitize(JSON.stringify(filters)));
@@ -51,7 +52,6 @@ export const getPatientById = async (id) => {
 
 // Import DOMPurify for sanitizing user input
 // DOMPurify is a DOM-only, super-fast, uber-tolerant XSS sanitizer for HTML, MathML and SVG
-import DOMPurify from 'dompurify';
 
 export const createPatient = async (patientData) => {
     console.log('Simulating creating patient:', DOMPurify.sanitize(JSON.stringify(patientData)));

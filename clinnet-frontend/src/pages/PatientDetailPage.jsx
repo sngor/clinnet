@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { getPatientById } from '../services/patientService'; // Placeholder service
 import { useAuth } from '../hooks/useAuth';
 
+
+
 const PatientDetailPage = () => {
   const { patientId } = useParams(); // Get patientId from URL
   const [patient, setPatient] = useState(null);
