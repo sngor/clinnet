@@ -24,7 +24,7 @@ const PatientDetailPage = () => {
         }
       } catch (err) {
         setError('Failed to fetch patient details.');
-        console.error(err);
+        // console.error(err); // Removed to prevent potential information leakage
       } finally {
         setLoading(false);
       }
