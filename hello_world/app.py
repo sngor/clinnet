@@ -1,6 +1,6 @@
 import json
-import requests
-
+# from requests import get, post  # Import specific functions from requests
+# The 'requests' library is used for making HTTP requests, but it's not used in this code snippet.
 
 def lambda_handler(event, context):
     """Sample pure Lambda function
@@ -25,7 +25,8 @@ def lambda_handler(event, context):
     """
 
     try:
-        ip = requests.get("http://checkip.amazonaws.com/")
+        # Use HTTPS instead of HTTP for secure communication
+        ip = requests.get("https://checkip.amazonaws.com/")
     except requests.RequestException as e:
         # Send some context about this error to Lambda Logs
         print(e)

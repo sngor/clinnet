@@ -9,8 +9,12 @@ const dummyPatients = [
     { id: 3, name: 'Charlie Chaplin', dob: '1978-03-10', contact: '555-9900', insurance: 'Cigna C789' },
 ];
 
+// Import DOMPurify for sanitizing user input
+// DOMPurify is a library that helps prevent XSS attacks by sanitizing HTML and preventing script injection
+import DOMPurify from 'dompurify';
+
 export const getPatients = async (filters = {}) => {
-    console.log('Simulating fetching patients with filters:', filters);
+    console.log('Simulating fetching patients with filters:', DOMPurify.sanitize(JSON.stringify(filters)));
     // Replace with actual API call:
     // const response = await axios.get(API_URL, {
     //    params: filters,
@@ -45,8 +49,12 @@ export const getPatientById = async (id) => {
      // --- End Placeholder ---
 }
 
+// Import DOMPurify for sanitizing user input
+// DOMPurify is a DOM-only, super-fast, uber-tolerant XSS sanitizer for HTML, MathML and SVG
+import DOMPurify from 'dompurify';
+
 export const createPatient = async (patientData) => {
-    console.log('Simulating creating patient:', patientData);
+    console.log('Simulating creating patient:', DOMPurify.sanitize(JSON.stringify(patientData)));
     // Replace with actual API call:
     // const response = await axios.post(API_URL, patientData, {
     //    headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
@@ -58,7 +66,7 @@ export const createPatient = async (patientData) => {
      const newId = Math.max(...dummyPatients.map(p => p.id), 0) + 1;
      const newPatient = { ...patientData, id: newId };
      dummyPatients.push(newPatient); // Add to our dummy list
-     console.log("Updated dummy patients:", dummyPatients);
+     console.log("Updated dummy patients:", DOMPurify.sanitize(JSON.stringify(dummyPatients)));
      return newPatient;
      // --- End Placeholder ---
 }

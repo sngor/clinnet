@@ -3,7 +3,11 @@
 // const API_URL = 'http://localhost:8000/api/auth/'; // Your Django backend URL
 
 export const login = async (username, password) => {
-    console.log('Simulating login for:', username);
+    // Import DOMPurify for sanitizing user input
+    // DOMPurify is used to sanitize user input before logging to prevent log injection attacks
+    const DOMPurify = require('dompurify');
+
+    console.log('Simulating login for:', DOMPurify.sanitize(username));
     // Replace with actual API call
     // const response = await axios.post(API_URL + 'login/', { username, password });
     // if (response.data.token) {
@@ -13,15 +17,32 @@ export const login = async (username, password) => {
   
     // --- Placeholder Logic ---
     await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-    if (username === 'admin' && password === 'password') {
-      return { username: 'admin', role: 'admin', id: 1 };
-    } else if (username === 'doctor' && password === 'password') {
-      return { username: 'doctor', role: 'doctor', id: 2 };
-    } else if (username === 'frontdesk' && password === 'password') {
-      return { username: 'frontdesk', role: 'frontdesk', id: 3 };
-    } else {
-      throw new Error('Invalid credentials');
-    }
+// Import dotenv for environment variable management
+// Import bcrypt for password hashing and comparison
+const dotenv = require('dotenv');
+const bcrypt = require('bcrypt');
+
+dotenv.config();
+
+async function authenticateUser(username, password) {
+  const users = [
+    { username: 'admin', role: 'admin', id: 1, hashedPassword: process.env.ADMIN_PASSWORD },
+    { username: 'doctor', role: 'doctor', id: 2, hashedPassword: process.env.DOCTOR_PASSWORD },
+    { username: 'frontdesk', role: 'frontdesk', id: 3, hashedPassword: process.env.FRONTDESK_PASSWORD }
+  ];
+
+  const user = users.find(u => u.username === username);
+  if (!user) {
+    throw new Error('Invalid credentials');
+  }
+
+  const passwordMatch = await bcrypt.compare(password, user.hashedPassword);
+  if (!passwordMatch) {
+    throw new Error('Invalid credentials');
+  }
+
+  return { username: user.username, role: user.role, id: user.id };
+}
     // --- End Placeholder ---
   };
   

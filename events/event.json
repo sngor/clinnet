@@ -33,6 +33,7 @@
       "X-Forwarded-Port": "443",
       "X-Forwarded-Proto": "https"
     },
+{
     "requestContext": {
       "accountId": "123456789012",
       "resourceId": "123456",
@@ -59,4 +60,5 @@
       "apiId": "1234567890",
       "protocol": "HTTP/1.1"
     }
+}
   }
