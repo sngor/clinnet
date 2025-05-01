@@ -138,7 +138,7 @@ function AppLayout() {
             component="div"
             sx={{ flexGrow: 1 /* Pushes icon to the right */ }}
           >
-            Clinnet EMR - {user?.role?.toUpperCase()} Portal
+            {user?.role?.toUpperCase()} Portal
           </Typography>
 
           {/* Profile Icon and Menu */}
