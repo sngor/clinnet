@@ -7,11 +7,7 @@ import { Grid, Paper, Typography, Box } from "@mui/material";
 function DoctorDashboard() {
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Typography variant="h5" gutterBottom>
-          Doctor Dashboard
-        </Typography>
-      </Grid>
+      <Grid item xs={12}></Grid>
       {/* Placeholder Widgets */}
       <Grid item xs={12} md={4}>
         <Paper sx={{ p: 2, height: 140 }}>
@@ -42,12 +38,6 @@ function DoctorDashboard() {
         </Paper>
       </Grid>
       {/* Patient List Snippet */}
-      <Grid item xs={12} lg={5}>
-        <Paper sx={{ p: 2 }}>
-          {/* Render a smaller version or link to full list */}
-          <PatientList />
-        </Paper>
-      </Grid>
     </Grid>
   );
 }

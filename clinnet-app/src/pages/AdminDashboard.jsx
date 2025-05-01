@@ -21,17 +21,11 @@ function AdminDashboard() {
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Typography variant="h5" gutterBottom>
-          Dashboard
-        </Typography>
-      </Grid>
       {/* Greeting Message */}
-      <Grid item xs={12}>
-        <Typography variant="h6">
-          {getGreeting()}, {user?.firstName || "Admin"}!
-        </Typography>
-      </Grid>
+
+      <Typography variant="h3">
+        {getGreeting()}, {user?.firstName || "Admin"}!
+      </Typography>
 
       {/* Placeholder Widgets */}
       <Grid item xs={12} md={6} lg={4}>

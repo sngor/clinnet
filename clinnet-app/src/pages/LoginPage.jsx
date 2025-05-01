@@ -44,7 +44,7 @@ function LoginPage() {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="s">
       <Box
         sx={{
           marginTop: 8,
@@ -53,9 +53,10 @@ function LoginPage() {
           alignItems: "center",
         }}
       >
-        <Typography component="h1" variant="h5">
-          Sign in to Clinnet
+        <Typography component="h1" variant="h2">
+          Welcome to Clinnet
         </Typography>
+
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
           {error && (
             <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
