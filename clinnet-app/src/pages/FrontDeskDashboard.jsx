@@ -1,56 +1,217 @@
 // src/pages/FrontDeskDashboard.jsx
-import React from "react";
-import AppointmentCalendar from "../features/appointments/components/AppointmentCalendar";
-import AppointmentForm from "../features/appointments/components/AppointmentForm";
-import PatientList from "../features/patients/components/PatientList";
-import { Grid, Paper, Typography } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  Button,
+  CircularProgress,
+  Alert,
+  Divider,
+} from "@mui/material";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline"; // Icon for walk-in button
+import WalkInFormModal from "../features/appointments/components/WalkInFormModal"; // Import the new modal
+
+// Mock data for today's appointments - Replace with API call
+const mockAppointments = [
+  {
+    id: 201,
+    patientName: "Alice Brown",
+    time: "09:00 AM",
+    doctorName: "Dr. Smith",
+    status: "Scheduled",
+  },
+  {
+    id: 202,
+    patientName: "Bob White",
+    time: "09:30 AM",
+    doctorName: "Dr. Jones",
+    status: "Scheduled",
+  },
+  {
+    id: 203,
+    patientName: "Charlie Green",
+    time: "10:00 AM",
+    doctorName: "Dr. Smith",
+    status: "Checked-in",
+  },
+  {
+    id: 204,
+    patientName: "David Black",
+    time: "10:30 AM",
+    doctorName: "Dr. Jones",
+    status: "Scheduled",
+  },
+];
 
 function FrontDeskDashboard() {
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // State for walk-in modal
+  const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+
+  // Fetch today's appointments (using mock data)
+  useEffect(() => {
+    // Simulate API call
+    setTimeout(() => {
+      try {
+        // Filter mock data for example purposes, API should handle this
+        setAppointments(mockAppointments);
+        // Replace with:
+        // fetch("/api/appointments?date=today&status=scheduled,checked-in") // Example API endpoint
+        //   .then(res => res.ok ? res.json() : Promise.reject(new Error('Failed to fetch appointments')))
+        //   .then(setAppointments)
+        //   .catch(err => setError(`Failed to load appointments: ${err.message}`))
+        setLoading(false);
+      } catch (err) {
+        setError(`Failed to load appointments: ${err.message}`);
+        setLoading(false);
+      }
+    }, 500); // Simulate network delay
+  }, []);
+
+  // Handle Check-in Action
+  const handleCheckIn = (appointmentId) => {
+    console.log(`Checking in appointment ID: ${appointmentId}`);
+    setError(null); // Clear previous errors
+
+    // --- Replace with API Call (e.g., PATCH /api/appointments/:id) ---
+    // Simulate API success by updating local state
+    setAppointments((prevAppointments) =>
+      prevAppointments.map((appt) =>
+        appt.id === appointmentId ? { ...appt, status: "Checked-in" } : appt
+      )
+    );
+    // Example API call structure:
+    /*
+    fetch(`/api/appointments/${appointmentId}/checkin`, { method: 'PATCH' })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to check in');
+        return res.json(); // Assuming API returns the updated appointment
+      })
+      .then(updatedAppointment => {
+        setAppointments(prev => prev.map(appt => appt.id === updatedAppointment.id ? updatedAppointment : appt));
+      })
+      .catch(err => {
+        console.error("Check-in failed:", err);
+        setError(`Check-in failed for appointment ${appointmentId}: ${err.message}`);
+        // Optional: Revert local state change if API fails
+      });
+    */
+  };
+
+  // --- Walk-in Handlers ---
+  const handleOpenWalkInModal = () => {
+    setIsWalkInModalOpen(true);
+  };
+
+  const handleCloseWalkInModal = () => {
+    setIsWalkInModalOpen(false);
+  };
+
+  const handleSubmitWalkIn = (formData) => {
+    console.log("Walk-in data submitted:", formData);
+    setError(null);
+    // --- Replace with API Call ---
+    // This would typically involve:
+    // 1. Maybe searching if patient exists or creating a new one.
+    // 2. Creating a new appointment record with status 'Checked-in'.
+    // 3. Fetching the updated appointment list or adding the new one locally.
+
+    // Simulate adding to the list for now:
+    const newWalkInAppointment = {
+      ...formData,
+      id: Date.now(),
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      doctorName: "Walk-in Dr.",
+      status: "Checked-in",
+    }; // Mock data
+    setAppointments((prev) => [newWalkInAppointment, ...prev]); // Add to top of list
+    handleCloseWalkInModal(); // Close modal on success
+  };
+
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Typography variant="h5" gutterBottom>
-          Front Desk Dashboard
-        </Typography>
-      </Grid>
-      {/* Placeholder Widgets */}
-      <Grid item xs={12} md={6} lg={3}>
-        <Paper sx={{ p: 2, height: 140 }}>
-          <Typography component="h2" variant="h6" color="primary" gutterBottom>
-            Check-ins Today
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        Front Desk Dashboard
+      </Typography>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Paper sx={{ p: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 1,
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Today's Appointments
           </Typography>
-          <Typography component="p" variant="h4">
-            8
-          </Typography>{" "}
-          {/* Placeholder */}
-        </Paper>
-      </Grid>
-      <Grid item xs={12} md={6} lg={3}>
-        <Paper sx={{ p: 2, height: 140 }}>
-          <Typography component="h2" variant="h6" color="primary" gutterBottom>
-            Pending Tasks
-          </Typography>
-          <Typography component="p" variant="h4">
-            3
-          </Typography>{" "}
-          {/* Placeholder */}
-        </Paper>
-      </Grid>
-      {/* Main Content Area */}
-      <Grid item xs={12} lg={8}>
-        <Paper sx={{ p: 2, mb: 3 }}>
-          <AppointmentCalendar />
-        </Paper>
-        <Paper sx={{ p: 2 }}>
-          <PatientList />
-        </Paper>
-      </Grid>
-      <Grid item xs={12} lg={4}>
-        <Paper sx={{ p: 2 }}>
-          <AppointmentForm />
-        </Paper>
-      </Grid>
-    </Grid>
+          <Button
+            variant="outlined"
+            startIcon={<AddCircleOutlineIcon />}
+            onClick={handleOpenWalkInModal}
+          >
+            Add Walk-in
+          </Button>
+        </Box>
+
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <List>
+            {appointments.map((appt, index) => (
+              <React.Fragment key={appt.id}>
+                <ListItem
+                  secondaryAction={
+                    appt.status === "Scheduled" && (
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleCheckIn(appt.id)}
+                      >
+                        Check-in
+                      </Button>
+                    )
+                  }
+                >
+                  <ListItemText
+                    primary={`${appt.time} - ${appt.patientName} (Dr. ${appt.doctorName})`}
+                    secondary={`Status: ${appt.status}`}
+                  />
+                </ListItem>
+                {index < appointments.length - 1 && <Divider component="li" />}
+              </React.Fragment>
+            ))}
+          </List>
+        )}
+        {!loading && appointments.length === 0 && (
+          <Typography>No appointments scheduled for today.</Typography>
+        )}
+      </Paper>
+
+      {/* Render the Walk-in Modal */}
+      <WalkInFormModal
+        open={isWalkInModalOpen}
+        onClose={handleCloseWalkInModal}
+        onSubmit={handleSubmitWalkIn}
+      />
+    </Box>
   );
 }
 

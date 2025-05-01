@@ -1,6 +1,6 @@
 // src/components/Layout/AppLayout.jsx (Simplified Example)
 import React, { useState } from "react";
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom"; // Import useNavigate
 import {
   Box,
   Drawer,
@@ -13,6 +13,9 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Avatar, // Import Avatar
+  Menu, // Import Menu
+  MenuItem, // Import MenuItem
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home"; // Example icons
@@ -20,6 +23,8 @@ import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from "@mui/icons-material/Logout";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle"; // Fallback icon
+import SettingsIcon from "@mui/icons-material/Settings"; // Icon for settings
 import { useAuth } from "../../app/providers/AuthProvider"; // Adjust path
 
 const drawerWidth = 240;
@@ -27,9 +32,25 @@ const drawerWidth = 240;
 function AppLayout() {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null); // State for Menu anchor
+  const navigate = useNavigate(); // Hook for navigation
+  const open = Boolean(anchorEl); // Menu open state
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  // Handler for menu items that navigate
+  const handleNavigate = (path) => {
+    navigate(path);
+    handleMenuClose();
   };
 
   // Define navigation links based on role
@@ -39,7 +60,11 @@ function AppLayout() {
     ];
     switch (role) {
       case "admin":
-        return;
+        return [
+          ...baseLinks,
+          { text: "Dashboard", path: "/admin", icon: <HomeIcon /> },
+          { text: "Users", path: "/admin/users", icon: <PeopleIcon /> }, // Example admin link
+        ];
       case "doctor":
         return [
           ...baseLinks,
@@ -52,7 +77,11 @@ function AppLayout() {
           },
         ];
       case "frontdesk":
-        return;
+        return [
+          ...baseLinks,
+          { text: "Dashboard", path: "/frontdesk", icon: <HomeIcon /> },
+          // Add frontdesk specific links here
+        ];
       default:
         return baseLinks;
     }
@@ -80,15 +109,6 @@ function AppLayout() {
           </ListItemButton>
         ))}
       </List>
-      <Divider />
-      <List>
-        <ListItemButton onClick={logout}>
-          <ListItemIcon>
-            <LogoutIcon />
-          </ListItemIcon>
-          <ListItemText primary="Logout" />
-        </ListItemButton>
-      </List>
     </div>
   );
 
@@ -98,7 +118,7 @@ function AppLayout() {
         position="fixed"
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
+          // ml: { sm: `${drawerWidth}px` }, // Remove this line
         }}
       >
         <Toolbar>
@@ -111,9 +131,77 @@ function AppLayout() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          {/* Optional: Keep title if desired, or remove */}
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ flexGrow: 1 /* Pushes icon to the right */ }}
+          >
             Clinnet EMR - {user?.role?.toUpperCase()} Portal
           </Typography>
+
+          {/* Profile Icon and Menu */}
+          <Box sx={{ flexShrink: 0 }}>
+            <IconButton
+              onClick={handleMenuOpen}
+              size="large"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              color="inherit"
+            >
+              {/* Replace with actual user photo URL if available */}
+              {user?.photoURL ? (
+                <Avatar
+                  alt={user.username}
+                  src={user.photoURL}
+                  sx={{ width: 32, height: 32 }}
+                />
+              ) : (
+                <Avatar
+                  sx={{ width: 32, height: 32, bgcolor: "secondary.main" }}
+                >
+                  {user?.username ? (
+                    user.username[0].toUpperCase()
+                  ) : (
+                    <AccountCircleIcon />
+                  )}
+                </Avatar>
+              )}
+            </IconButton>
+            <Menu
+              id="menu-appbar"
+              anchorEl={anchorEl}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              keepMounted
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+              open={open}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={() => handleNavigate("/profile")}>
+                {" "}
+                {/* Placeholder path */}
+                <ListItemIcon>
+                  <AccountCircleIcon fontSize="small" />
+                </ListItemIcon>
+                Profile
+              </MenuItem>
+              <MenuItem onClick={() => handleNavigate("/account-settings")}>
+                <ListItemIcon>
+                  <SettingsIcon fontSize="small" />
+                </ListItemIcon>
+                Account Settings
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={logout}>
+                <ListItemIcon>
+                  <LogoutIcon fontSize="small" />
+                </ListItemIcon>
+                Logout
+              </MenuItem>
+            </Menu>
+          </Box>
         </Toolbar>
       </AppBar>
       <Box
