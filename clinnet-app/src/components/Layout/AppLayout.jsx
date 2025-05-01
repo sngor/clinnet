@@ -99,7 +99,7 @@ function AppLayout() {
             key={link.text}
             component={NavLink}
             to={link.path}
-            // Apply active styles using NavLink's className or style prop based on `isActive`
+            end={link.path.split("/").length === 2} // Add this line to make dashboard route exact
             style={({ isActive }) => ({
               backgroundColor: isActive ? "rgba(0, 0, 0, 0.08)" : "transparent",
             })}
@@ -118,7 +118,8 @@ function AppLayout() {
         position="fixed"
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          // ml: { sm: `${drawerWidth}px` }, // Remove this line
+          ml: { sm: `${drawerWidth}px` }, // Uncomment and modify this line
+          zIndex: (theme) => theme.zIndex.drawer + 1, // Add this line to ensure AppBar stays on top
         }}
       >
         <Toolbar>
@@ -179,19 +180,11 @@ function AppLayout() {
               open={open}
               onClose={handleMenuClose}
             >
-              <MenuItem onClick={() => handleNavigate("/profile")}>
-                {" "}
-                {/* Placeholder path */}
-                <ListItemIcon>
-                  <AccountCircleIcon fontSize="small" />
-                </ListItemIcon>
-                Profile
-              </MenuItem>
               <MenuItem onClick={() => handleNavigate("/account-settings")}>
                 <ListItemIcon>
                   <SettingsIcon fontSize="small" />
                 </ListItemIcon>
-                Account Settings
+                Settings
               </MenuItem>
               <Divider />
               <MenuItem onClick={logout}>
@@ -214,10 +207,10 @@ function AppLayout() {
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }} // Better open performance on mobile.
+          ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: "block", sm: "none" },
-            "&.MuiDrawer-paper": {
+            "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
             },
@@ -225,14 +218,16 @@ function AppLayout() {
         >
           {drawer}
         </Drawer>
+
         {/* Permanent drawer for desktop */}
         <Drawer
           variant="permanent"
           sx={{
             display: { xs: "none", sm: "block" },
-            "&.MuiDrawer-paper": {
+            "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
+              borderRight: "1px solid rgba(0, 0, 0, 0.12)",
             },
           }}
           open
@@ -246,6 +241,7 @@ function AppLayout() {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          ml: { xs: 0, sm: `${drawerWidth}px` },
         }}
       >
         <Toolbar /> {/* Spacer for AppBar */}
