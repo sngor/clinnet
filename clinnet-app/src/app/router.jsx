@@ -5,14 +5,13 @@ import LoginPage from "../pages/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard";
 import DoctorDashboard from "../pages/DoctorDashboard";
 import FrontDeskDashboard from "../pages/FrontDeskDashboard";
-import PatientListPage from "../pages/PatientListPage"; // Import the new patient page
+import PatientManagementPage from "../pages/PatientManagementPage"; // Use the consistent patient management page
 import NotFoundPage from "../pages/NotFoundPage";
-import UserManagementPage from "../pages/UserManagementPage"; // Import the new page
-import AccountSettingsPage from "../pages/AccountSettingsPage"; // Import the new settings page
-import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage"; // Import the appointments page
-import FrontdeskPatientsPage from "../pages/FrontdeskPatientsPage"; // Import the patients page
-import AppLayout from "../components/Layout/AppLayout"; // Assuming layout component exists
-import { ProtectedRoute } from "./ProtectedRoute"; // Import the protector component
+import UserManagementPage from "../pages/UserManagementPage";
+import AccountSettingsPage from "../pages/AccountSettingsPage";
+import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage";
+import AppLayout from "../components/Layout/AppLayout";
+import { ProtectedRoute } from "./ProtectedRoute";
 
 function AppRouter() {
   return (
@@ -47,12 +46,12 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
-        {/* Add route for Patient List */}
+        {/* Patient Management for Doctor */}
         <Route
           path="/doctor/patients"
           element={
             <ProtectedRoute allowedRoles={["doctor"]}>
-              <PatientListPage />
+              <PatientManagementPage />
             </ProtectedRoute>
           }
         />
@@ -80,11 +79,12 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
+        {/* Patient Management for Front Desk */}
         <Route
           path="/frontdesk/patients"
           element={
             <ProtectedRoute allowedRoles={["frontdesk"]}>
-              <FrontdeskPatientsPage />
+              <PatientManagementPage />
             </ProtectedRoute>
           }
         />
@@ -93,16 +93,12 @@ function AppRouter() {
           path="/account-settings"
           element={
             <ProtectedRoute allowedRoles={["admin", "doctor", "frontdesk"]}>
-              {" "}
-              {/* Or just check auth */}
               <AccountSettingsPage />
             </ProtectedRoute>
           }
         />
-        {/* Add more specific routes like /patients, /appointments here */}
         {/* Example: Redirect root path to login or a default dashboard */}
-        <Route path="/" element={<Navigate to="/login" replace />} />{" "}
-        {/* Or redirect to a default dashboard if appropriate */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
       </Route>
 
       {/* Catch-all for Not Found */}

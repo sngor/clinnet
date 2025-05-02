@@ -1,5 +1,5 @@
 // src/features/patients/components/PatientList.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Box, 
   Typography, 
@@ -23,12 +23,18 @@ import {
   MenuItem,
   DialogContentText,
   useMediaQuery,
-  useTheme
+  useTheme,
+  InputAdornment,
+  CircularProgress,
+  Alert
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import SearchIcon from "@mui/icons-material/Search";
+import EventNoteIcon from "@mui/icons-material/EventNote";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 // Placeholder data - replace with API data later via React Query
 const initialPatients = [
@@ -42,7 +48,9 @@ const initialPatients = [
     dateOfBirth: "1985-05-15",
     address: "123 Main St, Anytown, CA 12345",
     insuranceProvider: "Blue Cross",
-    insuranceNumber: "BC12345678"
+    insuranceNumber: "BC12345678",
+    lastVisit: "2023-11-15",
+    upcomingAppointment: "2023-12-10"
   },
   {
     id: 2,
@@ -54,7 +62,9 @@ const initialPatients = [
     dateOfBirth: "1990-08-22",
     address: "456 Oak Ave, Somewhere, CA 67890",
     insuranceProvider: "Aetna",
-    insuranceNumber: "AE87654321"
+    insuranceNumber: "AE87654321",
+    lastVisit: "2023-10-05",
+    upcomingAppointment: null
   },
   {
     id: 3,
@@ -66,7 +76,37 @@ const initialPatients = [
     dateOfBirth: "1978-11-30",
     address: "789 Pine Rd, Nowhere, CA 54321",
     insuranceProvider: "Kaiser",
-    insuranceNumber: "KP98765432"
+    insuranceNumber: "KP98765432",
+    lastVisit: "2023-09-20",
+    upcomingAppointment: "2023-12-15"
+  },
+  {
+    id: 4,
+    firstName: "Emily",
+    lastName: "Williams",
+    email: "emily.w@example.com",
+    phone: "+1 (555) 456-7890",
+    gender: "Female",
+    dateOfBirth: "1990-11-28",
+    address: "101 Elm St, Anytown, CA 12345",
+    insuranceProvider: "Cigna",
+    insuranceNumber: "CI12345678",
+    lastVisit: "2023-11-25",
+    upcomingAppointment: "2023-12-05"
+  },
+  {
+    id: 5,
+    firstName: "Robert",
+    lastName: "Brown",
+    email: "robert.b@example.com",
+    phone: "+1 (555) 567-8901",
+    gender: "Male",
+    dateOfBirth: "1982-07-14",
+    address: "202 Maple Ave, Somewhere, CA 67890",
+    insuranceProvider: "Humana",
+    insuranceNumber: "HU87654321",
+    lastVisit: "2023-08-30",
+    upcomingAppointment: null
   },
 ];
 
@@ -76,7 +116,13 @@ function PatientList() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
-  const [patients, setPatients] = useState(initialPatients);
+  const [patients, setPatients] = useState([]);
+  const [filteredPatients, setFilteredPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Dialog states
   const [openAddEdit, setOpenAddEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [currentPatient, setCurrentPatient] = useState(null);
@@ -92,6 +138,38 @@ function PatientList() {
     insuranceNumber: ""
   });
 
+  // Fetch patients data
+  useEffect(() => {
+    // Simulate API call
+    setTimeout(() => {
+      try {
+        setPatients(initialPatients);
+        setFilteredPatients(initialPatients);
+        setLoading(false);
+      } catch (err) {
+        setError(`Failed to load patients: ${err.message}`);
+        setLoading(false);
+      }
+    }, 500); // Simulate network delay
+  }, []);
+
+  // Handle search
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredPatients(patients);
+    } else {
+      const lowercasedSearch = searchTerm.toLowerCase();
+      const filtered = patients.filter(
+        patient =>
+          patient.firstName.toLowerCase().includes(lowercasedSearch) ||
+          patient.lastName.toLowerCase().includes(lowercasedSearch) ||
+          (patient.phone && patient.phone.includes(searchTerm)) ||
+          (patient.email && patient.email.toLowerCase().includes(lowercasedSearch))
+      );
+      setFilteredPatients(filtered);
+    }
+  }, [searchTerm, patients]);
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -99,6 +177,10 @@ function PatientList() {
       ...formData,
       [name]: value
     });
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
   };
 
   // Open add patient dialog
@@ -141,6 +223,18 @@ function PatientList() {
     setOpenDelete(true);
   };
 
+  // View patient details
+  const handleViewPatient = (patient) => {
+    console.log("View patient details:", patient);
+    // Implement view functionality - could navigate to a detailed view page
+  };
+
+  // Schedule appointment for patient
+  const handleScheduleAppointment = (patient) => {
+    console.log("Schedule appointment for:", patient);
+    // Implement appointment scheduling - could open a modal or navigate to appointments page
+  };
+
   // Close dialogs
   const handleCloseDialog = () => {
     setOpenAddEdit(false);
@@ -154,13 +248,17 @@ function PatientList() {
       setPatients(patients.map(patient => 
         patient.id === currentPatient.id ? { ...patient, ...formData, id: currentPatient.id } : patient
       ));
+      setFilteredPatients(filteredPatients.map(patient => 
+        patient.id === currentPatient.id ? { ...patient, ...formData, id: currentPatient.id } : patient
+      ));
     } else {
       // Add new patient
       const newPatient = {
         ...formData,
-        id: Math.max(...patients.map(p => p.id)) + 1 // Simple ID generation
+        id: Math.max(...patients.map(p => p.id), 0) + 1 // Simple ID generation
       };
       setPatients([...patients, newPatient]);
+      setFilteredPatients([...filteredPatients, newPatient]);
     }
     setOpenAddEdit(false);
   };
@@ -168,6 +266,7 @@ function PatientList() {
   // Delete patient
   const handleDeletePatient = () => {
     setPatients(patients.filter(patient => patient.id !== currentPatient.id));
+    setFilteredPatients(filteredPatients.filter(patient => patient.id !== currentPatient.id));
     setOpenDelete(false);
   };
 
@@ -182,77 +281,102 @@ function PatientList() {
     }
   };
 
+  if (loading) {
+    return (
+      <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, width: '100%', height: 'calc(100vh - 140px)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <CircularProgress />
+      </Paper>
+    );
+  }
+
   return (
-    <Box sx={{ width: '100%' }}>
+    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, width: '100%', height: 'calc(100vh - 140px)' }}>
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        mb: 2
+        mb: 3
       }}>
         <Typography 
-          variant="h6" 
+          variant="h5" 
           sx={{ 
             fontSize: { xs: '1.1rem', sm: '1.25rem' },
             fontWeight: 'medium'
           }}
         >
-          Patients
+          Patient Management
         </Typography>
         <Button 
           variant="contained" 
           startIcon={<PersonAddIcon />}
           onClick={handleAddPatient}
           size={isMobile ? "small" : "medium"}
-          sx={{ 
-            minWidth: { xs: '100%', sm: 'auto' },
-            py: { xs: 0.75, sm: 1 },
-            px: { xs: 2, sm: 3 },
-            borderRadius: 1
-          }}
         >
           Add Patient
         </Button>
       </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder="Search patients by name, phone, or email..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+        sx={{ mb: 3 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+        }}
+      />
       
-      <TableContainer component={Paper} sx={{ 
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 1,
-        boxShadow: 'none'
-      }}>
-        <Table sx={{ minWidth: 650 }} aria-label="patients table">
-          <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+      <TableContainer sx={{ height: 'calc(100% - 120px)', overflowY: 'auto' }}>
+        <Table stickyHeader>
+          <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Date of Birth</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Insurance</TableCell>
-              <TableCell align="center">Actions</TableCell>
+              <TableCell><Typography fontWeight="bold">Name</Typography></TableCell>
+              <TableCell><Typography fontWeight="bold">Date of Birth</Typography></TableCell>
+              <TableCell><Typography fontWeight="bold">Phone</Typography></TableCell>
+              <TableCell><Typography fontWeight="bold">Insurance</Typography></TableCell>
+              <TableCell><Typography fontWeight="bold">Last Visit</Typography></TableCell>
+              <TableCell><Typography fontWeight="bold">Actions</Typography></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {patients.map((patient) => (
-              <TableRow
-                key={patient.id}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell component="th" scope="row">
-                  {patient.id}
+            {filteredPatients.map((patient) => (
+              <TableRow key={patient.id} hover>
+                <TableCell>
+                  <Typography variant="body1">{`${patient.firstName} ${patient.lastName}`}</Typography>
+                  {patient.upcomingAppointment && (
+                    <Typography variant="caption" color="primary">
+                      Upcoming Appt: {patient.upcomingAppointment}
+                    </Typography>
+                  )}
                 </TableCell>
-                <TableCell>{`${patient.firstName} ${patient.lastName}`}</TableCell>
                 <TableCell>{formatDate(patient.dateOfBirth)}</TableCell>
                 <TableCell>{patient.phone || "-"}</TableCell>
-                <TableCell>{patient.email || "-"}</TableCell>
                 <TableCell>{patient.insuranceProvider || "-"}</TableCell>
-                <TableCell align="center">
-                  <IconButton color="primary" size="small" onClick={() => handleEditPatient(patient)}>
+                <TableCell>{patient.lastVisit || "No visits"}</TableCell>
+                <TableCell>
+                  <IconButton size="small" onClick={() => handleViewPatient(patient)} title="View Details">
+                    <VisibilityIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleEditPatient(patient)} title="Edit Patient">
                     <EditIcon fontSize="small" />
                   </IconButton>
-                  <IconButton color="error" size="small" onClick={() => handleDeleteClick(patient)}>
-                    <DeleteIcon fontSize="small" />
+                  <IconButton size="small" onClick={() => handleScheduleAppointment(patient)} title="Schedule Appointment">
+                    <EventNoteIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleDeleteClick(patient)} title="Delete Patient">
+                    <DeleteIcon fontSize="small" color="error" />
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -401,7 +525,7 @@ function PatientList() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Paper>
   );
 }
 

@@ -40,15 +40,7 @@ function PatientManagementPage() {
       </Box>
 
       {/* Patient list */}
-      <Box sx={{ 
-        bgcolor: 'background.paper',
-        borderRadius: 2,
-        p: { xs: 2, sm: 3 },
-        border: '1px solid',
-        borderColor: 'divider'
-      }}>
-        <PatientList />
-      </Box>
+      <PatientList />
     </Container>
   );
 }
