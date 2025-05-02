@@ -73,8 +73,7 @@ function AppLayout() {
         return [
           ...baseLinks,
           { text: "Dashboard", path: "/admin", icon: <HomeIcon /> },
-          { text: "Users", path: "/admin/users", icon: <PeopleIcon /> },
-          { text: "Appointments", path: "/admin/appointments", icon: <EventIcon /> },
+          { text: "Users", path: "/admin/users", icon: <PeopleIcon /> }, // Example admin link
         ];
       case "doctor":
         return [

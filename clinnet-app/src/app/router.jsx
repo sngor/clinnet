@@ -1,15 +1,15 @@
-// src/app/router.jsx
+// src/app/router.jsx (Example structure)
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard";
 import DoctorDashboard from "../pages/DoctorDashboard";
 import FrontDeskDashboard from "../pages/FrontDeskDashboard";
-import PatientManagementPage from "../pages/PatientManagementPage";
-import AppointmentManagementPage from "../pages/AppointmentManagementPage";
+import PatientManagementPage from "../pages/PatientManagementPage"; // Use the consistent patient management page
 import NotFoundPage from "../pages/NotFoundPage";
 import UserManagementPage from "../pages/UserManagementPage";
 import AccountSettingsPage from "../pages/AccountSettingsPage";
+import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage";
 import AppLayout from "../components/Layout/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -46,30 +46,12 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
-        {/* Admin Appointments */}
-        <Route
-          path="/admin/appointments"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AppointmentManagementPage />
-            </ProtectedRoute>
-          }
-        />
         {/* Patient Management for Doctor */}
         <Route
           path="/doctor/patients"
           element={
             <ProtectedRoute allowedRoles={["doctor"]}>
               <PatientManagementPage />
-            </ProtectedRoute>
-          }
-        />
-        {/* Doctor Appointments */}
-        <Route
-          path="/doctor/appointments"
-          element={
-            <ProtectedRoute allowedRoles={["doctor"]}>
-              <AppointmentManagementPage />
             </ProtectedRoute>
           }
         />
@@ -89,12 +71,11 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
-        {/* Front Desk Appointments */}
         <Route
           path="/frontdesk/appointments"
           element={
             <ProtectedRoute allowedRoles={["frontdesk"]}>
-              <AppointmentManagementPage />
+              <FrontdeskAppointmentsPage />
             </ProtectedRoute>
           }
         />
