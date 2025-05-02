@@ -1,7 +1,17 @@
 // src/pages/AdminDashboard.jsx
 import React from "react";
 import { useAuth } from "../app/providers/AuthProvider"; // Import useAuth
-import { Grid, Paper, Typography, useMediaQuery, useTheme, Box, Button } from "@mui/material"; // Use Grid for layout
+import { 
+  Grid, 
+  Paper, 
+  Typography, 
+  useMediaQuery, 
+  useTheme, 
+  Box, 
+  Button,
+  Container,
+  Stack
+} from "@mui/material"; // Use Grid for layout
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import { useNavigate } from "react-router-dom";
@@ -30,129 +40,204 @@ function AdminDashboard() {
   };
 
   return (
-    <Grid container spacing={isMobile ? 2 : 3}>
-      {/* Greeting Message */}
-      <Grid item xs={12}>
+    <Container maxWidth="xl" disableGutters>
+      {/* Greeting Message - Separate section */}
+      <Box 
+        sx={{ 
+          mb: 4,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          pb: 2
+        }}
+      >
         <Typography 
           variant={isMobile ? "h4" : "h3"} 
           sx={{ 
-            mb: { xs: 2, sm: 3 },
-            fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' },
-            textAlign: { xs: 'center', sm: 'left' }
+            fontWeight: 'medium',
+            color: 'primary.main'
           }}
         >
           {getGreeting()}, {user?.firstName || "Admin"}!
         </Typography>
-      </Grid>
-
-      {/* Dashboard Summary Cards */}
-      <Grid item xs={12} sm={6} md={4}>
-        <Paper
-          sx={{ 
-            p: { xs: 2, sm: 3 }, 
-            display: "flex", 
-            flexDirection: "column", 
-            height: { xs: 160, sm: 180 },
-            borderRadius: 2,
-            boxShadow: 2,
-            position: "relative",
-            overflow: "hidden"
-          }}
+        <Typography 
+          variant="subtitle1" 
+          color="text.secondary"
+          sx={{ mt: 1 }}
         >
-          <Box 
+          Here's what's happening in your clinic today
+        </Typography>
+      </Box>
+
+      {/* Dashboard Summary Cards - Aligned in a row */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <Paper
+            elevation={0}
             sx={{ 
-              position: "absolute",
-              top: 10,
-              right: 10,
-              color: "primary.light",
-              opacity: 0.2,
-              transform: "scale(2)",
-              transformOrigin: "top right"
+              p: 3, 
+              display: "flex", 
+              flexDirection: "column", 
+              height: 180,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              position: "relative",
+              overflow: "hidden",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: 3,
+                transform: "translateY(-4px)"
+              }
             }}
           >
-            <PeopleIcon fontSize="large" />
-          </Box>
-          <Typography component="h2" variant="h6" color="primary" gutterBottom>
-            Total Users
-          </Typography>
-          {/* Placeholder data - replace with actual data later */}
-          <Typography component="p" variant="h3" sx={{ mt: 2, mb: 2 }}>
-            4
-          </Typography>
-          <Button 
-            variant="text" 
-            color="primary" 
-            onClick={handleNavigateToUsers}
-            sx={{ alignSelf: "flex-start", mt: "auto" }}
-          >
-            Manage Users
-          </Button>
-        </Paper>
-      </Grid>
+            <Box 
+              sx={{ 
+                position: "absolute",
+                top: 10,
+                right: 10,
+                color: "primary.light",
+                opacity: 0.15,
+                transform: "scale(2.5)",
+                transformOrigin: "top right"
+              }}
+            >
+              <PeopleIcon fontSize="large" />
+            </Box>
+            <Typography 
+              component="h2" 
+              variant="h6" 
+              color="primary.main" 
+              fontWeight="medium"
+            >
+              Total Users
+            </Typography>
+            <Typography 
+              component="p" 
+              variant="h2" 
+              sx={{ 
+                mt: 2, 
+                mb: 2,
+                fontWeight: 'bold' 
+              }}
+            >
+              4
+            </Typography>
+            <Button 
+              variant="text" 
+              color="primary" 
+              onClick={handleNavigateToUsers}
+              sx={{ 
+                alignSelf: "flex-start", 
+                mt: "auto",
+                pl: 0,
+                "&:hover": {
+                  backgroundColor: "transparent",
+                  textDecoration: "underline"
+                }
+              }}
+            >
+              Manage Users
+            </Button>
+          </Paper>
+        </Grid>
 
-      <Grid item xs={12} sm={6} md={4}>
-        <Paper
-          sx={{ 
-            p: { xs: 2, sm: 3 }, 
-            display: "flex", 
-            flexDirection: "column", 
-            height: { xs: 160, sm: 180 },
-            borderRadius: 2,
-            boxShadow: 2,
-            position: "relative",
-            overflow: "hidden"
-          }}
-        >
-          <Box 
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <Paper
+            elevation={0}
             sx={{ 
-              position: "absolute",
-              top: 10,
-              right: 10,
-              color: "primary.light",
-              opacity: 0.2,
-              transform: "scale(2)",
-              transformOrigin: "top right"
+              p: 3, 
+              display: "flex", 
+              flexDirection: "column", 
+              height: 180,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              position: "relative",
+              overflow: "hidden",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: 3,
+                transform: "translateY(-4px)"
+              }
             }}
           >
-            <EventIcon fontSize="large" />
-          </Box>
-          <Typography component="h2" variant="h6" color="primary" gutterBottom>
-            Active Appointments
-          </Typography>
-          {/* Placeholder data - replace with actual data later */}
-          <Typography component="p" variant="h3" sx={{ mt: 2, mb: 2 }}>
-            12
-          </Typography>
-          <Button 
-            variant="text" 
-            color="primary" 
-            sx={{ alignSelf: "flex-start", mt: "auto" }}
-          >
-            View Details
-          </Button>
-        </Paper>
+            <Box 
+              sx={{ 
+                position: "absolute",
+                top: 10,
+                right: 10,
+                color: "primary.light",
+                opacity: 0.15,
+                transform: "scale(2.5)",
+                transformOrigin: "top right"
+              }}
+            >
+              <EventIcon fontSize="large" />
+            </Box>
+            <Typography 
+              component="h2" 
+              variant="h6" 
+              color="primary.main"
+              fontWeight="medium"
+            >
+              Active Appointments
+            </Typography>
+            <Typography 
+              component="p" 
+              variant="h2" 
+              sx={{ 
+                mt: 2, 
+                mb: 2,
+                fontWeight: 'bold'
+              }}
+            >
+              12
+            </Typography>
+            <Button 
+              variant="text" 
+              color="primary" 
+              sx={{ 
+                alignSelf: "flex-start", 
+                mt: "auto",
+                pl: 0,
+                "&:hover": {
+                  backgroundColor: "transparent",
+                  textDecoration: "underline"
+                }
+              }}
+            >
+              View Details
+            </Button>
+          </Paper>
+        </Grid>
       </Grid>
 
       {/* Additional Dashboard Content */}
-      <Grid item xs={12}>
-        <Paper sx={{ 
-          p: { xs: 2, sm: 3 },
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: { xs: 3, sm: 4 },
           borderRadius: 2,
-          boxShadow: 2,
-          mt: { xs: 2, sm: 3 }
-        }}>
-          <Typography variant="h5" gutterBottom>
-            System Overview
-          </Typography>
-          <Typography variant="body1" paragraph>
-            Welcome to the Clinnet Admin Dashboard. From here, you can manage users, view system statistics, and access administrative functions.
-          </Typography>
-          <Typography variant="body1">
-            Use the navigation menu to access different sections of the admin portal. For user management, click on the "Users" tab in the sidebar or use the "Manage Users" button above.
-          </Typography>
-        </Paper>
-      </Grid>
-    </Grid>
+          border: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <Typography 
+          variant="h5" 
+          gutterBottom
+          color="primary.main"
+          fontWeight="medium"
+        >
+          System Overview
+        </Typography>
+        <Typography variant="body1" paragraph>
+          Welcome to the Clinnet Admin Dashboard. From here, you can manage users, view system statistics, and access administrative functions.
+        </Typography>
+        <Typography variant="body1">
+          Use the navigation menu to access different sections of the admin portal. For user management, click on the "Users" tab in the sidebar or use the "Manage Users" button above.
+        </Typography>
+      </Paper>
+    </Container>
   );
 }
 

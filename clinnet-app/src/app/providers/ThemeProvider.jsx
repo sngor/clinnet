@@ -11,6 +11,9 @@ let theme = createTheme({
     secondary: {
       main: '#dc004e', // Example secondary color
     },
+    background: {
+      default: '#f5f5f5', // Very light grey background for the body
+    },
     // Add more customizations as needed
   },
   typography: {

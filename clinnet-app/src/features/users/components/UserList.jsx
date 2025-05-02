@@ -1,15 +1,34 @@
-// src/features/users/components/UserList.jsx (using DataGrid)
-import React, { useState } from "react"; // Import useState
-import { DataGrid } from "@mui/x-data-grid";
-import { Box, Typography, Button, IconButton, useMediaQuery, useTheme } from "@mui/material"; // Import Button, IconButton
-import EditIcon from "@mui/icons-material/Edit"; // Import icons
+// src/features/users/components/UserList.jsx
+import React, { useState } from "react";
+import { 
+  Box, 
+  Typography, 
+  Button, 
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  DialogContentText
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import UserFormModal from "./UserFormModal"; // Import the modal
-import ConfirmDeleteDialog from "./ConfirmDeleteDialog"; // Import the dialog
 
 // Placeholder data - replace with API data later via React Query
-const mockUsers = [
+const initialUsers = [
   {
     id: 1,
     username: "admin",
@@ -17,7 +36,6 @@ const mockUsers = [
     lastName: "Admin",
     email: "admin@clinnet.com",
     phone: "+1 (555) 123-4567",
-    gender: "Male",
     role: "admin",
   },
   {
@@ -27,7 +45,6 @@ const mockUsers = [
     lastName: "Smith",
     email: "alice.smith@clinnet.com",
     phone: "+1 (555) 234-5678",
-    gender: "Female",
     role: "doctor",
   },
   {
@@ -37,242 +54,269 @@ const mockUsers = [
     lastName: "Johnson",
     email: "bob.johnson@clinnet.com",
     phone: "+1 (555) 345-6789",
-    gender: "Male",
     role: "frontdesk",
   },
-  // Add more mock users as needed
 ];
 
+const roles = ["admin", "doctor", "frontdesk"];
+
 function UserList() {
-  // --- State for managing users (replace mockUsers eventually) ---
-  const [users, setUsers] = useState(mockUsers);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const [users, setUsers] = useState(initialUsers);
+  const [openAddEdit, setOpenAddEdit] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [formData, setFormData] = useState({
+    username: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    role: "",
+    password: ""
+  });
 
-  // --- State for modals/dialogs (to be implemented later) ---
-  const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false); // Combined state for add/edit modal
-  const [editingUser, setEditingUser] = useState(null); // User object if editing, null if adding
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null); // User object to delete
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
 
-  // --- Modal/Dialog Handlers ---
+  // Open add user dialog
   const handleAddUser = () => {
-    console.log("Add New User clicked");
-    setEditingUser(null); // Ensure we are in "add" mode
-    setIsAddEditModalOpen(true);
+    setCurrentUser(null);
+    setFormData({
+      username: "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      role: "",
+      password: ""
+    });
+    setOpenAddEdit(true);
   };
 
+  // Open edit user dialog
   const handleEditUser = (user) => {
-    console.log("Edit User clicked:", user);
-    setEditingUser(user); // Set the user to edit
-    setIsAddEditModalOpen(true);
+    setCurrentUser(user);
+    setFormData({
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email || "",
+      phone: user.phone || "",
+      role: user.role,
+      password: "" // Don't pre-fill password
+    });
+    setOpenAddEdit(true);
   };
 
-  const handleDeleteUser = (user) => {
-    console.log("Delete User clicked:", user);
-    setUserToDelete(user); // Set the user to delete
-    setIsDeleteDialogOpen(true);
+  // Open delete confirmation dialog
+  const handleDeleteClick = (user) => {
+    setCurrentUser(user);
+    setOpenDelete(true);
   };
 
-  const handleCloseAddEditModal = () => {
-    setIsAddEditModalOpen(false);
-    setEditingUser(null); // Clear editing user on close
+  // Close dialogs
+  const handleCloseDialog = () => {
+    setOpenAddEdit(false);
+    setOpenDelete(false);
   };
 
-  const handleCloseDeleteDialog = () => {
-    setIsDeleteDialogOpen(false);
-    setUserToDelete(null); // Clear user to delete on close
-  };
-
-  // --- Form Submission / Confirmation Handlers ---
-  const handleSubmitUserForm = (formData) => {
-    console.log("Form submitted:", formData);
-    if (editingUser) {
-      // Edit existing user (replace with API call)
-      setUsers(
-        users.map((u) => (u.id === formData.id ? { ...u, ...formData } : u))
-      );
+  // Save user (add or edit)
+  const handleSaveUser = () => {
+    if (currentUser) {
+      // Edit existing user
+      setUsers(users.map(user => 
+        user.id === currentUser.id ? { ...user, ...formData, id: currentUser.id } : user
+      ));
     } else {
-      // Add new user (replace with API call)
-      const newUser = { ...formData, id: Date.now() }; // Mock ID generation
+      // Add new user
+      const newUser = {
+        ...formData,
+        id: Math.max(...users.map(u => u.id)) + 1 // Simple ID generation
+      };
       setUsers([...users, newUser]);
     }
-    handleCloseAddEditModal(); // Close modal on success
+    setOpenAddEdit(false);
   };
 
-  const handleConfirmDelete = () => {
-    console.log("Confirm delete for:", userToDelete);
-    // Delete user (replace with API call)
-    setUsers(users.filter((u) => u.id !== userToDelete.id)); // Use userToDelete instead
-    handleCloseDeleteDialog();
-  };
-
-  // --- Define Columns for DataGrid ---
-  const getColumns = () => {
-    // Base columns that are always shown
-    const baseColumns = [
-      { field: "id", headerName: "ID", width: 70, flex: isMobile ? 0 : 0.3 },
-      { 
-        field: "username", 
-        headerName: "Username", 
-        width: 150, 
-        flex: isMobile ? 1 : 0.7,
-        minWidth: 120
-      },
-    ];
-    
-    // Columns that may be hidden on mobile
-    const responsiveColumns = [
-      { 
-        field: "firstName", 
-        headerName: "First Name", 
-        width: 130, 
-        flex: 0.7,
-        minWidth: 100,
-        hide: isMobile 
-      },
-      { 
-        field: "lastName", 
-        headerName: "Last Name", 
-        width: 130, 
-        flex: 0.7,
-        minWidth: 100,
-        hide: isMobile 
-      },
-      {
-        field: "email",
-        headerName: "Email",
-        width: 200,
-        flex: 1,
-        minWidth: 180,
-        hide: isMobile
-      },
-      {
-        field: "phone",
-        headerName: "Phone",
-        width: 150,
-        flex: 0.8,
-        minWidth: 130,
-        hide: isMobile || isTablet
-      },
-      {
-        field: "gender",
-        headerName: "Gender",
-        width: 100,
-        flex: 0.5,
-        minWidth: 90,
-        hide: isMobile || isTablet
-      },
-      {
-        field: "role",
-        headerName: "Role",
-        width: 130,
-        flex: 0.5,
-        minWidth: 90,
-        hide: isMobile && isTablet
-      },
-    ];
-    
-    // Actions column
-    const actionsColumn = {
-      field: "actions",
-      headerName: "Actions",
-      width: 120,
-      sortable: false,
-      disableColumnMenu: true,
-      flex: isMobile ? 0.5 : 0.4,
-      minWidth: 100,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <IconButton onClick={() => handleEditUser(params.row)} size="small">
-            <EditIcon fontSize={isMobile ? "small" : "medium"} />
-          </IconButton>
-          <IconButton onClick={() => handleDeleteUser(params.row)} size="small">
-            <DeleteIcon fontSize={isMobile ? "small" : "medium"} />
-          </IconButton>
-        </Box>
-      ),
-    };
-    
-    return [...baseColumns, ...responsiveColumns, actionsColumn];
+  // Delete user
+  const handleDeleteUser = () => {
+    setUsers(users.filter(user => user.id !== currentUser.id));
+    setOpenDelete(false);
   };
 
   return (
-    <Box sx={{ height: { xs: 350, sm: 400 }, width: "100%" }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: { xs: 1.5, sm: 2 },
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: { xs: 1, sm: 0 }
-        }}
-      >
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            fontSize: { xs: '1.1rem', sm: '1.25rem' },
-            mb: { xs: 1, sm: 0 }
-          }}
-        >
-          User Management
+    <Box sx={{ width: '100%' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        mb: 2
+      }}>
+        <Typography variant="h6">
+          Users
         </Typography>
-        <Button
-          variant="contained"
+        <Button 
+          variant="contained" 
           startIcon={<AddIcon />}
           onClick={handleAddUser}
-          size={isMobile ? "small" : "medium"}
-          sx={{ 
-            minWidth: { xs: '100%', sm: 'auto' },
-            py: { xs: 0.75, sm: 1 }
-          }}
         >
           Add User
         </Button>
       </Box>
-      <DataGrid
-        rows={users}
-        columns={getColumns()}
-        initialState={{
-          pagination: {
-            paginationModel: { page: 0, pageSize: 5 },
-          },
-        }}
-        pageSizeOptions={[5, 10, 25]}
-        disableRowSelectionOnClick
-        autoHeight
-        sx={{
-          '& .MuiDataGrid-cell': {
-            fontSize: { xs: '0.875rem', sm: '1rem' }
-          },
-          '& .MuiDataGrid-columnHeader': {
-            fontSize: { xs: '0.875rem', sm: '1rem' }
-          },
-          '& .MuiDataGrid-footerContainer': {
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: 'center',
-            gap: { xs: 1, sm: 0 }
-          }
-        }}
-      />
+      
+      <TableContainer component={Paper}>
+        <Table sx={{ minWidth: 650 }} aria-label="users table">
+          <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Username</TableCell>
+              <TableCell>First Name</TableCell>
+              <TableCell>Last Name</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Phone</TableCell>
+              <TableCell>Role</TableCell>
+              <TableCell align="center">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow
+                key={user.id}
+                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+              >
+                <TableCell component="th" scope="row">
+                  {user.id}
+                </TableCell>
+                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.firstName}</TableCell>
+                <TableCell>{user.lastName}</TableCell>
+                <TableCell>{user.email || "-"}</TableCell>
+                <TableCell>{user.phone || "-"}</TableCell>
+                <TableCell>{user.role}</TableCell>
+                <TableCell align="center">
+                  <IconButton color="primary" size="small" onClick={() => handleEditUser(user)}>
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton color="error" size="small" onClick={() => handleDeleteClick(user)}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-      {/* Render the Add/Edit Modal */}
-      <UserFormModal
-        open={isAddEditModalOpen}
-        onClose={handleCloseAddEditModal}
-        onSubmit={handleSubmitUserForm}
-        initialData={editingUser} // Pass user data if editing, null if adding
-      />
+      {/* Add/Edit User Dialog */}
+      <Dialog open={openAddEdit} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>{currentUser ? "Edit User" : "Add New User"}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <TextField
+              name="username"
+              label="Username"
+              fullWidth
+              value={formData.username}
+              onChange={handleInputChange}
+              required
+            />
+            
+            {!currentUser && (
+              <TextField
+                name="password"
+                label="Password"
+                type="password"
+                fullWidth
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+              />
+            )}
+            
+            <TextField
+              name="firstName"
+              label="First Name"
+              fullWidth
+              value={formData.firstName}
+              onChange={handleInputChange}
+              required
+            />
+            
+            <TextField
+              name="lastName"
+              label="Last Name"
+              fullWidth
+              value={formData.lastName}
+              onChange={handleInputChange}
+              required
+            />
+            
+            <TextField
+              name="email"
+              label="Email"
+              type="email"
+              fullWidth
+              value={formData.email}
+              onChange={handleInputChange}
+              placeholder="user@example.com"
+            />
+            
+            <TextField
+              name="phone"
+              label="Phone Number"
+              fullWidth
+              value={formData.phone}
+              onChange={handleInputChange}
+              placeholder="+1 (555) 123-4567"
+            />
+            
+            <FormControl fullWidth required>
+              <InputLabel>Role</InputLabel>
+              <Select
+                name="role"
+                value={formData.role}
+                label="Role"
+                onChange={handleInputChange}
+              >
+                {roles.map(role => (
+                  <MenuItem key={role} value={role}>
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleSaveUser} variant="contained">
+            {currentUser ? "Save Changes" : "Add User"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-      {/* Render the Delete Confirmation Dialog */}
-      <ConfirmDeleteDialog
-        open={isDeleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        onConfirm={handleConfirmDelete}
-        userName={userToDelete?.username} // Pass username for display
-      />
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={openDelete} onClose={handleCloseDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the user "{currentUser?.username}"? 
+            This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleDeleteUser} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -178,10 +178,10 @@ function AppLayout() {
                 "&.Mui-selected, &.active": {
                   backgroundColor: "rgba(25, 118, 210, 0.08)", // Light blue background
                   "& .MuiListItemIcon-root": {
-                    color: "#0d47a1", // Dark blue icon for active state
+                    color: "primary.main", // Theme primary color for icon
                   },
                   "& .MuiListItemText-primary": {
-                    color: "#0d47a1", // Dark blue text for active state
+                    color: "primary.main", // Theme primary color for text
                     fontWeight: "bold", // Bold text for active state
                   }
                 }
@@ -343,8 +343,7 @@ function AppLayout() {
         sx={{
           flexGrow: 1,
           p: { xs: 2, sm: 3 }, // Responsive padding
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { xs: 0, sm: `${drawerWidth}px` },
+          width: "100%", // Full width
         }}
       >
         <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }} />{" "}
@@ -353,18 +352,20 @@ function AppLayout() {
           sx={{
             display: "flex",
             justifyContent: "center",
-            alignItems:
-              "flex-start" /* Changed from center to flex-start to allow content to fill space */,
-            minHeight: {
+            alignItems: "flex-start",
+            height: {
               xs: "calc(100vh - 112px)",
               sm: "calc(100vh - 128px)",
-            } /* Responsive full height minus app bar and padding */,
+            }, /* Use fixed height instead of minHeight */
             width: "100%",
+            overflow: "hidden" /* Prevent scrolling at this level */
           }}
         >
-          <Box sx={{ width: "100%" }}>
-            {" "}
-            {/* Removed maxWidth constraint */}
+          <Box sx={{ 
+            width: "100%",
+            height: "100%", /* Take full height */
+            overflow: "auto" /* Allow scrolling at this level if needed */
+          }}>
             <Outlet /> {/* Renders the matched child route's element */}
           </Box>
         </Box>

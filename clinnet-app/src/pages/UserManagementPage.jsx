@@ -1,49 +1,27 @@
 // src/pages/UserManagementPage.jsx
 import React from "react";
-import UserList from "../features/users/components/UserList"; // Adjust path if needed
-import { Box, Typography, Paper, Breadcrumbs, Link } from "@mui/material";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import { Link as RouterLink } from "react-router-dom";
+import UserList from "../features/users/components/UserList";
+import { Box, Typography, Paper } from "@mui/material";
 
 function UserManagementPage() {
   return (
-    <Box>
-      {/* Breadcrumbs navigation */}
-      <Breadcrumbs 
-        separator={<NavigateNextIcon fontSize="small" />} 
-        aria-label="breadcrumb"
-        sx={{ mb: 3 }}
-      >
-        <Link 
-          component={RouterLink} 
-          to="/admin" 
-          underline="hover" 
-          color="inherit"
-        >
-          Dashboard
-        </Link>
-        <Typography color="text.primary">Users</Typography>
-      </Breadcrumbs>
-
+    <Box sx={{ width: '100%' }}>
       {/* Page header */}
       <Typography 
         variant="h4" 
         component="h1" 
         gutterBottom
-        sx={{ 
-          mb: 3,
-          fontWeight: "medium"
-        }}
+        sx={{ mb: 3 }}
       >
         User Management
       </Typography>
 
-      {/* User list in a paper container */}
+      {/* User list */}
       <Paper 
-        elevation={2} 
+        elevation={1} 
         sx={{ 
-          p: { xs: 2, sm: 3 },
-          borderRadius: 2
+          p: 2,
+          borderRadius: 1
         }}
       >
         <UserList />
