@@ -2,6 +2,7 @@
 import React from "react";
 import { Scheduler } from "@aldabil/react-scheduler";
 import { Box, Typography } from "@mui/material";
+// import { useTranslation } from 'react-i18next'; // For internationalization
 
 // Placeholder appointments
 const mockAppointments = [
@@ -14,11 +15,14 @@ const mockAppointments = [
 ];
 
 function AppointmentCalendar() {
+  // const { t } = useTranslation(); // Hook for internationalization
+
   return (
     <Box sx={{ height: "calc(100vh - 200px)" }}>
       {" "}
       {/* Adjust height as needed */}
       <Typography variant="h6" gutterBottom>
+        {/* {t('appointmentCalendar')} */}
         Appointment Calendar
       </Typography>
       <Scheduler

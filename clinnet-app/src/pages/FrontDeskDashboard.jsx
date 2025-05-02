@@ -1,5 +1,6 @@
 // src/pages/FrontDeskDashboard.jsx
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Typography,
@@ -48,6 +49,7 @@ const mockAppointments = [
 ];
 
 function FrontDeskDashboard() {
+  const { t } = useTranslation(); // Moved inside component
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -77,16 +79,19 @@ function FrontDeskDashboard() {
 
   // Handle Check-in Action
   const handleCheckIn = (appointmentId) => {
-    console.log(`Checking in appointment ID: ${appointmentId}`);
-    setError(null); // Clear previous errors
+    setError(null);
+    try {
+      // API call would go here
+      setAppointments((prevAppointments) =>
+        prevAppointments.map((appt) =>
+          appt.id === appointmentId ? { ...appt, status: "Checked-in" } : appt
+        )
+      );
+    } catch (err) {
+      setError(`Failed to check in: ${err.message}`);
+      console.error("Check-in error:", err);
+    }
 
-    // --- Replace with API Call (e.g., PATCH /api/appointments/:id) ---
-    // Simulate API success by updating local state
-    setAppointments((prevAppointments) =>
-      prevAppointments.map((appt) =>
-        appt.id === appointmentId ? { ...appt, status: "Checked-in" } : appt
-      )
-    );
     // Example API call structure:
     /*
     fetch(`/api/appointments/${appointmentId}/checkin`, { method: 'PATCH' })
@@ -115,7 +120,8 @@ function FrontDeskDashboard() {
   };
 
   const handleSubmitWalkIn = (formData) => {
-    console.log("Walk-in data submitted:", formData);
+    const sanitizedFormData = JSON.stringify(formData).replace(/[\r\n]/g, " ");
+    console.log("Walk-in data submitted:", sanitizedFormData);
     setError(null);
     // --- Replace with API Call ---
     // This would typically involve:
@@ -138,10 +144,11 @@ function FrontDeskDashboard() {
     handleCloseWalkInModal(); // Close modal on success
   };
 
+  // Added return statement
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        Front Desk Dashboard
+        {t("frontDeskDashboard.title")}
       </Typography>
 
       {error && (
@@ -160,14 +167,14 @@ function FrontDeskDashboard() {
           }}
         >
           <Typography variant="h6" gutterBottom>
-            Today's Appointments
+            {t("frontDeskDashboard.todaysAppointments")}
           </Typography>
           <Button
             variant="outlined"
             startIcon={<AddCircleOutlineIcon />}
             onClick={handleOpenWalkInModal}
           >
-            Add Walk-in
+            {t("frontDeskDashboard.addWalkIn")}
           </Button>
         </Box>
 
@@ -185,7 +192,7 @@ function FrontDeskDashboard() {
                         size="small"
                         onClick={() => handleCheckIn(appt.id)}
                       >
-                        Check-in
+                        {t("frontDeskDashboard.checkIn")}
                       </Button>
                     )
                   }
@@ -201,7 +208,7 @@ function FrontDeskDashboard() {
           </List>
         )}
         {!loading && appointments.length === 0 && (
-          <Typography>No appointments scheduled for today.</Typography>
+          <Typography>{t("frontDeskDashboard.noAppointments")}</Typography>
         )}
       </Paper>
 

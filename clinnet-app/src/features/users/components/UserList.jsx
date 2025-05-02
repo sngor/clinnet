@@ -92,8 +92,8 @@ function UserList() {
   const handleConfirmDelete = () => {
     console.log("Confirm delete for:", userToDelete);
     // Delete user (replace with API call)
-    setUsers(users.filter((u) => u.id !== user.id));
-    handleCloseDeleteDialog(); // Close dialog on success
+    setUsers(users.filter((u) => u.id !== userToDelete.id)); // Use userToDelete instead
+    handleCloseDeleteDialog();
   };
 
   // --- Define Columns for DataGrid ---
@@ -146,15 +146,16 @@ function UserList() {
         </Button>
       </Box>
       <DataGrid
-        rows={users} // Use state variable here
+        rows={users}
         columns={columns}
-        pageSize={5} // Deprecated, use paginationModel
-        // paginationModel={{ page: 0, pageSize: 5 }} // Preferred way for v5+
-        rowsPerPageOptions={[1]} // Deprecated, use pageSizeOptions
-        // pageSizeOptions={[1, 2, 3]} // Preferred way
-        checkboxSelection={false} // Disable checkbox selection for MVP
-        disableSelectionOnClick // Disable row selection on click for MVP
-        // Add features like sorting, filtering later
+        initialState={{
+          pagination: {
+            paginationModel: { page: 0, pageSize: 5 },
+          },
+        }}
+        pageSizeOptions={[5, 10, 25]}
+        disableRowSelectionOnClick
+        // ...
       />
 
       {/* Render the Add/Edit Modal */}

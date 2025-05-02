@@ -28,11 +28,11 @@ function NotFoundPage() {
           404
         </Typography>
         <Typography variant="h5" component="h2" gutterBottom>
-          Oops! Page Not Found.
+          {t("notFound.title")}{" "}
+          {/* import { useTranslation } from 'react-i18next'; */}
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          Sorry, the page you are looking for does not exist. It might have been
-          moved or deleted.
+          {t("notFound.message")}
         </Typography>
         <Button
           variant="contained"
@@ -40,7 +40,7 @@ function NotFoundPage() {
           to="/login" // Or link to '/' or a relevant dashboard if the user might be logged in
           sx={{ mt: 2 }}
         >
-          Go Back to Login
+          {t("notFound.backToLogin")}
         </Button>
       </Box>
     </Container>

@@ -40,8 +40,15 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
           password: "", // Don't pre-fill password for editing
         });
       } else {
-        setFormData({ username: "", role: "", password: "" }); // Reset for adding
+        setFormData({
+          username: "",
+          firstName: "",
+          lastName: "",
+          role: "",
+          password: "",
+        });
       }
+
       setErrors({}); // Clear errors on open
     }
   }, [open, initialData, isEditing]);

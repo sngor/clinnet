@@ -80,36 +80,51 @@ function AppLayout() {
         return [
           ...baseLinks,
           { text: "Dashboard", path: "/frontdesk", icon: <HomeIcon /> },
-          // Add frontdesk specific links here
+          {
+            text: "Appointments",
+            path: "/frontdesk/appointments",
+            icon: <EventIcon />,
+          },
+          {
+            text: "Patients",
+            path: "/frontdesk/patients",
+            icon: <PeopleIcon />,
+          },
         ];
+
       default:
         return baseLinks;
     }
   };
 
-  const navLinks = getNavLinks(user?.role);
+  const navLinks = React.useMemo(() => getNavLinks(user?.role), [user?.role]);
 
-  const drawer = (
-    <div>
-      <Toolbar />
-      <Divider />
-      <List>
-        {navLinks.map((link) => (
-          <ListItemButton
-            key={link.text}
-            component={NavLink}
-            to={link.path}
-            end={link.path.split("/").length === 2} // Add this line to make dashboard route exact
-            style={({ isActive }) => ({
-              backgroundColor: isActive ? "rgba(0, 0, 0, 0.08)" : "transparent",
-            })}
-          >
-            <ListItemIcon>{link.icon}</ListItemIcon>
-            <ListItemText primary={link.text} />
-          </ListItemButton>
-        ))}
-      </List>
-    </div>
+  const drawer = React.useMemo(
+    () => (
+      <div>
+        <Toolbar />
+        <Divider />
+        <List>
+          {navLinks.map((link) => (
+            <ListItemButton
+              key={link.text}
+              component={NavLink}
+              to={link.path}
+              end={link.path.split("/").length === 2}
+              style={({ isActive }) => ({
+                backgroundColor: isActive
+                  ? "rgba(0, 0, 0, 0.08)"
+                  : "transparent",
+              })}
+            >
+              <ListItemIcon>{link.icon}</ListItemIcon>
+              <ListItemText primary={link.text} />
+            </ListItemButton>
+          ))}
+        </List>
+      </div>
+    ),
+    [navLinks]
   );
 
   return (

@@ -50,14 +50,14 @@ function WalkInFormModal({ open, onClose, onSubmit }) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Add Walk-in Patient</DialogTitle>
+      <DialogTitle>{t("addWalkInPatient")}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
             name="patientName"
-            label="Patient Name"
+            label={t("patientName")}
             type="text"
             fullWidth
             variant="outlined"
@@ -69,7 +69,7 @@ function WalkInFormModal({ open, onClose, onSubmit }) {
           <TextField
             margin="dense"
             name="reason"
-            label="Reason for Visit"
+            label={t("reasonForVisit")}
             type="text"
             fullWidth
             variant="outlined"
