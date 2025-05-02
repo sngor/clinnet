@@ -9,6 +9,9 @@ import {
   Button,
   Typography,
   Alert,
+  Paper,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 function LoginPage() {
@@ -16,6 +19,8 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(""); // To display login errors
   const { login } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   //   const navigate = useNavigate();
   //   const location = useLocation();
 
@@ -44,61 +49,89 @@ function LoginPage() {
   };
 
   return (
-    <Container component="main" maxWidth="s">
-      <Box
+    <Container component="main" maxWidth="xs">
+      <Paper 
+        elevation={3}
         sx={{
-          marginTop: 8,
+          mt: { xs: 4, sm: 8 },
+          p: { xs: 2, sm: 3 },
+          borderRadius: 2,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
         }}
       >
-        <Typography component="h1" variant="h2">
-          Welcome to Clinnet
-        </Typography>
-
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-          {error && (
-            <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="username"
-            label="Username"
-            name="username"
-            autoComplete="username"
-            autoFocus
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {/* Add Remember me checkbox if needed */}
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          <Typography 
+            component="h1" 
+            variant={isMobile ? "h3" : "h2"}
+            sx={{ 
+              mb: 3,
+              textAlign: "center",
+              fontSize: { xs: '2rem', sm: '3rem' }
+            }}
           >
-            Sign In
-          </Button>
-          {/* Add Forgot password or Sign up links if needed */}
+            Welcome to Clinnet
+          </Typography>
+
+          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1, width: "100%" }}>
+            {error && (
+              <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="username"
+              label="Username"
+              name="username"
+              autoComplete="username"
+              autoFocus
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              sx={{ mb: 3 }}
+            />
+            {/* Add Remember me checkbox if needed */}
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size={isMobile ? "medium" : "large"}
+              sx={{ 
+                mt: 2, 
+                mb: 2,
+                py: { xs: 1, sm: 1.5 },
+                borderRadius: 1.5
+              }}
+            >
+              Sign In
+            </Button>
+            {/* Add Forgot password or Sign up links if needed */}
+          </Box>
         </Box>
-      </Box>
+      </Paper>
     </Container>
   );
 }

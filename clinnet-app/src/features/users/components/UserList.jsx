@@ -1,7 +1,7 @@
 // src/features/users/components/UserList.jsx (using DataGrid)
 import React, { useState } from "react"; // Import useState
 import { DataGrid } from "@mui/x-data-grid";
-import { Box, Typography, Button, IconButton } from "@mui/material"; // Import Button, IconButton
+import { Box, Typography, Button, IconButton, useMediaQuery, useTheme } from "@mui/material"; // Import Button, IconButton
 import EditIcon from "@mui/icons-material/Edit"; // Import icons
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
@@ -15,6 +15,9 @@ const mockUsers = [
     username: "admin",
     firstName: "Super",
     lastName: "Admin",
+    email: "admin@clinnet.com",
+    phone: "+1 (555) 123-4567",
+    gender: "Male",
     role: "admin",
   },
   {
@@ -22,6 +25,9 @@ const mockUsers = [
     username: "doctor1",
     firstName: "Alice",
     lastName: "Smith",
+    email: "alice.smith@clinnet.com",
+    phone: "+1 (555) 234-5678",
+    gender: "Female",
     role: "doctor",
   },
   {
@@ -29,6 +35,9 @@ const mockUsers = [
     username: "frontdesk1",
     firstName: "Bob",
     lastName: "Johnson",
+    email: "bob.johnson@clinnet.com",
+    phone: "+1 (555) 345-6789",
+    gender: "Male",
     role: "frontdesk",
   },
   // Add more mock users as needed
@@ -37,6 +46,9 @@ const mockUsers = [
 function UserList() {
   // --- State for managing users (replace mockUsers eventually) ---
   const [users, setUsers] = useState(mockUsers);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
   // --- State for modals/dialogs (to be implemented later) ---
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false); // Combined state for add/edit modal
@@ -97,57 +109,132 @@ function UserList() {
   };
 
   // --- Define Columns for DataGrid ---
-  const columns = [
-    { field: "id", headerName: "ID", width: 70 },
-    { field: "username", headerName: "Username", width: 150 },
-    { field: "firstName", headerName: "First Name", width: 130 },
-    { field: "lastName", headerName: "Last Name", width: 130 },
-    {
-      field: "role",
-      headerName: "Role",
-      width: 130,
-    },
-    {
+  const getColumns = () => {
+    // Base columns that are always shown
+    const baseColumns = [
+      { field: "id", headerName: "ID", width: 70, flex: isMobile ? 0 : 0.3 },
+      { 
+        field: "username", 
+        headerName: "Username", 
+        width: 150, 
+        flex: isMobile ? 1 : 0.7,
+        minWidth: 120
+      },
+    ];
+    
+    // Columns that may be hidden on mobile
+    const responsiveColumns = [
+      { 
+        field: "firstName", 
+        headerName: "First Name", 
+        width: 130, 
+        flex: 0.7,
+        minWidth: 100,
+        hide: isMobile 
+      },
+      { 
+        field: "lastName", 
+        headerName: "Last Name", 
+        width: 130, 
+        flex: 0.7,
+        minWidth: 100,
+        hide: isMobile 
+      },
+      {
+        field: "email",
+        headerName: "Email",
+        width: 200,
+        flex: 1,
+        minWidth: 180,
+        hide: isMobile
+      },
+      {
+        field: "phone",
+        headerName: "Phone",
+        width: 150,
+        flex: 0.8,
+        minWidth: 130,
+        hide: isMobile || isTablet
+      },
+      {
+        field: "gender",
+        headerName: "Gender",
+        width: 100,
+        flex: 0.5,
+        minWidth: 90,
+        hide: isMobile || isTablet
+      },
+      {
+        field: "role",
+        headerName: "Role",
+        width: 130,
+        flex: 0.5,
+        minWidth: 90,
+        hide: isMobile && isTablet
+      },
+    ];
+    
+    // Actions column
+    const actionsColumn = {
       field: "actions",
       headerName: "Actions",
-      width: 150,
+      width: 120,
       sortable: false,
       disableColumnMenu: true,
+      flex: isMobile ? 0.5 : 0.4,
+      minWidth: 100,
       renderCell: (params) => (
-        <>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <IconButton onClick={() => handleEditUser(params.row)} size="small">
-            <EditIcon />
+            <EditIcon fontSize={isMobile ? "small" : "medium"} />
           </IconButton>
           <IconButton onClick={() => handleDeleteUser(params.row)} size="small">
-            <DeleteIcon />
+            <DeleteIcon fontSize={isMobile ? "small" : "medium"} />
           </IconButton>
-        </>
+        </Box>
       ),
-    },
-  ];
+    };
+    
+    return [...baseColumns, ...responsiveColumns, actionsColumn];
+  };
 
   return (
-    <Box sx={{ height: 400, width: "100%" }}>
+    <Box sx={{ height: { xs: 350, sm: 400 }, width: "100%" }}>
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 2,
+          mb: { xs: 1.5, sm: 2 },
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: { xs: 1, sm: 0 }
         }}
       >
-        <Typography variant="h6">User Management</Typography>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontSize: { xs: '1.1rem', sm: '1.25rem' },
+            mb: { xs: 1, sm: 0 }
+          }}
+        >
+          User Management
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAddUser}
+          size={isMobile ? "small" : "medium"}
+          sx={{ 
+            minWidth: { xs: '100%', sm: 'auto' },
+            py: { xs: 0.75, sm: 1 }
+          }}
         >
           Add User
         </Button>
       </Box>
       <DataGrid
         rows={users}
-        columns={columns}
+        columns={getColumns()}
         initialState={{
           pagination: {
             paginationModel: { page: 0, pageSize: 5 },
@@ -155,7 +242,20 @@ function UserList() {
         }}
         pageSizeOptions={[5, 10, 25]}
         disableRowSelectionOnClick
-        // ...
+        autoHeight
+        sx={{
+          '& .MuiDataGrid-cell': {
+            fontSize: { xs: '0.875rem', sm: '1rem' }
+          },
+          '& .MuiDataGrid-columnHeader': {
+            fontSize: { xs: '0.875rem', sm: '1rem' }
+          },
+          '& .MuiDataGrid-footerContainer': {
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'center',
+            gap: { xs: 1, sm: 0 }
+          }
+        }}
       />
 
       {/* Render the Add/Edit Modal */}

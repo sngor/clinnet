@@ -16,8 +16,10 @@ import {
   Avatar, // Import Avatar
   Menu, // Import Menu
   MenuItem, // Import MenuItem
+  useMediaQuery, // Import useMediaQuery for responsive design
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles"; // Import useTheme
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home"; // Example icons
 import PeopleIcon from "@mui/icons-material/People";
@@ -37,6 +39,8 @@ function AppLayout() {
   const [anchorEl, setAnchorEl] = useState(null); // State for Menu anchor
   const navigate = useNavigate(); // Hook for navigation
   const open = Boolean(anchorEl); // Menu open state
+  const theme = useTheme(); // Access the theme
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Check if viewport is mobile size
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -53,6 +57,10 @@ function AppLayout() {
   const handleNavigate = (path) => {
     navigate(path);
     handleMenuClose();
+    // Close the drawer on mobile when navigating
+    if (isMobile) {
+      setMobileOpen(false);
+    }
   };
 
   // Define navigation links based on role
@@ -104,34 +112,44 @@ function AppLayout() {
   const drawer = React.useMemo(
     () => (
       <div>
-        <Toolbar sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center',
-          justifyContent: 'center',
-          py: 2,
-          background: 'white' // Ensure the toolbar has a white background
-        }}>
+        <Toolbar
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            py: { xs: 1.5, sm: 2 }, // Responsive padding
+            background: "white", // Ensure the toolbar has a white background
+          }}
+        >
           {/* Logo */}
-          <Box 
-            sx={{ 
-              width: 60, 
-              height: 60, 
-              bgcolor: 'primary.main', 
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+          <Box
+            sx={{
+              width: { xs: 50, sm: 60 }, // Responsive size
+              height: { xs: 50, sm: 60 }, // Responsive size
+              bgcolor: "primary.main",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               mb: 1,
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' // Add shadow to the logo
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Add shadow to the logo
             }}
           >
-            <Typography variant="h4" color="white" fontWeight="bold">
+            <Typography
+              variant={isMobile ? "h5" : "h4"}
+              color="white"
+              fontWeight="bold"
+            >
               C
             </Typography>
           </Box>
           {/* App Name */}
-          <Typography variant="h6" color="primary.main" fontWeight="bold">
+          <Typography
+            variant={isMobile ? "subtitle1" : "h6"}
+            color="primary.main"
+            fontWeight="bold"
+          >
             CLINNET
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
@@ -146,20 +164,45 @@ function AppLayout() {
               component={NavLink}
               to={link.path}
               end={link.path.split("/").length === 2}
-              style={({ isActive }) => ({
-                backgroundColor: isActive
-                  ? "rgba(0, 0, 0, 0.08)"
-                  : "transparent",
-              })}
+              onClick={() => isMobile && setMobileOpen(false)} // Close drawer when clicking a link on mobile
+              sx={{
+                "&:hover": {
+                  backgroundColor: "rgba(25, 118, 210, 0.04)", // Very light blue background on hover
+                  "& .MuiListItemText-primary": {
+                    color: "#42a5f5", // Light blue text on hover
+                  },
+                  "& .MuiListItemIcon-root": {
+                    color: "#42a5f5", // Light blue icon on hover
+                  }
+                },
+                "&.Mui-selected, &.active": {
+                  backgroundColor: "rgba(25, 118, 210, 0.08)", // Light blue background
+                  "& .MuiListItemIcon-root": {
+                    color: "#0d47a1", // Dark blue icon for active state
+                  },
+                  "& .MuiListItemText-primary": {
+                    color: "#0d47a1", // Dark blue text for active state
+                    fontWeight: "bold", // Bold text for active state
+                  }
+                }
+              }}
+              className={({ isActive }) => isActive ? "active" : ""}
             >
-              <ListItemIcon>{link.icon}</ListItemIcon>
-              <ListItemText primary={link.text} />
+              <ListItemIcon>
+                {link.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={link.text}
+                primaryTypographyProps={{
+                  fontSize: { xs: "0.9rem", sm: "1rem" }, // Responsive text size
+                }}
+              />
             </ListItemButton>
           ))}
         </List>
       </div>
     ),
-    [navLinks]
+    [navLinks, isMobile]
   );
 
   return (
@@ -168,11 +211,13 @@ function AppLayout() {
         position="fixed"
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` }, // Uncomment and modify this line
-          zIndex: (theme) => theme.zIndex.drawer + 1, // Add this line to ensure AppBar stays on top
+          ml: { sm: `${drawerWidth}px` },
+          zIndex: (theme) => theme.zIndex.drawer + 1, // Ensure AppBar stays on top
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }}>
+          {" "}
+          {/* Responsive toolbar height */}
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -184,19 +229,18 @@ function AppLayout() {
           </IconButton>
           {/* Optional: Keep title if desired, or remove */}
           <Typography
-            variant="h6"
+            variant={isMobile ? "subtitle1" : "h6"}
             noWrap
             component="div"
             sx={{ flexGrow: 1 /* Pushes icon to the right */ }}
           >
             {user?.role?.toUpperCase()} Portal
           </Typography>
-
           {/* Profile Icon and Menu */}
           <Box sx={{ flexShrink: 0 }}>
             <IconButton
               onClick={handleMenuOpen}
-              size="large"
+              size={isMobile ? "medium" : "large"}
               aria-label="account of current user"
               aria-controls="menu-appbar"
               aria-haspopup="true"
@@ -207,16 +251,22 @@ function AppLayout() {
                 <Avatar
                   alt={user.username}
                   src={user.photoURL}
-                  sx={{ width: 32, height: 32 }}
+                  sx={{ width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } }}
                 />
               ) : (
                 <Avatar
-                  sx={{ width: 32, height: 32, bgcolor: "secondary.main" }}
+                  sx={{
+                    width: { xs: 28, sm: 32 },
+                    height: { xs: 28, sm: 32 },
+                    bgcolor: "secondary.main",
+                  }}
                 >
                   {user?.username ? (
                     user.username[0].toUpperCase()
                   ) : (
-                    <AccountCircleIcon />
+                    <AccountCircleIcon
+                      fontSize={isMobile ? "small" : "medium"}
+                    />
                   )}
                 </Avatar>
               )}
@@ -292,22 +342,29 @@ function AppLayout() {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 2, sm: 3 }, // Responsive padding
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { xs: 0, sm: `${drawerWidth}px` },
         }}
       >
-        <Toolbar /> {/* Spacer for AppBar */}
-        <Box 
-          sx={{ 
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'flex-start', /* Changed from center to flex-start to allow content to fill space */
-            minHeight: 'calc(100vh - 128px)', /* Full height minus app bar and padding */
-            width: '100%'
+        <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }} />{" "}
+        {/* Responsive spacer for AppBar */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems:
+              "flex-start" /* Changed from center to flex-start to allow content to fill space */,
+            minHeight: {
+              xs: "calc(100vh - 112px)",
+              sm: "calc(100vh - 128px)",
+            } /* Responsive full height minus app bar and padding */,
+            width: "100%",
           }}
         >
-          <Box sx={{ width: '100%' }}> {/* Removed maxWidth constraint */}
+          <Box sx={{ width: "100%" }}>
+            {" "}
+            {/* Removed maxWidth constraint */}
             <Outlet /> {/* Renders the matched child route's element */}
           </Box>
         </Box>
