@@ -1,6 +1,5 @@
 // src/pages/FrontDeskDashboard.jsx
 import React, { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import {
   Box,
   Typography,
@@ -14,7 +13,8 @@ import {
   Divider,
 } from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline"; // Icon for walk-in button
-import WalkInFormModal from "../features/appointments/components/WalkInFormModal"; // Import the new modal
+// Commented out until WalkInFormModal is implemented
+// import WalkInFormModal from "../features/appointments/components/WalkInFormModal";
 
 // Mock data for today's appointments - Replace with API call
 const mockAppointments = [
@@ -49,7 +49,7 @@ const mockAppointments = [
 ];
 
 function FrontDeskDashboard() {
-  const { t } = useTranslation(); // Moved inside component
+  // Removed useTranslation
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -87,6 +87,8 @@ function FrontDeskDashboard() {
           appt.id === appointmentId ? { ...appt, status: "Checked-in" } : appt
         )
       );
+      // Add a console log to confirm the function is executing
+      console.log(`Patient with appointment ID ${appointmentId} checked in successfully`);
     } catch (err) {
       setError(`Failed to check in: ${err.message}`);
       console.error("Check-in error:", err);
@@ -146,61 +148,94 @@ function FrontDeskDashboard() {
 
   // Added return statement
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom>
-        {t("frontDeskDashboard.title")}
-      </Typography>
-
+    <Paper sx={{ 
+      p: 3, 
+      borderRadius: 2, 
+      boxShadow: 3, 
+      width: '100%',
+    }}>
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
-
-      <Paper sx={{ p: 2 }}>
         <Box
           sx={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "center",
             alignItems: "center",
-            mb: 1,
+            mb: 3, // Increased margin bottom
+            flexDirection: { xs: 'column', sm: 'column' }, // Stack on all screen sizes
+            gap: 2, // Add gap between elements
           }}
         >
-          <Typography variant="h6" gutterBottom>
-            {t("frontDeskDashboard.todaysAppointments")}
+          <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+            Today's Appointments
           </Typography>
           <Button
             variant="outlined"
             startIcon={<AddCircleOutlineIcon />}
             onClick={handleOpenWalkInModal}
+            size="large"
+            sx={{ 
+              px: 3, 
+              py: 1, 
+              borderRadius: 2,
+              minWidth: '200px'
+            }}
           >
-            {t("frontDeskDashboard.addWalkIn")}
+            Add Walk-In
           </Button>
         </Box>
 
         {loading ? (
-          <CircularProgress />
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', py: 4 }}>
+            <CircularProgress />
+          </Box>
         ) : (
-          <List>
+          <List sx={{ width: '100%' }}>
             {appointments.map((appt, index) => (
               <React.Fragment key={appt.id}>
                 <ListItem
-                  secondaryAction={
-                    appt.status === "Scheduled" && (
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => handleCheckIn(appt.id)}
-                      >
-                        {t("frontDeskDashboard.checkIn")}
-                      </Button>
-                    )
-                  }
+                  sx={{ 
+                    py: 2, // Add more vertical padding
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' }, // Stack on mobile, row on desktop
+                    alignItems: { xs: 'center', sm: 'center' },
+                    justifyContent: 'space-between'
+                  }}
                 >
-                  <ListItemText
-                    primary={`${appt.time} - ${appt.patientName} (Dr. ${appt.doctorName})`}
-                    secondary={`Status: ${appt.status}`}
-                  />
+                  <Box sx={{ mb: { xs: 2, sm: 0 }, width: { xs: '100%', sm: 'auto' }, textAlign: { xs: 'center', sm: 'left' } }}>
+                    <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                      {appt.time} - {appt.patientName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Doctor: {appt.doctorName}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: appt.status === "Checked-in" ? "success.main" : "info.main",
+                        fontWeight: 'medium'
+                      }}
+                    >
+                      Status: {appt.status}
+                    </Typography>
+                  </Box>
+                  
+                  {appt.status === "Scheduled" && (
+                    <Button
+                      variant="contained"
+                      size="medium"
+                      onClick={() => handleCheckIn(appt.id)}
+                      sx={{ 
+                        minWidth: '120px',
+                        alignSelf: { xs: 'center', sm: 'flex-end' }
+                      }}
+                    >
+                      Check In
+                    </Button>
+                  )}
                 </ListItem>
                 {index < appointments.length - 1 && <Divider component="li" />}
               </React.Fragment>
@@ -208,17 +243,15 @@ function FrontDeskDashboard() {
           </List>
         )}
         {!loading && appointments.length === 0 && (
-          <Typography>{t("frontDeskDashboard.noAppointments")}</Typography>
+          <Typography sx={{ textAlign: 'center', py: 4 }}>No appointments scheduled for today</Typography>
         )}
-      </Paper>
-
-      {/* Render the Walk-in Modal */}
+      {/* Temporarily commented out until WalkInFormModal is implemented 
       <WalkInFormModal
         open={isWalkInModalOpen}
         onClose={handleCloseWalkInModal}
         onSubmit={handleSubmitWalkIn}
-      />
-    </Box>
+      /> */}
+    </Paper>
   );
 }
 

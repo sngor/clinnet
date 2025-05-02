@@ -1,4 +1,5 @@
 // src/app/router.jsx (Example structure)
+import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard";
@@ -8,6 +9,8 @@ import PatientListPage from "../pages/PatientListPage"; // Import the new patien
 import NotFoundPage from "../pages/NotFoundPage";
 import UserManagementPage from "../pages/UserManagementPage"; // Import the new page
 import AccountSettingsPage from "../pages/AccountSettingsPage"; // Import the new settings page
+import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage"; // Import the appointments page
+import FrontdeskPatientsPage from "../pages/FrontdeskPatientsPage"; // Import the patients page
 import AppLayout from "../components/Layout/AppLayout"; // Assuming layout component exists
 import { ProtectedRoute } from "./ProtectedRoute"; // Import the protector component
 
@@ -66,6 +69,22 @@ function AppRouter() {
           element={
             <ProtectedRoute allowedRoles={["frontdesk"]}>
               <FrontDeskDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/frontdesk/appointments"
+          element={
+            <ProtectedRoute allowedRoles={["frontdesk"]}>
+              <FrontdeskAppointmentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/frontdesk/patients"
+          element={
+            <ProtectedRoute allowedRoles={["frontdesk"]}>
+              <FrontdeskPatientsPage />
             </ProtectedRoute>
           }
         />

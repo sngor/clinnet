@@ -17,6 +17,7 @@ import {
   Menu, // Import Menu
   MenuItem, // Import MenuItem
 } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home"; // Example icons
 import PeopleIcon from "@mui/icons-material/People";
@@ -28,6 +29,7 @@ import SettingsIcon from "@mui/icons-material/Settings"; // Icon for settings
 import { useAuth } from "../../app/providers/AuthProvider"; // Adjust path
 
 const drawerWidth = 240;
+const collapsedDrawerWidth = 64;
 
 function AppLayout() {
   const { user, logout } = useAuth();
@@ -102,7 +104,40 @@ function AppLayout() {
   const drawer = React.useMemo(
     () => (
       <div>
-        <Toolbar />
+        <Toolbar sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          justifyContent: 'center',
+          py: 2,
+          background: 'white' // Ensure the toolbar has a white background
+        }}>
+          {/* Logo */}
+          <Box 
+            sx={{ 
+              width: 60, 
+              height: 60, 
+              bgcolor: 'primary.main', 
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mb: 1,
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' // Add shadow to the logo
+            }}
+          >
+            <Typography variant="h4" color="white" fontWeight="bold">
+              C
+            </Typography>
+          </Box>
+          {/* App Name */}
+          <Typography variant="h6" color="primary.main" fontWeight="bold">
+            CLINNET
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+            Healthcare Management
+          </Typography>
+        </Toolbar>
         <Divider />
         <List>
           {navLinks.map((link) => (
@@ -228,6 +263,7 @@ function AppLayout() {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
+              boxShadow: "4px 0 10px rgba(0, 0, 0, 0.12)",
             },
           }}
         >
@@ -242,7 +278,9 @@ function AppLayout() {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
-              borderRight: "1px solid rgba(0, 0, 0, 0.12)",
+              borderRight: "none",
+              boxShadow: "4px 0 10px rgba(0, 0, 0, 0.12)",
+              zIndex: (theme) => theme.zIndex.drawer,
             },
           }}
           open
@@ -260,7 +298,19 @@ function AppLayout() {
         }}
       >
         <Toolbar /> {/* Spacer for AppBar */}
-        <Outlet /> {/* Renders the matched child route's element */}
+        <Box 
+          sx={{ 
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'flex-start', /* Changed from center to flex-start to allow content to fill space */
+            minHeight: 'calc(100vh - 128px)', /* Full height minus app bar and padding */
+            width: '100%'
+          }}
+        >
+          <Box sx={{ width: '100%' }}> {/* Removed maxWidth constraint */}
+            <Outlet /> {/* Renders the matched child route's element */}
+          </Box>
+        </Box>
       </Box>
     </Box>
   );
