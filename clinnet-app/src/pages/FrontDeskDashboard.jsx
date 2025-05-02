@@ -1,5 +1,6 @@
 // src/pages/FrontDeskDashboard.jsx
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../app/providers/AuthProvider"; // Import useAuth
 import {
   Box,
   Typography,
@@ -11,8 +12,14 @@ import {
   CircularProgress,
   Alert,
   Divider,
+  Container,
+  Grid,
+  useTheme,
+  useMediaQuery
 } from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline"; // Icon for walk-in button
+import EventIcon from "@mui/icons-material/Event";
+import PeopleIcon from "@mui/icons-material/People";
 // Commented out until WalkInFormModal is implemented
 // import WalkInFormModal from "../features/appointments/components/WalkInFormModal";
 
@@ -49,13 +56,28 @@ const mockAppointments = [
 ];
 
 function FrontDeskDashboard() {
-  // Removed useTranslation
+  const { user } = useAuth(); // Get the user object
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // State for walk-in modal
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+
+  // Function to get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return "Good morning";
+    } else if (hour < 18) {
+      return "Good afternoon";
+    } else {
+      return "Good evening";
+    }
+  };
 
   // Fetch today's appointments (using mock data)
   useEffect(() => {
@@ -64,11 +86,6 @@ function FrontDeskDashboard() {
       try {
         // Filter mock data for example purposes, API should handle this
         setAppointments(mockAppointments);
-        // Replace with:
-        // fetch("/api/appointments?date=today&status=scheduled,checked-in") // Example API endpoint
-        //   .then(res => res.ok ? res.json() : Promise.reject(new Error('Failed to fetch appointments')))
-        //   .then(setAppointments)
-        //   .catch(err => setError(`Failed to load appointments: ${err.message}`))
         setLoading(false);
       } catch (err) {
         setError(`Failed to load appointments: ${err.message}`);
@@ -87,29 +104,11 @@ function FrontDeskDashboard() {
           appt.id === appointmentId ? { ...appt, status: "Checked-in" } : appt
         )
       );
-      // Add a console log to confirm the function is executing
       console.log(`Patient with appointment ID ${appointmentId} checked in successfully`);
     } catch (err) {
       setError(`Failed to check in: ${err.message}`);
       console.error("Check-in error:", err);
     }
-
-    // Example API call structure:
-    /*
-    fetch(`/api/appointments/${appointmentId}/checkin`, { method: 'PATCH' })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to check in');
-        return res.json(); // Assuming API returns the updated appointment
-      })
-      .then(updatedAppointment => {
-        setAppointments(prev => prev.map(appt => appt.id === updatedAppointment.id ? updatedAppointment : appt));
-      })
-      .catch(err => {
-        console.error("Check-in failed:", err);
-        setError(`Check-in failed for appointment ${appointmentId}: ${err.message}`);
-        // Optional: Revert local state change if API fails
-      });
-    */
   };
 
   // --- Walk-in Handlers ---
@@ -125,11 +124,6 @@ function FrontDeskDashboard() {
     const sanitizedFormData = JSON.stringify(formData).replace(/[\r\n]/g, " ");
     console.log("Walk-in data submitted:", sanitizedFormData);
     setError(null);
-    // --- Replace with API Call ---
-    // This would typically involve:
-    // 1. Maybe searching if patient exists or creating a new one.
-    // 2. Creating a new appointment record with status 'Checked-in'.
-    // 3. Fetching the updated appointment list or adding the new one locally.
 
     // Simulate adding to the list for now:
     const newWalkInAppointment = {
@@ -146,47 +140,219 @@ function FrontDeskDashboard() {
     handleCloseWalkInModal(); // Close modal on success
   };
 
-  // Added return statement
   return (
-    <Paper sx={{ 
-      p: 3, 
-      borderRadius: 2, 
-      boxShadow: 3, 
-      width: '100%',
-    }}>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            mb: 3, // Increased margin bottom
-            flexDirection: { xs: 'column', sm: 'column' }, // Stack on all screen sizes
-            gap: 2, // Add gap between elements
+    <Container maxWidth="xl" disableGutters>
+      {/* Greeting Section - Same as Admin Dashboard */}
+      <Box 
+        sx={{ 
+          mb: 4,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          pb: 2
+        }}
+      >
+        <Typography 
+          variant={isMobile ? "h4" : "h3"} 
+          sx={{ 
+            fontWeight: 'medium',
+            color: 'primary.main'
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center', width: '100%' }}>
+          {getGreeting()}, {user?.firstName || "Front Desk"}!
+        </Typography>
+        <Typography 
+          variant="subtitle1" 
+          color="text.secondary"
+          sx={{ mt: 1 }}
+        >
+          {appointments.length} appointments scheduled for today
+        </Typography>
+      </Box>
+
+      {/* Dashboard Summary Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <Paper
+            elevation={0}
+            sx={{ 
+              p: 3, 
+              display: "flex", 
+              flexDirection: "column", 
+              height: 180,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              position: "relative",
+              overflow: "hidden",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: 3,
+                transform: "translateY(-4px)"
+              }
+            }}
+          >
+            <Box 
+              sx={{ 
+                position: "absolute",
+                top: 10,
+                right: 10,
+                color: "primary.light",
+                opacity: 0.15,
+                transform: "scale(2.5)",
+                transformOrigin: "top right"
+              }}
+            >
+              <EventIcon fontSize="large" />
+            </Box>
+            <Typography 
+              component="h2" 
+              variant="h6" 
+              color="primary.main" 
+              fontWeight="medium"
+            >
+              Today's Appointments
+            </Typography>
+            <Typography 
+              component="p" 
+              variant="h2" 
+              sx={{ 
+                mt: 2, 
+                mb: 2,
+                fontWeight: 'bold' 
+              }}
+            >
+              {appointments.length}
+            </Typography>
+            <Button 
+              variant="text" 
+              color="primary" 
+              sx={{ 
+                alignSelf: "flex-start", 
+                mt: "auto",
+                pl: 0,
+                "&:hover": {
+                  backgroundColor: "transparent",
+                  textDecoration: "underline"
+                }
+              }}
+            >
+              View All
+            </Button>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <Paper
+            elevation={0}
+            sx={{ 
+              p: 3, 
+              display: "flex", 
+              flexDirection: "column", 
+              height: 180,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              position: "relative",
+              overflow: "hidden",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: 3,
+                transform: "translateY(-4px)"
+              }
+            }}
+          >
+            <Box 
+              sx={{ 
+                position: "absolute",
+                top: 10,
+                right: 10,
+                color: "primary.light",
+                opacity: 0.15,
+                transform: "scale(2.5)",
+                transformOrigin: "top right"
+              }}
+            >
+              <PeopleIcon fontSize="large" />
+            </Box>
+            <Typography 
+              component="h2" 
+              variant="h6" 
+              color="primary.main"
+              fontWeight="medium"
+            >
+              Checked-In Patients
+            </Typography>
+            <Typography 
+              component="p" 
+              variant="h2" 
+              sx={{ 
+                mt: 2, 
+                mb: 2,
+                fontWeight: 'bold'
+              }}
+            >
+              {appointments.filter(a => a.status === "Checked-in").length}
+            </Typography>
+            <Button 
+              variant="text" 
+              color="primary" 
+              sx={{ 
+                alignSelf: "flex-start", 
+                mt: "auto",
+                pl: 0,
+                "&:hover": {
+                  backgroundColor: "transparent",
+                  textDecoration: "underline"
+                }
+              }}
+            >
+              View Patients
+            </Button>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Appointments List */}
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <Box sx={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center",
+          mb: 3
+        }}>
+          <Typography 
+            variant="h5" 
+            color="primary.main"
+            fontWeight="medium"
+          >
             Today's Appointments
           </Typography>
           <Button
-            variant="outlined"
+            variant="contained"
             startIcon={<AddCircleOutlineIcon />}
             onClick={handleOpenWalkInModal}
-            size="large"
             sx={{ 
-              px: 3, 
-              py: 1, 
-              borderRadius: 2,
-              minWidth: '200px'
+              borderRadius: 1.5,
+              px: 2
             }}
           >
             Add Walk-In
           </Button>
         </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
 
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', py: 4 }}>
@@ -198,14 +364,14 @@ function FrontDeskDashboard() {
               <React.Fragment key={appt.id}>
                 <ListItem
                   sx={{ 
-                    py: 2, // Add more vertical padding
+                    py: 2,
                     display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' }, // Stack on mobile, row on desktop
-                    alignItems: { xs: 'center', sm: 'center' },
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'flex-start', sm: 'center' },
                     justifyContent: 'space-between'
                   }}
                 >
-                  <Box sx={{ mb: { xs: 2, sm: 0 }, width: { xs: '100%', sm: 'auto' }, textAlign: { xs: 'center', sm: 'left' } }}>
+                  <Box sx={{ mb: { xs: 2, sm: 0 }, width: { xs: '100%', sm: 'auto' } }}>
                     <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
                       {appt.time} - {appt.patientName}
                     </Typography>
@@ -230,28 +396,33 @@ function FrontDeskDashboard() {
                       onClick={() => handleCheckIn(appt.id)}
                       sx={{ 
                         minWidth: '120px',
-                        alignSelf: { xs: 'center', sm: 'flex-end' }
+                        alignSelf: { xs: 'flex-start', sm: 'center' }
                       }}
                     >
                       Check In
                     </Button>
                   )}
                 </ListItem>
-                {index < appointments.length - 1 && <Divider component="li" />}
+                {index < appointments.length - 1 && <Divider />}
               </React.Fragment>
             ))}
           </List>
         )}
+        
         {!loading && appointments.length === 0 && (
-          <Typography sx={{ textAlign: 'center', py: 4 }}>No appointments scheduled for today</Typography>
+          <Typography sx={{ textAlign: 'center', py: 4 }}>
+            No appointments scheduled for today
+          </Typography>
         )}
+      </Paper>
+
       {/* Temporarily commented out until WalkInFormModal is implemented 
       <WalkInFormModal
         open={isWalkInModalOpen}
         onClose={handleCloseWalkInModal}
         onSubmit={handleSubmitWalkIn}
       /> */}
-    </Paper>
+    </Container>
   );
 }
 
