@@ -1,0 +1,23 @@
+{
+  "name": "clinnet-emr-backend",
+  "version": "1.0.0",
+  "description": "Serverless backend for Clinnet EMR healthcare management system",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "deploy": "sam build && sam deploy",
+    "start-api": "sam local start-api"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1048.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.6.0",
+    "jest": "^27.4.7",
+    "aws-sam-cli": "^1.37.0"
+  },
+  "author": "",
+  "license": "MIT"
+}

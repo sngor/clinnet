@@ -1,0 +1,364 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Clinnet-EMR Serverless Backend
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs18.x
+    MemorySize: 256
+    Environment:
+      Variables:
+        PATIENTS_TABLE: !Ref PatientsTable
+        USERS_TABLE: !Ref UsersTable
+        SERVICES_TABLE: !Ref ServicesTable
+        APPOINTMENTS_TABLE: !Ref AppointmentsTable
+        DOCUMENTS_BUCKET: !Ref DocumentsBucket
+
+Resources:
+  # API Gateway
+  ClinnetApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt ClinnetUserPool.Arn
+
+  # Cognito User Pool for Authentication
+  ClinnetUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: ClinnetUserPool
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: role
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+
+  # Cognito User Pool Client
+  ClinnetUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: clinnet-app
+      UserPoolId: !Ref ClinnetUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+
+  # DynamoDB Tables
+  PatientsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ClinnetPatients
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ClinnetUsers
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  ServicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ClinnetServices
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  AppointmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ClinnetAppointments
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: patientId
+          AttributeType: S
+        - AttributeName: date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: PatientAppointments
+          KeySchema:
+            - AttributeName: patientId
+              KeyType: HASH
+            - AttributeName: date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  # S3 Bucket for Documents
+  DocumentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub clinnet-documents-${AWS::AccountId}
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            AllowedOrigins:
+              - '*'
+            MaxAge: 3000
+
+  # Lambda Functions
+  # Patients API
+  GetPatientsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/patients/getPatients.handler
+      Description: Get all patients
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /patients
+            Method: get
+
+  GetPatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/patients/getPatient.handler
+      Description: Get patient by ID
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /patients/{id}
+            Method: get
+
+  CreatePatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/patients/createPatient.handler
+      Description: Create a new patient
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /patients
+            Method: post
+
+  UpdatePatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/patients/updatePatient.handler
+      Description: Update a patient
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /patients/{id}
+            Method: put
+
+  DeletePatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/patients/deletePatient.handler
+      Description: Delete a patient
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /patients/{id}
+            Method: delete
+
+  # Users API
+  GetUsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/users/getUsers.handler
+      Description: Get all users
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /users
+            Method: get
+
+  GetUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/users/getUser.handler
+      Description: Get user by ID
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /users/{id}
+            Method: get
+
+  CreateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/users/createUser.handler
+      Description: Create a new user
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /users
+            Method: post
+
+  UpdateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/users/updateUser.handler
+      Description: Update a user
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /users/{id}
+            Method: put
+
+  DeleteUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/users/deleteUser.handler
+      Description: Delete a user
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /users/{id}
+            Method: delete
+
+  # Services API
+  GetServicesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/services/getServices.handler
+      Description: Get all services
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /services
+            Method: get
+
+  GetServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/services/getService.handler
+      Description: Get service by ID
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /services/{id}
+            Method: get
+
+  CreateServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/services/createService.handler
+      Description: Create a new service
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /services
+            Method: post
+
+  UpdateServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/services/updateService.handler
+      Description: Update a service
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /services/{id}
+            Method: put
+
+  DeleteServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/services/deleteService.handler
+      Description: Delete a service
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinnetApi
+            Path: /services/{id}
+            Method: delete
+
+Outputs:
+  ClinnetApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${ClinnetApi}.execute-api.${AWS::Region}.amazonaws.com/prod/
+  
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref ClinnetUserPool
+  
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref ClinnetUserPoolClient
+  
+  DocumentsBucketName:
+    Description: S3 Bucket for storing documents
+    Value: !Ref DocumentsBucket

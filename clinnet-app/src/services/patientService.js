@@ -56,24 +56,11 @@ export const deletePatient = async (patientId) => {
   }
 };
 
-// Get patient's medical records
-export const getPatientMedicalRecords = async (patientId) => {
-  try {
-    const response = await api.get(`/medicalRecords?patientId=${patientId}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching medical records for patient ${patientId}:`, error);
-    throw error;
-  }
-};
-
-// Get patient's appointments
-export const getPatientAppointments = async (patientId) => {
-  try {
-    const response = await api.get(`/appointments?patientId=${patientId}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching appointments for patient ${patientId}:`, error);
-    throw error;
-  }
+// Export as default object for easier imports
+export default {
+  getPatients,
+  getPatientById,
+  createPatient,
+  updatePatient,
+  deletePatient
 };
