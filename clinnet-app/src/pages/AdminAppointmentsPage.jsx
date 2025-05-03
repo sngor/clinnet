@@ -5,134 +5,60 @@ import {
   Typography, 
   Paper, 
   Tabs, 
-  Tab, 
-  Grid,
-  Container
+  Tab 
 } from '@mui/material';
-import AppointmentCalendar from '../features/appointments/components/AppointmentCalendar';
-import AppointmentCard from '../components/AppointmentCard';
-import PageHeader from '../components/PageHeader';
-
-// Mock data for all appointments (admin can see all appointments)
-const allAppointments = [
-  {
-    id: 201,
-    patientName: "Alice Brown",
-    time: "09:00 AM",
-    doctorName: "Dr. Smith",
-    status: "Scheduled",
-    type: "Checkup"
-  },
-  {
-    id: 202,
-    patientName: "Bob White",
-    time: "09:30 AM",
-    doctorName: "Dr. Jones",
-    status: "Checked-in",
-    type: "Follow-up"
-  },
-  {
-    id: 203,
-    patientName: "Charlie Green",
-    time: "10:00 AM",
-    doctorName: "Dr. Smith",
-    status: "In Progress",
-    type: "Consultation"
-  },
-  {
-    id: 204,
-    patientName: "David Black",
-    time: "10:30 AM",
-    doctorName: "Dr. Jones",
-    status: "Scheduled",
-    type: "New Patient"
-  },
-  {
-    id: 205,
-    patientName: "Eva Gray",
-    time: "11:00 AM",
-    doctorName: "Dr. Wilson",
-    status: "Scheduled",
-    type: "Annual Physical"
-  },
-  {
-    id: 206,
-    patientName: "Frank Miller",
-    time: "11:30 AM",
-    doctorName: "Dr. Taylor",
-    status: "Cancelled",
-    type: "Follow-up"
-  }
-];
+import AdminAppointmentCalendar from '../features/appointments/components/AdminAppointmentCalendar';
 
 function AdminAppointmentsPage() {
   const [tabValue, setTabValue] = useState(0);
-
+  
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
-
+  
   return (
-    <Container maxWidth="xl" disableGutters>
-      {/* Use the consistent PageHeader component */}
-      <PageHeader 
-        title="Appointments" 
-        subtitle="View and manage all clinic appointments"
-      />
-
+    <Box>
+      <Typography variant="h4" sx={{ mb: 3 }}>
+        Appointments
+      </Typography>
+      
       <Tabs 
         value={tabValue} 
         onChange={handleTabChange} 
-        sx={{ 
-          mb: 3, 
-          borderBottom: 1, 
-          borderColor: 'divider',
-          '& .MuiTab-root': {
-            fontWeight: 500,
-            fontSize: '1rem',
-            textTransform: 'none',
-          }
-        }}
-        centered
+        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+        centered={false}
       >
         <Tab label="Calendar View" />
-        <Tab label="All Appointments" />
+        <Tab label="List View" />
+        <Tab label="Settings" />
       </Tabs>
-
+      
       {tabValue === 0 && (
-        <AppointmentCalendar />
+        <AdminAppointmentCalendar />
       )}
-
+      
       {tabValue === 1 && (
-        <Paper 
-          sx={{ 
-            p: { xs: 2, sm: 3 }, 
-            borderRadius: 2, 
-            boxShadow: 2, 
-            width: '100%' 
-          }}
-        >
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              mb: 3, 
-              fontWeight: 500,
-              color: 'primary.main' 
-            }}
-          >
-            All Appointments
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6">
+            Appointment List
           </Typography>
-          
-          <Grid container spacing={3}>
-            {allAppointments.map((appointment) => (
-              <Grid item xs={12} sm={6} md={4} key={appointment.id}>
-                <AppointmentCard appointment={appointment} />
-              </Grid>
-            ))}
-          </Grid>
+          <Typography variant="body1" sx={{ mt: 2 }}>
+            This is a placeholder for the appointment list view.
+          </Typography>
         </Paper>
       )}
-    </Container>
+      
+      {tabValue === 2 && (
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6">
+            Appointment Settings
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 2 }}>
+            This is a placeholder for appointment settings like working hours, appointment types, etc.
+          </Typography>
+        </Paper>
+      )}
+    </Box>
   );
 }
 

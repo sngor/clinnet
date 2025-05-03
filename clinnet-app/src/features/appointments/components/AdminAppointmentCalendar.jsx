@@ -1,4 +1,4 @@
-// src/features/appointments/components/FrontdeskAppointmentCalendar.jsx
+// src/features/appointments/components/AdminAppointmentCalendar.jsx
 import React, { useState } from "react";
 import { 
   Box, 
@@ -15,16 +15,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Autocomplete,
-  Card,
-  CardContent,
-  Chip,
-  Divider
+  Autocomplete
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import PersonIcon from "@mui/icons-material/Person";
-import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 
 // Mock data for doctors
 const mockDoctors = [
@@ -51,11 +44,10 @@ const mockAppointments = [
     start: new Date(new Date().setHours(9, 0, 0, 0)),
     end: new Date(new Date().setHours(10, 0, 0, 0)),
     doctor: "Dr. Smith",
-    doctorId: 1,
     patient: "Alice Brown",
     patientId: 101,
-    status: "Scheduled",
-    type: "Checkup"
+    doctorId: 1,
+    status: "Scheduled"
   },
   {
     id: 2,
@@ -63,11 +55,10 @@ const mockAppointments = [
     start: new Date(new Date().setHours(11, 0, 0, 0)),
     end: new Date(new Date().setHours(12, 0, 0, 0)),
     doctor: "Dr. Jones",
-    doctorId: 2,
     patient: "Bob White",
     patientId: 102,
-    status: "Checked-in",
-    type: "Consultation"
+    doctorId: 2,
+    status: "Checked-in"
   },
   {
     id: 3,
@@ -75,15 +66,14 @@ const mockAppointments = [
     start: new Date(new Date().setHours(14, 0, 0, 0)),
     end: new Date(new Date().setHours(15, 0, 0, 0)),
     doctor: "Dr. Smith",
-    doctorId: 1,
     patient: "Charlie Green",
     patientId: 103,
-    status: "Scheduled",
-    type: "Follow-up"
+    doctorId: 1,
+    status: "Scheduled"
   }
 ];
 
-function FrontdeskAppointmentCalendar() {
+function AdminAppointmentCalendar() {
   const [appointments, setAppointments] = useState(mockAppointments);
   const [openDialog, setOpenDialog] = useState(false);
   const [newAppointment, setNewAppointment] = useState({
@@ -94,31 +84,10 @@ function FrontdeskAppointmentCalendar() {
     doctorId: "",
     patient: "",
     patientId: "",
-    status: "Scheduled",
-    type: ""
+    status: "Scheduled"
   });
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-
-  // Get color for status chip
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Scheduled':
-        return 'info';
-      case 'Checked-in':
-        return 'primary';
-      case 'In Progress':
-        return 'warning';
-      case 'Ready for Checkout':
-        return 'secondary';
-      case 'Completed':
-        return 'success';
-      case 'Cancelled':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
 
   const handleOpenDialog = () => {
     setOpenDialog(true);
@@ -135,8 +104,7 @@ function FrontdeskAppointmentCalendar() {
       doctorId: "",
       patient: "",
       patientId: "",
-      status: "Scheduled",
-      type: ""
+      status: "Scheduled"
     });
     setSelectedPatient(null);
     setSelectedDoctor(null);
@@ -187,7 +155,7 @@ function FrontdeskAppointmentCalendar() {
 
   const handleCreateAppointment = () => {
     // Create a title from patient name and appointment type
-    const title = `${newAppointment.patient} - ${newAppointment.type || "Appointment"}`;
+    const title = `${newAppointment.patient} - ${newAppointment.appointmentType || "Appointment"}`;
     
     const appointment = {
       ...newAppointment,
@@ -198,15 +166,6 @@ function FrontdeskAppointmentCalendar() {
     setAppointments([...appointments, appointment]);
     handleCloseDialog();
   };
-
-  // Group appointments by doctor
-  const appointmentsByDoctor = appointments.reduce((acc, appointment) => {
-    if (!acc[appointment.doctorId]) {
-      acc[appointment.doctorId] = [];
-    }
-    acc[appointment.doctorId].push(appointment);
-    return acc;
-  }, {});
 
   return (
     <Paper sx={{ p: 3, borderRadius: 2 }}>
@@ -221,85 +180,25 @@ function FrontdeskAppointmentCalendar() {
         </Button>
       </Box>
 
-      <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Today's Schedule by Doctor
+      <Box sx={{ height: 600, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+        <Typography variant="body1" color="text.secondary" align="center">
+          Calendar view placeholder - @aldabil/react-scheduler removed due to compatibility issues with date-fns
         </Typography>
         
-        <Divider sx={{ mb: 3 }} />
-        
-        <Grid container spacing={3}>
-          {Object.keys(appointmentsByDoctor).map(doctorId => {
-            const doctorAppointments = appointmentsByDoctor[doctorId];
-            const doctor = mockDoctors.find(d => d.id === parseInt(doctorId));
-            
-            return (
-              <Grid item xs={12} md={6} key={doctorId}>
-                <Paper 
-                  elevation={2} 
-                  sx={{ 
-                    p: 2, 
-                    mb: 3, 
-                    borderTop: 4, 
-                    borderColor: 'primary.main' 
-                  }}
-                >
-                  <Typography variant="h6" sx={{ mb: 2 }}>
-                    {doctor ? doctor.name : `Doctor ID: ${doctorId}`}
-                  </Typography>
-                  
-                  {doctorAppointments
-                    .sort((a, b) => a.start - b.start)
-                    .map(appointment => (
-                      <Card 
-                        key={appointment.id} 
-                        sx={{ 
-                          mb: 2, 
-                          borderLeft: 4, 
-                          borderColor: getStatusColor(appointment.status) + '.main' 
-                        }}
-                      >
-                        <CardContent>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                            <Typography variant="subtitle1">
-                              {appointment.patient}
-                            </Typography>
-                            <Chip 
-                              label={appointment.status} 
-                              color={getStatusColor(appointment.status)} 
-                              size="small" 
-                            />
-                          </Box>
-                          
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                              {appointment.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
-                              {appointment.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                            </Typography>
-                          </Box>
-                          
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <PersonIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                              Patient ID: {appointment.patientId}
-                            </Typography>
-                          </Box>
-                          
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <LocalHospitalIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                              Type: {appointment.type}
-                            </Typography>
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    ))}
-                </Paper>
-              </Grid>
-            );
-          })}
-        </Grid>
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" gutterBottom>Upcoming Appointments</Typography>
+          {appointments.map(appointment => (
+            <Paper key={appointment.id} sx={{ p: 2, mb: 2, borderLeft: 4, borderColor: 'primary.main' }}>
+              <Typography variant="subtitle1">{appointment.title}</Typography>
+              <Typography variant="body2">
+                {appointment.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
+                {appointment.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              </Typography>
+              <Typography variant="body2">Doctor: {appointment.doctor}</Typography>
+              <Typography variant="body2">Status: {appointment.status}</Typography>
+            </Paper>
+          ))}
+        </Box>
       </Box>
 
       {/* New Appointment Dialog */}
@@ -375,11 +274,11 @@ function FrontdeskAppointmentCalendar() {
               <FormControl fullWidth>
                 <InputLabel>Appointment Type</InputLabel>
                 <Select
-                  value={newAppointment.type || ""}
+                  value={newAppointment.appointmentType || ""}
                   label="Appointment Type"
                   onChange={(e) => setNewAppointment({
                     ...newAppointment,
-                    type: e.target.value
+                    appointmentType: e.target.value
                   })}
                 >
                   <MenuItem value="Checkup">Checkup</MenuItem>
@@ -397,10 +296,6 @@ function FrontdeskAppointmentCalendar() {
                 rows={3}
                 fullWidth
                 placeholder="Add any additional notes about the appointment"
-                onChange={(e) => setNewAppointment({
-                  ...newAppointment,
-                  notes: e.target.value
-                })}
               />
             </Grid>
           </Grid>
@@ -420,4 +315,4 @@ function FrontdeskAppointmentCalendar() {
   );
 }
 
-export default FrontdeskAppointmentCalendar;
+export default AdminAppointmentCalendar;
