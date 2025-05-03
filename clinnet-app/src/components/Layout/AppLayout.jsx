@@ -1,6 +1,6 @@
-// src/components/Layout/AppLayout.jsx (Simplified Example)
+// src/components/Layout/AppLayout.jsx
 import React, { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom"; // Import useNavigate
+import { Outlet, useNavigate } from "react-router-dom";
 import ActiveNavLink from "../ActiveNavLink";
 import {
   Box,
@@ -11,37 +11,33 @@ import {
   Typography,
   Divider,
   IconButton,
-  ListItemButton,
   ListItemIcon,
   ListItemText,
-  Avatar, // Import Avatar
-  Menu, // Import Menu
-  MenuItem, // Import MenuItem
-  useMediaQuery, // Import useMediaQuery for responsive design
+  Avatar,
+  Menu,
+  MenuItem,
+  useMediaQuery,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
-import { useTheme } from "@mui/material/styles"; // Import useTheme
+import { useTheme } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
-import HomeIcon from "@mui/icons-material/Home"; // Example icons
+import HomeIcon from "@mui/icons-material/Home";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from "@mui/icons-material/Logout";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle"; // Fallback icon
-import SettingsIcon from "@mui/icons-material/Settings"; // Icon for settings
-import { useAuth } from "../../app/providers/AuthProvider"; // Adjust path
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import SettingsIcon from "@mui/icons-material/Settings";
+import { useAuth } from "../../app/providers/AuthProvider";
 
 const drawerWidth = 240;
-const collapsedDrawerWidth = 64;
 
 function AppLayout() {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null); // State for Menu anchor
-  const navigate = useNavigate(); // Hook for navigation
-  const open = Boolean(anchorEl); // Menu open state
-  const theme = useTheme(); // Access the theme
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Check if viewport is mobile size
+  const [anchorEl, setAnchorEl] = useState(null);
+  const navigate = useNavigate();
+  const open = Boolean(anchorEl);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -50,6 +46,7 @@ function AppLayout() {
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
+  
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
@@ -66,9 +63,7 @@ function AppLayout() {
 
   // Define navigation links based on role
   const getNavLinks = (role) => {
-    const baseLinks = [
-      // Add common links if any
-    ];
+    const baseLinks = [];
     switch (role) {
       case "admin":
         return [
@@ -82,28 +77,15 @@ function AppLayout() {
           ...baseLinks,
           { text: "Dashboard", path: "/doctor", icon: <HomeIcon /> },
           { text: "Patients", path: "/doctor/patients", icon: <PeopleIcon /> },
-          {
-            text: "Appointments",
-            path: "/doctor/appointments",
-            icon: <EventIcon />,
-          },
+          { text: "Appointments", path: "/doctor/appointments", icon: <EventIcon /> },
         ];
       case "frontdesk":
         return [
           ...baseLinks,
           { text: "Dashboard", path: "/frontdesk", icon: <HomeIcon /> },
-          {
-            text: "Appointments",
-            path: "/frontdesk/appointments",
-            icon: <EventIcon />,
-          },
-          {
-            text: "Patients",
-            path: "/frontdesk/patients",
-            icon: <PeopleIcon />,
-          },
+          { text: "Appointments", path: "/frontdesk/appointments", icon: <EventIcon /> },
+          { text: "Patients", path: "/frontdesk/patients", icon: <PeopleIcon /> },
         ];
-
       default:
         return baseLinks;
     }
@@ -113,35 +95,36 @@ function AppLayout() {
 
   const drawer = React.useMemo(
     () => (
-      <div>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <Toolbar
           sx={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            py: { xs: 1.5, sm: 2 }, // Responsive padding
-            background: "white", // Ensure the toolbar has a white background
+            py: { xs: 2, sm: 3 },
+            background: "white",
           }}
         >
           {/* Logo */}
           <Box
             sx={{
-              width: { xs: 50, sm: 60 }, // Responsive size
-              height: { xs: 50, sm: 60 }, // Responsive size
+              width: { xs: 50, sm: 60 },
+              height: { xs: 50, sm: 60 },
               bgcolor: "primary.main",
               borderRadius: "50%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              mb: 1,
-              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Add shadow to the logo
+              mb: 1.5,
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
             }}
           >
             <Typography
               variant={isMobile ? "h5" : "h4"}
               color="white"
               fontWeight="bold"
+              align="center"
             >
               C
             </Typography>
@@ -151,26 +134,50 @@ function AppLayout() {
             variant={isMobile ? "subtitle1" : "h6"}
             color="primary.main"
             fontWeight="bold"
+            align="center"
+            sx={{ mb: 0.5 }}
           >
             CLINNET
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+          <Typography 
+            variant="caption" 
+            color="text.secondary"
+            align="center"
+          >
             Healthcare Management
           </Typography>
         </Toolbar>
         <Divider />
-        <List>
+        <List sx={{ 
+          py: 1,
+          px: 0,
+          '& .MuiListItemButton-root': {
+            borderRadius: 0,
+            mx: 0
+          }
+        }}>
           {navLinks.map((link) => (
             <ActiveNavLink
               key={link.text}
               to={link.path}
               icon={link.icon}
               primary={link.text}
-              onClick={() => isMobile && setMobileOpen(false)} // Close drawer when clicking a link on mobile
+              onClick={() => isMobile && setMobileOpen(false)}
             />
           ))}
         </List>
-      </div>
+        <Box sx={{ flexGrow: 1 }} />
+        <Divider />
+        <Box sx={{ p: 2 }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            align="center"
+          >
+            © {new Date().getFullYear()} Clinnet
+          </Typography>
+        </Box>
+      </Box>
     ),
     [navLinks, isMobile]
   );
@@ -182,12 +189,10 @@ function AppLayout() {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          zIndex: (theme) => theme.zIndex.drawer + 1, // Ensure AppBar stays on top
+          zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
       >
         <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }}>
-          {" "}
-          {/* Responsive toolbar height */}
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -197,17 +202,35 @@ function AppLayout() {
           >
             <MenuIcon />
           </IconButton>
-          {/* Optional: Keep title if desired, or remove */}
-          <Typography
-            variant={isMobile ? "subtitle1" : "h6"}
-            noWrap
-            component="div"
-            sx={{ flexGrow: 1 /* Pushes icon to the right */ }}
-          >
-            {user?.role?.toUpperCase()} Portal
-          </Typography>
+          
+          {/* Centered Portal Title */}
+          <Box sx={{ 
+            flexGrow: 1, 
+            display: 'flex', 
+            justifyContent: 'center',
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            pointerEvents: 'none' // Ensures clicks pass through to elements below
+          }}>
+            <Typography
+              variant={isMobile ? "subtitle1" : "h6"}
+              noWrap
+              component="div"
+              sx={{ 
+                fontWeight: 500,
+                letterSpacing: 1
+              }}
+            >
+              {user?.role?.toUpperCase()} PORTAL
+            </Typography>
+          </Box>
+          
           {/* Profile Icon and Menu */}
-          <Box sx={{ flexShrink: 0 }}>
+          <Box sx={{ 
+            flexShrink: 0,
+            ml: 'auto' // Push to the right edge
+          }}>
             <IconButton
               onClick={handleMenuOpen}
               size={isMobile ? "medium" : "large"}
@@ -216,7 +239,6 @@ function AppLayout() {
               aria-haspopup="true"
               color="inherit"
             >
-              {/* Replace with actual user photo URL if available */}
               {user?.photoURL ? (
                 <Avatar
                   alt={user.username}
@@ -249,19 +271,44 @@ function AppLayout() {
               transformOrigin={{ vertical: "top", horizontal: "right" }}
               open={open}
               onClose={handleMenuClose}
+              PaperProps={{
+                sx: {
+                  minWidth: 180,
+                  '& .MuiMenuItem-root': {
+                    px: 2,
+                    py: 1,
+                    '& .MuiListItemIcon-root': {
+                      minWidth: 36,
+                      color: 'text.secondary'
+                    }
+                  }
+                }
+              }}
             >
               <MenuItem onClick={() => handleNavigate("/account-settings")}>
                 <ListItemIcon>
                   <SettingsIcon fontSize="small" />
                 </ListItemIcon>
-                Settings
+                <ListItemText 
+                  primary="Settings" 
+                  primaryTypographyProps={{ 
+                    variant: 'body2',
+                    sx: { fontWeight: 500 }
+                  }}
+                />
               </MenuItem>
               <Divider />
               <MenuItem onClick={logout}>
                 <ListItemIcon>
                   <LogoutIcon fontSize="small" />
                 </ListItemIcon>
-                Logout
+                <ListItemText 
+                  primary="Logout" 
+                  primaryTypographyProps={{ 
+                    variant: 'body2',
+                    sx: { fontWeight: 500 }
+                  }}
+                />
               </MenuItem>
             </Menu>
           </Box>
@@ -270,7 +317,7 @@ function AppLayout() {
       <Box
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
+        aria-label="navigation drawer"
       >
         {/* Temporary drawer for mobile */}
         <Drawer
@@ -312,12 +359,11 @@ function AppLayout() {
         component="main"
         sx={{
           flexGrow: 1,
-          p: { xs: 2, sm: 3 }, // Responsive padding
-          width: "100%", // Full width
+          p: { xs: 2, sm: 3 },
+          width: "100%",
         }}
       >
-        <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }} />{" "}
-        {/* Responsive spacer for AppBar */}
+        <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }} />
         <Box
           sx={{
             display: "flex",
@@ -326,19 +372,19 @@ function AppLayout() {
             height: {
               xs: "calc(100vh - 112px)",
               sm: "calc(100vh - 128px)",
-            } /* Use fixed height instead of minHeight */,
+            },
             width: "100%",
-            overflow: "hidden" /* Prevent scrolling at this level */,
+            overflow: "hidden",
           }}
         >
           <Box
             sx={{
               width: "100%",
-              height: "100%" /* Take full height */,
-              overflow: "auto" /* Allow scrolling at this level if needed */,
+              height: "100%",
+              overflow: "auto",
             }}
           >
-            <Outlet /> {/* Renders the matched child route's element */}
+            <Outlet />
           </Box>
         </Box>
       </Box>

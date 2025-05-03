@@ -2,10 +2,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
 import {
-  Container,
   Box,
-  TextField,
-  Button,
   Typography,
   Alert,
   Paper,
@@ -15,13 +12,23 @@ import {
   IconButton,
   Divider,
   CircularProgress,
-  Link
+  Link,
+  TextField
 } from "@mui/material";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
+
+import { 
+  PageContainer, 
+  FlexBox, 
+  PrimaryButton, 
+  SecondaryButton, 
+  BodyText, 
+  SecondaryText 
+} from '../components/ui';
 
 function LoginPage() {
   const [username, setUsername] = useState("");
@@ -79,7 +86,7 @@ function LoginPage() {
         backgroundColor: '#f5f7fa'
       }}
     >
-      <Container maxWidth="md">
+      <Box maxWidth="md" sx={{ width: '100%' }}>
         <Paper 
           elevation={4}
           sx={{
@@ -173,15 +180,9 @@ function LoginPage() {
             >
               Sign In
             </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                mb: 4,
-                color: 'text.secondary'
-              }}
-            >
+            <SecondaryText sx={{ mb: 4 }}>
               Enter your credentials to access your account
-            </Typography>
+            </SecondaryText>
 
             {error && (
               <Alert 
@@ -254,23 +255,12 @@ function LoginPage() {
                 }}
               />
 
-              <Button
+              <PrimaryButton
                 type="submit"
                 fullWidth
-                variant="contained"
                 size="large"
                 disabled={isLoading || !username || !password}
-                sx={{ 
-                  mt: 1, 
-                  mb: 3,
-                  py: 1.5,
-                  borderRadius: 2,
-                  position: 'relative',
-                  boxShadow: '0 4px 14px rgba(25, 118, 210, 0.3)',
-                  '&:hover': {
-                    boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
-                  }
-                }}
+                sx={{ mt: 1, mb: 3 }}
               >
                 {isLoading ? (
                   <CircularProgress 
@@ -281,7 +271,7 @@ function LoginPage() {
                     }} 
                   />
                 ) : 'Sign In'}
-              </Button>
+              </PrimaryButton>
 
               <Box sx={{ mb: 3 }}>
                 <Divider>
@@ -299,41 +289,32 @@ function LoginPage() {
                 </Divider>
               </Box>
 
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  gap: 1.5,
-                  justifyContent: 'space-between'
-                }}
+              <FlexBox 
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1.5}
+                justify="space-between"
               >
                 {demoCredentials.map((demo) => (
-                  <Button
+                  <SecondaryButton
                     key={demo.role}
-                    variant="outlined"
                     size="small"
                     onClick={() => handleDemoLogin(demo.username, demo.password)}
-                    sx={{ 
-                      flex: { sm: 1 },
-                      borderRadius: 1.5,
-                      textTransform: 'none',
-                      fontWeight: 500
-                    }}
+                    sx={{ flex: { sm: 1 } }}
                   >
                     {demo.role}
-                  </Button>
+                  </SecondaryButton>
                 ))}
-              </Box>
+              </FlexBox>
 
               <Box sx={{ mt: 3, textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
+                <SecondaryText sx={{ mb: 0 }}>
                   Having trouble signing in? <Link href="#" underline="hover">Contact Support</Link>
-                </Typography>
+                </SecondaryText>
               </Box>
             </Box>
           </Box>
         </Paper>
-      </Container>
+      </Box>
     </Box>
   );
 }

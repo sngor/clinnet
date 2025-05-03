@@ -12,6 +12,7 @@ import AccountSettingsPage from "../pages/AccountSettingsPage";
 import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage";
 import DoctorAppointmentsPage from "../pages/DoctorAppointmentsPage";
 import AdminAppointmentsPage from "../pages/AdminAppointmentsPage";
+import StyleGuidePage from "../pages/StyleGuidePage"; // Import the style guide page
 import AppLayout from "../components/Layout/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -20,6 +21,9 @@ function AppRouter() {
     <Routes>
       {/* Public Route */}
       <Route path="/login" element={<LoginPage />} />
+
+      {/* Style Guide Route - accessible without login for development purposes */}
+      <Route path="/style-guide" element={<StyleGuidePage />} />
 
       {/* Protected Routes within AppLayout */}
       {/* This outer ProtectedRoute ensures user is logged in for any route within AppLayout */}

@@ -7,10 +7,8 @@ import {
   Tabs, 
   Tab, 
   Grid,
-  Button,
   Container
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import FrontdeskAppointmentCalendar from '../features/appointments/components/FrontdeskAppointmentCalendar';
 import AppointmentCard from '../components/AppointmentCard';
 import PageHeader from '../components/PageHeader';
@@ -74,25 +72,12 @@ function AdminAppointmentsPage() {
     setTabValue(newValue);
   };
 
-  // Action button for the header
-  const actionButton = (
-    <Button
-      variant="contained"
-      startIcon={<AddIcon />}
-      onClick={() => console.log("New appointment button clicked")}
-      sx={{ borderRadius: 1.5 }}
-    >
-      New Appointment
-    </Button>
-  );
-
   return (
     <Container maxWidth="xl" disableGutters>
       {/* Use the consistent PageHeader component */}
       <PageHeader 
         title="Appointments" 
         subtitle="View and manage all clinic appointments"
-        action={actionButton}
       />
 
       <Tabs 

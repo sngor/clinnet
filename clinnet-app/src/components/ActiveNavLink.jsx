@@ -16,6 +16,10 @@ function ActiveNavLink({ to, icon, primary, onClick, ...props }) {
       onClick={onClick}
       className="nav-link"
       sx={(theme) => ({
+        py: 1.5, // Consistent vertical padding
+        px: 2, // Consistent horizontal padding
+        display: 'flex',
+        alignItems: 'center',
         "&:hover": {
           backgroundColor: "rgba(25, 118, 210, 0.04)", // Very light blue background on hover
           "& .MuiListItemText-primary": {
@@ -38,12 +42,35 @@ function ActiveNavLink({ to, icon, primary, onClick, ...props }) {
       })}
       {...props}
     >
-      {icon && <ListItemIcon>{icon}</ListItemIcon>}
+      {icon && (
+        <ListItemIcon 
+          sx={{ 
+            minWidth: 36, // Reduce the default width for better alignment
+            mr: 1.5, // Add consistent margin to the right
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'text.secondary' // Consistent color for inactive state
+          }}
+        >
+          {icon}
+        </ListItemIcon>
+      )}
       <ListItemText 
         primary={primary} 
+        disableTypography={false}
         primaryTypographyProps={{
           fontSize: { xs: "0.9rem", sm: "1rem" }, // Responsive text size
+          fontWeight: 500, // Medium weight for better readability
+          variant: 'body2'
         }}
+        sx={{ 
+          my: 0, // Remove default margin for better vertical alignment
+          '& .MuiListItemText-primary': {
+            display: 'block', // Ensure text is on its own line
+            whiteSpace: 'nowrap' // Prevent text wrapping
+          }
+        }} 
       />
     </ListItemButton>
   );

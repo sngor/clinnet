@@ -17,7 +17,6 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { useNavigate } from 'react-router-dom';
-import PageHeader from '../components/PageHeader';
 
 // Mock patient data
 const mockPatients = [
@@ -128,31 +127,66 @@ function FrontdeskPatientsPage() {
 
   // Handle new patient registration
   const handleNewPatient = () => {
-    // In a real app, navigate to new patient form
+    // Show a simple alert for now to verify the button works
+    window.alert("Add New Patient button clicked! This feature is under development.");
     console.log('Creating new patient');
-    // navigate('/frontdesk/patients/new');
   };
-
-  // Action button for the header
-  const actionButton = (
-    <Button
-      variant="contained"
-      startIcon={<PersonAddIcon />}
-      onClick={handleNewPatient}
-      sx={{ borderRadius: 1.5 }}
-    >
-      New Patient
-    </Button>
-  );
 
   return (
     <Container maxWidth="xl" disableGutters>
-      {/* Use the consistent PageHeader component */}
-      <PageHeader 
-        title="Patient Management" 
-        subtitle="Search, view, and manage patient records"
-        action={actionButton}
-      />
+      {/* Page header */}
+      <Box 
+        sx={{ 
+          mb: 4,
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: 2
+        }}
+      >
+        <Box sx={{ textAlign: 'left', width: '100%' }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 500, 
+              color: 'primary.main',
+              mb: 0.5,
+              textAlign: 'left'
+            }}
+          >
+            Patient Management
+          </Typography>
+          
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ 
+              mt: 0.5, 
+              mb: 0, 
+              fontSize: '1rem', 
+              textAlign: 'left' 
+            }}
+          >
+            Search, view, and manage patient records
+          </Typography>
+        </Box>
+        
+        <Box sx={{ 
+          alignSelf: { xs: 'flex-start', sm: 'center' },
+          flexShrink: 0
+        }}>
+          <Button
+            variant="contained"
+            startIcon={<PersonAddIcon />}
+            onClick={handleNewPatient}
+            sx={{ borderRadius: 1.5 }}
+          >
+            New Patient
+          </Button>
+        </Box>
+      </Box>
 
       {/* Search bar */}
       <Paper 
