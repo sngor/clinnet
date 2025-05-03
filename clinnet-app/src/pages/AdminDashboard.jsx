@@ -8,9 +8,7 @@ import {
   useMediaQuery, 
   useTheme, 
   Box, 
-  Button,
   Container,
-  Stack,
   CircularProgress,
   List,
   ListItem,
@@ -19,9 +17,11 @@ import {
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
+import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
+import PersonIcon from "@mui/icons-material/Person";
 import { useNavigate } from "react-router-dom";
-import LinkButton from "../components/LinkButton";
 import { PageHeaderWithDivider } from "../components/PageHeader";
+import DashboardCard from "../components/DashboardCard";
 
 // Mock data for today's appointments
 const mockAppointments = [
@@ -115,133 +115,43 @@ function AdminDashboard() {
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <Paper
-            elevation={0}
-            sx={{ 
-              p: 3, 
-              display: "flex", 
-              flexDirection: "column", 
-              height: 180,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              position: "relative",
-              overflow: "hidden",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                boxShadow: 3,
-                transform: "translateY(-4px)"
-              }
-            }}
-          >
-            <Box 
-              sx={{ 
-                position: "absolute",
-                top: 10,
-                right: 10,
-                color: "primary.light",
-                opacity: 0.15,
-                transform: "scale(2.5)",
-                transformOrigin: "top right"
-              }}
-            >
-              <PeopleIcon fontSize="large" />
-            </Box>
-            <Typography 
-              component="h2" 
-              variant="h6" 
-              color="primary.main" 
-              fontWeight="medium"
-            >
-              Total Users
-            </Typography>
-            <Typography 
-              component="p" 
-              variant="h2" 
-              sx={{ 
-                mt: 2, 
-                mb: 2,
-                fontWeight: 'bold' 
-              }}
-            >
-              4
-            </Typography>
-            <LinkButton 
-              to="/admin/users"
-              sx={{ 
-                alignSelf: "flex-start", 
-                mt: "auto",
-                pl: 0
-              }}
-            >
-              Manage Users
-            </LinkButton>
-          </Paper>
+          <DashboardCard 
+            icon={<PeopleIcon fontSize="large" />}
+            title="Users"
+            value={4}
+            linkText="Manage Users"
+            linkTo="/admin/users"
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <Paper
-            elevation={0}
-            sx={{ 
-              p: 3, 
-              display: "flex", 
-              flexDirection: "column", 
-              height: 180,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              position: "relative",
-              overflow: "hidden",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                boxShadow: 3,
-                transform: "translateY(-4px)"
-              }
-            }}
-          >
-            <Box 
-              sx={{ 
-                position: "absolute",
-                top: 10,
-                right: 10,
-                color: "primary.light",
-                opacity: 0.15,
-                transform: "scale(2.5)",
-                transformOrigin: "top right"
-              }}
-            >
-              <EventIcon fontSize="large" />
-            </Box>
-            <Typography 
-              component="h2" 
-              variant="h6" 
-              color="primary.main"
-              fontWeight="medium"
-            >
-              Today's Appointments
-            </Typography>
-            <Typography 
-              component="p" 
-              variant="h2" 
-              sx={{ 
-                mt: 2, 
-                mb: 2,
-                fontWeight: 'bold'
-              }}
-            >
-              {appointments.length}
-            </Typography>
-            <LinkButton 
-              to="/admin/appointments"
-              sx={{ 
-                alignSelf: "flex-start", 
-                mt: "auto",
-                pl: 0
-              }}
-            >
-              View All
-            </LinkButton>
-          </Paper>
+          <DashboardCard 
+            icon={<EventIcon fontSize="large" />}
+            title="Appointments"
+            value={appointments.length}
+            linkText="View All"
+            linkTo="/admin/appointments"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <DashboardCard 
+            icon={<PersonIcon fontSize="large" />}
+            title="Patients"
+            value={6} // Mock value
+            linkText="View All"
+            linkTo="/admin/patients"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <DashboardCard 
+            icon={<LocalHospitalIcon fontSize="large" />}
+            title="Doctors"
+            value={4}
+            linkText="View All"
+            linkTo="/admin/users"
+          />
         </Grid>
       </Grid>
 
@@ -304,12 +214,6 @@ function AdminDashboard() {
               </React.Fragment>
             ))}
           </List>
-        )}
-        
-        {!loading && appointments.length === 0 && (
-          <Typography sx={{ textAlign: 'center', py: 4 }}>
-            No appointments scheduled for today
-          </Typography>
         )}
       </Paper>
     </Container>

@@ -6,8 +6,9 @@ import AdminDashboard from "../pages/AdminDashboard";
 import DoctorDashboard from "../pages/DoctorDashboard";
 import FrontDeskDashboard from "../pages/FrontDeskDashboard";
 import PatientManagementPage from "../pages/PatientManagementPage";
+import AdminPatientsPage from "../pages/AdminPatientsPage";
 import PatientDetailPage from "../pages/PatientDetailPage";
-import NewPatientPage from "../pages/NewPatientPage"; // Import the new NewPatientPage
+import NewPatientPage from "../pages/NewPatientPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import UserManagementPage from "../pages/UserManagementPage";
 import AccountSettingsPage from "../pages/AccountSettingsPage";
@@ -60,6 +61,24 @@ function AppRouter() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminAppointmentsPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Add route for Admin Patients */}
+        <Route
+          path="/admin/patients"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminPatientsPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Admin New Patient Page */}
+        <Route
+          path="/admin/patients/new"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <NewPatientPage />
             </ProtectedRoute>
           }
         />

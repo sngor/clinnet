@@ -1,55 +1,71 @@
 // src/pages/DoctorDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
-import {
-  Box,
-  Typography,
-  Paper,
+import { 
+  Grid, 
+  Paper, 
+  Typography, 
+  useMediaQuery, 
+  useTheme, 
+  Box, 
+  Container,
+  CircularProgress,
   List,
   ListItem,
   Divider,
-  Container,
-  Grid,
   Chip,
-  CircularProgress,
-  Alert
+  Button
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import LinkButton from "../components/LinkButton";
-import { PageHeaderWithDivider } from "../components/PageHeader";
+import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import PeopleIcon from "@mui/icons-material/People";
+import { useNavigate } from "react-router-dom";
+import { PageHeaderWithDivider } from "../components/PageHeader";
+import DashboardCard from "../components/DashboardCard";
 
-// Mock data for today's appointments
+// Mock data for doctor's appointments
 const mockAppointments = [
   {
     id: 301,
     patientName: "Alice Brown",
     time: "09:00 AM",
     status: "Scheduled",
-    type: "Checkup"
+    type: "Checkup",
+    notes: "Annual physical examination"
   },
   {
     id: 302,
     patientName: "Bob White",
     time: "09:30 AM",
     status: "Checked-in",
-    type: "Follow-up"
+    type: "Follow-up",
+    notes: "Follow-up on medication adjustment"
   },
   {
     id: 303,
     patientName: "Charlie Green",
     time: "10:00 AM",
     status: "In Progress",
-    type: "Consultation"
+    type: "Consultation",
+    notes: "New symptoms discussion"
   }
+];
+
+// Mock data for doctor's patients
+const mockPatients = [
+  { id: 1, name: "John Doe", lastVisit: "2023-11-20" },
+  { id: 2, name: "Jane Smith", lastVisit: "2023-10-05" },
+  { id: 3, name: "Michael Johnson", lastVisit: "2023-09-20" },
+  { id: 4, name: "Emily Williams", lastVisit: "2023-11-25" }
 ];
 
 function DoctorDashboard() {
   const { user } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
+  const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -65,15 +81,16 @@ function DoctorDashboard() {
     }
   };
 
-  // Fetch today's appointments (using mock data)
+  // Fetch data (using mock data)
   useEffect(() => {
     // Simulate API call
     setTimeout(() => {
       try {
         setAppointments(mockAppointments);
+        setPatients(mockPatients);
         setLoading(false);
       } catch (err) {
-        setError(`Failed to load appointments: ${err.message}`);
+        setError(`Failed to load data: ${err.message}`);
         setLoading(false);
       }
     }, 500); // Simulate network delay
@@ -108,133 +125,33 @@ function DoctorDashboard() {
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <Paper
-            elevation={0}
-            sx={{ 
-              p: 3, 
-              display: "flex", 
-              flexDirection: "column", 
-              height: 180,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              position: "relative",
-              overflow: "hidden",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                boxShadow: 3,
-                transform: "translateY(-4px)"
-              }
-            }}
-          >
-            <Box 
-              sx={{ 
-                position: "absolute",
-                top: 10,
-                right: 10,
-                color: "primary.light",
-                opacity: 0.15,
-                transform: "scale(2.5)",
-                transformOrigin: "top right"
-              }}
-            >
-              <EventIcon fontSize="large" />
-            </Box>
-            <Typography 
-              component="h2" 
-              variant="h6" 
-              color="primary.main" 
-              fontWeight="medium"
-            >
-              Today's Appointments
-            </Typography>
-            <Typography 
-              component="p" 
-              variant="h2" 
-              sx={{ 
-                mt: 2, 
-                mb: 2,
-                fontWeight: 'bold' 
-              }}
-            >
-              {appointments.length}
-            </Typography>
-            <LinkButton 
-              to="/doctor/appointments"
-              sx={{ 
-                alignSelf: "flex-start", 
-                mt: "auto",
-                pl: 0
-              }}
-            >
-              View All
-            </LinkButton>
-          </Paper>
+          <DashboardCard 
+            icon={<EventIcon fontSize="large" />}
+            title="Appointments"
+            value={appointments.length}
+            linkText="View All"
+            linkTo="/doctor/appointments"
+          />
         </Grid>
 
         <Grid item xs={12} sm={6} md={4} lg={3}>
-          <Paper
-            elevation={0}
-            sx={{ 
-              p: 3, 
-              display: "flex", 
-              flexDirection: "column", 
-              height: 180,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              position: "relative",
-              overflow: "hidden",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                boxShadow: 3,
-                transform: "translateY(-4px)"
-              }
-            }}
-          >
-            <Box 
-              sx={{ 
-                position: "absolute",
-                top: 10,
-                right: 10,
-                color: "primary.light",
-                opacity: 0.15,
-                transform: "scale(2.5)",
-                transformOrigin: "top right"
-              }}
-            >
-              <PeopleIcon fontSize="large" />
-            </Box>
-            <Typography 
-              component="h2" 
-              variant="h6" 
-              color="primary.main"
-              fontWeight="medium"
-            >
-              My Patients
-            </Typography>
-            <Typography 
-              component="p" 
-              variant="h2" 
-              sx={{ 
-                mt: 2, 
-                mb: 2,
-                fontWeight: 'bold'
-              }}
-            >
-              24
-            </Typography>
-            <LinkButton 
-              to="/doctor/patients"
-              sx={{ 
-                alignSelf: "flex-start", 
-                mt: "auto",
-                pl: 0
-              }}
-            >
-              View Patients
-            </LinkButton>
-          </Paper>
+          <DashboardCard 
+            icon={<PeopleIcon fontSize="large" />}
+            title="Patients"
+            value={patients.length}
+            linkText="View All"
+            linkTo="/doctor/patients"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <DashboardCard 
+            icon={<AssignmentIcon fontSize="large" />}
+            title="Records"
+            value={12}
+            linkText="View All"
+            linkTo="/doctor/patients"
+          />
         </Grid>
       </Grid>
 
@@ -245,7 +162,8 @@ function DoctorDashboard() {
           p: { xs: 2, sm: 3 },
           borderRadius: 2,
           border: '1px solid',
-          borderColor: 'divider'
+          borderColor: 'divider',
+          mb: 4
         }}
       >
         <Typography 
@@ -254,14 +172,8 @@ function DoctorDashboard() {
           fontWeight="medium"
           sx={{ mb: 3 }}
         >
-          Upcoming Appointments
+          Today's Schedule
         </Typography>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
 
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', py: 4 }}>
@@ -287,6 +199,11 @@ function DoctorDashboard() {
                     <Typography variant="body2" color="text.secondary">
                       Type: {appt.type}
                     </Typography>
+                    {appt.notes && (
+                      <Typography variant="body2" color="text.secondary">
+                        Notes: {appt.notes}
+                      </Typography>
+                    )}
                   </Box>
                   
                   <Chip 
@@ -300,12 +217,6 @@ function DoctorDashboard() {
               </React.Fragment>
             ))}
           </List>
-        )}
-        
-        {!loading && appointments.length === 0 && (
-          <Typography sx={{ textAlign: 'center', py: 4 }}>
-            No appointments scheduled for today
-          </Typography>
         )}
       </Paper>
     </Container>

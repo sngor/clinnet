@@ -1,13 +1,11 @@
 // src/components/Layout/AppLayout.jsx
 import React, { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import ActiveNavLink from "../ActiveNavLink";
 import {
   Box,
   Drawer,
   AppBar,
   Toolbar,
-  List,
   Typography,
   Divider,
   IconButton,
@@ -20,13 +18,13 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
-import HomeIcon from "@mui/icons-material/Home";
-import PeopleIcon from "@mui/icons-material/People";
-import EventIcon from "@mui/icons-material/Event";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useAuth } from "../../app/providers/AuthProvider";
+import AdminSidebar from "./AdminSidebar";
+import DoctorSidebar from "./DoctorSidebar";
+import FrontdeskSidebar from "./FrontdeskSidebar";
 
 const drawerWidth = 240;
 
@@ -61,37 +59,19 @@ function AppLayout() {
     }
   };
 
-  // Define navigation links based on role
-  const getNavLinks = (role) => {
-    const baseLinks = [];
-    switch (role) {
+  // Render sidebar based on user role
+  const renderSidebar = () => {
+    switch (user?.role) {
       case "admin":
-        return [
-          ...baseLinks,
-          { text: "Dashboard", path: "/admin", icon: <HomeIcon /> },
-          { text: "Appointments", path: "/admin/appointments", icon: <EventIcon /> },
-          { text: "Users", path: "/admin/users", icon: <PeopleIcon /> },
-        ];
+        return <AdminSidebar />;
       case "doctor":
-        return [
-          ...baseLinks,
-          { text: "Dashboard", path: "/doctor", icon: <HomeIcon /> },
-          { text: "Patients", path: "/doctor/patients", icon: <PeopleIcon /> },
-          { text: "Appointments", path: "/doctor/appointments", icon: <EventIcon /> },
-        ];
+        return <DoctorSidebar />;
       case "frontdesk":
-        return [
-          ...baseLinks,
-          { text: "Dashboard", path: "/frontdesk", icon: <HomeIcon /> },
-          { text: "Appointments", path: "/frontdesk/appointments", icon: <EventIcon /> },
-          { text: "Patients", path: "/frontdesk/patients", icon: <PeopleIcon /> },
-        ];
+        return <FrontdeskSidebar />;
       default:
-        return baseLinks;
+        return null;
     }
   };
-
-  const navLinks = React.useMemo(() => getNavLinks(user?.role), [user?.role]);
 
   const drawer = React.useMemo(
     () => (
@@ -148,25 +128,13 @@ function AppLayout() {
           </Typography>
         </Toolbar>
         <Divider />
-        <List sx={{ 
-          py: 1,
-          px: 0,
-          '& .MuiListItemButton-root': {
-            borderRadius: 0,
-            mx: 0
-          }
+        <Box sx={{ 
+          width: '100%',
+          flexGrow: 1,
+          overflow: 'auto'
         }}>
-          {navLinks.map((link) => (
-            <ActiveNavLink
-              key={link.text}
-              to={link.path}
-              icon={link.icon}
-              primary={link.text}
-              onClick={() => isMobile && setMobileOpen(false)}
-            />
-          ))}
-        </List>
-        <Box sx={{ flexGrow: 1 }} />
+          {renderSidebar()}
+        </Box>
         <Divider />
         <Box sx={{ p: 2 }}>
           <Typography 
@@ -179,7 +147,7 @@ function AppLayout() {
         </Box>
       </Box>
     ),
-    [navLinks, isMobile]
+    [user?.role, isMobile]
   );
 
   return (
