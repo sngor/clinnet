@@ -1,18 +1,20 @@
-// src/app/router.jsx (Example structure)
+// src/app/router.jsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard";
 import DoctorDashboard from "../pages/DoctorDashboard";
 import FrontDeskDashboard from "../pages/FrontDeskDashboard";
-import PatientManagementPage from "../pages/PatientManagementPage"; // Use the consistent patient management page
+import PatientManagementPage from "../pages/PatientManagementPage";
+import PatientDetailPage from "../pages/PatientDetailPage";
+import NewPatientPage from "../pages/NewPatientPage"; // Import the new NewPatientPage
 import NotFoundPage from "../pages/NotFoundPage";
 import UserManagementPage from "../pages/UserManagementPage";
 import AccountSettingsPage from "../pages/AccountSettingsPage";
 import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage";
 import DoctorAppointmentsPage from "../pages/DoctorAppointmentsPage";
 import AdminAppointmentsPage from "../pages/AdminAppointmentsPage";
-import StyleGuidePage from "../pages/StyleGuidePage"; // Import the style guide page
+import StyleGuidePage from "../pages/StyleGuidePage";
 import AppLayout from "../components/Layout/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -61,12 +63,30 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
+        {/* Admin Patient Detail Page */}
+        <Route
+          path="/admin/patients/:id"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <PatientDetailPage />
+            </ProtectedRoute>
+          }
+        />
         {/* Patient Management for Doctor */}
         <Route
           path="/doctor/patients"
           element={
             <ProtectedRoute allowedRoles={["doctor"]}>
               <PatientManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Doctor Patient Detail Page */}
+        <Route
+          path="/doctor/patients/:id"
+          element={
+            <ProtectedRoute allowedRoles={["doctor"]}>
+              <PatientDetailPage />
             </ProtectedRoute>
           }
         />
@@ -108,6 +128,24 @@ function AppRouter() {
           element={
             <ProtectedRoute allowedRoles={["frontdesk"]}>
               <PatientManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* New Patient Page for Front Desk */}
+        <Route
+          path="/frontdesk/patients/new"
+          element={
+            <ProtectedRoute allowedRoles={["frontdesk"]}>
+              <NewPatientPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Frontdesk Patient Detail Page */}
+        <Route
+          path="/frontdesk/patients/:id"
+          element={
+            <ProtectedRoute allowedRoles={["frontdesk"]}>
+              <PatientDetailPage />
             </ProtectedRoute>
           }
         />

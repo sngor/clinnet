@@ -126,16 +126,28 @@ function PatientManagementPage() {
 
   // Handle view patient details
   const handleViewPatient = (patientId) => {
-    // In a real app, navigate to patient detail page
-    console.log(`Viewing patient ${patientId}`);
-    // navigate(`/patients/${patientId}`);
+    console.log(`Navigating to patient ${patientId}`);
+    
+    // Navigate to the patient detail page based on user role
+    if (user?.role === 'doctor') {
+      navigate(`/doctor/patients/${patientId}`);
+    } else if (user?.role === 'frontdesk') {
+      navigate(`/frontdesk/patients/${patientId}`);
+    } else if (user?.role === 'admin') {
+      navigate(`/admin/patients/${patientId}`);
+    }
   };
 
   // Handle new patient registration
   const handleNewPatient = () => {
-    // In a real app, navigate to new patient form
     console.log('Creating new patient');
-    // navigate('/patients/new');
+    
+    // Navigate to the new patient page based on user role
+    if (user?.role === 'frontdesk') {
+      navigate('/frontdesk/patients/new');
+    } else if (user?.role === 'admin') {
+      navigate('/admin/patients/new');
+    }
   };
 
   // Handle tab change

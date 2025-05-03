@@ -120,16 +120,13 @@ function FrontdeskPatientsPage() {
 
   // Handle view patient details
   const handleViewPatient = (patientId) => {
-    // In a real app, navigate to patient detail page
-    console.log(`Viewing patient ${patientId}`);
-    // navigate(`/frontdesk/patients/${patientId}`);
+    navigate(`/frontdesk/patients/${patientId}`);
   };
 
   // Handle new patient registration
   const handleNewPatient = () => {
-    // Show a simple alert for now to verify the button works
-    window.alert("Add New Patient button clicked! This feature is under development.");
     console.log('Creating new patient');
+    navigate('/frontdesk/patients/new');
   };
 
   return (
