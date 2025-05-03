@@ -10,6 +10,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
   Paper,
   IconButton,
   Dialog,
@@ -56,9 +57,73 @@ const initialUsers = [
     phone: "+1 (555) 345-6789",
     role: "frontdesk",
   },
+  {
+    id: 4,
+    username: "doctor2",
+    firstName: "Carol",
+    lastName: "Williams",
+    email: "carol.williams@clinnet.com",
+    phone: "+1 (555) 456-7890",
+    role: "doctor",
+  },
+  {
+    id: 5,
+    username: "frontdesk2",
+    firstName: "David",
+    lastName: "Brown",
+    email: "david.brown@clinnet.com",
+    phone: "+1 (555) 567-8901",
+    role: "frontdesk",
+  },
 ];
 
 const roles = ["admin", "doctor", "frontdesk"];
+
+// Table column definitions
+const columns = [
+  { id: 'id', label: 'ID', numeric: true },
+  { id: 'username', label: 'Username', numeric: false },
+  { id: 'firstName', label: 'First Name', numeric: false },
+  { id: 'lastName', label: 'Last Name', numeric: false },
+  { id: 'email', label: 'Email', numeric: false },
+  { id: 'phone', label: 'Phone', numeric: false },
+  { id: 'role', label: 'Role', numeric: false },
+];
+
+function descendingComparator(a, b, orderBy) {
+  // Handle null or undefined values
+  if (b[orderBy] == null) return -1;
+  if (a[orderBy] == null) return 1;
+  
+  // Compare based on type
+  if (typeof b[orderBy] === 'string') {
+    return b[orderBy].toLowerCase().localeCompare(a[orderBy].toLowerCase());
+  } else {
+    if (b[orderBy] < a[orderBy]) {
+      return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+function getComparator(order, orderBy) {
+  return order === 'desc'
+    ? (a, b) => descendingComparator(a, b, orderBy)
+    : (a, b) => -descendingComparator(a, b, orderBy);
+}
+
+function stableSort(array, comparator) {
+  const stabilizedThis = array.map((el, index) => [el, index]);
+  stabilizedThis.sort((a, b) => {
+    const order = comparator(a[0], b[0]);
+    if (order !== 0) return order;
+    return a[1] - b[1]; // Preserve original order if values are equal
+  });
+  return stabilizedThis.map((el) => el[0]);
+}
 
 function UserList() {
   const [users, setUsers] = useState(initialUsers);
@@ -74,6 +139,10 @@ function UserList() {
     role: "",
     password: ""
   });
+  
+  // Sorting state
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('id');
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -150,6 +219,18 @@ function UserList() {
     setOpenDelete(false);
   };
 
+  // Handle sort request
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  // Create sort handler for a column
+  const createSortHandler = (property) => () => {
+    handleRequestSort(property);
+  };
+
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ 
@@ -174,18 +255,25 @@ function UserList() {
         <Table sx={{ minWidth: 650 }} aria-label="users table">
           <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Username</TableCell>
-              <TableCell>First Name</TableCell>
-              <TableCell>Last Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Role</TableCell>
+              {columns.map((column) => (
+                <TableCell 
+                  key={column.id}
+                  sortDirection={orderBy === column.id ? order : false}
+                >
+                  <TableSortLabel
+                    active={orderBy === column.id}
+                    direction={orderBy === column.id ? order : 'asc'}
+                    onClick={createSortHandler(column.id)}
+                  >
+                    {column.label}
+                  </TableSortLabel>
+                </TableCell>
+              ))}
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user) => (
+            {stableSort(users, getComparator(order, orderBy)).map((user) => (
               <TableRow
                 key={user.id}
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
