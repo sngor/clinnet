@@ -9,7 +9,7 @@ import {
   Grid,
   Container
 } from '@mui/material';
-import FrontdeskAppointmentCalendar from '../features/appointments/components/FrontdeskAppointmentCalendar';
+import AppointmentCalendar from '../features/appointments/components/AppointmentCalendar';
 import AppointmentCard from '../components/AppointmentCard';
 import PageHeader from '../components/PageHeader';
 
@@ -100,7 +100,7 @@ function AdminAppointmentsPage() {
       </Tabs>
 
       {tabValue === 0 && (
-        <FrontdeskAppointmentCalendar />
+        <AppointmentCalendar />
       )}
 
       {tabValue === 1 && (
