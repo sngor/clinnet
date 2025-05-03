@@ -5,6 +5,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
 import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/Person';
+import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import ActiveNavLink from '../ActiveNavLink';
 
 function AdminSidebar() {
@@ -24,6 +25,11 @@ function AdminSidebar() {
         to="/admin/patients"
         icon={<PersonIcon />}
         primary="Patients"
+      />
+      <ActiveNavLink
+        to="/admin/services"
+        icon={<MedicalServicesIcon />}
+        primary="Services"
       />
       <ActiveNavLink
         to="/admin/users"

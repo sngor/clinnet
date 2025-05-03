@@ -2,17 +2,14 @@
 import React, { useState } from "react";
 import { 
   Box, 
-  Typography, 
   Button, 
   Table,
   TableBody,
   TableCell,
-  TableContainer,
+  TableContainer as MuiTableContainer,
   TableHead,
   TableRow,
   TableSortLabel,
-  Paper,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -22,11 +19,14 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  DialogContentText
+  IconButton,
+  Chip
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import TableContainer from "../../../components/TableContainer";
+import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
 
 // Placeholder data - replace with API data later via React Query
 const initialUsers = [
@@ -231,78 +231,93 @@ function UserList() {
     handleRequestSort(property);
   };
 
+  // Action button for the table
+  const actionButton = (
+    <Button 
+      variant="contained" 
+      startIcon={<AddIcon />}
+      onClick={handleAddUser}
+      sx={{ borderRadius: 1.5 }}
+    >
+      Add User
+    </Button>
+  );
+
   return (
     <Box sx={{ width: '100%' }}>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        mb: 2
-      }}>
-        <Typography variant="h6">
-          Users
-        </Typography>
-        <Button 
-          variant="contained" 
-          startIcon={<AddIcon />}
-          onClick={handleAddUser}
-        >
-          Add User
-        </Button>
-      </Box>
-      
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="users table">
-          <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell 
-                  key={column.id}
-                  sortDirection={orderBy === column.id ? order : false}
-                >
-                  <TableSortLabel
-                    active={orderBy === column.id}
-                    direction={orderBy === column.id ? order : 'asc'}
-                    onClick={createSortHandler(column.id)}
+      <TableContainer title="Users" action={actionButton}>
+        <MuiTableContainer sx={{ boxShadow: 'none' }}>
+          <Table 
+            sx={{ 
+              minWidth: 650,
+              '& .MuiTableCell-root': {
+                borderBottom: '1px solid rgba(224, 224, 224, 0.4)'
+              }
+            }} 
+            aria-label="users table"
+          >
+            <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+              <TableRow>
+                {columns.map((column) => (
+                  <TableCell 
+                    key={column.id}
+                    sortDirection={orderBy === column.id ? order : false}
                   >
-                    {column.label}
-                  </TableSortLabel>
-                </TableCell>
-              ))}
-              <TableCell align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {stableSort(users, getComparator(order, orderBy)).map((user) => (
-              <TableRow
-                key={user.id}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell component="th" scope="row">
-                  {user.id}
-                </TableCell>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.firstName}</TableCell>
-                <TableCell>{user.lastName}</TableCell>
-                <TableCell>{user.email || "-"}</TableCell>
-                <TableCell>{user.phone || "-"}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell align="center">
-                  <IconButton color="primary" size="small" onClick={() => handleEditUser(user)}>
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton color="error" size="small" onClick={() => handleDeleteClick(user)}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </TableCell>
+                    <TableSortLabel
+                      active={orderBy === column.id}
+                      direction={orderBy === column.id ? order : 'asc'}
+                      onClick={createSortHandler(column.id)}
+                    >
+                      {column.label}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
+                <TableCell align="center">Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {stableSort(users, getComparator(order, orderBy)).map((user) => (
+                <TableRow
+                  key={user.id}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                >
+                  <TableCell component="th" scope="row">
+                    {user.id}
+                  </TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.firstName}</TableCell>
+                  <TableCell>{user.lastName}</TableCell>
+                  <TableCell>{user.email || "-"}</TableCell>
+                  <TableCell>{user.phone || "-"}</TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={user.role.charAt(0).toUpperCase() + user.role.slice(1)} 
+                      size="small" 
+                      color={
+                        user.role === 'admin' ? 'error' : 
+                        user.role === 'doctor' ? 'primary' : 
+                        'secondary'
+                      }
+                      variant="outlined"
+                    />
+                  </TableCell>
+                  <TableCell align="center">
+                    <IconButton color="primary" size="small" onClick={() => handleEditUser(user)}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton color="error" size="small" onClick={() => handleDeleteClick(user)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </MuiTableContainer>
       </TableContainer>
 
       {/* Add/Edit User Dialog */}
-      <Dialog open={openAddEdit} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog open={openAddEdit} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>{currentUser ? "Edit User" : "Add New User"}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
@@ -383,28 +398,24 @@ function UserList() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSaveUser} variant="contained">
+          <Button 
+            onClick={handleSaveUser} 
+            variant="contained"
+            disabled={!formData.username || !formData.firstName || !formData.lastName || !formData.role}
+          >
             {currentUser ? "Save Changes" : "Add User"}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={openDelete} onClose={handleCloseDialog}>
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete the user "{currentUser?.username}"? 
-            This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleDeleteUser} color="error" variant="contained">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDeleteDialog
+        open={openDelete}
+        onClose={handleCloseDialog}
+        onConfirm={handleDeleteUser}
+        itemName={currentUser?.username}
+        itemType="user"
+      />
     </Box>
   );
 }
