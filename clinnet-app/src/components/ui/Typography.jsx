@@ -1,140 +1,66 @@
 // src/components/ui/Typography.jsx
 import React from 'react';
-import { Typography as MuiTypography } from '@mui/material';
+import { Typography } from '@mui/material';
+import { styled } from '@mui/material/styles';
 
-/**
- * Consistent typography components for use throughout the application
- */
+// Page title (h1)
+export const PageTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '2rem',
+  fontWeight: 700,
+  color: theme.palette.text.primary,
+  marginBottom: theme.spacing(3),
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.75rem',
+  },
+}));
 
-export function PageTitle({ children, sx = {}, ...props }) {
-  return (
-    <MuiTypography
-      variant="h4"
-      component="h1"
-      sx={{
-        fontWeight: 500,
-        color: 'primary.main',
-        mb: 2,
-        textAlign: 'left',
-        ...sx
-      }}
-      {...props}
-    >
-      {children}
-    </MuiTypography>
-  );
-}
+// Section title (h2)
+export const SectionTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1.5rem',
+  fontWeight: 600,
+  color: theme.palette.text.primary,
+  marginBottom: theme.spacing(2),
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.25rem',
+  },
+}));
 
-export function SectionTitle({ children, sx = {}, ...props }) {
-  return (
-    <MuiTypography
-      variant="h5"
-      component="h2"
-      sx={{
-        fontWeight: 500,
-        color: 'primary.main',
-        mb: 2,
-        textAlign: 'left',
-        ...sx
-      }}
-      {...props}
-    >
-      {children}
-    </MuiTypography>
-  );
-}
+// Subsection title (h3)
+export const SubsectionTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1.25rem',
+  fontWeight: 600,
+  color: theme.palette.text.primary,
+  marginBottom: theme.spacing(2),
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.1rem',
+  },
+}));
 
-export function SubsectionTitle({ children, sx = {}, ...props }) {
-  return (
-    <MuiTypography
-      variant="h6"
-      component="h3"
-      sx={{
-        fontWeight: 500,
-        mb: 1.5,
-        textAlign: 'left',
-        ...sx
-      }}
-      {...props}
-    >
-      {children}
-    </MuiTypography>
-  );
-}
+// Body text (p)
+export const BodyText = styled(Typography)(({ theme }) => ({
+  fontSize: '1rem',
+  color: theme.palette.text.primary,
+  marginBottom: theme.spacing(2),
+}));
 
-export function BodyText({ children, sx = {}, ...props }) {
-  return (
-    <MuiTypography
-      variant="body1"
-      sx={{
-        mb: 2,
-        textAlign: 'left',
-        ...sx
-      }}
-      {...props}
-    >
-      {children}
-    </MuiTypography>
-  );
-}
+// Secondary text (smaller, lighter)
+export const SecondaryText = styled(Typography)(({ theme }) => ({
+  fontSize: '0.875rem',
+  color: theme.palette.text.secondary,
+  marginBottom: theme.spacing(2),
+}));
 
-export function SecondaryText({ children, sx = {}, ...props }) {
-  return (
-    <MuiTypography
-      variant="body2"
-      color="text.secondary"
-      sx={{
-        mb: 1.5,
-        textAlign: 'left',
-        ...sx
-      }}
-      {...props}
-    >
-      {children}
-    </MuiTypography>
-  );
-}
+// Label text (for form labels, etc.)
+export const LabelText = styled(Typography)(({ theme }) => ({
+  fontSize: '0.875rem',
+  fontWeight: 500,
+  color: theme.palette.text.secondary,
+  marginBottom: theme.spacing(0.5),
+}));
 
-export function LabelText({ children, sx = {}, ...props }) {
-  return (
-    <MuiTypography
-      variant="subtitle2"
-      sx={{
-        fontWeight: 500,
-        mb: 0.5,
-        textAlign: 'left',
-        ...sx
-      }}
-      {...props}
-    >
-      {children}
-    </MuiTypography>
-  );
-}
-
-export function Caption({ children, sx = {}, ...props }) {
-  return (
-    <MuiTypography
-      variant="caption"
-      color="text.secondary"
-      sx={{
-        display: 'block',
-        textAlign: 'left',
-        ...sx
-      }}
-      {...props}
-    >
-      {children}
-    </MuiTypography>
-  );
-}
-
-export default {
-  PageTitle,
-  SectionTitle,
-  SubsectionTitle,
-  BodyText,
-  SecondaryText,
-  LabelText,
-  Caption
-};
+// Caption text (smallest)
+export const Caption = styled(Typography)(({ theme }) => ({
+  fontSize: '0.75rem',
+  color: theme.palette.text.secondary,
+  marginBottom: theme.spacing(1),
+}));

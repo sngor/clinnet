@@ -1,5 +1,5 @@
 // src/features/appointments/components/DoctorAppointmentCalendar.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Box, 
   Typography, 
@@ -22,7 +22,9 @@ import {
   Divider,
   ToggleButtonGroup,
   ToggleButton,
-  Tooltip
+  Tooltip,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
@@ -32,6 +34,7 @@ import NoteIcon from "@mui/icons-material/Note";
 import CalendarViewWeekIcon from '@mui/icons-material/CalendarViewWeek';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
+import AppointmentDetailModal from './AppointmentDetailModal';
 
 // Mock data for patients
 const mockPatients = [
@@ -104,9 +107,12 @@ const mockAppointments = [
 // Time slots for the calendar
 const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 7 PM
 
-function DoctorAppointmentCalendar() {
+function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
   const [appointments, setAppointments] = useState(mockAppointments);
+  const [cancelledAppointments, setCancelledAppointments] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [newAppointment, setNewAppointment] = useState({
     title: "",
     start: new Date(),
@@ -120,6 +126,21 @@ function DoctorAppointmentCalendar() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [viewMode, setViewMode] = useState('calendar'); // 'calendar' or 'list'
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  // Notify parent component about appointment updates
+  useEffect(() => {
+    if (onAppointmentUpdate) {
+      onAppointmentUpdate({
+        appointments,
+        cancelledAppointments
+      });
+    }
+  }, [appointments, cancelledAppointments, onAppointmentUpdate]);
 
   // Get current week dates
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start on Monday
@@ -201,8 +222,16 @@ function DoctorAppointmentCalendar() {
       title
     };
     
-    setAppointments([...appointments, appointment]);
+    const updatedAppointments = [...appointments, appointment];
+    setAppointments(updatedAppointments);
     handleCloseDialog();
+    
+    // Show success message
+    setSnackbar({
+      open: true,
+      message: 'Appointment created successfully',
+      severity: 'success'
+    });
   };
 
   // Handle view mode change
@@ -210,6 +239,89 @@ function DoctorAppointmentCalendar() {
     if (newViewMode !== null) {
       setViewMode(newViewMode);
     }
+  };
+
+  // Handle appointment click
+  const handleAppointmentClick = (appointment) => {
+    setSelectedAppointment(appointment);
+    setDetailModalOpen(true);
+  };
+
+  // Handle appointment edit
+  const handleEditAppointment = (editedAppointment) => {
+    const updatedAppointments = appointments.map(appointment => 
+      appointment.id === editedAppointment.id ? editedAppointment : appointment
+    );
+    setAppointments(updatedAppointments);
+    
+    // Show success message
+    setSnackbar({
+      open: true,
+      message: 'Appointment updated successfully',
+      severity: 'success'
+    });
+  };
+
+  // Handle appointment reschedule
+  const handleRescheduleAppointment = (rescheduledAppointment) => {
+    // Update the title if needed
+    const title = `${rescheduledAppointment.patient} - ${rescheduledAppointment.type || "Appointment"}`;
+    
+    const updatedAppointment = {
+      ...rescheduledAppointment,
+      title
+    };
+    
+    const updatedAppointments = appointments.map(appointment => 
+      appointment.id === updatedAppointment.id ? updatedAppointment : appointment
+    );
+    setAppointments(updatedAppointments);
+    
+    // Show success message
+    setSnackbar({
+      open: true,
+      message: 'Appointment rescheduled successfully',
+      severity: 'success'
+    });
+  };
+
+  // Handle appointment cancellation
+  const handleCancelAppointment = (appointmentId, reason) => {
+    // Find the appointment
+    const appointmentToCancel = appointments.find(appointment => appointment.id === appointmentId);
+    
+    if (appointmentToCancel) {
+      // Update the appointment status and add cancellation reason
+      const cancelledAppointment = {
+        ...appointmentToCancel,
+        status: 'Cancelled',
+        cancellationReason: reason,
+        cancelledAt: new Date()
+      };
+      
+      // Remove from active appointments
+      const updatedAppointments = appointments.filter(appointment => appointment.id !== appointmentId);
+      setAppointments(updatedAppointments);
+      
+      // Add to cancelled appointments
+      const updatedCancelledAppointments = [...cancelledAppointments, cancelledAppointment];
+      setCancelledAppointments(updatedCancelledAppointments);
+      
+      // Show success message
+      setSnackbar({
+        open: true,
+        message: 'Appointment cancelled successfully',
+        severity: 'info'
+      });
+    }
+  };
+
+  // Handle snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbar({
+      ...snackbar,
+      open: false
+    });
   };
 
   // Get appointments for a specific day
@@ -372,6 +484,7 @@ function DoctorAppointmentCalendar() {
                             backgroundColor: getStatusColor(appointment.status) + '.main',
                           }
                         }}
+                        onClick={() => handleAppointmentClick(appointment)}
                       >
                         <Typography variant="caption" noWrap>
                           {appointment.title}
@@ -459,8 +572,13 @@ function DoctorAppointmentCalendar() {
                           sx={{ 
                             borderLeft: 4, 
                             borderColor: getStatusColor(appointment.status) + '.main',
-                            boxShadow: 2
+                            boxShadow: 2,
+                            cursor: 'pointer',
+                            '&:hover': {
+                              boxShadow: 4
+                            }
                           }}
+                          onClick={() => handleAppointmentClick(appointment)}
                         >
                           <CardContent>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -621,6 +739,33 @@ function DoctorAppointmentCalendar() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Appointment Detail Modal */}
+      <AppointmentDetailModal
+        open={detailModalOpen}
+        appointment={selectedAppointment}
+        onClose={() => setDetailModalOpen(false)}
+        onEdit={handleEditAppointment}
+        onReschedule={handleRescheduleAppointment}
+        onCancel={handleCancelAppointment}
+        getStatusColor={getStatusColor}
+      />
+
+      {/* Snackbar for notifications */}
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity} 
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 }

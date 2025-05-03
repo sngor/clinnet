@@ -1,12 +1,99 @@
-# React + Vite
+# Clinnet-EMR Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend application for the Clinnet-EMR healthcare management system.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 16.x - 18.x (recommended: 18.18.0)
+- npm 8.x or later
 
-## Expanding the ESLint configuration
+## Setup Instructions
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Node.js Version Management
+
+This project requires Node.js version 18.x. We recommend using NVM (Node Version Manager) to manage your Node.js versions.
+
+```bash
+# Install NVM (if not already installed)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# Restart your terminal or source your profile
+source ~/.zshrc  # or ~/.bashrc depending on your shell
+
+# Install and use the correct Node.js version
+nvm install 18.18.0
+nvm use 18.18.0
+```
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+
+# In a separate terminal, start the mock API server
+npm run server
+```
+
+## Available Scripts
+
+- `npm run dev` - Start the development server
+- `npm run build` - Build the application for production
+- `npm run preview` - Preview the production build locally
+- `npm run server` - Start the JSON server for API mocking
+- `npm run lint` - Run ESLint to check code quality
+- `npm run clean` - Clean and reinstall dependencies
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+VITE_API_URL=http://localhost:3001
+```
+
+For production, you'll need to set AWS-specific variables:
+
+```
+VITE_API_ENDPOINT=https://your-api-id.execute-api.your-region.amazonaws.com/prod
+VITE_COGNITO_REGION=us-east-1
+VITE_USER_POOL_ID=your-user-pool-id
+VITE_USER_POOL_CLIENT_ID=your-app-client-id
+VITE_S3_BUCKET=your-documents-bucket
+VITE_S3_REGION=us-east-1
+```
+
+## Project Structure
+
+```
+clinnet-app/
+├── public/              # Static assets
+├── src/
+│   ├── app/             # App configuration
+│   │   └── providers/   # Context providers
+│   ├── components/      # Shared UI components
+│   │   └── ui/          # Base UI components
+│   ├── features/        # Feature modules
+│   │   ├── patients/    # Patient management
+│   │   ├── services/    # Medical services
+│   │   └── users/       # User management
+│   ├── pages/           # Page components
+│   ├── services/        # API services
+│   └── main.jsx         # Application entry point
+├── index.html           # HTML entry point
+└── vite.config.js       # Vite configuration
+```
+
+## Troubleshooting
+
+If you encounter issues:
+
+1. Make sure you're using Node.js version 18.x
+2. Run the clean script to reinstall dependencies:
+   ```bash
+   npm run clean
+   ```
+3. Check the browser console for error messages

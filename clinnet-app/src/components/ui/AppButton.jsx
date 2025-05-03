@@ -1,153 +1,65 @@
 // src/components/ui/AppButton.jsx
 import React from 'react';
 import { Button, IconButton } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { styled } from '@mui/material/styles';
 
-/**
- * A consistent button component that can be used throughout the application
- * 
- * @param {Object} props - Component props
- * @param {string} [props.variant='contained'] - Button variant: 'contained', 'outlined', or 'text'
- * @param {string} [props.color='primary'] - Button color: 'primary', 'secondary', 'error', etc.
- * @param {string} [props.size='medium'] - Button size: 'small', 'medium', or 'large'
- * @param {React.ReactNode} [props.startIcon] - Icon to display at the start of the button
- * @param {React.ReactNode} [props.endIcon] - Icon to display at the end of the button
- * @param {string} [props.to] - If provided, button will act as a router link
- * @param {string} [props.href] - If provided, button will act as an external link
- * @param {boolean} [props.fullWidth] - Whether the button should take up the full width
- * @param {Function} [props.onClick] - Click handler function
- */
-export function AppButton({
-  variant = 'contained',
-  color = 'primary',
-  size = 'medium',
-  startIcon,
-  endIcon,
-  to,
-  href,
-  fullWidth = false,
-  children,
-  sx = {},
-  ...props
-}) {
-  // Common button styles
-  const buttonStyles = {
-    borderRadius: 1.5,
-    textTransform: 'none',
-    fontWeight: 500,
-    boxShadow: variant === 'contained' ? 2 : 'none',
-    px: size === 'small' ? 2 : size === 'large' ? 4 : 3,
-    py: size === 'small' ? 0.5 : size === 'large' ? 1.5 : 1,
-    ...sx
-  };
+// Base styled button with common properties
+const StyledButton = styled(Button)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  textTransform: 'none',
+  fontWeight: 500,
+  boxShadow: 'none',
+  '&:hover': {
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+  },
+}));
 
-  // If "to" prop is provided, render as a router link
-  if (to) {
-    return (
-      <Button
-        component={Link}
-        to={to}
-        variant={variant}
-        color={color}
-        size={size}
-        startIcon={startIcon}
-        endIcon={endIcon}
-        fullWidth={fullWidth}
-        sx={buttonStyles}
-        {...props}
-      >
-        {children}
-      </Button>
-    );
-  }
+// Primary button (filled)
+export const PrimaryButton = styled(StyledButton)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
+  '&:hover': {
+    backgroundColor: theme.palette.primary.dark,
+  },
+}));
 
-  // If "href" prop is provided, render as an external link
-  if (href) {
-    return (
-      <Button
-        component="a"
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        variant={variant}
-        color={color}
-        size={size}
-        startIcon={startIcon}
-        endIcon={endIcon}
-        fullWidth={fullWidth}
-        sx={buttonStyles}
-        {...props}
-      >
-        {children}
-      </Button>
-    );
-  }
+// Secondary button (outlined)
+export const SecondaryButton = styled(StyledButton)(({ theme }) => ({
+  backgroundColor: 'transparent',
+  color: theme.palette.primary.main,
+  border: `1px solid ${theme.palette.primary.main}`,
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+  },
+}));
 
-  // Otherwise, render as a regular button
-  return (
-    <Button
-      variant={variant}
-      color={color}
-      size={size}
-      startIcon={startIcon}
-      endIcon={endIcon}
-      fullWidth={fullWidth}
-      sx={buttonStyles}
-      {...props}
-    >
-      {children}
-    </Button>
-  );
-}
+// Text button (no background, no border)
+export const TextButton = styled(StyledButton)(({ theme }) => ({
+  backgroundColor: 'transparent',
+  color: theme.palette.primary.main,
+  '&:hover': {
+    backgroundColor: 'transparent',
+    textDecoration: 'underline',
+  },
+}));
 
-/**
- * A consistent icon button component
- */
-export function AppIconButton({
-  color = 'primary',
-  size = 'medium',
-  sx = {},
-  ...props
-}) {
-  return (
-    <IconButton
-      color={color}
-      size={size}
-      sx={{
-        borderRadius: '50%',
-        ...sx
-      }}
-      {...props}
-    />
-  );
-}
+// Danger button (for destructive actions)
+export const DangerButton = styled(StyledButton)(({ theme }) => ({
+  backgroundColor: theme.palette.error.main,
+  color: theme.palette.error.contrastText,
+  '&:hover': {
+    backgroundColor: theme.palette.error.dark,
+  },
+}));
 
-/**
- * A primary action button with consistent styling
- */
-export function PrimaryButton(props) {
-  return <AppButton variant="contained" color="primary" {...props} />;
-}
+// Icon button with consistent styling
+export const AppIconButton = styled(IconButton)(({ theme }) => ({
+  color: theme.palette.primary.main,
+}));
 
-/**
- * A secondary action button with consistent styling
- */
-export function SecondaryButton(props) {
-  return <AppButton variant="outlined" color="primary" {...props} />;
-}
-
-/**
- * A text button with consistent styling
- */
-export function TextButton(props) {
-  return <AppButton variant="text" color="primary" {...props} />;
-}
-
-/**
- * A danger/delete button with consistent styling
- */
-export function DangerButton(props) {
-  return <AppButton variant="contained" color="error" {...props} />;
-}
+// Default export is the base button
+const AppButton = ({ variant = 'contained', ...props }) => {
+  return <StyledButton variant={variant} {...props} />;
+};
 
 export default AppButton;

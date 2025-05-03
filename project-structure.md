@@ -21,17 +21,13 @@ Clinnet-EMR/
 │   │   ├── app/                # App configuration
 │   │   │   └── providers/      # Context providers
 │   │   ├── components/         # Shared UI components
-│   │   │   └── Layout/         # Layout components
+│   │   │   └── ui/             # Base UI components
 │   │   ├── features/           # Feature modules
 │   │   │   ├── patients/       # Patient management
 │   │   │   ├── services/       # Medical services
 │   │   │   └── users/          # User management
+│   │   ├── pages/              # Page components
 │   │   └── services/           # API services
-│   │       ├── api.js          # Axios API client
-│   │       ├── api-amplify.js  # AWS Amplify API client
-│   │       ├── config.js       # AWS configuration
-│   │       ├── index.js        # Service exports
-│   │       └── *Service.js     # Individual service modules
 │   ├── .env                    # Environment variables
 │   ├── db.json                 # Mock database for development
 │   └── package.json            # Frontend dependencies
