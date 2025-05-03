@@ -10,6 +10,8 @@ import NotFoundPage from "../pages/NotFoundPage";
 import UserManagementPage from "../pages/UserManagementPage";
 import AccountSettingsPage from "../pages/AccountSettingsPage";
 import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage";
+import DoctorAppointmentsPage from "../pages/DoctorAppointmentsPage";
+import AdminAppointmentsPage from "../pages/AdminAppointmentsPage";
 import AppLayout from "../components/Layout/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -46,6 +48,15 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
+        {/* Add route for Admin Appointments */}
+        <Route
+          path="/admin/appointments"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminAppointmentsPage />
+            </ProtectedRoute>
+          }
+        />
         {/* Patient Management for Doctor */}
         <Route
           path="/doctor/patients"
@@ -60,6 +71,14 @@ function AppRouter() {
           element={
             <ProtectedRoute allowedRoles={["doctor"]}>
               <DoctorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/appointments"
+          element={
+            <ProtectedRoute allowedRoles={["doctor"]}>
+              <DoctorAppointmentsPage />
             </ProtectedRoute>
           }
         />

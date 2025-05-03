@@ -17,11 +17,14 @@ import {
   useTheme,
   useMediaQuery
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import LinkButton from "../components/LinkButton";
+import PageHeader, { PageHeaderWithDivider } from "../components/PageHeader";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline"; // Icon for walk-in button
 import EventIcon from "@mui/icons-material/Event";
 import PeopleIcon from "@mui/icons-material/People";
-// Commented out until WalkInFormModal is implemented
-// import WalkInFormModal from "../features/appointments/components/WalkInFormModal";
+// Import the WalkInFormModal component
+import WalkInFormModal from "../features/appointments/components/WalkInFormModal";
 
 // Mock data for today's appointments - Replace with API call
 const mockAppointments = [
@@ -59,6 +62,7 @@ function FrontDeskDashboard() {
   const { user } = useAuth(); // Get the user object
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate(); // Hook for navigation
   
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -133,7 +137,7 @@ function FrontDeskDashboard() {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      doctorName: "Walk-in Dr.",
+      doctorName: formData.doctorName || "Unassigned",
       status: "Checked-in",
     }; // Mock data
     setAppointments((prev) => [newWalkInAppointment, ...prev]); // Add to top of list
@@ -142,32 +146,11 @@ function FrontDeskDashboard() {
 
   return (
     <Container maxWidth="xl" disableGutters>
-      {/* Greeting Section - Same as Admin Dashboard */}
-      <Box 
-        sx={{ 
-          mb: 4,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          pb: 2
-        }}
-      >
-        <Typography 
-          variant={isMobile ? "h4" : "h3"} 
-          sx={{ 
-            fontWeight: 'medium',
-            color: 'primary.main'
-          }}
-        >
-          {getGreeting()}, {user?.firstName || "Front Desk"}!
-        </Typography>
-        <Typography 
-          variant="subtitle1" 
-          color="text.secondary"
-          sx={{ mt: 1 }}
-        >
-          {appointments.length} appointments scheduled for today
-        </Typography>
-      </Box>
+      {/* Use the PageHeaderWithDivider component for the dashboard */}
+      <PageHeaderWithDivider 
+        title={`${getGreeting()}, ${user?.firstName || user?.username || "Front Desk"}!`}
+        subtitle={`${appointments.length} appointments scheduled for today`}
+      />
 
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -223,21 +206,16 @@ function FrontDeskDashboard() {
             >
               {appointments.length}
             </Typography>
-            <Button 
-              variant="text" 
-              color="primary" 
+            <LinkButton 
+              to="/frontdesk/appointments"
               sx={{ 
                 alignSelf: "flex-start", 
                 mt: "auto",
-                pl: 0,
-                "&:hover": {
-                  backgroundColor: "transparent",
-                  textDecoration: "underline"
-                }
+                pl: 0
               }}
             >
               View All
-            </Button>
+            </LinkButton>
           </Paper>
         </Grid>
 
@@ -293,21 +271,16 @@ function FrontDeskDashboard() {
             >
               {appointments.filter(a => a.status === "Checked-in").length}
             </Typography>
-            <Button 
-              variant="text" 
-              color="primary" 
+            <LinkButton 
+              to="/frontdesk/patients"
               sx={{ 
                 alignSelf: "flex-start", 
                 mt: "auto",
-                pl: 0,
-                "&:hover": {
-                  backgroundColor: "transparent",
-                  textDecoration: "underline"
-                }
+                pl: 0
               }}
             >
               View Patients
-            </Button>
+            </LinkButton>
           </Paper>
         </Grid>
       </Grid>
@@ -416,12 +389,12 @@ function FrontDeskDashboard() {
         )}
       </Paper>
 
-      {/* Temporarily commented out until WalkInFormModal is implemented 
+      {/* Walk-in registration modal */}
       <WalkInFormModal
         open={isWalkInModalOpen}
         onClose={handleCloseWalkInModal}
         onSubmit={handleSubmitWalkIn}
-      /> */}
+      />
     </Container>
   );
 }

@@ -1,4 +1,4 @@
-// src/pages/FrontdeskAppointmentsPage.jsx
+// src/pages/AdminAppointmentsPage.jsx
 import React, { useState } from 'react';
 import { 
   Box, 
@@ -15,8 +15,8 @@ import FrontdeskAppointmentCalendar from '../features/appointments/components/Fr
 import AppointmentCard from '../components/AppointmentCard';
 import PageHeader from '../components/PageHeader';
 
-// Mock data for today's appointments
-const todaysAppointments = [
+// Mock data for all appointments (admin can see all appointments)
+const allAppointments = [
   {
     id: 201,
     patientName: "Alice Brown",
@@ -49,9 +49,25 @@ const todaysAppointments = [
     status: "Scheduled",
     type: "New Patient"
   },
+  {
+    id: 205,
+    patientName: "Eva Gray",
+    time: "11:00 AM",
+    doctorName: "Dr. Wilson",
+    status: "Scheduled",
+    type: "Annual Physical"
+  },
+  {
+    id: 206,
+    patientName: "Frank Miller",
+    time: "11:30 AM",
+    doctorName: "Dr. Taylor",
+    status: "Cancelled",
+    type: "Follow-up"
+  }
 ];
 
-function FrontdeskAppointmentsPage() {
+function AdminAppointmentsPage() {
   const [tabValue, setTabValue] = useState(0);
 
   const handleTabChange = (event, newValue) => {
@@ -75,7 +91,7 @@ function FrontdeskAppointmentsPage() {
       {/* Use the consistent PageHeader component */}
       <PageHeader 
         title="Appointments" 
-        subtitle="Manage and schedule patient appointments"
+        subtitle="View and manage all clinic appointments"
         action={actionButton}
       />
 
@@ -95,7 +111,7 @@ function FrontdeskAppointmentsPage() {
         centered
       >
         <Tab label="Calendar View" />
-        <Tab label="Today's Appointments" />
+        <Tab label="All Appointments" />
       </Tabs>
 
       {tabValue === 0 && (
@@ -119,11 +135,11 @@ function FrontdeskAppointmentsPage() {
               color: 'primary.main' 
             }}
           >
-            Today's Appointments
+            All Appointments
           </Typography>
           
           <Grid container spacing={3}>
-            {todaysAppointments.map((appointment) => (
+            {allAppointments.map((appointment) => (
               <Grid item xs={12} sm={6} md={4} key={appointment.id}>
                 <AppointmentCard appointment={appointment} />
               </Grid>
@@ -135,4 +151,4 @@ function FrontdeskAppointmentsPage() {
   );
 }
 
-export default FrontdeskAppointmentsPage;
+export default AdminAppointmentsPage;

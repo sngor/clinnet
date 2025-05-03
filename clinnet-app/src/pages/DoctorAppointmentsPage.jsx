@@ -1,4 +1,4 @@
-// src/pages/FrontdeskAppointmentsPage.jsx
+// src/pages/DoctorAppointmentsPage.jsx
 import React, { useState } from 'react';
 import { 
   Box, 
@@ -7,76 +7,61 @@ import {
   Tabs, 
   Tab, 
   Grid,
-  Button,
   Container
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import FrontdeskAppointmentCalendar from '../features/appointments/components/FrontdeskAppointmentCalendar';
 import AppointmentCard from '../components/AppointmentCard';
 import PageHeader from '../components/PageHeader';
 
-// Mock data for today's appointments
-const todaysAppointments = [
+// Mock data for doctor's appointments
+const doctorAppointments = [
   {
-    id: 201,
+    id: 301,
     patientName: "Alice Brown",
     time: "09:00 AM",
-    doctorName: "Dr. Smith",
     status: "Scheduled",
-    type: "Checkup"
+    type: "Checkup",
+    notes: "Annual physical examination"
   },
   {
-    id: 202,
+    id: 302,
     patientName: "Bob White",
     time: "09:30 AM",
-    doctorName: "Dr. Jones",
     status: "Checked-in",
-    type: "Follow-up"
+    type: "Follow-up",
+    notes: "Follow-up on medication adjustment"
   },
   {
-    id: 203,
+    id: 303,
     patientName: "Charlie Green",
     time: "10:00 AM",
-    doctorName: "Dr. Smith",
     status: "In Progress",
-    type: "Consultation"
+    type: "Consultation",
+    notes: "New symptoms discussion"
   },
   {
-    id: 204,
+    id: 304,
     patientName: "David Black",
     time: "10:30 AM",
-    doctorName: "Dr. Jones",
     status: "Scheduled",
-    type: "New Patient"
+    type: "New Patient",
+    notes: "Initial consultation"
   },
 ];
 
-function FrontdeskAppointmentsPage() {
+function DoctorAppointmentsPage() {
   const [tabValue, setTabValue] = useState(0);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
 
-  // Action button for the header
-  const actionButton = (
-    <Button
-      variant="contained"
-      startIcon={<AddIcon />}
-      onClick={() => console.log("New appointment button clicked")}
-      sx={{ borderRadius: 1.5 }}
-    >
-      New Appointment
-    </Button>
-  );
-
   return (
     <Container maxWidth="xl" disableGutters>
       {/* Use the consistent PageHeader component */}
       <PageHeader 
-        title="Appointments" 
-        subtitle="Manage and schedule patient appointments"
-        action={actionButton}
+        title="My Appointments" 
+        subtitle="View and manage your patient appointments"
       />
 
       <Tabs 
@@ -123,9 +108,12 @@ function FrontdeskAppointmentsPage() {
           </Typography>
           
           <Grid container spacing={3}>
-            {todaysAppointments.map((appointment) => (
+            {doctorAppointments.map((appointment) => (
               <Grid item xs={12} sm={6} md={4} key={appointment.id}>
-                <AppointmentCard appointment={appointment} />
+                <AppointmentCard 
+                  appointment={appointment} 
+                  showDoctor={false} // Doctor doesn't need to see their own name
+                />
               </Grid>
             ))}
           </Grid>
@@ -135,4 +123,4 @@ function FrontdeskAppointmentsPage() {
   );
 }
 
-export default FrontdeskAppointmentsPage;
+export default DoctorAppointmentsPage;

@@ -1,6 +1,7 @@
 // src/components/Layout/AppLayout.jsx (Simplified Example)
 import React, { useState } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom"; // Import useNavigate
+import { Outlet, useNavigate } from "react-router-dom"; // Import useNavigate
+import ActiveNavLink from "../ActiveNavLink";
 import {
   Box,
   Drawer,
@@ -73,7 +74,8 @@ function AppLayout() {
         return [
           ...baseLinks,
           { text: "Dashboard", path: "/admin", icon: <HomeIcon /> },
-          { text: "Users", path: "/admin/users", icon: <PeopleIcon /> }, // Example admin link
+          { text: "Appointments", path: "/admin/appointments", icon: <EventIcon /> },
+          { text: "Users", path: "/admin/users", icon: <PeopleIcon /> },
         ];
       case "doctor":
         return [
@@ -159,45 +161,13 @@ function AppLayout() {
         <Divider />
         <List>
           {navLinks.map((link) => (
-            <ListItemButton
+            <ActiveNavLink
               key={link.text}
-              component={NavLink}
               to={link.path}
-              end={link.path.split("/").length === 2}
+              icon={link.icon}
+              primary={link.text}
               onClick={() => isMobile && setMobileOpen(false)} // Close drawer when clicking a link on mobile
-              sx={{
-                "&:hover": {
-                  backgroundColor: "rgba(25, 118, 210, 0.04)", // Very light blue background on hover
-                  "& .MuiListItemText-primary": {
-                    color: "#42a5f5", // Light blue text on hover
-                  },
-                  "& .MuiListItemIcon-root": {
-                    color: "#42a5f5", // Light blue icon on hover
-                  }
-                },
-                "&.Mui-selected, &.active": {
-                  backgroundColor: "rgba(25, 118, 210, 0.08)", // Light blue background
-                  "& .MuiListItemIcon-root": {
-                    color: "primary.main", // Theme primary color for icon
-                  },
-                  "& .MuiListItemText-primary": {
-                    color: "primary.main", // Theme primary color for text
-                    fontWeight: "bold", // Bold text for active state
-                  }
-                }
-              }}
-              className={({ isActive }) => isActive ? "active" : ""}
-            >
-              <ListItemIcon>
-                {link.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={link.text}
-                primaryTypographyProps={{
-                  fontSize: { xs: "0.9rem", sm: "1rem" }, // Responsive text size
-                }}
-              />
-            </ListItemButton>
+            />
           ))}
         </List>
       </div>
@@ -356,16 +326,18 @@ function AppLayout() {
             height: {
               xs: "calc(100vh - 112px)",
               sm: "calc(100vh - 128px)",
-            }, /* Use fixed height instead of minHeight */
+            } /* Use fixed height instead of minHeight */,
             width: "100%",
-            overflow: "hidden" /* Prevent scrolling at this level */
+            overflow: "hidden" /* Prevent scrolling at this level */,
           }}
         >
-          <Box sx={{ 
-            width: "100%",
-            height: "100%", /* Take full height */
-            overflow: "auto" /* Allow scrolling at this level if needed */
-          }}>
+          <Box
+            sx={{
+              width: "100%",
+              height: "100%" /* Take full height */,
+              overflow: "auto" /* Allow scrolling at this level if needed */,
+            }}
+          >
             <Outlet /> {/* Renders the matched child route's element */}
           </Box>
         </Box>

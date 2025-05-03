@@ -1,6 +1,5 @@
 // src/features/appointments/components/FrontdeskAppointmentCalendar.jsx
 import React, { useState } from "react";
-import { Scheduler } from "@aldabil/react-scheduler";
 import { 
   Box, 
   Typography, 
@@ -12,11 +11,15 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Autocomplete
+  Autocomplete,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  Divider
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 
@@ -130,17 +133,50 @@ function FrontdeskAppointmentCalendar() {
     handleCloseDialog();
   };
 
-  const handleEventClick = (event) => {
-    console.log("Appointment clicked:", event);
-    // Here you could open a detail view or edit dialog
+  const formatTime = (date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'Scheduled':
+        return 'primary';
+      case 'Checked-in':
+        return 'success';
+      case 'In Progress':
+        return 'warning';
+      case 'Completed':
+        return 'info';
+      case 'Cancelled':
+        return 'error';
+      default:
+        return 'default';
+    }
   };
 
   return (
-    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, width: '100%' }}>
+    <Paper 
+      sx={{ 
+        p: { xs: 2, sm: 3 }, 
+        borderRadius: 2, 
+        boxShadow: 2, 
+        width: '100%' 
+      }}
+    >
       <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
         <Grid item xs>
-          <Typography variant="h5">
-            Appointment Calendar
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              fontWeight: 500,
+              color: 'primary.main'
+            }}
+          >
+            Appointment Schedule
           </Typography>
         </Grid>
         <Grid item>
@@ -148,61 +184,82 @@ function FrontdeskAppointmentCalendar() {
             variant="contained" 
             startIcon={<AddIcon />}
             onClick={handleOpenDialog}
+            sx={{ borderRadius: 1.5 }}
           >
             New Appointment
           </Button>
         </Grid>
       </Grid>
 
-      <Box sx={{ height: "calc(100vh - 250px)" }}>
-        <Scheduler
-          view="week"
-          events={events}
-          onEventClick={handleEventClick}
-          editable={true}
-          deletable={true}
-          draggable={true}
-          hourFormat="12"
-          month={{
-            weekDays: [0, 1, 2, 3, 4, 5, 6],
-            weekStartOn: 0,
-            startHour: 8,
-            endHour: 18,
-          }}
-          week={{
-            weekDays: [0, 1, 2, 3, 4, 5, 6],
-            weekStartOn: 0,
-            startHour: 8,
-            endHour: 18,
-            step: 60
-          }}
-          day={{
-            startHour: 8,
-            endHour: 18,
-            step: 60
-          }}
-          eventRenderer={({ event }) => {
-            return (
-              <Box sx={{ 
-                p: 1, 
-                bgcolor: event.status === "Checked-in" ? "success.light" : "primary.light",
-                borderRadius: 1,
-                height: '100%'
-              }}>
-                <Typography variant="subtitle2" noWrap>{event.title}</Typography>
-                <Typography variant="caption" display="block">{event.doctor}</Typography>
-                <Typography variant="caption" display="block">Status: {event.status}</Typography>
-              </Box>
-            );
-          }}
-        />
+      <Divider sx={{ mb: 3 }} />
+
+      <Box sx={{ height: "calc(100vh - 300px)", overflow: "auto" }}>
+        <TableContainer>
+          <Table sx={{ minWidth: 650 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Time</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Patient</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Doctor</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {events.sort((a, b) => a.start - b.start).map((event) => (
+                <TableRow 
+                  key={event.event_id}
+                  sx={{ 
+                    '&:hover': { 
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      cursor: 'pointer'
+                    }
+                  }}
+                >
+                  <TableCell>{formatDate(event.start)}</TableCell>
+                  <TableCell>
+                    {formatTime(event.start)} - {formatTime(event.end)}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 500 }}>{event.patient}</TableCell>
+                  <TableCell>{event.doctor}</TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={event.status} 
+                      color={getStatusColor(event.status)} 
+                      size="small" 
+                      sx={{ fontWeight: 500 }}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Box>
 
       {/* New Appointment Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Schedule New Appointment</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          pb: 2,
+          fontWeight: 500
+        }}>
+          Schedule New Appointment
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Grid container spacing={2}>
             <Grid item xs={12}>
               <Autocomplete
                 options={mockPatients}
@@ -318,8 +375,13 @@ function FrontdeskAppointmentCalendar() {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Button 
+            onClick={handleCloseDialog}
+            sx={{ color: 'text.secondary' }}
+          >
+            Cancel
+          </Button>
           <Button 
             onClick={handleCreateAppointment} 
             variant="contained" 

@@ -1,27 +1,57 @@
 // src/pages/DoctorDashboard.jsx
-import React from "react";
-import { useAuth } from "../app/providers/AuthProvider"; // Import useAuth
-import { 
-  Grid, 
-  Paper, 
-  Typography, 
-  Box, 
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../app/providers/AuthProvider";
+import {
+  Box,
+  Typography,
+  Paper,
+  List,
+  ListItem,
+  Divider,
   Container,
-  useTheme,
-  useMediaQuery,
-  Button
+  Grid,
+  Chip,
+  CircularProgress,
+  Alert
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import LinkButton from "../components/LinkButton";
+import { PageHeaderWithDivider } from "../components/PageHeader";
 import EventIcon from "@mui/icons-material/Event";
-import EmailIcon from "@mui/icons-material/Email";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import PeopleIcon from "@mui/icons-material/People";
-import AppointmentAgenda from "../features/appointments/components/AppointmentAgenda";
+
+// Mock data for today's appointments
+const mockAppointments = [
+  {
+    id: 301,
+    patientName: "Alice Brown",
+    time: "09:00 AM",
+    status: "Scheduled",
+    type: "Checkup"
+  },
+  {
+    id: 302,
+    patientName: "Bob White",
+    time: "09:30 AM",
+    status: "Checked-in",
+    type: "Follow-up"
+  },
+  {
+    id: 303,
+    patientName: "Charlie Green",
+    time: "10:00 AM",
+    status: "In Progress",
+    type: "Consultation"
+  }
+];
 
 function DoctorDashboard() {
-  const { user } = useAuth(); // Get the user object
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Function to get time-based greeting
   const getGreeting = () => {
@@ -35,43 +65,45 @@ function DoctorDashboard() {
     }
   };
 
-  // Navigation handlers
-  const handleNavigateToAppointments = () => {
-    navigate("/doctor/appointments");
-  };
+  // Fetch today's appointments (using mock data)
+  useEffect(() => {
+    // Simulate API call
+    setTimeout(() => {
+      try {
+        setAppointments(mockAppointments);
+        setLoading(false);
+      } catch (err) {
+        setError(`Failed to load appointments: ${err.message}`);
+        setLoading(false);
+      }
+    }, 500); // Simulate network delay
+  }, []);
 
-  const handleNavigateToPatients = () => {
-    navigate("/doctor/patients");
+  // Get status color
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'Scheduled':
+        return 'primary';
+      case 'Checked-in':
+        return 'success';
+      case 'In Progress':
+        return 'warning';
+      case 'Completed':
+        return 'info';
+      case 'Cancelled':
+        return 'error';
+      default:
+        return 'default';
+    }
   };
 
   return (
     <Container maxWidth="xl" disableGutters>
-      {/* Greeting Section */}
-      <Box 
-        sx={{ 
-          mb: 4,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          pb: 2
-        }}
-      >
-        <Typography 
-          variant={isMobile ? "h4" : "h3"} 
-          sx={{ 
-            fontWeight: 'medium',
-            color: 'primary.main'
-          }}
-        >
-          {getGreeting()}, Dr. {user?.lastName || user?.firstName || "Doctor"}!
-        </Typography>
-        <Typography 
-          variant="subtitle1" 
-          color="text.secondary"
-          sx={{ mt: 1 }}
-        >
-          You have 5 appointments scheduled for today
-        </Typography>
-      </Box>
+      {/* Use the PageHeaderWithDivider component for the dashboard */}
+      <PageHeaderWithDivider 
+        title={`${getGreeting()}, Dr. ${user?.lastName || user?.username || "Smith"}!`}
+        subtitle={`${appointments.length} appointments scheduled for today`}
+      />
 
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -125,24 +157,18 @@ function DoctorDashboard() {
                 fontWeight: 'bold' 
               }}
             >
-              5
+              {appointments.length}
             </Typography>
-            <Button 
-              variant="text" 
-              color="primary" 
-              onClick={handleNavigateToAppointments}
+            <LinkButton 
+              to="/doctor/appointments"
               sx={{ 
                 alignSelf: "flex-start", 
                 mt: "auto",
-                pl: 0,
-                "&:hover": {
-                  backgroundColor: "transparent",
-                  textDecoration: "underline"
-                }
+                pl: 0
               }}
             >
-              View Schedule
-            </Button>
+              View All
+            </LinkButton>
           </Paper>
         </Grid>
 
@@ -185,7 +211,7 @@ function DoctorDashboard() {
               color="primary.main"
               fontWeight="medium"
             >
-              Active Patients
+              My Patients
             </Typography>
             <Typography 
               component="p" 
@@ -198,139 +224,90 @@ function DoctorDashboard() {
             >
               24
             </Typography>
-            <Button 
-              variant="text" 
-              color="primary" 
-              onClick={handleNavigateToPatients}
+            <LinkButton 
+              to="/doctor/patients"
               sx={{ 
                 alignSelf: "flex-start", 
                 mt: "auto",
-                pl: 0,
-                "&:hover": {
-                  backgroundColor: "transparent",
-                  textDecoration: "underline"
-                }
+                pl: 0
               }}
             >
               View Patients
-            </Button>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <Paper
-            elevation={0}
-            sx={{ 
-              p: 3, 
-              display: "flex", 
-              flexDirection: "column", 
-              height: 180,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              position: "relative",
-              overflow: "hidden",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                boxShadow: 3,
-                transform: "translateY(-4px)"
-              }
-            }}
-          >
-            <Box 
-              sx={{ 
-                position: "absolute",
-                top: 10,
-                right: 10,
-                color: "primary.light",
-                opacity: 0.15,
-                transform: "scale(2.5)",
-                transformOrigin: "top right"
-              }}
-            >
-              <EmailIcon fontSize="large" />
-            </Box>
-            <Typography 
-              component="h2" 
-              variant="h6" 
-              color="primary.main"
-              fontWeight="medium"
-            >
-              Unread Messages
-            </Typography>
-            <Typography 
-              component="p" 
-              variant="h2" 
-              sx={{ 
-                mt: 2, 
-                mb: 2,
-                fontWeight: 'bold'
-              }}
-            >
-              2
-            </Typography>
-            <Button 
-              variant="text" 
-              color="primary" 
-              sx={{ 
-                alignSelf: "flex-start", 
-                mt: "auto",
-                pl: 0,
-                "&:hover": {
-                  backgroundColor: "transparent",
-                  textDecoration: "underline"
-                }
-              }}
-            >
-              View Messages
-            </Button>
+            </LinkButton>
           </Paper>
         </Grid>
       </Grid>
 
-      {/* Appointment Agenda */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={7}>
-          <Paper 
-            elevation={0}
-            sx={{ 
-              p: { xs: 2, sm: 3 },
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              height: '100%'
-            }}
-          >
-            <AppointmentAgenda />
-          </Paper>
-        </Grid>
+      {/* Appointments List */}
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <Typography 
+          variant="h5" 
+          color="primary.main"
+          fontWeight="medium"
+          sx={{ mb: 3 }}
+        >
+          Upcoming Appointments
+        </Typography>
 
-        <Grid item xs={12} md={5}>
-          <Paper 
-            elevation={0}
-            sx={{ 
-              p: { xs: 2, sm: 3 },
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              height: '100%'
-            }}
-          >
-            <Typography 
-              variant="h6" 
-              gutterBottom
-              color="primary.main"
-              fontWeight="medium"
-              sx={{ mb: 2 }}
-            >
-              Recent Patients
-            </Typography>
-            <Typography variant="body1">
-              Recent patient list will be displayed here.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <List sx={{ width: '100%' }}>
+            {appointments.map((appt, index) => (
+              <React.Fragment key={appt.id}>
+                <ListItem
+                  sx={{ 
+                    py: 2,
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <Box sx={{ mb: { xs: 2, sm: 0 }, width: { xs: '100%', sm: 'auto' } }}>
+                    <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                      {appt.time} - {appt.patientName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Type: {appt.type}
+                    </Typography>
+                  </Box>
+                  
+                  <Chip 
+                    label={appt.status} 
+                    color={getStatusColor(appt.status)}
+                    size="small"
+                    sx={{ fontWeight: 500 }}
+                  />
+                </ListItem>
+                {index < appointments.length - 1 && <Divider />}
+              </React.Fragment>
+            ))}
+          </List>
+        )}
+        
+        {!loading && appointments.length === 0 && (
+          <Typography sx={{ textAlign: 'center', py: 4 }}>
+            No appointments scheduled for today
+          </Typography>
+        )}
+      </Paper>
     </Container>
   );
 }
