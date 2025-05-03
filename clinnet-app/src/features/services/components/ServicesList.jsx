@@ -1,8 +1,8 @@
 // src/features/services/components/ServicesList.jsx
 import React, { useState } from "react";
-import { 
-  Box, 
-  Button, 
+import {
+  Box,
+  Button,
   Table,
   TableBody,
   TableCell,
@@ -22,34 +22,39 @@ import {
   IconButton,
   InputAdornment,
   Chip,
-  Typography
+  Typography,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import { serviceCategories, formatPrice, calculateFinalPrice, initialServiceFormData } from "../models/serviceModel";
+import {
+  serviceCategories,
+  formatPrice,
+  calculateFinalPrice,
+  initialServiceFormData,
+} from "../models/serviceModel";
 import { initialServices } from "../data/initialServices";
 import TableContainer from "../../../components/TableContainer";
 import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
 
 // Table column definitions
 const columns = [
-  { id: 'id', label: 'ID', numeric: true },
-  { id: 'name', label: 'Service Name', numeric: false },
-  { id: 'category', label: 'Category', numeric: false },
-  { id: 'price', label: 'Price ($)', numeric: true },
-  { id: 'discountPercentage', label: 'Discount (%)', numeric: true },
-  { id: 'duration', label: 'Duration (min)', numeric: true },
-  { id: 'active', label: 'Status', numeric: false },
+  { id: "id", label: "ID", numeric: true },
+  { id: "name", label: "Service Name", numeric: false },
+  { id: "category", label: "Category", numeric: false },
+  { id: "price", label: "Price ($)", numeric: true },
+  { id: "discountPercentage", label: "Discount (%)", numeric: true },
+  { id: "duration", label: "Duration (min)", numeric: true },
+  { id: "active", label: "Status", numeric: false },
 ];
 
 function descendingComparator(a, b, orderBy) {
   // Handle null or undefined values
   if (b[orderBy] == null) return -1;
   if (a[orderBy] == null) return 1;
-  
+
   // Compare based on type
-  if (typeof b[orderBy] === 'string') {
+  if (typeof b[orderBy] === "string") {
     return b[orderBy].toLowerCase().localeCompare(a[orderBy].toLowerCase());
   } else {
     if (b[orderBy] < a[orderBy]) {
@@ -63,7 +68,7 @@ function descendingComparator(a, b, orderBy) {
 }
 
 function getComparator(order, orderBy) {
-  return order === 'desc'
+  return order === "desc"
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
@@ -83,26 +88,30 @@ function ServicesList() {
   const [openAddEdit, setOpenAddEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [currentService, setCurrentService] = useState(null);
-  const [formData, setFormData] = useState({...initialServiceFormData});
-  
+  const [formData, setFormData] = useState({ ...initialServiceFormData });
+
   // Sorting state
-  const [order, setOrder] = useState('asc');
-  const [orderBy, setOrderBy] = useState('id');
+  const [order, setOrder] = useState("asc");
+  const [orderBy, setOrderBy] = useState("id");
 
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Convert numeric values
-    if (name === 'price' || name === 'discountPercentage' || name === 'duration') {
+    if (
+      name === "price" ||
+      name === "discountPercentage" ||
+      name === "duration"
+    ) {
       setFormData({
         ...formData,
-        [name]: value === '' ? '' : Number(value)
+        [name]: value === "" ? "" : Number(value),
       });
     } else {
       setFormData({
         ...formData,
-        [name]: value
+        [name]: value,
       });
     }
   };
@@ -110,7 +119,7 @@ function ServicesList() {
   // Open add service dialog
   const handleAddService = () => {
     setCurrentService(null);
-    setFormData({...initialServiceFormData});
+    setFormData({ ...initialServiceFormData });
     setOpenAddEdit(true);
   };
 
@@ -124,7 +133,7 @@ function ServicesList() {
       price: service.price,
       discountPercentage: service.discountPercentage,
       duration: service.duration,
-      active: service.active
+      active: service.active,
     });
     setOpenAddEdit(true);
   };
@@ -145,14 +154,18 @@ function ServicesList() {
   const handleSaveService = () => {
     if (currentService) {
       // Edit existing service
-      setServices(services.map(service => 
-        service.id === currentService.id ? { ...service, ...formData, id: currentService.id } : service
-      ));
+      setServices(
+        services.map((service) =>
+          service.id === currentService.id
+            ? { ...service, ...formData, id: currentService.id }
+            : service
+        )
+      );
     } else {
       // Add new service
       const newService = {
         ...formData,
-        id: Math.max(...services.map(s => s.id)) + 1 // Simple ID generation
+        id: Math.max(...services.map((s) => s.id)) + 1, // Simple ID generation
       };
       setServices([...services, newService]);
     }
@@ -161,14 +174,14 @@ function ServicesList() {
 
   // Delete service
   const handleDeleteService = () => {
-    setServices(services.filter(service => service.id !== currentService.id));
+    setServices(services.filter((service) => service.id !== currentService.id));
     setOpenDelete(false);
   };
 
   // Handle sort request
   const handleRequestSort = (property) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
@@ -179,8 +192,8 @@ function ServicesList() {
 
   // Action button for the table
   const actionButton = (
-    <Button 
-      variant="contained" 
+    <Button
+      variant="contained"
       startIcon={<AddIcon />}
       onClick={handleAddService}
       sx={{ borderRadius: 1.5 }}
@@ -190,28 +203,43 @@ function ServicesList() {
   );
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: "100%" }}>
       <TableContainer title="Medical Services" action={actionButton}>
-        <MuiTableContainer sx={{ boxShadow: 'none' }}>
-          <Table 
-            sx={{ 
+        <MuiTableContainer sx={{ boxShadow: "none" }}>
+          <Table
+            sx={{
               minWidth: 650,
-              '& .MuiTableCell-root': {
-                borderBottom: '1px solid rgba(224, 224, 224, 0.4)'
-              }
-            }} 
+              "& .MuiTableCell-root": {
+                borderBottom: "none",
+                padding: "16px",
+              },
+              "& tbody tr": {
+                borderBottom: "1px solid rgba(224, 224, 224, 0.4)",
+              },
+              "& tbody tr:last-child": {
+                border: 0,
+              },
+              borderCollapse: "separate",
+              borderSpacing: 0,
+              "& thead tr th:first-of-type": {
+                borderRadius: "8px 0 0 8px",
+              },
+              "& thead tr th:last-of-type": {
+                borderRadius: "0 8px 8px 0",
+              },
+            }}
             aria-label="services table"
           >
-            <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
               <TableRow>
                 {columns.map((column) => (
-                  <TableCell 
+                  <TableCell
                     key={column.id}
                     sortDirection={orderBy === column.id ? order : false}
                   >
                     <TableSortLabel
                       active={orderBy === column.id}
-                      direction={orderBy === column.id ? order : 'asc'}
+                      direction={orderBy === column.id ? order : "asc"}
                       onClick={createSortHandler(column.id)}
                     >
                       {column.label}
@@ -222,69 +250,102 @@ function ServicesList() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {stableSort(services, getComparator(order, orderBy)).map((service) => (
-                <TableRow
-                  key={service.id}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                >
-                  <TableCell component="th" scope="row">
-                    {service.id}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="medium">
-                      {service.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      {service.description.length > 50 
-                        ? `${service.description.substring(0, 50)}...` 
-                        : service.description}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={service.category.charAt(0).toUpperCase() + service.category.slice(1)} 
-                      size="small" 
-                      color="primary"
-                      variant="outlined"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {formatPrice(service.price)}
-                    {service.discountPercentage > 0 && (
-                      <Typography variant="caption" color="success.main" sx={{ display: 'block' }}>
-                        {formatPrice(calculateFinalPrice(service.price, service.discountPercentage))}
+              {stableSort(services, getComparator(order, orderBy)).map(
+                (service) => (
+                  <TableRow
+                    key={service.id}
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  >
+                    <TableCell component="th" scope="row">
+                      {service.id}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="medium">
+                        {service.name}
                       </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>{service.discountPercentage}%</TableCell>
-                  <TableCell>{service.duration} min</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={service.active ? "Active" : "Inactive"} 
-                      size="small" 
-                      color={service.active ? "success" : "default"}
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton color="primary" size="small" onClick={() => handleEditService(service)}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton color="error" size="small" onClick={() => handleDeleteClick(service)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: "block" }}
+                      >
+                        {service.description.length > 50
+                          ? `${service.description.substring(0, 50)}...`
+                          : service.description}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={
+                          service.category.charAt(0).toUpperCase() +
+                          service.category.slice(1)
+                        }
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {formatPrice(service.price)}
+                      {service.discountPercentage > 0 && (
+                        <Typography
+                          variant="caption"
+                          color="success.main"
+                          sx={{ display: "block" }}
+                        >
+                          {formatPrice(
+                            calculateFinalPrice(
+                              service.price,
+                              service.discountPercentage
+                            )
+                          )}
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>{service.discountPercentage}%</TableCell>
+                    <TableCell>{service.duration} min</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={service.active ? "Active" : "Inactive"}
+                        size="small"
+                        color={service.active ? "success" : "default"}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        color="primary"
+                        size="small"
+                        onClick={() => handleEditService(service)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        size="small"
+                        onClick={() => handleDeleteClick(service)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                )
+              )}
             </TableBody>
           </Table>
         </MuiTableContainer>
       </TableContainer>
 
       {/* Add/Edit Service Dialog */}
-      <Dialog open={openAddEdit} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{currentService ? "Edit Service" : "Add New Service"}</DialogTitle>
+      <Dialog
+        open={openAddEdit}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {currentService ? "Edit Service" : "Add New Service"}
+        </DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
             <TextField
               name="name"
               label="Service Name"
@@ -293,7 +354,7 @@ function ServicesList() {
               onChange={handleInputChange}
               required
             />
-            
+
             <TextField
               name="description"
               label="Description"
@@ -304,7 +365,7 @@ function ServicesList() {
               onChange={handleInputChange}
               placeholder="Detailed description of the service"
             />
-            
+
             <FormControl fullWidth required>
               <InputLabel>Category</InputLabel>
               <Select
@@ -313,14 +374,14 @@ function ServicesList() {
                 label="Category"
                 onChange={handleInputChange}
               >
-                {serviceCategories.map(category => (
+                {serviceCategories.map((category) => (
                   <MenuItem key={category} value={category}>
                     {category.charAt(0).toUpperCase() + category.slice(1)}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
-            
+
             <TextField
               name="price"
               label="Price"
@@ -330,10 +391,12 @@ function ServicesList() {
               onChange={handleInputChange}
               required
               InputProps={{
-                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                startAdornment: (
+                  <InputAdornment position="start">$</InputAdornment>
+                ),
               }}
             />
-            
+
             <TextField
               name="discountPercentage"
               label="Discount Percentage"
@@ -346,10 +409,10 @@ function ServicesList() {
               }}
               inputProps={{
                 min: 0,
-                max: 100
+                max: 100,
               }}
             />
-            
+
             <TextField
               name="duration"
               label="Duration (minutes)"
@@ -359,20 +422,24 @@ function ServicesList() {
               onChange={handleInputChange}
               required
               InputProps={{
-                endAdornment: <InputAdornment position="end">min</InputAdornment>,
+                endAdornment: (
+                  <InputAdornment position="end">min</InputAdornment>
+                ),
               }}
               inputProps={{
-                min: 1
+                min: 1,
               }}
             />
-            
+
             <FormControl fullWidth>
               <InputLabel>Status</InputLabel>
               <Select
                 name="active"
                 value={formData.active}
                 label="Status"
-                onChange={(e) => setFormData({...formData, active: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, active: e.target.value })
+                }
               >
                 <MenuItem value={true}>Active</MenuItem>
                 <MenuItem value={false}>Inactive</MenuItem>
@@ -382,10 +449,12 @@ function ServicesList() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button 
-            onClick={handleSaveService} 
+          <Button
+            onClick={handleSaveService}
             variant="contained"
-            disabled={!formData.name || !formData.category || formData.price < 0}
+            disabled={
+              !formData.name || !formData.category || formData.price < 0
+            }
           >
             {currentService ? "Save Changes" : "Add Service"}
           </Button>

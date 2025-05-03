@@ -3,7 +3,6 @@ import React from 'react';
 import { 
   Box, 
   Typography, 
-  Button, 
   Paper
 } from '@mui/material';
 
@@ -25,6 +24,7 @@ function TableContainer({ children, title, action, sx = {} }) {
         borderRadius: 2,
         border: '1px solid',
         borderColor: 'divider',
+        overflow: 'hidden',
         ...sx
       }}
     >

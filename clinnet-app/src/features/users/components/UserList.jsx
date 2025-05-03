@@ -1,8 +1,8 @@
 // src/features/users/components/UserList.jsx
 import React, { useState } from "react";
-import { 
-  Box, 
-  Button, 
+import {
+  Box,
+  Button,
   Table,
   TableBody,
   TableCell,
@@ -20,7 +20,7 @@ import {
   Select,
   MenuItem,
   IconButton,
-  Chip
+  Chip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -81,22 +81,22 @@ const roles = ["admin", "doctor", "frontdesk"];
 
 // Table column definitions
 const columns = [
-  { id: 'id', label: 'ID', numeric: true },
-  { id: 'username', label: 'Username', numeric: false },
-  { id: 'firstName', label: 'First Name', numeric: false },
-  { id: 'lastName', label: 'Last Name', numeric: false },
-  { id: 'email', label: 'Email', numeric: false },
-  { id: 'phone', label: 'Phone', numeric: false },
-  { id: 'role', label: 'Role', numeric: false },
+  { id: "id", label: "ID", numeric: true },
+  { id: "username", label: "Username", numeric: false },
+  { id: "firstName", label: "First Name", numeric: false },
+  { id: "lastName", label: "Last Name", numeric: false },
+  { id: "email", label: "Email", numeric: false },
+  { id: "phone", label: "Phone", numeric: false },
+  { id: "role", label: "Role", numeric: false },
 ];
 
 function descendingComparator(a, b, orderBy) {
   // Handle null or undefined values
   if (b[orderBy] == null) return -1;
   if (a[orderBy] == null) return 1;
-  
+
   // Compare based on type
-  if (typeof b[orderBy] === 'string') {
+  if (typeof b[orderBy] === "string") {
     return b[orderBy].toLowerCase().localeCompare(a[orderBy].toLowerCase());
   } else {
     if (b[orderBy] < a[orderBy]) {
@@ -110,7 +110,7 @@ function descendingComparator(a, b, orderBy) {
 }
 
 function getComparator(order, orderBy) {
-  return order === 'desc'
+  return order === "desc"
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
@@ -137,19 +137,19 @@ function UserList() {
     email: "",
     phone: "",
     role: "",
-    password: ""
+    password: "",
   });
-  
+
   // Sorting state
-  const [order, setOrder] = useState('asc');
-  const [orderBy, setOrderBy] = useState('id');
+  const [order, setOrder] = useState("asc");
+  const [orderBy, setOrderBy] = useState("id");
 
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -163,7 +163,7 @@ function UserList() {
       email: "",
       phone: "",
       role: "",
-      password: ""
+      password: "",
     });
     setOpenAddEdit(true);
   };
@@ -178,7 +178,7 @@ function UserList() {
       email: user.email || "",
       phone: user.phone || "",
       role: user.role,
-      password: "" // Don't pre-fill password
+      password: "", // Don't pre-fill password
     });
     setOpenAddEdit(true);
   };
@@ -199,14 +199,18 @@ function UserList() {
   const handleSaveUser = () => {
     if (currentUser) {
       // Edit existing user
-      setUsers(users.map(user => 
-        user.id === currentUser.id ? { ...user, ...formData, id: currentUser.id } : user
-      ));
+      setUsers(
+        users.map((user) =>
+          user.id === currentUser.id
+            ? { ...user, ...formData, id: currentUser.id }
+            : user
+        )
+      );
     } else {
       // Add new user
       const newUser = {
         ...formData,
-        id: Math.max(...users.map(u => u.id)) + 1 // Simple ID generation
+        id: Math.max(...users.map((u) => u.id)) + 1, // Simple ID generation
       };
       setUsers([...users, newUser]);
     }
@@ -215,14 +219,14 @@ function UserList() {
 
   // Delete user
   const handleDeleteUser = () => {
-    setUsers(users.filter(user => user.id !== currentUser.id));
+    setUsers(users.filter((user) => user.id !== currentUser.id));
     setOpenDelete(false);
   };
 
   // Handle sort request
   const handleRequestSort = (property) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
 
@@ -233,8 +237,8 @@ function UserList() {
 
   // Action button for the table
   const actionButton = (
-    <Button 
-      variant="contained" 
+    <Button
+      variant="contained"
       startIcon={<AddIcon />}
       onClick={handleAddUser}
       sx={{ borderRadius: 1.5 }}
@@ -244,28 +248,43 @@ function UserList() {
   );
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: "100%" }}>
       <TableContainer title="Users" action={actionButton}>
-        <MuiTableContainer sx={{ boxShadow: 'none' }}>
-          <Table 
-            sx={{ 
+        <MuiTableContainer sx={{ boxShadow: "none" }}>
+          <Table
+            sx={{
               minWidth: 650,
-              '& .MuiTableCell-root': {
-                borderBottom: '1px solid rgba(224, 224, 224, 0.4)'
-              }
-            }} 
+              "& .MuiTableCell-root": {
+                borderBottom: "none",
+                padding: "16px",
+              },
+              "& tbody tr": {
+                borderBottom: "1px solid rgba(224, 224, 224, 0.4)",
+              },
+              "& tbody tr:last-child": {
+                border: 0,
+              },
+              borderCollapse: "separate",
+              borderSpacing: 0,
+              "& thead tr th:first-of-type": {
+                borderRadius: "8px 0 0 8px",
+              },
+              "& thead tr th:last-of-type": {
+                borderRadius: "0 8px 8px 0",
+              },
+            }}
             aria-label="users table"
           >
-            <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
               <TableRow>
-                {columns.map((column) => (
-                  <TableCell 
+                {columns.map((column, index) => (
+                  <TableCell
                     key={column.id}
                     sortDirection={orderBy === column.id ? order : false}
                   >
                     <TableSortLabel
                       active={orderBy === column.id}
-                      direction={orderBy === column.id ? order : 'asc'}
+                      direction={orderBy === column.id ? order : "asc"}
                       onClick={createSortHandler(column.id)}
                     >
                       {column.label}
@@ -279,7 +298,7 @@ function UserList() {
               {stableSort(users, getComparator(order, orderBy)).map((user) => (
                 <TableRow
                   key={user.id}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                 >
                   <TableCell component="th" scope="row">
                     {user.id}
@@ -290,22 +309,34 @@ function UserList() {
                   <TableCell>{user.email || "-"}</TableCell>
                   <TableCell>{user.phone || "-"}</TableCell>
                   <TableCell>
-                    <Chip 
-                      label={user.role.charAt(0).toUpperCase() + user.role.slice(1)} 
-                      size="small" 
+                    <Chip
+                      label={
+                        user.role.charAt(0).toUpperCase() + user.role.slice(1)
+                      }
+                      size="small"
                       color={
-                        user.role === 'admin' ? 'error' : 
-                        user.role === 'doctor' ? 'primary' : 
-                        'secondary'
+                        user.role === "admin"
+                          ? "error"
+                          : user.role === "doctor"
+                          ? "primary"
+                          : "secondary"
                       }
                       variant="outlined"
                     />
                   </TableCell>
                   <TableCell align="center">
-                    <IconButton color="primary" size="small" onClick={() => handleEditUser(user)}>
+                    <IconButton
+                      color="primary"
+                      size="small"
+                      onClick={() => handleEditUser(user)}
+                    >
                       <EditIcon fontSize="small" />
                     </IconButton>
-                    <IconButton color="error" size="small" onClick={() => handleDeleteClick(user)}>
+                    <IconButton
+                      color="error"
+                      size="small"
+                      onClick={() => handleDeleteClick(user)}
+                    >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
@@ -317,10 +348,15 @@ function UserList() {
       </TableContainer>
 
       {/* Add/Edit User Dialog */}
-      <Dialog open={openAddEdit} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+      <Dialog
+        open={openAddEdit}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogTitle>{currentUser ? "Edit User" : "Add New User"}</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
             <TextField
               name="username"
               label="Username"
@@ -329,7 +365,7 @@ function UserList() {
               onChange={handleInputChange}
               required
             />
-            
+
             {!currentUser && (
               <TextField
                 name="password"
@@ -341,7 +377,7 @@ function UserList() {
                 required
               />
             )}
-            
+
             <TextField
               name="firstName"
               label="First Name"
@@ -350,7 +386,7 @@ function UserList() {
               onChange={handleInputChange}
               required
             />
-            
+
             <TextField
               name="lastName"
               label="Last Name"
@@ -359,7 +395,7 @@ function UserList() {
               onChange={handleInputChange}
               required
             />
-            
+
             <TextField
               name="email"
               label="Email"
@@ -369,7 +405,7 @@ function UserList() {
               onChange={handleInputChange}
               placeholder="user@example.com"
             />
-            
+
             <TextField
               name="phone"
               label="Phone Number"
@@ -378,7 +414,7 @@ function UserList() {
               onChange={handleInputChange}
               placeholder="+1 (555) 123-4567"
             />
-            
+
             <FormControl fullWidth required>
               <InputLabel>Role</InputLabel>
               <Select
@@ -387,7 +423,7 @@ function UserList() {
                 label="Role"
                 onChange={handleInputChange}
               >
-                {roles.map(role => (
+                {roles.map((role) => (
                   <MenuItem key={role} value={role}>
                     {role.charAt(0).toUpperCase() + role.slice(1)}
                   </MenuItem>
@@ -398,10 +434,15 @@ function UserList() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button 
-            onClick={handleSaveUser} 
+          <Button
+            onClick={handleSaveUser}
             variant="contained"
-            disabled={!formData.username || !formData.firstName || !formData.lastName || !formData.role}
+            disabled={
+              !formData.username ||
+              !formData.firstName ||
+              !formData.lastName ||
+              !formData.role
+            }
           >
             {currentUser ? "Save Changes" : "Add User"}
           </Button>

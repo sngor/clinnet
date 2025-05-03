@@ -44,7 +44,7 @@ function AppLayout() {
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
@@ -75,7 +75,7 @@ function AppLayout() {
 
   const drawer = React.useMemo(
     () => (
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
         <Toolbar
           sx={{
             display: "flex",
@@ -119,30 +119,24 @@ function AppLayout() {
           >
             CLINNET
           </Typography>
-          <Typography 
-            variant="caption" 
-            color="text.secondary"
-            align="center"
-          >
+          <Typography variant="caption" color="text.secondary" align="center">
             Healthcare Management
           </Typography>
         </Toolbar>
         <Divider />
-        <Box sx={{ 
-          width: '100%',
-          flexGrow: 1,
-          overflow: 'auto'
-        }}>
+        <Box
+          sx={{
+            width: "100%",
+            flexGrow: 1,
+            overflow: "auto",
+          }}
+        >
           {renderSidebar()}
         </Box>
         <Divider />
         <Box sx={{ p: 2 }}>
-          <Typography 
-            variant="body2" 
-            color="text.secondary" 
-            align="center"
-          >
-            © {new Date().getFullYear()} Clinnet
+          <Typography variant="body2" color="text.secondary" align="center">
+            © {new Date().getFullYear()} Clinnet EMR by Seng
           </Typography>
         </Box>
       </Box>
@@ -170,35 +164,39 @@ function AppLayout() {
           >
             <MenuIcon />
           </IconButton>
-          
+
           {/* Centered Portal Title */}
-          <Box sx={{ 
-            flexGrow: 1, 
-            display: 'flex', 
-            justifyContent: 'center',
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            pointerEvents: 'none' // Ensures clicks pass through to elements below
-          }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: "flex",
+              justifyContent: "center",
+              position: "absolute",
+              left: 0,
+              right: 0,
+              pointerEvents: "none", // Ensures clicks pass through to elements below
+            }}
+          >
             <Typography
               variant={isMobile ? "subtitle1" : "h6"}
               noWrap
               component="div"
-              sx={{ 
+              sx={{
                 fontWeight: 500,
-                letterSpacing: 1
+                letterSpacing: 1,
               }}
             >
               {user?.role?.toUpperCase()} PORTAL
             </Typography>
           </Box>
-          
+
           {/* Profile Icon and Menu */}
-          <Box sx={{ 
-            flexShrink: 0,
-            ml: 'auto' // Push to the right edge
-          }}>
+          <Box
+            sx={{
+              flexShrink: 0,
+              ml: "auto", // Push to the right edge
+            }}
+          >
             <IconButton
               onClick={handleMenuOpen}
               size={isMobile ? "medium" : "large"}
@@ -242,26 +240,26 @@ function AppLayout() {
               PaperProps={{
                 sx: {
                   minWidth: 180,
-                  '& .MuiMenuItem-root': {
+                  "& .MuiMenuItem-root": {
                     px: 2,
                     py: 1,
-                    '& .MuiListItemIcon-root': {
+                    "& .MuiListItemIcon-root": {
                       minWidth: 36,
-                      color: 'text.secondary'
-                    }
-                  }
-                }
+                      color: "text.secondary",
+                    },
+                  },
+                },
               }}
             >
               <MenuItem onClick={() => handleNavigate("/account-settings")}>
                 <ListItemIcon>
                   <SettingsIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText 
-                  primary="Settings" 
-                  primaryTypographyProps={{ 
-                    variant: 'body2',
-                    sx: { fontWeight: 500 }
+                <ListItemText
+                  primary="Settings"
+                  primaryTypographyProps={{
+                    variant: "body2",
+                    sx: { fontWeight: 500 },
                   }}
                 />
               </MenuItem>
@@ -270,11 +268,11 @@ function AppLayout() {
                 <ListItemIcon>
                   <LogoutIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText 
-                  primary="Logout" 
-                  primaryTypographyProps={{ 
-                    variant: 'body2',
-                    sx: { fontWeight: 500 }
+                <ListItemText
+                  primary="Logout"
+                  primaryTypographyProps={{
+                    variant: "body2",
+                    sx: { fontWeight: 500 },
                   }}
                 />
               </MenuItem>
