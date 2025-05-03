@@ -16,7 +16,8 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
-  Alert
+  Alert,
+  Container
 } from '@mui/material';
 import FrontdeskAppointmentCalendar from '../features/appointments/components/FrontdeskAppointmentCalendar';
 import PatientStatusWorkflow from '../features/patients/components/PatientStatusWorkflow';
@@ -194,7 +195,35 @@ function FrontdeskAppointmentsPage() {
   };
   
   return (
-    <Box>
+    <Container maxWidth="xl" disableGutters>
+      {/* Page header */}
+      <Box 
+        sx={{ 
+          mb: 4,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          pb: 2
+        }}
+      >
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          sx={{ 
+            fontWeight: 'medium',
+            color: 'primary.main'
+          }}
+        >
+          Appointments
+        </Typography>
+        <Typography 
+          variant="subtitle1" 
+          color="text.secondary"
+          sx={{ mt: 1 }}
+        >
+          Manage patient check-ins and appointments
+        </Typography>
+      </Box>
+      
       <Tabs 
         value={tabValue} 
         onChange={handleTabChange} 
@@ -326,7 +355,7 @@ function FrontdeskAppointmentsPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   );
 }
 

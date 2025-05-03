@@ -20,13 +20,17 @@ import {
   CardContent,
   Chip,
   Divider,
-  Tabs,
-  Tab
+  ToggleButtonGroup,
+  ToggleButton,
+  IconButton,
+  Tooltip
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
+import CalendarViewWeekIcon from '@mui/icons-material/CalendarViewWeek';
+import ViewListIcon from '@mui/icons-material/ViewList';
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
 
 // Mock data for doctors
@@ -237,6 +241,13 @@ function FrontdeskAppointmentCalendar() {
     handleCloseDialog();
   };
 
+  // Handle view mode change
+  const handleViewModeChange = (event, newViewMode) => {
+    if (newViewMode !== null) {
+      setViewMode(newViewMode);
+    }
+  };
+
   // Filter appointments by doctor
   const filteredAppointments = selectedDoctorFilter === 'all' 
     ? appointments 
@@ -271,10 +282,29 @@ function FrontdeskAppointmentCalendar() {
           {format(weekStart, 'MMMM d')} - {format(weekEnd, 'MMMM d, yyyy')}
         </Typography>
         
-        <Box sx={{ display: 'flex', height: 'calc(100vh - 350px)', border: '1px solid #e0e0e0' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          height: 'calc(100vh - 350px)', 
+          border: '1px solid #e0e0e0',
+          overflow: 'auto' // Make the entire calendar scrollable
+        }}>
           {/* Time column */}
-          <Box sx={{ width: '80px', borderRight: '1px solid #e0e0e0', bgcolor: '#f5f5f5' }}>
-            <Box sx={{ height: '40px', borderBottom: '1px solid #e0e0e0' }} /> {/* Empty cell for header */}
+          <Box sx={{ 
+            width: '80px', 
+            borderRight: '1px solid #e0e0e0', 
+            bgcolor: '#f5f5f5',
+            position: 'sticky',
+            left: 0,
+            zIndex: 1 // Ensure time column stays above other content when scrolling
+          }}>
+            <Box sx={{ 
+              height: '40px', 
+              borderBottom: '1px solid #e0e0e0',
+              position: 'sticky',
+              top: 0,
+              bgcolor: '#f5f5f5',
+              zIndex: 2 // Higher z-index for the corner cell
+            }} /> {/* Empty cell for header */}
             {timeSlots.map(hour => (
               <Box 
                 key={hour} 
@@ -294,88 +324,98 @@ function FrontdeskAppointmentCalendar() {
             ))}
           </Box>
           
-          {/* Days columns */}
-          {weekDays.map(day => (
-            <Box 
-              key={format(day, 'yyyy-MM-dd')} 
-              sx={{ 
-                flexGrow: 1, 
-                borderRight: '1px solid #e0e0e0',
-                position: 'relative',
-                width: 0, // This forces equal width columns
-              }}
-            >
-              {/* Day header */}
+          {/* Days columns container */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexGrow: 1,
+            minWidth: 'min-content' // Ensure columns don't shrink too much
+          }}>
+            {/* Days columns */}
+            {weekDays.map(day => (
               <Box 
+                key={format(day, 'yyyy-MM-dd')} 
                 sx={{ 
-                  height: '40px', 
-                  borderBottom: '1px solid #e0e0e0',
-                  p: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  bgcolor: isToday(day) ? 'primary.light' : '#f5f5f5',
-                  color: isToday(day) ? 'white' : 'inherit'
+                  flexGrow: 1, 
+                  borderRight: '1px solid #e0e0e0',
+                  position: 'relative',
+                  minWidth: '150px', // Minimum width for each day column
                 }}
               >
-                <Typography variant="subtitle2">
-                  {format(day, 'EEE d')}
-                </Typography>
-              </Box>
-              
-              {/* Time slots */}
-              {timeSlots.map(hour => (
+                {/* Day header */}
                 <Box 
-                  key={hour} 
                   sx={{ 
-                    height: '60px', 
+                    height: '40px', 
                     borderBottom: '1px solid #e0e0e0',
-                    position: 'relative'
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: isToday(day) ? 'primary.light' : '#f5f5f5',
+                    color: isToday(day) ? 'white' : 'inherit',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1
                   }}
-                />
-              ))}
-              
-              {/* Render appointments for this day */}
-              {getAppointmentsForDay(day).map(appointment => {
-                const startHour = appointment.start.getHours();
-                const startMinutes = appointment.start.getMinutes();
-                const endHour = appointment.end.getHours();
-                const endMinutes = appointment.end.getMinutes();
+                >
+                  <Typography variant="subtitle2">
+                    {format(day, 'EEE d')}
+                  </Typography>
+                </Box>
                 
-                const top = 40 + (startHour - 8) * 60 + startMinutes; // 40px for the header
-                const height = ((endHour - startHour) * 60) + (endMinutes - startMinutes);
-                
-                return (
-                  <Box
-                    key={appointment.id}
-                    sx={{
-                      position: 'absolute',
-                      top: `${top}px`,
-                      left: '2px',
-                      right: '2px',
-                      height: `${height}px`,
-                      backgroundColor: getStatusColor(appointment.status) + '.light',
-                      color: 'white',
-                      borderRadius: 1,
-                      p: 0.5,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        backgroundColor: getStatusColor(appointment.status) + '.main',
-                      }
+                {/* Time slots */}
+                {timeSlots.map(hour => (
+                  <Box 
+                    key={hour} 
+                    sx={{ 
+                      height: '60px', 
+                      borderBottom: '1px solid #e0e0e0',
+                      position: 'relative'
                     }}
-                  >
-                    <Typography variant="caption" noWrap>
-                      {appointment.title}
-                    </Typography>
-                    <Typography variant="caption" display="block" noWrap sx={{ fontSize: '0.65rem' }}>
-                      {appointment.doctor}
-                    </Typography>
-                  </Box>
-                );
-              })}
-            </Box>
-          ))}
+                  />
+                ))}
+                
+                {/* Render appointments for this day */}
+                {getAppointmentsForDay(day).map(appointment => {
+                  const startHour = appointment.start.getHours();
+                  const startMinutes = appointment.start.getMinutes();
+                  const endHour = appointment.end.getHours();
+                  const endMinutes = appointment.end.getMinutes();
+                  
+                  const top = 40 + (startHour - 8) * 60 + startMinutes; // 40px for the header
+                  const height = ((endHour - startHour) * 60) + (endMinutes - startMinutes);
+                  
+                  return (
+                    <Box
+                      key={appointment.id}
+                      sx={{
+                        position: 'absolute',
+                        top: `${top}px`,
+                        left: '2px',
+                        right: '2px',
+                        height: `${height}px`,
+                        backgroundColor: getStatusColor(appointment.status) + '.light',
+                        color: 'white',
+                        borderRadius: 1,
+                        p: 0.5,
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        '&:hover': {
+                          backgroundColor: getStatusColor(appointment.status) + '.main',
+                        }
+                      }}
+                    >
+                      <Typography variant="caption" noWrap>
+                        {appointment.title}
+                      </Typography>
+                      <Typography variant="caption" display="block" noWrap sx={{ fontSize: '0.65rem' }}>
+                        {appointment.doctor}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+            ))}
+          </Box>
         </Box>
       </Box>
     );
@@ -383,45 +423,60 @@ function FrontdeskAppointmentCalendar() {
 
   return (
     <Paper sx={{ p: 3, borderRadius: 2 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+      <Box sx={{ mb: 3, textAlign: 'left' }}>
         <Typography variant="h6">Appointment Calendar</Typography>
+        <Typography variant="body2" color="text.secondary">
+          View and manage all scheduled appointments
+        </Typography>
+      </Box>
+
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
+        {/* Doctor filter */}
+        <FormControl size="small" sx={{ minWidth: 150, mr: 2 }}>
+          <InputLabel>Filter by Doctor</InputLabel>
+          <Select
+            value={selectedDoctorFilter}
+            label="Filter by Doctor"
+            onChange={(e) => setSelectedDoctorFilter(e.target.value)}
+          >
+            <MenuItem value="all">All Doctors</MenuItem>
+            {mockDoctors.map(doctor => (
+              <MenuItem key={doctor.id} value={doctor.id}>
+                {doctor.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        
+        {/* View toggle */}
+        <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={handleViewModeChange}
+          aria-label="view mode"
+          size="small"
+          sx={{ mr: 2 }}
+        >
+          <ToggleButton value="calendar" aria-label="calendar view">
+            <Tooltip title="Calendar View">
+              <CalendarViewWeekIcon />
+            </Tooltip>
+          </ToggleButton>
+          <ToggleButton value="list" aria-label="list view">
+            <Tooltip title="List View">
+              <ViewListIcon />
+            </Tooltip>
+          </ToggleButton>
+        </ToggleButtonGroup>
+        
         <Button 
           variant="contained" 
           startIcon={<AddIcon />}
           onClick={handleOpenDialog}
+          size="small"
         >
-          New Appointment
+          New
         </Button>
-      </Box>
-
-      {/* View toggle and doctor filter */}
-      <Box sx={{ mb: 2 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item>
-            <Tabs value={viewMode} onChange={(e, newValue) => setViewMode(newValue)}>
-              <Tab value="calendar" label="Calendar View" />
-              <Tab value="list" label="List View" />
-            </Tabs>
-          </Grid>
-          <Grid item xs />
-          <Grid item>
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Filter by Doctor</InputLabel>
-              <Select
-                value={selectedDoctorFilter}
-                label="Filter by Doctor"
-                onChange={(e) => setSelectedDoctorFilter(e.target.value)}
-              >
-                <MenuItem value="all">All Doctors</MenuItem>
-                {mockDoctors.map(doctor => (
-                  <MenuItem key={doctor.id} value={doctor.id}>
-                    {doctor.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
       </Box>
 
       {/* Calendar View */}

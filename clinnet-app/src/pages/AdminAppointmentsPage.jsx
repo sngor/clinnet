@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
-  Paper, 
   Tabs, 
-  Tab 
+  Tab,
+  Container
 } from '@mui/material';
 import AdminAppointmentCalendar from '../features/appointments/components/AdminAppointmentCalendar';
+import AdminAppointmentHistory from '../features/appointments/components/AdminAppointmentHistory';
 
 function AdminAppointmentsPage() {
   const [tabValue, setTabValue] = useState(0);
@@ -17,10 +18,34 @@ function AdminAppointmentsPage() {
   };
   
   return (
-    <Box>
-      <Typography variant="h4" sx={{ mb: 3 }}>
-        Appointments
-      </Typography>
+    <Container maxWidth="xl" disableGutters>
+      {/* Page header */}
+      <Box 
+        sx={{ 
+          mb: 4,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          pb: 2
+        }}
+      >
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          sx={{ 
+            fontWeight: 'medium',
+            color: 'primary.main'
+          }}
+        >
+          Appointments
+        </Typography>
+        <Typography 
+          variant="subtitle1" 
+          color="text.secondary"
+          sx={{ mt: 1 }}
+        >
+          Manage all appointments across the practice
+        </Typography>
+      </Box>
       
       <Tabs 
         value={tabValue} 
@@ -29,8 +54,7 @@ function AdminAppointmentsPage() {
         centered={false}
       >
         <Tab label="Calendar View" />
-        <Tab label="List View" />
-        <Tab label="Settings" />
+        <Tab label="Appointment History" />
       </Tabs>
       
       {tabValue === 0 && (
@@ -38,27 +62,9 @@ function AdminAppointmentsPage() {
       )}
       
       {tabValue === 1 && (
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6">
-            Appointment List
-          </Typography>
-          <Typography variant="body1" sx={{ mt: 2 }}>
-            This is a placeholder for the appointment list view.
-          </Typography>
-        </Paper>
+        <AdminAppointmentHistory />
       )}
-      
-      {tabValue === 2 && (
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6">
-            Appointment Settings
-          </Typography>
-          <Typography variant="body1" sx={{ mt: 2 }}>
-            This is a placeholder for appointment settings like working hours, appointment types, etc.
-          </Typography>
-        </Paper>
-      )}
-    </Box>
+    </Container>
   );
 }
 

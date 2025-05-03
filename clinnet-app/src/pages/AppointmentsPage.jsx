@@ -23,46 +23,28 @@ function AppointmentsPage() {
           mb: 4,
           borderBottom: '1px solid',
           borderColor: 'divider',
-          pb: 2,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 2
+          pb: 2
         }}
       >
-        <Box>
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            sx={{ 
-              fontWeight: 'medium',
-              color: 'primary.main'
-            }}
-          >
-            Appointments
-          </Typography>
-          <Typography 
-            variant="subtitle1" 
-            color="text.secondary"
-            sx={{ mt: 1 }}
-          >
-            {user?.role === 'doctor' ? 
-              'View and manage your appointment schedule' : 
-              'Schedule and manage patient appointments'}
-          </Typography>
-        </Box>
-        
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
+        <Typography 
+          variant="h4" 
+          component="h1" 
           sx={{ 
-            borderRadius: 1.5,
-            px: 3
+            fontWeight: 'medium',
+            color: 'primary.main'
           }}
         >
-          New Appointment
-        </Button>
+          Appointments
+        </Typography>
+        <Typography 
+          variant="subtitle1" 
+          color="text.secondary"
+          sx={{ mt: 1 }}
+        >
+          {user?.role === 'doctor' ? 
+            'View and manage your appointment schedule' : 
+            'Schedule and manage patient appointments'}
+        </Typography>
       </Box>
 
       {/* Calendar */}
