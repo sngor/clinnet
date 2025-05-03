@@ -1,25 +1,16 @@
 // src/features/appointments/components/AppointmentCalendar.jsx
 import React, { useState } from 'react';
 import { 
-  Paper, 
   Box, 
   Typography, 
+  Paper,
   Button, 
   ButtonGroup,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Grid
+  Grid,
+  Tabs,
+  Tab
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
-import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameDay, addWeeks, subWeeks } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameDay, addWeeks, subWeeks, startOfMonth, endOfMonth, getDate } from 'date-fns';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -94,15 +85,6 @@ const mockDoctors = [
   { id: 4, name: "Dr. Taylor", specialty: "Dermatology" }
 ];
 
-// Mock data for patients
-const mockPatients = [
-  { id: 1, name: "John Doe" },
-  { id: 2, name: "Jane Smith" },
-  { id: 3, name: "Michael Johnson" },
-  { id: 4, name: "Emily Williams" },
-  { id: 5, name: "David Brown" }
-];
-
 // Time slots for the calendar
 const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 7 PM
 
@@ -110,24 +92,17 @@ function AppointmentCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('week'); // 'day', 'week', or 'month'
   const [appointments, setAppointments] = useState(mockAppointments);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [newAppointment, setNewAppointment] = useState({
-    title: "",
-    start: new Date(),
-    end: new Date(new Date().getTime() + 3600000), // 1 hour later
-    doctor: "",
-    doctorId: "",
-    patient: "",
-    patientId: "",
-    status: "Scheduled"
-  });
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedDoctor, setSelectedDoctor] = useState('all'); // 'all' or doctor ID
 
   // Get current week dates
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start on Monday
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+  // Get current month dates
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   // Navigate to previous period
   const handlePrevious = () => {
@@ -135,6 +110,10 @@ function AppointmentCalendar() {
       setCurrentDate(prev => addDays(prev, -1));
     } else if (view === 'week') {
       setCurrentDate(prev => subWeeks(prev, 1));
+    } else if (view === 'month') {
+      const newDate = new Date(currentDate);
+      newDate.setMonth(currentDate.getMonth() - 1);
+      setCurrentDate(newDate);
     }
   };
 
@@ -144,6 +123,10 @@ function AppointmentCalendar() {
       setCurrentDate(prev => addDays(prev, 1));
     } else if (view === 'week') {
       setCurrentDate(prev => addWeeks(prev, 1));
+    } else if (view === 'month') {
+      const newDate = new Date(currentDate);
+      newDate.setMonth(currentDate.getMonth() + 1);
+      setCurrentDate(newDate);
     }
   };
 
@@ -157,119 +140,26 @@ function AppointmentCalendar() {
     setView(newView);
   };
 
-  // Open new appointment dialog
-  const handleOpenDialog = () => {
-    setDialogOpen(true);
-  };
-
-  // Close dialog
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-    // Reset form
-    setNewAppointment({
-      title: "",
-      start: new Date(),
-      end: new Date(new Date().getTime() + 3600000),
-      doctor: "",
-      doctorId: "",
-      patient: "",
-      patientId: "",
-      status: "Scheduled"
-    });
-    setSelectedDoctor(null);
-    setSelectedPatient(null);
-  };
-
-  // Handle doctor selection
-  const handleDoctorChange = (event, newValue) => {
-    setSelectedDoctor(newValue);
-    if (newValue) {
-      setNewAppointment({
-        ...newAppointment,
-        doctor: newValue.name,
-        doctorId: newValue.id
-      });
-    }
-  };
-
-  // Handle patient selection
-  const handlePatientChange = (event, newValue) => {
-    setSelectedPatient(newValue);
-    if (newValue) {
-      setNewAppointment({
-        ...newAppointment,
-        patient: newValue.name,
-        patientId: newValue.id,
-        title: `${newValue.name} - Appointment`
-      });
-    }
-  };
-
-  // Handle date change
-  const handleDateChange = (date) => {
-    const newStart = new Date(date);
-    newStart.setHours(
-      newAppointment.start.getHours(),
-      newAppointment.start.getMinutes()
-    );
-    
-    const newEnd = new Date(date);
-    newEnd.setHours(
-      newAppointment.end.getHours(),
-      newAppointment.end.getMinutes()
-    );
-    
-    setNewAppointment({
-      ...newAppointment,
-      start: newStart,
-      end: newEnd
-    });
-  };
-
-  // Handle start time change
-  const handleStartTimeChange = (time) => {
-    if (!time) return;
-    
-    const newStart = new Date(time);
-    const newEnd = new Date(newStart.getTime() + 3600000); // 1 hour later
-    
-    setNewAppointment({
-      ...newAppointment,
-      start: newStart,
-      end: newEnd
-    });
-  };
-
-  // Handle end time change
-  const handleEndTimeChange = (time) => {
-    if (!time) return;
-    setNewAppointment({
-      ...newAppointment,
-      end: new Date(time)
-    });
-  };
-
-  // Create appointment
-  const handleCreateAppointment = () => {
-    const appointment = {
-      ...newAppointment,
-      id: Date.now() // Simple ID generation for demo
-    };
-    
-    setAppointments([...appointments, appointment]);
-    handleCloseDialog();
-  };
-
   // Format time
   const formatTime = (date) => {
     return format(date, 'h:mm a');
   };
 
+  // Filter appointments by doctor
+  const filteredAppointments = selectedDoctor === 'all' 
+    ? appointments 
+    : appointments.filter(appointment => appointment.doctorId === parseInt(selectedDoctor));
+
   // Get appointments for a specific day
   const getAppointmentsForDay = (day) => {
-    return appointments.filter(appointment => 
+    return filteredAppointments.filter(appointment => 
       isSameDay(new Date(appointment.start), day)
     );
+  };
+
+  // Handle doctor filter change
+  const handleDoctorChange = (event, newValue) => {
+    setSelectedDoctor(newValue);
   };
 
   // Render day view
@@ -480,6 +370,116 @@ function AppointmentCalendar() {
     );
   };
 
+  // Render month view
+  const renderMonthView = () => {
+    // Calculate days to display (including days from previous/next month to fill the grid)
+    const firstDayOfMonth = startOfMonth(currentDate);
+    const lastDayOfMonth = endOfMonth(currentDate);
+    
+    // Get the day of week for the first day (0 = Sunday, 1 = Monday, etc.)
+    const firstDayOfWeek = firstDayOfMonth.getDay();
+    
+    // Adjust for Monday as first day of week
+    const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+    
+    // Calculate start and end dates for the calendar grid
+    const calendarStart = addDays(firstDayOfMonth, -startOffset);
+    const calendarEnd = addDays(calendarStart, 41); // 6 weeks (42 days) to ensure we cover the month
+    
+    const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+    
+    // Group days into weeks
+    const weeks = [];
+    for (let i = 0; i < calendarDays.length; i += 7) {
+      weeks.push(calendarDays.slice(i, i + 7));
+    }
+    
+    return (
+      <Box>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          {format(currentDate, 'MMMM yyyy')}
+        </Typography>
+        
+        <Box sx={{ border: '1px solid #e0e0e0' }}>
+          {/* Weekday headers */}
+          <Box sx={{ display: 'flex', borderBottom: '1px solid #e0e0e0', bgcolor: '#f5f5f5' }}>
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+              <Box 
+                key={day} 
+                sx={{ 
+                  flexGrow: 1, 
+                  p: 1, 
+                  textAlign: 'center',
+                  width: 0 // Force equal width
+                }}
+              >
+                <Typography variant="subtitle2">{day}</Typography>
+              </Box>
+            ))}
+          </Box>
+          
+          {/* Calendar grid */}
+          {weeks.map((week, weekIndex) => (
+            <Box key={weekIndex} sx={{ display: 'flex', height: '120px' }}>
+              {week.map(day => {
+                const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+                const dayAppointments = getAppointmentsForDay(day);
+                
+                return (
+                  <Box 
+                    key={format(day, 'yyyy-MM-dd')} 
+                    sx={{ 
+                      flexGrow: 1, 
+                      p: 1, 
+                      borderRight: '1px solid #e0e0e0',
+                      borderBottom: '1px solid #e0e0e0',
+                      bgcolor: isToday(day) ? 'primary.light' : isCurrentMonth ? 'white' : '#f9f9f9',
+                      color: isToday(day) ? 'white' : isCurrentMonth ? 'inherit' : '#bdbdbd',
+                      width: 0, // Force equal width
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 'medium', mb: 1 }}>
+                      {getDate(day)}
+                    </Typography>
+                    
+                    {/* Show max 3 appointments with count indicator if more */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      {dayAppointments.slice(0, 3).map(appointment => (
+                        <Box 
+                          key={appointment.id}
+                          sx={{ 
+                            bgcolor: 'primary.main', 
+                            color: 'white', 
+                            borderRadius: 0.5,
+                            p: 0.5,
+                            fontSize: '0.75rem',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}
+                        >
+                          {appointment.title}
+                        </Box>
+                      ))}
+                      
+                      {dayAppointments.length > 3 && (
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          +{dayAppointments.length - 3} more
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    );
+  };
+
   return (
     <Paper sx={{ p: 3, borderRadius: 2 }}>
       {/* Calendar header */}
@@ -507,6 +507,13 @@ function AppointmentCalendar() {
             >
               Week
             </Button>
+            <Button 
+              variant={view === 'month' ? 'contained' : 'outlined'} 
+              onClick={() => handleViewChange('month')}
+              startIcon={<CalendarMonthIcon />}
+            >
+              Month
+            </Button>
           </ButtonGroup>
           
           {/* Navigation */}
@@ -521,133 +528,28 @@ function AppointmentCalendar() {
               Next
             </Button>
           </ButtonGroup>
-          
-          {/* Add appointment button */}
-          <Button 
-            variant="contained" 
-            startIcon={<AddIcon />}
-            onClick={handleOpenDialog}
-            sx={{ borderRadius: 1.5 }}
-          >
-            New Appointment
-          </Button>
         </Box>
       </Box>
       
-      {/* Calendar view */}
-      {view === 'day' ? renderDayView() : renderWeekView()}
+      {/* Doctor filter */}
+      <Box sx={{ mb: 3 }}>
+        <Tabs 
+          value={selectedDoctor} 
+          onChange={handleDoctorChange}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          <Tab label="All Doctors" value="all" />
+          {mockDoctors.map(doctor => (
+            <Tab key={doctor.id} label={doctor.name} value={doctor.id.toString()} />
+          ))}
+        </Tabs>
+      </Box>
       
-      {/* New Appointment Dialog */}
-      <Dialog 
-        open={dialogOpen} 
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Schedule New Appointment</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Patient</InputLabel>
-                <Select
-                  value={selectedPatient ? selectedPatient.id : ''}
-                  onChange={(e) => {
-                    const patient = mockPatients.find(p => p.id === e.target.value);
-                    handlePatientChange(e, patient);
-                  }}
-                  label="Patient"
-                >
-                  {mockPatients.map((patient) => (
-                    <MenuItem key={patient.id} value={patient.id}>
-                      {patient.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Doctor</InputLabel>
-                <Select
-                  value={selectedDoctor ? selectedDoctor.id : ''}
-                  onChange={(e) => {
-                    const doctor = mockDoctors.find(d => d.id === e.target.value);
-                    handleDoctorChange(e, doctor);
-                  }}
-                  label="Doctor"
-                >
-                  {mockDoctors.map((doctor) => (
-                    <MenuItem key={doctor.id} value={doctor.id}>
-                      {doctor.name} ({doctor.specialty})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="Date"
-                  value={newAppointment.start}
-                  onChange={handleDateChange}
-                  slotProps={{
-                    textField: { fullWidth: true }
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <TimePicker
-                  label="Start Time"
-                  value={newAppointment.start}
-                  onChange={handleStartTimeChange}
-                  slotProps={{
-                    textField: { fullWidth: true }
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <TimePicker
-                  label="End Time"
-                  value={newAppointment.end}
-                  onChange={handleEndTimeChange}
-                  slotProps={{
-                    textField: { fullWidth: true }
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                label="Notes"
-                multiline
-                rows={3}
-                fullWidth
-                placeholder="Add any notes about this appointment"
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button 
-            onClick={handleCreateAppointment} 
-            variant="contained"
-            disabled={!selectedPatient || !selectedDoctor}
-          >
-            Schedule
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Calendar view */}
+      {view === 'day' && renderDayView()}
+      {view === 'week' && renderWeekView()}
+      {view === 'month' && renderMonthView()}
     </Paper>
   );
 }

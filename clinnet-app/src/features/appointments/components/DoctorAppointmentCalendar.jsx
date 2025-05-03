@@ -3,16 +3,41 @@ import React, { useState } from "react";
 import { 
   Box, 
   Typography, 
-  Paper,
-  Chip,
-  Grid,
+  Paper, 
+  Grid, 
+  Button, 
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Autocomplete,
   Card,
   CardContent,
-  Divider
+  Chip,
+  Divider,
+  Tabs,
+  Tab
 } from "@mui/material";
+import AddIcon from '@mui/icons-material/Add';
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
+import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import NoteIcon from "@mui/icons-material/Note";
+import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
+
+// Mock data for patients
+const mockPatients = [
+  { id: 101, name: "Alice Brown" },
+  { id: 102, name: "Bob White" },
+  { id: 103, name: "Charlie Green" },
+  { id: 104, name: "David Black" },
+  { id: 105, name: "Eva Gray" }
+];
 
 // Mock appointments for the doctor
 const mockAppointments = [
@@ -24,6 +49,7 @@ const mockAppointments = [
     patient: "Alice Brown",
     patientId: 101,
     status: "Scheduled",
+    type: "Checkup",
     notes: "Annual physical examination"
   },
   {
@@ -34,6 +60,7 @@ const mockAppointments = [
     patient: "Bob White",
     patientId: 102,
     status: "Checked-in",
+    type: "Consultation",
     notes: "Follow-up on medication"
   },
   {
@@ -44,13 +71,58 @@ const mockAppointments = [
     patient: "Charlie Green",
     patientId: 103,
     status: "Scheduled",
+    type: "Follow-up",
     notes: "Review test results"
+  },
+  {
+    id: 4,
+    title: "David Black - Checkup",
+    start: addDays(new Date(new Date().setHours(10, 0, 0, 0)), 1),
+    end: addDays(new Date(new Date().setHours(11, 0, 0, 0)), 1),
+    patient: "David Black",
+    patientId: 104,
+    status: "Scheduled",
+    type: "Checkup",
+    notes: "New patient initial visit"
+  },
+  {
+    id: 5,
+    title: "Eva Gray - Consultation",
+    start: addDays(new Date(new Date().setHours(13, 30, 0, 0)), 2),
+    end: addDays(new Date(new Date().setHours(14, 30, 0, 0)), 2),
+    patient: "Eva Gray",
+    patientId: 105,
+    status: "Scheduled",
+    type: "Consultation",
+    notes: "Discuss treatment options"
   }
 ];
 
+// Time slots for the calendar
+const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 7 PM
+
 function DoctorAppointmentCalendar() {
-  const [appointments] = useState(mockAppointments);
-  
+  const [appointments, setAppointments] = useState(mockAppointments);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [newAppointment, setNewAppointment] = useState({
+    title: "",
+    start: new Date(),
+    end: new Date(new Date().getTime() + 3600000), // 1 hour later
+    patient: "",
+    patientId: "",
+    status: "Scheduled",
+    type: "",
+    notes: ""
+  });
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [viewMode, setViewMode] = useState('calendar'); // 'calendar' or 'list'
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Get current week dates
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start on Monday
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
   // Get color for status chip
   const getStatusColor = (status) => {
     switch(status) {
@@ -71,7 +143,78 @@ function DoctorAppointmentCalendar() {
     }
   };
 
-  // Group appointments by time
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    // Reset form
+    setNewAppointment({
+      title: "",
+      start: new Date(),
+      end: new Date(new Date().getTime() + 3600000),
+      patient: "",
+      patientId: "",
+      status: "Scheduled",
+      type: "",
+      notes: ""
+    });
+    setSelectedPatient(null);
+  };
+
+  const handleDateChange = (field, date) => {
+    setNewAppointment({
+      ...newAppointment,
+      [field]: date
+    });
+  };
+
+  const handlePatientChange = (event, value) => {
+    if (value) {
+      setSelectedPatient(value);
+      setNewAppointment({
+        ...newAppointment,
+        patient: value.name,
+        patientId: value.id
+      });
+    } else {
+      setSelectedPatient(null);
+      setNewAppointment({
+        ...newAppointment,
+        patient: "",
+        patientId: ""
+      });
+    }
+  };
+
+  const handleCreateAppointment = () => {
+    // Create a title from patient name and appointment type
+    const title = `${newAppointment.patient} - ${newAppointment.type || "Appointment"}`;
+    
+    const appointment = {
+      ...newAppointment,
+      id: Date.now(), // Simple ID generation
+      title
+    };
+    
+    setAppointments([...appointments, appointment]);
+    handleCloseDialog();
+  };
+
+  // Get appointments for a specific day
+  const getAppointmentsForDay = (day) => {
+    return appointments.filter(appointment => 
+      isSameDay(new Date(appointment.start), day)
+    );
+  };
+
+  // Format time
+  const formatTime = (date) => {
+    return format(date, 'h:mm a');
+  };
+
+  // Group appointments by time for list view
   const groupedAppointments = appointments.reduce((acc, appointment) => {
     const hour = appointment.start.getHours();
     if (!acc[hour]) {
@@ -81,87 +224,335 @@ function DoctorAppointmentCalendar() {
     return acc;
   }, {});
 
-  return (
-    <Paper sx={{ p: 3, borderRadius: 2 }}>
-      <Typography variant="h6" sx={{ mb: 3 }}>My Schedule</Typography>
-
-      <Box sx={{ height: 600, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Today's Appointments
+  // Render week view calendar
+  const renderWeekCalendar = () => {
+    return (
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          {format(weekStart, 'MMMM d')} - {format(weekEnd, 'MMMM d, yyyy')}
         </Typography>
         
-        <Divider sx={{ mb: 3 }} />
-        
-        {Object.keys(groupedAppointments).length > 0 ? (
-          Object.keys(groupedAppointments)
-            .sort((a, b) => parseInt(a) - parseInt(b))
-            .map(hour => (
-              <Box key={hour} sx={{ mb: 4 }}>
-                <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-                  {new Date(new Date().setHours(parseInt(hour), 0, 0, 0)).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+        <Box sx={{ display: 'flex', height: 'calc(100vh - 350px)', border: '1px solid #e0e0e0' }}>
+          {/* Time column */}
+          <Box sx={{ width: '80px', borderRight: '1px solid #e0e0e0', bgcolor: '#f5f5f5' }}>
+            <Box sx={{ height: '40px', borderBottom: '1px solid #e0e0e0' }} /> {/* Empty cell for header */}
+            {timeSlots.map(hour => (
+              <Box 
+                key={hour} 
+                sx={{ 
+                  height: '60px', 
+                  borderBottom: '1px solid #e0e0e0',
+                  p: 1,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'center'
+                }}
+              >
+                <Typography variant="caption">
+                  {hour % 12 === 0 ? 12 : hour % 12} {hour >= 12 ? 'PM' : 'AM'}
                 </Typography>
+              </Box>
+            ))}
+          </Box>
+          
+          {/* Days columns */}
+          {weekDays.map(day => (
+            <Box 
+              key={format(day, 'yyyy-MM-dd')} 
+              sx={{ 
+                flexGrow: 1, 
+                borderRight: '1px solid #e0e0e0',
+                position: 'relative',
+                width: 0, // This forces equal width columns
+              }}
+            >
+              {/* Day header */}
+              <Box 
+                sx={{ 
+                  height: '40px', 
+                  borderBottom: '1px solid #e0e0e0',
+                  p: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: isToday(day) ? 'primary.light' : '#f5f5f5',
+                  color: isToday(day) ? 'white' : 'inherit'
+                }}
+              >
+                <Typography variant="subtitle2">
+                  {format(day, 'EEE d')}
+                </Typography>
+              </Box>
+              
+              {/* Time slots */}
+              {timeSlots.map(hour => (
+                <Box 
+                  key={hour} 
+                  sx={{ 
+                    height: '60px', 
+                    borderBottom: '1px solid #e0e0e0',
+                    position: 'relative'
+                  }}
+                />
+              ))}
+              
+              {/* Render appointments for this day */}
+              {getAppointmentsForDay(day).map(appointment => {
+                const startHour = appointment.start.getHours();
+                const startMinutes = appointment.start.getMinutes();
+                const endHour = appointment.end.getHours();
+                const endMinutes = appointment.end.getMinutes();
                 
-                <Grid container spacing={2}>
-                  {groupedAppointments[hour].map(appointment => (
-                    <Grid item xs={12} md={6} key={appointment.id}>
-                      <Card 
-                        sx={{ 
-                          borderLeft: 4, 
-                          borderColor: getStatusColor(appointment.status) + '.main',
-                          boxShadow: 2
-                        }}
-                      >
-                        <CardContent>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                            <Typography variant="subtitle1">
-                              {appointment.patient}
-                            </Typography>
-                            <Chip 
-                              label={appointment.status} 
-                              color={getStatusColor(appointment.status)} 
-                              size="small" 
-                            />
-                          </Box>
-                          
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                              {appointment.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
-                              {appointment.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                            </Typography>
-                          </Box>
-                          
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                            <PersonIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                            <Typography variant="body2" color="text.secondary">
-                              Patient ID: {appointment.patientId}
-                            </Typography>
-                          </Box>
-                          
-                          {appointment.notes && (
-                            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                              <NoteIcon fontSize="small" sx={{ mr: 1, mt: 0.3, color: 'text.secondary' }} />
+                const top = 40 + (startHour - 8) * 60 + startMinutes; // 40px for the header
+                const height = ((endHour - startHour) * 60) + (endMinutes - startMinutes);
+                
+                return (
+                  <Box
+                    key={appointment.id}
+                    sx={{
+                      position: 'absolute',
+                      top: `${top}px`,
+                      left: '2px',
+                      right: '2px',
+                      height: `${height}px`,
+                      backgroundColor: getStatusColor(appointment.status) + '.light',
+                      color: 'white',
+                      borderRadius: 1,
+                      p: 0.5,
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: getStatusColor(appointment.status) + '.main',
+                      }
+                    }}
+                  >
+                    <Typography variant="caption" noWrap>
+                      {appointment.title}
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    );
+  };
+
+  return (
+    <Paper sx={{ p: 3, borderRadius: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+        <Typography variant="h6">My Appointment Calendar</Typography>
+        <Button 
+          variant="contained" 
+          startIcon={<AddIcon />}
+          onClick={handleOpenDialog}
+        >
+          New Appointment
+        </Button>
+      </Box>
+
+      {/* View toggle */}
+      <Box sx={{ mb: 2 }}>
+        <Tabs value={viewMode} onChange={(e, newValue) => setViewMode(newValue)}>
+          <Tab value="calendar" label="Calendar View" />
+          <Tab value="list" label="List View" />
+        </Tabs>
+      </Box>
+
+      {/* Calendar View */}
+      {viewMode === 'calendar' && renderWeekCalendar()}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+          <Typography variant="subtitle1" gutterBottom>
+            My Appointments
+          </Typography>
+          
+          <Divider sx={{ mb: 3 }} />
+          
+          {Object.keys(groupedAppointments).length > 0 ? (
+            Object.keys(groupedAppointments)
+              .sort((a, b) => parseInt(a) - parseInt(b))
+              .map(hour => (
+                <Box key={hour} sx={{ mb: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+                    {new Date(new Date().setHours(parseInt(hour), 0, 0, 0)).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </Typography>
+                  
+                  <Grid container spacing={2}>
+                    {groupedAppointments[hour].map(appointment => (
+                      <Grid item xs={12} md={6} key={appointment.id}>
+                        <Card 
+                          sx={{ 
+                            borderLeft: 4, 
+                            borderColor: getStatusColor(appointment.status) + '.main',
+                            boxShadow: 2
+                          }}
+                        >
+                          <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                              <Typography variant="subtitle1">
+                                {appointment.patient}
+                              </Typography>
+                              <Chip 
+                                label={appointment.status} 
+                                color={getStatusColor(appointment.status)} 
+                                size="small" 
+                              />
+                            </Box>
+                            
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                              <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                               <Typography variant="body2" color="text.secondary">
-                                {appointment.notes}
+                                {format(appointment.start, 'MMM d, yyyy')} • {formatTime(appointment.start)} - {formatTime(appointment.end)}
                               </Typography>
                             </Box>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            ))
-        ) : (
-          <Typography variant="body1" color="text.secondary" align="center" sx={{ mt: 4 }}>
-            No appointments scheduled for today
-          </Typography>
-        )}
-      </Box>
+                            
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                              <PersonIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                              <Typography variant="body2" color="text.secondary">
+                                Patient ID: {appointment.patientId}
+                              </Typography>
+                            </Box>
+                            
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                              <LocalHospitalIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                              <Typography variant="body2" color="text.secondary">
+                                Type: {appointment.type}
+                              </Typography>
+                            </Box>
+                            
+                            {appointment.notes && (
+                              <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                                <NoteIcon fontSize="small" sx={{ mr: 1, mt: 0.3, color: 'text.secondary' }} />
+                                <Typography variant="body2" color="text.secondary">
+                                  {appointment.notes}
+                                </Typography>
+                              </Box>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              ))
+          ) : (
+            <Typography variant="body1" color="text.secondary" align="center" sx={{ mt: 4 }}>
+              No appointments scheduled
+            </Typography>
+          )}
+        </Box>
+      )}
+
+      {/* New Appointment Dialog */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+        <DialogTitle>Schedule New Appointment</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <Autocomplete
+                options={mockPatients}
+                getOptionLabel={(option) => option.name}
+                value={selectedPatient}
+                onChange={handlePatientChange}
+                renderInput={(params) => (
+                  <TextField {...params} label="Patient" fullWidth required />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Date"
+                type="date"
+                fullWidth
+                required
+                value={newAppointment.start.toISOString().split('T')[0]}
+                onChange={(e) => {
+                  const date = new Date(e.target.value);
+                  const startTime = new Date(newAppointment.start);
+                  date.setHours(startTime.getHours(), startTime.getMinutes());
+                  
+                  const endDate = new Date(date);
+                  endDate.setHours(date.getHours() + 1);
+                  
+                  handleDateChange('start', date);
+                  handleDateChange('end', endDate);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Time"
+                type="time"
+                fullWidth
+                required
+                value={`${String(newAppointment.start.getHours()).padStart(2, '0')}:${String(newAppointment.start.getMinutes()).padStart(2, '0')}`}
+                onChange={(e) => {
+                  const [hours, minutes] = e.target.value.split(':').map(Number);
+                  const startDate = new Date(newAppointment.start);
+                  startDate.setHours(hours, minutes);
+                  
+                  const endDate = new Date(startDate);
+                  endDate.setHours(startDate.getHours() + 1);
+                  
+                  handleDateChange('start', startDate);
+                  handleDateChange('end', endDate);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Appointment Type</InputLabel>
+                <Select
+                  value={newAppointment.type || ""}
+                  label="Appointment Type"
+                  onChange={(e) => setNewAppointment({
+                    ...newAppointment,
+                    type: e.target.value
+                  })}
+                >
+                  <MenuItem value="Checkup">Checkup</MenuItem>
+                  <MenuItem value="Follow-up">Follow-up</MenuItem>
+                  <MenuItem value="Consultation">Consultation</MenuItem>
+                  <MenuItem value="Procedure">Procedure</MenuItem>
+                  <MenuItem value="Emergency">Emergency</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Notes"
+                multiline
+                rows={3}
+                fullWidth
+                placeholder="Add any additional notes about the appointment"
+                onChange={(e) => setNewAppointment({
+                  ...newAppointment,
+                  notes: e.target.value
+                })}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button 
+            onClick={handleCreateAppointment} 
+            variant="contained" 
+            disabled={!newAppointment.patient}
+          >
+            Schedule
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }
