@@ -8,9 +8,15 @@ frontend:
         - npm install
     build:
       commands:
-        - cd clinnet-app
-        - ls -la
+        - echo "Current directory before build:"
         - pwd
+        - ls -la
+        - echo "Changing to clinnet-app directory..."
+        - cd clinnet-app || cd /codebuild/output/src*/src/Clinnet-EMR/clinnet-app
+        - echo "Current directory after change:"
+        - pwd
+        - ls -la
+        - echo "Running build command..."
         - npm run build
   artifacts:
     baseDirectory: clinnet-app/dist
