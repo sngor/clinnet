@@ -3,12 +3,19 @@ frontend:
   phases:
     preBuild:
       commands:
+        - echo "Current directory (preBuild):"
+        - pwd
+        - echo "Installing Amplify CLI..."
         - npm install -g @aws-amplify/cli
+        - echo "Changing to clinnet-app directory..."
         - cd clinnet-app
+        - echo "Installing dependencies..."
         - npm install
     build:
       commands:
-        - cd clinnet-app
+        - echo "Current directory (build):"
+        - pwd
+        - echo "Building the app..."
         - npm run build
   artifacts:
     baseDirectory: clinnet-app/dist
