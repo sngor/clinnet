@@ -11,10 +11,13 @@ frontend:
         - cd clinnet-app
         - echo "Installing dependencies..."
         - npm install
+        - npm install --save react-router-dom
     build:
       commands:
         - echo "Current directory (build):"
         - pwd
+        - echo "Changing to clinnet-app directory again..."
+        - cd clinnet-app
         - echo "Building the app..."
         - npm run build
   artifacts:
