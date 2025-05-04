@@ -4,13 +4,14 @@ frontend:
     preBuild:
       commands:
         - cd clinnet-app
+        - rm -f package-lock.json
         - npm install
     build:
       commands:
         - cd clinnet-app
         - npm run build
   artifacts:
-    baseDirectory: clinnet-app/build
+    baseDirectory: clinnet-app/dist
     files:
       - '**/*'
   cache:
