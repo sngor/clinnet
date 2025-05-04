@@ -11,7 +11,8 @@ frontend:
         - cd clinnet-app
         - echo "Installing dependencies..."
         - npm install
-        - npm install --save react-router-dom
+        - echo "Installing additional required dependencies..."
+        - npm install --save react-router-dom @mui/material @mui/icons-material @emotion/react @emotion/styled @mui/x-date-pickers date-fns
     build:
       commands:
         - echo "Current directory (build):"
