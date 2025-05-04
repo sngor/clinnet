@@ -9,6 +9,8 @@ frontend:
     build:
       commands:
         - cd clinnet-app
+        - ls -la
+        - pwd
         - npm run build
   artifacts:
     baseDirectory: clinnet-app/dist
