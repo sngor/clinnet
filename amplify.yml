@@ -5,6 +5,8 @@ frontend:
       commands:
         - echo "Current directory (preBuild):"
         - pwd
+        - echo "Listing directory contents:"
+        - ls -la
         - echo "Installing Amplify CLI..."
         - npm install -g @aws-amplify/cli
         - echo "Changing to clinnet-app directory..."
@@ -12,7 +14,7 @@ frontend:
         - echo "Installing dependencies..."
         - npm install
         - echo "Installing additional required dependencies..."
-        - npm install --save aws-amplify react-router-dom @mui/material @mui/icons-material @emotion/react @emotion/styled @mui/x-date-pickers date-fns
+        - npm install --save aws-amplify react-router-dom @mui/material @mui/icons-material @emotion/react @emotion/styled @mui/x-date-pickers date-fns axios
     build:
       commands:
         - echo "Current directory (build):"
@@ -20,12 +22,12 @@ frontend:
         - echo "Building the app..."
         - npm run build
   artifacts:
-    baseDirectory: build
+    baseDirectory: clinnet-app/dist
     files:
       - '**/*'
   cache:
     paths:
-      - node_modules/**/*
+      - clinnet-app/node_modules/**/*
   customHeaders:
     - pattern: '**/*'
       headers:
