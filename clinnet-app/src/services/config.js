@@ -1,50 +1,22 @@
 // src/services/config.js
 import { Amplify } from 'aws-amplify';
+import awsExports from '../aws-exports';
 
 const config = {
-  API_ENDPOINT: process.env.REACT_APP_API_ENDPOINT,
+  API_ENDPOINT: process.env.REACT_APP_API_ENDPOINT || 
+    (awsExports.aws_cloud_logic_custom && awsExports.aws_cloud_logic_custom[0]?.endpoint),
   COGNITO: {
-   11 reference-tracker>erence-tracker> REGION: process.env.REACT_APP_COGNITO_REGION,
-    USER_POOL_ID: process.env.REACT_APP_USER_POOL_ID,
-    APP_CLIENT_ID: process.env.REACT_APP_USER_POOL_CLIENT_ID,
+    REGION: process.env.REACT_APP_COGNITO_REGION || awsExports.aws_cognito_region,
+    USER_POOL_ID: process.env.REACT_APP_USER_POOL_ID || awsExports.aws_user_pools_id,
+    APP_CLIENT_ID: process.env.REACT_APP_USER_POOL_CLIENT_ID || awsExports.aws_user_pools_web_client_id,
   },
   S3: {
-    BUCKET: process.env.REACT_APP_S3_BUCKET,
-    REGION: process.env.REACT_APP_S3_REGION,
+    BUCKET: process.env.REACT_APP_S3_BUCKET || awsExports.aws_user_files_s3_bucket,
+    REGION: process.env.REACT_APP_S3_REGION || awsExports.aws_user_files_s3_bucket_region,
   }
 };
 
-Amplify.configure({
-  Auth: {
-    region: config.COGNITO.REGION,
-    userPoolId: config.COGNITO.USER_POOL_ID,
-    userPoolWebClientId: config.COGNITO.APP_CLIENT_ID,
-  },
-  API: {
-    endpoints: [
-      {
-        name: 'clinnetApi',
-        endpoint: config.API_ENDPOINT,
-        custom_header: async () => {
-        ence-tracker>  try {
-            const session = awai<me-tracker>ark marker-index=0 reference-tracker>t Amplify.Auth.currentSession();
-            return {
-              Authorization: `Bearer ${session.getIdToken().getJwtToken()}`,
-            };
-          } catch (error) {
-            console.log('No current session');
-            return {};
-          }
-        },
-      },
-    ],
-  },
-  Storage: {
-    AWSS3: {
-      bucket: config.S3.BUCKET,
-      region: config.S3.REGION,
-    }
-  }
-});
+// We don't need to configure Amplify here since it's already done in AmplifyProvider
+// This avoids duplicate configuration
 
 export default config;

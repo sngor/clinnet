@@ -1,118 +1,74 @@
-# Clinnet-EMR
+# Clinnet EMR
 
-A comprehensive Electronic Medical Record (EMR) system for clinics and healthcare providers.
+Electronic Medical Records system for clinics.
 
 ## Project Structure
 
-The project consists of two main parts:
+- `/clinnet-app` - Frontend React application
+- `/src` - Backend AWS Lambda functions and API
+- `/template.yaml` - AWS SAM template for backend resources
 
-1. **Backend**: AWS Serverless Application Model (SAM) with Lambda, DynamoDB, S3, API Gateway, and Cognito
-2. **Frontend**: React application with AWS Amplify for hosting and integration
+## Deployment Instructions
 
-## Getting Started
+### Backend Deployment
 
-### Prerequisites
-
-- Node.js (v14 or later)
-- AWS CLI
-- AWS SAM CLI
-- AWS Account
-
-### Backend Setup
-
-1. Install dependencies:
-
-```bash
-npm install
-```
-
-2. Deploy the backend:
+Deploy the backend services using AWS SAM:
 
 ```bash
 npm run deploy
 ```
 
-3. After deployment, note the outputs for:
-   - API Gateway endpoint URL
-   - Cognito User Pool ID
-   - Cognito User Pool Client ID
-   - S3 bucket name
+### Frontend Deployment
 
-### Frontend Setup
+The frontend is deployed using AWS Amplify. To deploy:
 
-1. Navigate to the frontend directory:
+1. Push your changes to your Git repository
+2. Amplify will automatically build and deploy the frontend
+
+Alternatively, you can manually deploy from your local machine:
 
 ```bash
 cd clinnet-app
+npm run build
+# Then upload the dist folder to Amplify
 ```
 
-2. Install dependencies:
+## Environment Variables
+
+The frontend requires the following environment variables:
+
+```
+VITE_API_ENDPOINT=https://your-api-gateway-url.execute-api.region.amazonaws.com/prod
+VITE_COGNITO_REGION=your-region
+VITE_USER_POOL_ID=your-user-pool-id
+VITE_USER_POOL_CLIENT_ID=your-user-pool-client-id
+VITE_S3_BUCKET=your-s3-bucket
+VITE_S3_REGION=your-s3-region
+```
+
+These are automatically set in the Amplify console during deployment.
+
+## Troubleshooting Deployment
+
+If you encounter issues with the Amplify deployment:
+
+1. Check the build logs in the Amplify Console
+2. Verify that all environment variables are correctly set
+3. Make sure the amplify.yml file is properly configured
+4. Check that the Vite build is generating the correct output directory (dist)
+
+## Local Development
+
+To run the frontend locally:
 
 ```bash
+cd clinnet-app
 npm install
-```
-
-3. Create a `.env` file with the backend configuration:
-
-```
-REACT_APP_API_ENDPOINT=<API_GATEWAY_URL>
-REACT_APP_COGNITO_REGION=us-east-2
-REACT_APP_USER_POOL_ID=<USER_POOL_ID>
-REACT_APP_USER_POOL_CLIENT_ID=<USER_POOL_CLIENT_ID>
-REACT_APP_S3_BUCKET=<S3_BUCKET_NAME>
-REACT_APP_S3_REGION=us-east-2
-```
-
-4. Start the development server:
-
-```bash
 npm start
 ```
 
-## Implemented AWS Services
-
-### DynamoDB Tables
-- Patients
-- Users
-- Services
-- Appointments
-- Medical Records
-
-### Lambda Functions
-- Services API (CRUD operations)
-- Users API (CRUD operations)
-- Patients API (CRUD operations)
-- Appointments API (CRUD operations)
-- Medical Records API (CRUD operations)
-
-### API Gateway
-- RESTful API with Cognito authorizer
-
-### Cognito
-- User authentication and authorization
-
-### S3
-- Document storage for patient records
-
-### Amplify
-- Frontend hosting and CI/CD
-
-## Development Workflow
-
-1. Make changes to the backend code in the `src/handlers` directory
-2. Deploy the changes with `npm run deploy`
-3. Update the frontend to use the new backend features
-4. Test locally with `npm start` in the frontend directory
-5. Deploy the frontend with Amplify
-
-## Seeding Data
-
-To seed initial data into the DynamoDB tables:
+To run the backend locally:
 
 ```bash
-npm run seed-data
+npm run start-local
 ```
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.

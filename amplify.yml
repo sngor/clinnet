@@ -8,6 +8,7 @@ applications:
             - npm ci
         build:
           commands:
+            - echo "Building Clinnet EMR frontend..."
             - cd clinnet-app
             - npm run build
       artifacts:
@@ -30,4 +31,17 @@ applications:
               value: 'SAMEORIGIN'
             - key: 'Content-Security-Policy'
               value: "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' *.amazonaws.com *.amazoncognito.com *.execute-api.*.amazonaws.com"
-    appRoot: clinnet-app
+    appRoot: .
+    environmentVariables:
+      VITE_API_ENDPOINT: 'https://v30yfenncd.execute-api.us-east-2.amazonaws.com/prod'
+      VITE_COGNITO_REGION: 'us-east-2'
+      VITE_USER_POOL_ID: 'us-east-2_HU35r96jk'
+      VITE_USER_POOL_CLIENT_ID: '1ltnr3hircmcoip4f6okfr3000'
+      VITE_S3_BUCKET: 'clinnet-documents-152296711262'
+      VITE_S3_REGION: 'us-east-2'
+      REACT_APP_API_ENDPOINT: 'https://v30yfenncd.execute-api.us-east-2.amazonaws.com/prod'
+      REACT_APP_COGNITO_REGION: 'us-east-2'
+      REACT_APP_USER_POOL_ID: 'us-east-2_HU35r96jk'
+      REACT_APP_USER_POOL_CLIENT_ID: '1ltnr3hircmcoip4f6okfr3000'
+      REACT_APP_S3_BUCKET: 'clinnet-documents-152296711262'
+      REACT_APP_S3_REGION: 'us-east-2'
