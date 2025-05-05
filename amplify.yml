@@ -9,15 +9,14 @@ applications:
         build:
           commands:
             - echo "Building Clinnet EMR frontend..."
-            - cd clinnet-app
             - npm run build
       artifacts:
-        baseDirectory: clinnet-app/dist
+        baseDirectory: dist
         files:
           - '**/*'
       cache:
         paths:
-          - clinnet-app/node_modules/**/*
+          - node_modules/**/*
       customHeaders:
         - pattern: '**/*'
           headers:
@@ -31,7 +30,7 @@ applications:
               value: 'SAMEORIGIN'
             - key: 'Content-Security-Policy'
               value: "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' *.amazonaws.com *.amazoncognito.com *.execute-api.*.amazonaws.com"
-    appRoot: .
+    appRoot: clinnet-app
     environmentVariables:
       VITE_API_ENDPOINT: 'https://v30yfenncd.execute-api.us-east-2.amazonaws.com/prod'
       VITE_COGNITO_REGION: 'us-east-2'
