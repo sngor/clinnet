@@ -1,0 +1,77 @@
+{
+    "clinnet-users": [
+      {
+        "PutRequest": {
+          "Item": {
+            "id": {"S": "user-1"},
+            "firstName": {"S": "Admin"},
+            "lastName": {"S": "User"},
+            "email": {"S": "admin@clinnet.com"},
+            "password": {"S": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"},
+            "role": {"S": "admin"},
+            "phone": {"S": "555-111-0000"},
+            "department": {"S": "Administration"},
+            "position": {"S": "System Administrator"},
+            "active": {"BOOL": true},
+            "createdAt": {"S": "2023-05-01T00:00:00Z"},
+            "updatedAt": {"S": "2023-05-01T00:00:00Z"}
+          }
+        }
+      },
+      {
+        "PutRequest": {
+          "Item": {
+            "id": {"S": "user-2"},
+            "firstName": {"S": "Doctor"},
+            "lastName": {"S": "Smith"},
+            "email": {"S": "doctor.smith@clinnet.com"},
+            "password": {"S": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"},
+            "role": {"S": "doctor"},
+            "phone": {"S": "555-222-0000"},
+            "department": {"S": "Medical"},
+            "position": {"S": "General Practitioner"},
+            "active": {"BOOL": true},
+            "createdAt": {"S": "2023-05-01T00:00:00Z"},
+            "updatedAt": {"S": "2023-05-01T00:00:00Z"}
+          }
+        }
+      },
+      {
+        "PutRequest": {
+          "Item": {
+            "id": {"S": "user-3"},
+            "firstName": {"S": "Nurse"},
+            "lastName": {"S": "Johnson"},
+            "email": {"S": "nurse.johnson@clinnet.com"},
+            "password": {"S": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"},
+            "role": {"S": "nurse"},
+            "phone": {"S": "555-333-0000"},
+            "department": {"S": "Medical"},
+            "position": {"S": "Registered Nurse"},
+            "active": {"BOOL": true},
+            "createdAt": {"S": "2023-05-01T00:00:00Z"},
+            "updatedAt": {"S": "2023-05-01T00:00:00Z"}
+          }
+        }
+      },
+      {
+        "PutRequest": {
+          "Item": {
+            "id": {"S": "user-4"},
+            "firstName": {"S": "Front"},
+            "lastName": {"S": "Desk"},
+            "email": {"S": "frontdesk@clinnet.com"},
+            "password": {"S": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"},
+            "role": {"S": "receptionist"},
+            "phone": {"S": "555-444-0000"},
+            "department": {"S": "Administration"},
+            "position": {"S": "Receptionist"},
+            "active": {"BOOL": true},
+            "createdAt": {"S": "2023-05-01T00:00:00Z"},
+            "updatedAt": {"S": "2023-05-01T00:00:00Z"}
+          }
+        }
+      }
+    ]
+  }
+  

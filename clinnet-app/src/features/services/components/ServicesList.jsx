@@ -23,6 +23,8 @@ import {
   InputAdornment,
   Chip,
   Typography,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -33,9 +35,9 @@ import {
   calculateFinalPrice,
   initialServiceFormData,
 } from "../models/serviceModel";
-import { initialServices } from "../data/initialServices";
 import TableContainer from "../../../components/TableContainer";
 import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
+import useServices from "../hooks/useServices";
 
 // Table column definitions
 const columns = [
@@ -84,7 +86,16 @@ function stableSort(array, comparator) {
 }
 
 function ServicesList() {
-  const [services, setServices] = useState(initialServices);
+  const { 
+    services, 
+    loading, 
+    error, 
+    fetchServices, 
+    createService, 
+    updateService, 
+    deleteService 
+  } = useServices();
+  
   const [openAddEdit, setOpenAddEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [currentService, setCurrentService] = useState(null);
@@ -151,31 +162,31 @@ function ServicesList() {
   };
 
   // Save service (add or edit)
-  const handleSaveService = () => {
-    if (currentService) {
-      // Edit existing service
-      setServices(
-        services.map((service) =>
-          service.id === currentService.id
-            ? { ...service, ...formData, id: currentService.id }
-            : service
-        )
-      );
-    } else {
-      // Add new service
-      const newService = {
-        ...formData,
-        id: Math.max(...services.map((s) => s.id)) + 1, // Simple ID generation
-      };
-      setServices([...services, newService]);
+  const handleSaveService = async () => {
+    try {
+      if (currentService) {
+        // Edit existing service
+        await updateService(currentService.id, formData);
+      } else {
+        // Add new service
+        await createService(formData);
+      }
+      setOpenAddEdit(false);
+    } catch (err) {
+      console.error('Error saving service:', err);
+      // Error is handled by the hook
     }
-    setOpenAddEdit(false);
   };
 
   // Delete service
-  const handleDeleteService = () => {
-    setServices(services.filter((service) => service.id !== currentService.id));
-    setOpenDelete(false);
+  const handleDeleteService = async () => {
+    try {
+      await deleteService(currentService.id);
+      setOpenDelete(false);
+    } catch (err) {
+      console.error('Error deleting service:', err);
+      // Error is handled by the hook
+    }
   };
 
   // Handle sort request
@@ -205,133 +216,153 @@ function ServicesList() {
   return (
     <Box sx={{ width: "100%" }}>
       <TableContainer title="Medical Services" action={actionButton}>
-        <MuiTableContainer sx={{ boxShadow: "none" }}>
-          <Table
-            sx={{
-              minWidth: 650,
-              "& .MuiTableCell-root": {
-                borderBottom: "none",
-                padding: "16px",
-              },
-              "& tbody tr": {
-                borderBottom: "1px solid rgba(224, 224, 224, 0.4)",
-              },
-              "& tbody tr:last-child": {
-                border: 0,
-              },
-              borderCollapse: "separate",
-              borderSpacing: 0,
-              "& thead tr th:first-of-type": {
-                borderRadius: "8px 0 0 8px",
-              },
-              "& thead tr th:last-of-type": {
-                borderRadius: "0 8px 8px 0",
-              },
-            }}
-            aria-label="services table"
-          >
-            <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell
-                    key={column.id}
-                    sortDirection={orderBy === column.id ? order : false}
-                  >
-                    <TableSortLabel
-                      active={orderBy === column.id}
-                      direction={orderBy === column.id ? order : "asc"}
-                      onClick={createSortHandler(column.id)}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <MuiTableContainer sx={{ boxShadow: "none" }}>
+            <Table
+              sx={{
+                minWidth: 650,
+                "& .MuiTableCell-root": {
+                  borderBottom: "none",
+                  padding: "16px",
+                },
+                "& tbody tr": {
+                  borderBottom: "1px solid rgba(224, 224, 224, 0.4)",
+                },
+                "& tbody tr:last-child": {
+                  border: 0,
+                },
+                borderCollapse: "separate",
+                borderSpacing: 0,
+                "& thead tr th:first-of-type": {
+                  borderRadius: "8px 0 0 8px",
+                },
+                "& thead tr th:last-of-type": {
+                  borderRadius: "0 8px 8px 0",
+                },
+              }}
+              aria-label="services table"
+            >
+              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      sortDirection={orderBy === column.id ? order : false}
                     >
-                      {column.label}
-                    </TableSortLabel>
-                  </TableCell>
-                ))}
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {stableSort(services, getComparator(order, orderBy)).map(
-                (service) => (
-                  <TableRow
-                    key={service.id}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell component="th" scope="row">
-                      {service.id}
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight="medium">
-                        {service.name}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ display: "block" }}
+                      <TableSortLabel
+                        active={orderBy === column.id}
+                        direction={orderBy === column.id ? order : "asc"}
+                        onClick={createSortHandler(column.id)}
                       >
-                        {service.description.length > 50
-                          ? `${service.description.substring(0, 50)}...`
-                          : service.description}
-                      </Typography>
+                        {column.label}
+                      </TableSortLabel>
                     </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={
-                          service.category.charAt(0).toUpperCase() +
-                          service.category.slice(1)
-                        }
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {formatPrice(service.price)}
-                      {service.discountPercentage > 0 && (
-                        <Typography
-                          variant="caption"
-                          color="success.main"
-                          sx={{ display: "block" }}
-                        >
-                          {formatPrice(
-                            calculateFinalPrice(
-                              service.price,
-                              service.discountPercentage
-                            )
-                          )}
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>{service.discountPercentage}%</TableCell>
-                    <TableCell>{service.duration} min</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={service.active ? "Active" : "Inactive"}
-                        size="small"
-                        color={service.active ? "success" : "default"}
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        color="primary"
-                        size="small"
-                        onClick={() => handleEditService(service)}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        size="small"
-                        onClick={() => handleDeleteClick(service)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                  ))}
+                  <TableCell align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {services.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length + 1} align="center">
+                      No services found
                     </TableCell>
                   </TableRow>
-                )
-              )}
-            </TableBody>
-          </Table>
-        </MuiTableContainer>
+                ) : (
+                  stableSort(services, getComparator(order, orderBy)).map(
+                    (service) => (
+                      <TableRow
+                        key={service.id}
+                        sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                      >
+                        <TableCell component="th" scope="row">
+                          {service.id}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="medium">
+                            {service.name}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: "block" }}
+                          >
+                            {service.description && service.description.length > 50
+                              ? `${service.description.substring(0, 50)}...`
+                              : service.description}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={
+                              service.category.charAt(0).toUpperCase() +
+                              service.category.slice(1)
+                            }
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {formatPrice(service.price)}
+                          {service.discountPercentage > 0 && (
+                            <Typography
+                              variant="caption"
+                              color="success.main"
+                              sx={{ display: "block" }}
+                            >
+                              {formatPrice(
+                                calculateFinalPrice(
+                                  service.price,
+                                  service.discountPercentage
+                                )
+                              )}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>{service.discountPercentage}%</TableCell>
+                        <TableCell>{service.duration} min</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={service.active ? "Active" : "Inactive"}
+                            size="small"
+                            color={service.active ? "success" : "default"}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            color="primary"
+                            size="small"
+                            onClick={() => handleEditService(service)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            color="error"
+                            size="small"
+                            onClick={() => handleDeleteClick(service)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )
+                )}
+              </TableBody>
+            </Table>
+          </MuiTableContainer>
+        )}
       </TableContainer>
 
       {/* Add/Edit Service Dialog */}

@@ -1,0 +1,408 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Clinnet-EMR
+
+  SAM Template for Clinnet-EMR backend services
+  
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.9
+    MemorySize: 128
+    Environment:
+      Variables:
+        PATIENTS_TABLE: !Ref PatientsTable
+        USERS_TABLE: !Ref UsersTable
+        SERVICES_TABLE: !Ref ServicesTable
+        APPOINTMENTS_TABLE: !Ref AppointmentsTable
+        MEDICAL_RECORDS_TABLE: !Ref MedicalRecordsTable
+        DOCUMENTS_BUCKET: !Ref DocumentsBucket
+    Architectures:
+      - x86_64
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,Authorization'"
+      AllowOrigin: "'*'"
+
+Resources:
+  # DynamoDB Tables
+  PatientsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: clinnet-patients
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: clinnet-users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  ServicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: clinnet-services
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  AppointmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: clinnet-appointments
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  MedicalRecordsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: clinnet-medical-records
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # S3 Bucket for document storage
+  DocumentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub clinnet-documents-${AWS::AccountId}
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - HEAD
+            AllowedOrigins:
+              - '*'
+            MaxAge: 3000
+
+  # API Gateway
+  ClinicAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt UserPool.Arn
+
+  # Cognito User Pool
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: clinnet-user-pool
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: clinnet-app-client
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      PreventUserExistenceErrors: ENABLED
+
+  # Lambda Functions for Services
+  GetServicesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/services/
+      Handler: get_services.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ServicesTable
+      Events:
+        GetServices:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /services
+            Method: get
+
+  GetServiceByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/services/
+      Handler: get_service_by_id.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ServicesTable
+      Events:
+        GetServiceById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /services/{id}
+            Method: get
+
+  CreateServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/services/
+      Handler: create_service.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ServicesTable
+      Events:
+        CreateService:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /services
+            Method: post
+
+  UpdateServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/services/
+      Handler: update_service.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ServicesTable
+      Events:
+        UpdateService:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /services/{id}
+            Method: put
+
+  DeleteServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/services/
+      Handler: delete_service.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ServicesTable
+      Events:
+        DeleteService:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /services/{id}
+            Method: delete
+
+  # Lambda Functions for Patients
+  GetPatientsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/patients/
+      Handler: get_patients.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref PatientsTable
+      Events:
+        GetPatients:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /patients
+            Method: get
+
+  GetPatientByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/patients/
+      Handler: get_patient_by_id.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref PatientsTable
+      Events:
+        GetPatientById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /patients/{id}
+            Method: get
+
+  CreatePatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/patients/
+      Handler: create_patient.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PatientsTable
+      Events:
+        CreatePatient:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /patients
+            Method: post
+
+  UpdatePatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/patients/
+      Handler: update_patient.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PatientsTable
+      Events:
+        UpdatePatient:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /patients/{id}
+            Method: put
+
+  DeletePatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/patients/
+      Handler: delete_patient.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PatientsTable
+      Events:
+        DeletePatient:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /patients/{id}
+            Method: delete
+
+  # Lambda Functions for Users
+  GetUsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: get_users.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        GetUsers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users
+            Method: get
+
+  GetUserByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: get_user_by_id.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        GetUserById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users/{id}
+            Method: get
+
+  CreateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: create_user.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        CreateUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users
+            Method: post
+
+  UpdateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: update_user.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        UpdateUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users/{id}
+            Method: put
+
+  DeleteUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: delete_user.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        DeleteUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users/{id}
+            Method: delete
+
+Outputs:
+  ClinicAPI:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com/prod"
+  
+  UserPoolId:
+    Description: "Cognito User Pool ID"
+    Value: !Ref UserPool
+  
+  UserPoolClientId:
+    Description: "Cognito User Pool Client ID"
+    Value: !Ref UserPoolClient
+  
+  DocumentsBucket:
+    Description: "S3 bucket for document storage"
+    Value: !Ref DocumentsBucket
