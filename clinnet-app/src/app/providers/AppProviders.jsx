@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './AuthProvider';
+import AmplifyProvider from './AmplifyProvider';
 
 // Create a theme instance directly in this file
 const theme = createTheme({
@@ -67,9 +68,11 @@ function AppProviders({ children }) {
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <AmplifyProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </AmplifyProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
