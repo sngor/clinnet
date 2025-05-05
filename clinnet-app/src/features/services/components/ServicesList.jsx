@@ -1,5 +1,5 @@
 // src/features/services/components/ServicesList.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -37,7 +37,7 @@ import {
 } from "../models/serviceModel";
 import TableContainer from "../../../components/TableContainer";
 import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
-import useServices from "../hooks/useServices";
+import { serviceApi } from "../../../services";
 
 // Table column definitions
 const columns = [
@@ -86,16 +86,9 @@ function stableSort(array, comparator) {
 }
 
 function ServicesList() {
-  const { 
-    services, 
-    loading, 
-    error, 
-    fetchServices, 
-    createService, 
-    updateService, 
-    deleteService 
-  } = useServices();
-  
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [openAddEdit, setOpenAddEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [currentService, setCurrentService] = useState(null);
@@ -104,6 +97,26 @@ function ServicesList() {
   // Sorting state
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("id");
+
+  // Fetch services from API
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        const data = await serviceApi.getAll();
+        console.log("Fetched services:", data);
+        setServices(data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching services:", err);
+        setError("Failed to load services. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -142,9 +155,9 @@ function ServicesList() {
       description: service.description || "",
       category: service.category,
       price: service.price,
-      discountPercentage: service.discountPercentage,
-      duration: service.duration,
-      active: service.active,
+      discountPercentage: service.discountPercentage || 0,
+      duration: service.duration || 30,
+      active: service.active !== undefined ? service.active : true,
     });
     setOpenAddEdit(true);
   };
@@ -164,28 +177,52 @@ function ServicesList() {
   // Save service (add or edit)
   const handleSaveService = async () => {
     try {
+      setLoading(true);
+
       if (currentService) {
         // Edit existing service
-        await updateService(currentService.id, formData);
+        const updatedService = await serviceApi.update(
+          currentService.id,
+          formData
+        );
+        setServices(
+          services.map((service) =>
+            service.id === currentService.id ? updatedService : service
+          )
+        );
       } else {
         // Add new service
-        await createService(formData);
+        const newService = await serviceApi.create(formData);
+        setServices([...services, newService]);
       }
+
       setOpenAddEdit(false);
+      setError(null);
     } catch (err) {
-      console.error('Error saving service:', err);
-      // Error is handled by the hook
+      console.error("Error saving service:", err);
+      setError("Failed to save service. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   // Delete service
   const handleDeleteService = async () => {
     try {
-      await deleteService(currentService.id);
+      setLoading(true);
+
+      await serviceApi.delete(currentService.id);
+      setServices(
+        services.filter((service) => service.id !== currentService.id)
+      );
+
       setOpenDelete(false);
+      setError(null);
     } catch (err) {
-      console.error('Error deleting service:', err);
-      // Error is handled by the hook
+      console.error("Error deleting service:", err);
+      setError("Failed to delete service. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -221,9 +258,9 @@ function ServicesList() {
             {error}
           </Alert>
         )}
-        
+
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
             <CircularProgress />
           </Box>
         ) : (
@@ -283,7 +320,9 @@ function ServicesList() {
                     (service) => (
                       <TableRow
                         key={service.id}
-                        sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                        sx={{
+                          "&:last-child td, &:last-child th": { border: 0 },
+                        }}
                       >
                         <TableCell component="th" scope="row">
                           {service.id}
@@ -297,7 +336,8 @@ function ServicesList() {
                             color="text.secondary"
                             sx={{ display: "block" }}
                           >
-                            {service.description && service.description.length > 50
+                            {service.description &&
+                            service.description.length > 50
                               ? `${service.description.substring(0, 50)}...`
                               : service.description}
                           </Typography>
@@ -330,13 +370,19 @@ function ServicesList() {
                             </Typography>
                           )}
                         </TableCell>
-                        <TableCell>{service.discountPercentage}%</TableCell>
-                        <TableCell>{service.duration} min</TableCell>
+                        <TableCell>
+                          {service.discountPercentage || 0}%
+                        </TableCell>
+                        <TableCell>{service.duration || 30} min</TableCell>
                         <TableCell>
                           <Chip
-                            label={service.active ? "Active" : "Inactive"}
+                            label={
+                              service.active !== false ? "Active" : "Inactive"
+                            }
                             size="small"
-                            color={service.active ? "success" : "default"}
+                            color={
+                              service.active !== false ? "success" : "default"
+                            }
                           />
                         </TableCell>
                         <TableCell align="center">

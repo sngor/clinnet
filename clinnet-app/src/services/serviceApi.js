@@ -11,7 +11,10 @@ const serviceApi = {
    */
   getAll: async () => {
     try {
-      return await API.get('clinnetApi', '/services');
+      console.log('Calling API Gateway to get services');
+      const response = await API.get('clinnetApi', '/services');
+      console.log('API response:', response);
+      return response;
     } catch (error) {
       console.error('Error fetching services:', error);
       throw error;
