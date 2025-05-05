@@ -12,17 +12,32 @@ frontend:
         - echo "Installing dependencies..."
         - npm install
         - echo "Installing additional required dependencies..."
-        - npm install --save react-router-dom @mui/material @mui/icons-material @emotion/react @emotion/styled @mui/x-date-pickers date-fns
+        - npm install --save aws-amplify react-router-dom @mui/material @mui/icons-material @emotion/react @emotion/styled @mui/x-date-pickers date-fns
     build:
       commands:
         - echo "Current directory (build):"
         - pwd
+        - echo "Changing to clinnet-app directory..."
+        - cd clinnet-app
         - echo "Building the app..."
         - npm run build
   artifacts:
-    baseDirectory: clinnet-app/dist
+    baseDirectory: clinnet-app/build
     files:
       - '**/*'
   cache:
     paths:
       - clinnet-app/node_modules/**/*
+  customHeaders:
+    - pattern: '**/*'
+      headers:
+        - key: 'Strict-Transport-Security'
+          value: 'max-age=31536000; includeSubDomains'
+        - key: 'X-Content-Type-Options'
+          value: 'nosniff'
+        - key: 'X-XSS-Protection'
+          value: '1; mode=block'
+        - key: 'X-Frame-Options'
+          value: 'SAMEORIGIN'
+        - key: 'Content-Security-Policy'
+          value: "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' *.amazonaws.com *.amazoncognito.com *.execute-api.*.amazonaws.com"
