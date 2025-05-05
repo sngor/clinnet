@@ -1,0 +1,85 @@
+{
+    "clinnet-services": [
+      {
+        "PutRequest": {
+          "Item": {
+            "id": {"S": "service-1"},
+            "name": {"S": "General Consultation"},
+            "description": {"S": "Standard medical consultation with a general practitioner"},
+            "category": {"S": "consultation"},
+            "price": {"N": "100.00"},
+            "discountPercentage": {"N": "0"},
+            "duration": {"N": "30"},
+            "active": {"BOOL": true},
+            "createdAt": {"S": "2023-05-01T00:00:00Z"},
+            "updatedAt": {"S": "2023-05-01T00:00:00Z"}
+          }
+        }
+      },
+      {
+        "PutRequest": {
+          "Item": {
+            "id": {"S": "service-2"},
+            "name": {"S": "Specialist Consultation"},
+            "description": {"S": "Consultation with a medical specialist"},
+            "category": {"S": "consultation"},
+            "price": {"N": "150.00"},
+            "discountPercentage": {"N": "0"},
+            "duration": {"N": "45"},
+            "active": {"BOOL": true},
+            "createdAt": {"S": "2023-05-01T00:00:00Z"},
+            "updatedAt": {"S": "2023-05-01T00:00:00Z"}
+          }
+        }
+      },
+      {
+        "PutRequest": {
+          "Item": {
+            "id": {"S": "service-3"},
+            "name": {"S": "Blood Test - Basic Panel"},
+            "description": {"S": "Standard blood work including CBC, metabolic panel"},
+            "category": {"S": "laboratory"},
+            "price": {"N": "75.00"},
+            "discountPercentage": {"N": "0"},
+            "duration": {"N": "15"},
+            "active": {"BOOL": true},
+            "createdAt": {"S": "2023-05-01T00:00:00Z"},
+            "updatedAt": {"S": "2023-05-01T00:00:00Z"}
+          }
+        }
+      },
+      {
+        "PutRequest": {
+          "Item": {
+            "id": {"S": "service-4"},
+            "name": {"S": "X-Ray - Single View"},
+            "description": {"S": "Single view X-ray imaging"},
+            "category": {"S": "imaging"},
+            "price": {"N": "120.00"},
+            "discountPercentage": {"N": "0"},
+            "duration": {"N": "20"},
+            "active": {"BOOL": true},
+            "createdAt": {"S": "2023-05-01T00:00:00Z"},
+            "updatedAt": {"S": "2023-05-01T00:00:00Z"}
+          }
+        }
+      },
+      {
+        "PutRequest": {
+          "Item": {
+            "id": {"S": "service-5"},
+            "name": {"S": "Annual Physical"},
+            "description": {"S": "Comprehensive annual physical examination"},
+            "category": {"S": "examination"},
+            "price": {"N": "200.00"},
+            "discountPercentage": {"N": "0"},
+            "duration": {"N": "60"},
+            "active": {"BOOL": true},
+            "createdAt": {"S": "2023-05-01T00:00:00Z"},
+            "updatedAt": {"S": "2023-05-01T00:00:00Z"}
+          }
+        }
+      }
+    ]
+  }
+  
