@@ -17,17 +17,15 @@ frontend:
       commands:
         - echo "Current directory (build):"
         - pwd
-        - echo "Changing to clinnet-app directory..."
-        - cd clinnet-app
         - echo "Building the app..."
         - npm run build
   artifacts:
-    baseDirectory: clinnet-app/build
+    baseDirectory: build
     files:
       - '**/*'
   cache:
     paths:
-      - clinnet-app/node_modules/**/*
+      - node_modules/**/*
   customHeaders:
     - pattern: '**/*'
       headers:
