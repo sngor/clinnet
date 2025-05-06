@@ -36,7 +36,7 @@ import { calculateAge } from '../utils/validation';
 function PatientDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { patients, loading } = useAppData();
+  const { patients, loading, updatePatient: apiUpdatePatient } = useAppData();
   const [patient, setPatient] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedPatient, setEditedPatient] = useState(null);
@@ -44,6 +44,7 @@ function PatientDetailPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch patient data
   useEffect(() => {
@@ -83,27 +84,49 @@ function PatientDetailPage() {
   // Save patient changes
   const handleSaveChanges = async () => {
     try {
-      // In a real app, this would be an API call
-      setPatient(editedPatient);
+      setIsSaving(true);
+      
+      // Call the API to update the patient
+      const updatedPatient = await apiUpdatePatient(id, editedPatient);
+      
+      // Update local state
+      setPatient(updatedPatient);
+      setEditedPatient(updatedPatient);
       setIsEditing(false);
       setSnackbarMessage('Patient information updated successfully');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error updating patient:', error);
-      setSnackbarMessage('Error updating patient information');
+      setSnackbarMessage('Error updating patient information: ' + (error.message || 'Unknown error'));
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   // Handle form field changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditedPatient(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Special handling for fields that should be arrays in the backend
+    if (name === 'allergies' || name === 'medications' || name === 'medicalConditions') {
+      // Convert comma-separated string to array if value exists
+      const arrayValue = value ? value.split(',').map(item => item.trim()) : [];
+      
+      setEditedPatient(prev => ({
+        ...prev,
+        [name]: value, // Keep the string value for the form
+        // Also store as array in the appropriate backend field
+        ...(name === 'medicalConditions' ? { medicalHistory: arrayValue } : { [name]: arrayValue })
+      }));
+    } else {
+      setEditedPatient(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   // Handle back button click
@@ -159,8 +182,9 @@ function PatientDetailPage() {
               startIcon={<SaveIcon />}
               onClick={handleSaveChanges}
               sx={{ borderRadius: 1.5 }}
+              disabled={isSaving}
             >
-              Save Changes
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </Box>
         )}

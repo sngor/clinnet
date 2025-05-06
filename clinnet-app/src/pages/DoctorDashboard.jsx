@@ -3,18 +3,9 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
 import { 
   Grid, 
-  Paper, 
-  Typography, 
-  useMediaQuery, 
-  useTheme, 
-  Box, 
   Container,
-  CircularProgress,
-  List,
-  ListItem,
-  Divider,
-  Chip,
-  Button
+  useMediaQuery, 
+  useTheme
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
@@ -22,6 +13,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import { useNavigate } from "react-router-dom";
 import { PageHeaderWithDivider } from "../components/PageHeader";
 import DashboardCard from "../components/DashboardCard";
+import AppointmentList from "../components/AppointmentList";
 
 // Mock data for doctor's appointments
 const mockAppointments = [
@@ -96,23 +88,7 @@ function DoctorDashboard() {
     }, 500); // Simulate network delay
   }, []);
 
-  // Get status color
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Scheduled':
-        return 'primary';
-      case 'Checked-in':
-        return 'success';
-      case 'In Progress':
-        return 'warning';
-      case 'Completed':
-        return 'info';
-      case 'Cancelled':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
+  // Using the shared getStatusColor function from UI components
 
   return (
     <Container maxWidth="xl" disableGutters>
@@ -156,69 +132,12 @@ function DoctorDashboard() {
       </Grid>
 
       {/* Appointments List */}
-      <Paper 
-        elevation={0}
-        sx={{ 
-          p: { xs: 2, sm: 3 },
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          mb: 4
-        }}
-      >
-        <Typography 
-          variant="h5" 
-          color="primary.main"
-          fontWeight="medium"
-          sx={{ mb: 3 }}
-        >
-          Today's Schedule
-        </Typography>
-
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', py: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <List sx={{ width: '100%' }}>
-            {appointments.map((appt, index) => (
-              <React.Fragment key={appt.id}>
-                <ListItem
-                  sx={{ 
-                    py: 2,
-                    display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    alignItems: { xs: 'flex-start', sm: 'center' },
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <Box sx={{ mb: { xs: 2, sm: 0 }, width: { xs: '100%', sm: 'auto' } }}>
-                    <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                      {appt.time} - {appt.patientName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Type: {appt.type}
-                    </Typography>
-                    {appt.notes && (
-                      <Typography variant="body2" color="text.secondary">
-                        Notes: {appt.notes}
-                      </Typography>
-                    )}
-                  </Box>
-                  
-                  <Chip 
-                    label={appt.status} 
-                    color={getStatusColor(appt.status)}
-                    size="small"
-                    sx={{ fontWeight: 500 }}
-                  />
-                </ListItem>
-                {index < appointments.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
-          </List>
-        )}
-      </Paper>
+      <AppointmentList
+        appointments={appointments}
+        loading={loading}
+        title="Today's Schedule"
+        emptyMessage="No appointments scheduled for today."
+      />
     </Container>
   );
 }

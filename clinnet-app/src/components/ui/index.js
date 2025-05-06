@@ -7,3 +7,5 @@ export { PageContainer, SectionContainer, CardContainer, FlexBox } from './Conta
 export { default as PageHeading } from './PageHeading';
 export { default as SectionHeading } from './SectionHeading';
 export { default as DialogHeading } from './DialogHeading';
+export { default as StatusChip, getStatusColor } from './StatusChip';
+export { default as DataTable } from './DataTable';

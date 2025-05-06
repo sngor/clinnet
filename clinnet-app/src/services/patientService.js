@@ -1,5 +1,6 @@
 // src/services/patientService.js
 import { get, post, put, del } from 'aws-amplify/api';
+import { formatPatientForApi } from '../utils/syncUtils';
 
 // Get all patients
 export const getPatients = async () => {
@@ -32,19 +33,10 @@ export const getPatientById = async (patientId) => {
 // Create a new patient
 export const createPatient = async (patientData) => {
   try {
-    // Transform the data to match the backend expectations
-    const transformedData = {
-      firstName: patientData.firstName,
-      lastName: patientData.lastName,
-      dateOfBirth: patientData.dateOfBirth || patientData.dob,
-      phone: patientData.phone,
-      email: patientData.email,
-      address: patientData.address,
-      insuranceProvider: patientData.insuranceProvider,
-      insuranceNumber: patientData.insuranceNumber,
-      status: patientData.status || 'Active',
-      gender: patientData.gender
-    };
+    // Transform the data to match the backend expectations using the utility function
+    const transformedData = formatPatientForApi(patientData);
+    
+    console.log('Sending patient data to API:', transformedData);
     
     const response = await post({
       apiName: 'clinnetApi',
@@ -53,6 +45,8 @@ export const createPatient = async (patientData) => {
         body: transformedData
       }
     });
+    
+    console.log('API response for patient creation:', response);
     return response.body;
   } catch (error) {
     console.error('Error creating patient:', error);
@@ -63,19 +57,10 @@ export const createPatient = async (patientData) => {
 // Update a patient
 export const updatePatient = async (patientId, patientData) => {
   try {
-    // Transform the data to match the backend expectations
-    const transformedData = {
-      firstName: patientData.firstName,
-      lastName: patientData.lastName,
-      dateOfBirth: patientData.dateOfBirth || patientData.dob,
-      phone: patientData.phone,
-      email: patientData.email,
-      address: patientData.address,
-      insuranceProvider: patientData.insuranceProvider,
-      insuranceNumber: patientData.insuranceNumber,
-      status: patientData.status || 'Active',
-      gender: patientData.gender
-    };
+    // Transform the data to match the backend expectations using the utility function
+    const transformedData = formatPatientForApi(patientData);
+    
+    console.log(`Updating patient ${patientId} with data:`, transformedData);
     
     const response = await put({
       apiName: 'clinnetApi',
@@ -84,6 +69,8 @@ export const updatePatient = async (patientId, patientData) => {
         body: transformedData
       }
     });
+    
+    console.log(`Patient ${patientId} updated successfully:`, response);
     return response.body;
   } catch (error) {
     console.error(`Error updating patient ${patientId}:`, error);

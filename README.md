@@ -1,70 +1,133 @@
 # Clinnet EMR
 
-Electronic Medical Records system for clinics built with React and AWS serverless technologies.
+A comprehensive Electronic Medical Records (EMR) system for clinics and healthcare providers.
 
-## Overview
+## Project Overview
 
-Clinnet EMR is a comprehensive electronic medical records system designed for modern healthcare clinics. It provides a user-friendly interface for managing patients, appointments, medical records, and clinic services.
-
-## Features
+Clinnet EMR is a full-stack application designed to help healthcare providers manage patient records, appointments, medical services, and more. The system includes:
 
 - Patient management
 - Appointment scheduling
 - Medical records
-- User management with role-based access
-- Secure document storage
+- User management with role-based access control
 - Billing and services
+
+## Architecture
+
+The application is built using:
+
+- **Frontend**: React with Material UI
+- **Backend**: AWS Serverless (Lambda, API Gateway)
+- **Database**: Amazon DynamoDB
+- **Authentication**: Amazon Cognito
+- **Storage**: Amazon S3
+- **Infrastructure**: AWS SAM (Serverless Application Model)
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v16+)
+- Python 3.9+
+- AWS CLI
+- AWS SAM CLI
+- AWS Account
+
+### Installation
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/clinnet-emr.git
+   cd clinnet-emr
+   ```
+
+2. Install backend dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+3. Install frontend dependencies:
+   ```
+   cd clinnet-app
+   npm install
+   ```
+
+4. Configure environment variables:
+   - Copy `.env.example` to `.env` in the clinnet-app directory
+   - Update with your AWS credentials and resources
+
+### Local Development
+
+1. Start the backend API locally:
+   ```
+   sam local start-api
+   ```
+
+2. Start the frontend development server:
+   ```
+   cd clinnet-app
+   npm start
+   ```
+
+3. Access the application at http://localhost:3000
+
+### Deployment
+
+1. Deploy the backend:
+   ```
+   sam build
+   sam deploy --guided
+   ```
+
+2. Build and deploy the frontend:
+   ```
+   cd clinnet-app
+   npm run build
+   ```
+
+3. Upload the build folder to your hosting service (e.g., AWS Amplify, S3)
+
+## Data Synchronization
+
+The application ensures data synchronization between the frontend and backend through:
+
+1. **Consistent Data Formatting**: Utility functions in `src/utils/syncUtils.js` handle data transformation between frontend and backend formats.
+
+2. **Real-time Updates**: The DataProvider context maintains application state and synchronizes with the backend API.
+
+3. **Error Handling**: Comprehensive error handling ensures data integrity during CRUD operations.
 
 ## Project Structure
 
-- `/clinnet-app` - Frontend React application
-- `/src` - Backend AWS Lambda functions and API
-- `/docs` - Project documentation
-- `/template.yaml` - AWS SAM template for backend resources
-
-## Documentation
-
-- [Project Structure](docs/project-structure.md) - Overview of the codebase organization
-- [Architecture](docs/architecture.md) - Serverless architecture details
-- [Deployment](docs/deployment.md) - Instructions for deploying to AWS
-- [Local Development](docs/local-development.md) - Guide for local development setup
-
-## Quick Start
-
-### Backend Development
-
-```bash
-# Install dependencies
-npm install
-
-# Run backend locally
-npm run start-local
-
-# Deploy to AWS
-npm run deploy
 ```
-
-### Frontend Development
-
-```bash
-# Navigate to frontend directory
-cd clinnet-app
-
-# Install dependencies
-npm install
-
-# Start development server
-npm start
+clinnet-emr/
+├── clinnet-app/              # Frontend React application
+│   ├── public/               # Static files
+│   ├── src/                  # Source code
+│   │   ├── app/              # App configuration
+│   │   ├── components/       # Reusable components
+│   │   ├── features/         # Feature-specific components
+│   │   ├── pages/            # Page components
+│   │   ├── services/         # API services
+│   │   ├── store/            # State management
+│   │   ├── utils/            # Utility functions
+│   │   └── main.jsx          # Entry point
+│   └── package.json          # Frontend dependencies
+├── src/                      # Backend serverless functions
+│   ├── handlers/             # Lambda function handlers
+│   │   ├── appointments/     # Appointment handlers
+│   │   ├── patients/         # Patient handlers
+│   │   ├── services/         # Service handlers
+│   │   └── users/            # User handlers
+│   └── utils/                # Backend utilities
+├── template.yaml             # SAM template
+└── requirements.txt          # Backend dependencies
 ```
-
-## Environment Setup
-
-For local development, create a `.env.local` file in the `clinnet-app` directory with your development environment variables. See [Local Development](docs/local-development.md) for details.
-
-## Deployment
-
-The application is deployed using AWS Amplify for the frontend and AWS SAM for the backend. See [Deployment](docs/deployment.md) for detailed instructions.
 
 ## License
 
-This project is proprietary and confidential.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contributors
+
+- Your Name - Initial work

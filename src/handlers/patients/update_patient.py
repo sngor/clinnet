@@ -56,7 +56,8 @@ def lambda_handler(event, context):
         fields = [
             'firstName', 'lastName', 'dateOfBirth', 'gender', 'email', 
             'phone', 'address', 'insuranceProvider', 'insuranceNumber',
-            'medicalHistory', 'allergies', 'medications'
+            'medicalHistory', 'allergies', 'medications', 'status',
+            'emergencyContact', 'bloodType', 'height', 'weight'
         ]
         
         for field in fields:

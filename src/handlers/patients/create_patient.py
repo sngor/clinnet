@@ -63,8 +63,22 @@ def lambda_handler(event, context):
             'insuranceNumber': request_body.get('insuranceNumber', ''),
             'medicalHistory': request_body.get('medicalHistory', []),
             'allergies': request_body.get('allergies', []),
-            'medications': request_body.get('medications', [])
+            'medications': request_body.get('medications', []),
+            'status': request_body.get('status', 'Active')
         }
+        
+        # Add optional fields if they exist
+        if 'emergencyContact' in request_body:
+            patient['emergencyContact'] = request_body.get('emergencyContact')
+            
+        if 'bloodType' in request_body:
+            patient['bloodType'] = request_body.get('bloodType')
+            
+        if 'height' in request_body:
+            patient['height'] = request_body.get('height')
+            
+        if 'weight' in request_body:
+            patient['weight'] = request_body.get('weight')
         
         # Create patient in DynamoDB
         created_patient = create_item(table_name, patient)

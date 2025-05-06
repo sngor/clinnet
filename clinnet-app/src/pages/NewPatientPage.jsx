@@ -6,22 +6,13 @@ import {
   Box,
   Typography,
   Paper,
-  Grid,
-  TextField,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Divider,
   IconButton,
   Alert,
   Snackbar
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SaveIcon from '@mui/icons-material/Save';
-import { isValidEmail, isValidPhone, formatDateToString } from '../utils/validation';
 import { useAppData } from '../app/providers/DataProvider';
+import PatientForm from '../components/PatientForm';
 
 function NewPatientPage() {
   const navigate = useNavigate();

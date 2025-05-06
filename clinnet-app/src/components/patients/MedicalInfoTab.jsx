@@ -8,6 +8,12 @@ import {
 } from '@mui/material';
 
 function MedicalInfoTab({ patient, editedPatient, isEditing, handleInputChange }) {
+  // Helper function to handle array or string values
+  const formatArrayOrString = (value) => {
+    if (!value) return '';
+    return Array.isArray(value) ? value.join(', ') : value;
+  };
+
   return (
     <>
       <Typography variant="h6" sx={{ mb: 3, fontWeight: 500, color: 'primary.main' }}>
@@ -25,7 +31,7 @@ function MedicalInfoTab({ patient, editedPatient, isEditing, handleInputChange }
           <TextField
             label="Insurance Provider"
             name="insuranceProvider"
-            value={isEditing ? editedPatient.insuranceProvider : patient.insuranceProvider}
+            value={isEditing ? editedPatient.insuranceProvider || '' : patient.insuranceProvider || ''}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
@@ -36,7 +42,7 @@ function MedicalInfoTab({ patient, editedPatient, isEditing, handleInputChange }
           <TextField
             label="Insurance Number"
             name="insuranceNumber"
-            value={isEditing ? editedPatient.insuranceNumber : patient.insuranceNumber}
+            value={isEditing ? editedPatient.insuranceNumber || '' : patient.insuranceNumber || ''}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
@@ -55,7 +61,7 @@ function MedicalInfoTab({ patient, editedPatient, isEditing, handleInputChange }
           <TextField
             label="Blood Type"
             name="bloodType"
-            value={isEditing ? editedPatient.bloodType : patient.bloodType}
+            value={isEditing ? editedPatient.bloodType || '' : patient.bloodType || ''}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
@@ -66,7 +72,7 @@ function MedicalInfoTab({ patient, editedPatient, isEditing, handleInputChange }
           <TextField
             label="Height"
             name="height"
-            value={isEditing ? editedPatient.height : patient.height}
+            value={isEditing ? editedPatient.height || '' : patient.height || ''}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
@@ -77,7 +83,7 @@ function MedicalInfoTab({ patient, editedPatient, isEditing, handleInputChange }
           <TextField
             label="Weight"
             name="weight"
-            value={isEditing ? editedPatient.weight : patient.weight}
+            value={isEditing ? editedPatient.weight || '' : patient.weight || ''}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
@@ -88,39 +94,48 @@ function MedicalInfoTab({ patient, editedPatient, isEditing, handleInputChange }
           <TextField
             label="Allergies"
             name="allergies"
-            value={isEditing ? editedPatient.allergies : patient.allergies}
+            value={isEditing 
+              ? formatArrayOrString(editedPatient.allergies)
+              : formatArrayOrString(patient.allergies)}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
             multiline
             rows={2}
             disabled={!isEditing}
+            helperText="Separate multiple allergies with commas"
           />
         </Grid>
         <Grid item xs={12}>
           <TextField
             label="Medical Conditions"
             name="medicalConditions"
-            value={isEditing ? editedPatient.medicalConditions : patient.medicalConditions}
+            value={isEditing 
+              ? formatArrayOrString(editedPatient.medicalHistory || editedPatient.medicalConditions)
+              : formatArrayOrString(patient.medicalHistory || patient.medicalConditions)}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
             multiline
             rows={2}
             disabled={!isEditing}
+            helperText="Separate multiple conditions with commas"
           />
         </Grid>
         <Grid item xs={12}>
           <TextField
             label="Medications"
             name="medications"
-            value={isEditing ? editedPatient.medications : patient.medications}
+            value={isEditing 
+              ? formatArrayOrString(editedPatient.medications)
+              : formatArrayOrString(patient.medications)}
             onChange={handleInputChange}
             fullWidth
             margin="normal"
             multiline
             rows={2}
             disabled={!isEditing}
+            helperText="Separate multiple medications with commas"
           />
         </Grid>
       </Grid>

@@ -53,7 +53,11 @@ export const DataProvider = ({ children }) => {
   // Functions to update data
   const addPatient = async (patientData) => {
     try {
+      console.log('Adding patient with data:', patientData);
       const newPatient = await patientService.createPatient(patientData);
+      console.log('Patient created successfully:', newPatient);
+      
+      // Update local state with the new patient
       setData(prevData => ({
         ...prevData,
         patients: [...prevData.patients, newPatient]
@@ -67,7 +71,11 @@ export const DataProvider = ({ children }) => {
 
   const updatePatient = async (patientId, patientData) => {
     try {
+      console.log('Updating patient with ID:', patientId, 'Data:', patientData);
       const updatedPatient = await patientService.updatePatient(patientId, patientData);
+      console.log('Patient updated successfully:', updatedPatient);
+      
+      // Update local state with the updated patient
       setData(prevData => ({
         ...prevData,
         patients: prevData.patients.map(p => 
