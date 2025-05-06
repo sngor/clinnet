@@ -1,5 +1,5 @@
 // src/components/patients/AppointmentsTab.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -7,64 +7,37 @@ import {
   Grid,
   Card,
   CardContent,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-
-// Mock appointments data
-const mockAppointments = [
-  {
-    id: 101,
-    patientId: 1,
-    date: "2023-11-20",
-    time: "09:00 AM",
-    doctorName: "Dr. Smith",
-    reason: "Annual checkup",
-    notes: "Patient reported feeling well. Blood pressure normal.",
-    status: "Completed"
-  },
-  {
-    id: 102,
-    patientId: 1,
-    date: "2023-12-05",
-    time: "10:30 AM",
-    doctorName: "Dr. Jones",
-    reason: "Follow-up",
-    notes: "",
-    status: "Scheduled"
-  },
-  {
-    id: 103,
-    patientId: 2,
-    date: "2023-10-05",
-    time: "11:00 AM",
-    doctorName: "Dr. Wilson",
-    reason: "Diabetes management",
-    notes: "Adjusted medication dosage.",
-    status: "Completed"
-  }
-];
+import { useAppData } from '../../app/providers/DataProvider';
+import { formatDateForDisplay } from '../../utils/validation';
 
 function AppointmentsTab({ patientId }) {
-  // Get patient appointments
-  const patientAppointments = mockAppointments.filter(a => a.patientId === parseInt(patientId));
+  const { appointments, loading } = useAppData();
+  const [patientAppointments, setPatientAppointments] = useState([]);
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  // Filter appointments for this patient
+  useEffect(() => {
+    if (appointments && appointments.length > 0) {
+      const filtered = appointments.filter(a => a.patientId === patientId);
+      setPatientAppointments(filtered);
+    }
+  }, [appointments, patientId]);
 
   // Handle schedule appointment
   const handleScheduleAppointment = () => {
     alert('Schedule appointment functionality will be implemented here');
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -89,17 +62,17 @@ function AppointmentsTab({ patientId }) {
               <Card sx={{ 
                 height: '100%',
                 borderLeft: 6,
-                borderColor: appointment.status === 'Completed' ? 'success.main' : 'primary.main',
+                borderColor: appointment.status === 'completed' ? 'success.main' : 'primary.main',
               }}>
                 <CardContent>
                   <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1 }}>
-                    {formatDate(appointment.date)} at {appointment.time}
+                    {formatDateForDisplay(appointment.startTime)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    Doctor: {appointment.doctorName}
+                    Doctor: {appointment.doctorName || 'Not assigned'}
                   </Typography>
                   <Typography variant="body2" sx={{ mb: 1 }}>
-                    Reason: {appointment.reason}
+                    Duration: {appointment.duration || 30} minutes
                   </Typography>
                   {appointment.notes && (
                     <Typography variant="body2" sx={{ mb: 1 }}>
@@ -107,9 +80,9 @@ function AppointmentsTab({ patientId }) {
                     </Typography>
                   )}
                   <Chip 
-                    label={appointment.status} 
+                    label={appointment.status || 'scheduled'} 
                     size="small" 
-                    color={appointment.status === 'Completed' ? 'success' : 'primary'}
+                    color={appointment.status === 'completed' ? 'success' : 'primary'}
                     sx={{ mt: 1 }}
                   />
                 </CardContent>

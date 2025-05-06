@@ -30,138 +30,39 @@ import PersonalInfoTab from '../components/patients/PersonalInfoTab';
 import MedicalInfoTab from '../components/patients/MedicalInfoTab';
 import AppointmentsTab from '../components/patients/AppointmentsTab';
 import MedicalRecordsTab from '../components/patients/MedicalRecordsTab';
-
-// Mock patient data - in a real app, this would come from an API
-const mockPatients = [
-  {
-    id: 1,
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    gender: "Male",
-    dateOfBirth: "1985-05-15",
-    address: "123 Main St",
-    city: "Anytown",
-    state: "CA",
-    zipCode: "12345",
-    insuranceProvider: "Blue Cross",
-    insuranceNumber: "BC12345678",
-    emergencyContactName: "Jane Doe",
-    emergencyContactPhone: "+1 (555) 987-6543",
-    allergies: "Penicillin",
-    medicalConditions: "Hypertension, Asthma",
-    medications: "Lisinopril, Albuterol",
-    lastVisit: "2023-11-20",
-    upcomingAppointment: "2023-12-05",
-    bloodType: "O+",
-    height: "180 cm",
-    weight: "75 kg"
-  },
-  {
-    id: 2,
-    firstName: "Jane",
-    lastName: "Smith",
-    email: "jane.smith@example.com",
-    phone: "+1 (555) 234-5678",
-    gender: "Female",
-    dateOfBirth: "1990-08-22",
-    address: "456 Oak Ave",
-    city: "Somewhere",
-    state: "CA",
-    zipCode: "67890",
-    insuranceProvider: "Aetna",
-    insuranceNumber: "AE87654321",
-    emergencyContactName: "John Smith",
-    emergencyContactPhone: "+1 (555) 876-5432",
-    allergies: "None",
-    medicalConditions: "Diabetes Type 2",
-    medications: "Metformin",
-    lastVisit: "2023-10-05",
-    upcomingAppointment: null,
-    bloodType: "A+",
-    height: "165 cm",
-    weight: "62 kg"
-  },
-  {
-    id: 3,
-    firstName: "Michael",
-    lastName: "Johnson",
-    email: "michael.j@example.com",
-    phone: "+1 (555) 345-6789",
-    gender: "Male",
-    dateOfBirth: "1978-11-30",
-    address: "789 Pine Rd",
-    city: "Nowhere",
-    state: "CA",
-    zipCode: "54321",
-    insuranceProvider: "Kaiser",
-    insuranceNumber: "KP98765432",
-    emergencyContactName: "Sarah Johnson",
-    emergencyContactPhone: "+1 (555) 765-4321",
-    allergies: "Shellfish",
-    medicalConditions: "None",
-    medications: "None",
-    lastVisit: "2023-09-20",
-    upcomingAppointment: "2023-12-15",
-    bloodType: "B-",
-    height: "175 cm",
-    weight: "80 kg"
-  },
-  {
-    id: 4,
-    firstName: "Emily",
-    lastName: "Williams",
-    email: "emily.w@example.com",
-    phone: "+1 (555) 456-7890",
-    gender: "Female",
-    dateOfBirth: "1990-11-28",
-    address: "101 Elm St",
-    city: "Anytown",
-    state: "CA",
-    zipCode: "12345",
-    insuranceProvider: "Cigna",
-    insuranceNumber: "CI12345678",
-    emergencyContactName: "David Williams",
-    emergencyContactPhone: "+1 (555) 654-3210",
-    allergies: "Peanuts",
-    medicalConditions: "Migraine",
-    medications: "Sumatriptan",
-    lastVisit: "2023-11-25",
-    upcomingAppointment: "2023-12-05",
-    bloodType: "AB+",
-    height: "170 cm",
-    weight: "65 kg"
-  }
-];
+import { useAppData } from '../app/providers/DataProvider';
+import { calculateAge } from '../utils/validation';
 
 function PatientDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { patients, loading } = useAppData();
   const [patient, setPatient] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedPatient, setEditedPatient] = useState(null);
   const [tabValue, setTabValue] = useState(0);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   // Fetch patient data
   useEffect(() => {
-    // In a real app, this would be an API call
-    const patientId = parseInt(id);
-    const foundPatient = mockPatients.find(p => p.id === patientId);
-    
-    if (foundPatient) {
-      setPatient(foundPatient);
-      setEditedPatient(foundPatient);
-    } else {
-      // Handle patient not found
-      setSnackbarMessage('Patient not found');
-      setSnackbarOpen(true);
-      // Redirect back to patients list after a delay
-      setTimeout(() => navigate('/frontdesk/patients'), 2000);
+    if (patients && patients.length > 0) {
+      const foundPatient = patients.find(p => p.id === id);
+      
+      if (foundPatient) {
+        setPatient(foundPatient);
+        setEditedPatient(foundPatient);
+      } else {
+        // Handle patient not found
+        setSnackbarMessage('Patient not found');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        // Redirect back to patients list after a delay
+        setTimeout(() => navigate('/frontdesk/patients'), 2000);
+      }
     }
-  }, [id, navigate]);
+  }, [id, navigate, patients]);
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -180,12 +81,20 @@ function PatientDetailPage() {
   };
 
   // Save patient changes
-  const handleSaveChanges = () => {
-    // In a real app, this would be an API call
-    setPatient(editedPatient);
-    setIsEditing(false);
-    setSnackbarMessage('Patient information updated successfully');
-    setSnackbarOpen(true);
+  const handleSaveChanges = async () => {
+    try {
+      // In a real app, this would be an API call
+      setPatient(editedPatient);
+      setIsEditing(false);
+      setSnackbarMessage('Patient information updated successfully');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Error updating patient:', error);
+      setSnackbarMessage('Error updating patient information');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
   };
 
   // Handle form field changes
@@ -197,29 +106,13 @@ function PatientDetailPage() {
     }));
   };
 
-  // Calculate age from date of birth
-  const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return 'N/A';
-    
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
-  };
-
   // Handle back button click
   const handleBackClick = () => {
     navigate(-1);
   };
 
   // If patient is not loaded yet
-  if (!patient) {
+  if (loading || !patient) {
     return (
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Typography variant="h5">Loading patient information...</Typography>
@@ -291,7 +184,7 @@ function PatientDetailPage() {
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
               <Chip 
-                label={`${calculateAge(patient.dateOfBirth)} years`} 
+                label={`${calculateAge(patient.dateOfBirth || patient.dob)} years`} 
                 size="small" 
                 sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
               />
@@ -371,7 +264,7 @@ function PatientDetailPage() {
         )}
       </Paper>
 
-      {/* Success Snackbar */}
+      {/* Success/Error Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
@@ -380,7 +273,7 @@ function PatientDetailPage() {
       >
         <Alert 
           onClose={() => setSnackbarOpen(false)} 
-          severity="success" 
+          severity={snackbarSeverity} 
           sx={{ width: '100%' }}
         >
           {snackbarMessage}

@@ -10,15 +10,13 @@ import {
   Select,
   MenuItem
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { format } from 'date-fns';
+import { formatDateToString } from '../../utils/validation';
 
 function PersonalInfoTab({ patient, editedPatient, isEditing, handleInputChange }) {
   // Handle date change
-  const handleDateChange = (date, fieldName) => {
-    const formattedDate = date ? format(date, 'yyyy-MM-dd') : null;
-    handleInputChange({ target: { name: fieldName, value: formattedDate } });
+  const handleDateChange = (e) => {
+    const { value } = e.target;
+    handleInputChange({ target: { name: 'dateOfBirth', value } });
   };
 
   return (
@@ -52,20 +50,19 @@ function PersonalInfoTab({ patient, editedPatient, isEditing, handleInputChange 
           />
         </Grid>
         <Grid item xs={12} md={6}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Date of Birth"
-              value={isEditing ? (editedPatient.dateOfBirth ? new Date(editedPatient.dateOfBirth) : null) : (patient.dateOfBirth ? new Date(patient.dateOfBirth) : null)}
-              onChange={(date) => handleDateChange(date, 'dateOfBirth')}
-              disabled={!isEditing}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  margin: 'normal'
-                }
-              }}
-            />
-          </LocalizationProvider>
+          <TextField
+            label="Date of Birth"
+            name="dateOfBirth"
+            type="date"
+            value={isEditing 
+              ? (editedPatient.dateOfBirth || '') 
+              : (patient.dateOfBirth || '')}
+            onChange={handleDateChange}
+            fullWidth
+            margin="normal"
+            disabled={!isEditing}
+            InputLabelProps={{ shrink: true }}
+          />
         </Grid>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth margin="normal">
@@ -106,7 +103,6 @@ function PersonalInfoTab({ patient, editedPatient, isEditing, handleInputChange 
             disabled={!isEditing}
           />
         </Grid>
-
         {/* Address Information */}
         <Grid item xs={12}>
           <Divider sx={{ my: 2 }} />
@@ -158,7 +154,6 @@ function PersonalInfoTab({ patient, editedPatient, isEditing, handleInputChange 
             disabled={!isEditing}
           />
         </Grid>
-
         {/* Emergency Contact */}
         <Grid item xs={12}>
           <Divider sx={{ my: 2 }} />

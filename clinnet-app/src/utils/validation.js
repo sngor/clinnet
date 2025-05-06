@@ -70,7 +70,9 @@ export const formatDateForDisplay = (dateString) => {
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric'
     });
   } catch (error) {
     console.error('Error formatting date for display:', error);
