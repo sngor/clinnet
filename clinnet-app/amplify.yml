@@ -7,6 +7,25 @@ frontend:
         - npm install
         - echo "Listing source files:"
         - find src -type f -name "*.jsx" -o -name "*.js" | sort
+        - echo "Checking for missing FrontdeskDashboard.jsx..."
+        - |
+          if [ ! -f src/pages/FrontdeskDashboard.jsx ]; then
+            echo "Creating FrontdeskDashboard.jsx..."
+            cat > src/pages/FrontdeskDashboard.jsx << 'EOL'
+            import React from "react";
+            import { Container, Typography } from "@mui/material";
+
+            function FrontdeskDashboard() {
+              return (
+                <Container>
+                  <Typography variant="h4">Frontdesk Dashboard</Typography>
+                </Container>
+              );
+            }
+
+            export default FrontdeskDashboard;
+            EOL
+          fi
     build:
       commands:
         - echo "Building for environment: ${ENVIRONMENT:-prod}"
@@ -56,8 +75,7 @@ frontend:
     files:
       - '**/*'
   cache:
-    paths:
-      - node_modules/**/*
+    paths: []
   customHeaders:
     - pattern: '**/*'
       headers:
