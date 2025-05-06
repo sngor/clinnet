@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import { initializeAppData } from '../../services/dataInitializer';
 import patientService from '../../services/patientService';
 import { serviceApi } from '../../services';
+import appointmentService from '../../services/appointmentService';
 
 // Create context
 const DataContext = createContext(null);
@@ -11,6 +12,7 @@ export const DataProvider = ({ children }) => {
   const [data, setData] = useState({
     services: [],
     patients: [],
+    appointments: [], // Add appointments to state
     loading: true,
     error: null
   });
@@ -29,6 +31,7 @@ export const DataProvider = ({ children }) => {
       setData({
         services: appData.services || [],
         patients: appData.patients || [],
+        appointments: appData.appointments || [], // Include appointments
         loading: false,
         error: null
       });
@@ -134,6 +137,50 @@ export const DataProvider = ({ children }) => {
     }
   };
 
+  // Add appointment CRUD operations
+  const addAppointment = async (appointmentData) => {
+    try {
+      const newAppointment = await appointmentService.createAppointment(appointmentData);
+      setData(prevData => ({
+        ...prevData,
+        appointments: [...prevData.appointments, newAppointment]
+      }));
+      return newAppointment;
+    } catch (error) {
+      console.error('Error adding appointment:', error);
+      throw error;
+    }
+  };
+
+  const updateAppointment = async (appointmentId, appointmentData) => {
+    try {
+      const updatedAppointment = await appointmentService.updateAppointment(appointmentId, appointmentData);
+      setData(prevData => ({
+        ...prevData,
+        appointments: prevData.appointments.map(a => 
+          a.id === appointmentId ? updatedAppointment : a
+        )
+      }));
+      return updatedAppointment;
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      throw error;
+    }
+  };
+
+  const deleteAppointment = async (appointmentId) => {
+    try {
+      await appointmentService.deleteAppointment(appointmentId);
+      setData(prevData => ({
+        ...prevData,
+        appointments: prevData.appointments.filter(a => a.id !== appointmentId)
+      }));
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      throw error;
+    }
+  };
+
   // Create the context value with data and functions
   const contextValue = {
     ...data,
@@ -143,7 +190,10 @@ export const DataProvider = ({ children }) => {
     deletePatient,
     addService,
     updateService,
-    deleteService
+    deleteService,
+    addAppointment,
+    updateAppointment,
+    deleteAppointment
   };
 
   return (

@@ -21,11 +21,26 @@ export const initializeAppData = async () => {
     const patients = patientsResponse.body;
     console.log('Patients loaded:', patients);
     
+    // Fetch appointments
+    let appointments = [];
+    try {
+      const appointmentsResponse = await get({
+        apiName: 'clinnetApi',
+        path: '/appointments'
+      });
+      appointments = appointmentsResponse.body;
+      console.log('Appointments loaded:', appointments);
+    } catch (error) {
+      console.error('Error loading appointments:', error);
+      // Continue with empty appointments array
+    }
+    
     console.log('Data initialization complete');
     
     return {
       services,
-      patients
+      patients,
+      appointments
     };
   } catch (error) {
     console.error('Error initializing app data:', error);
