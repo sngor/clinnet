@@ -1,74 +1,70 @@
 # Clinnet EMR
 
-Electronic Medical Records system for clinics.
+Electronic Medical Records system for clinics built with React and AWS serverless technologies.
+
+## Overview
+
+Clinnet EMR is a comprehensive electronic medical records system designed for modern healthcare clinics. It provides a user-friendly interface for managing patients, appointments, medical records, and clinic services.
+
+## Features
+
+- Patient management
+- Appointment scheduling
+- Medical records
+- User management with role-based access
+- Secure document storage
+- Billing and services
 
 ## Project Structure
 
 - `/clinnet-app` - Frontend React application
 - `/src` - Backend AWS Lambda functions and API
+- `/docs` - Project documentation
 - `/template.yaml` - AWS SAM template for backend resources
 
-## Deployment Instructions
+## Documentation
 
-### Backend Deployment
+- [Project Structure](docs/project-structure.md) - Overview of the codebase organization
+- [Architecture](docs/architecture.md) - Serverless architecture details
+- [Deployment](docs/deployment.md) - Instructions for deploying to AWS
+- [Local Development](docs/local-development.md) - Guide for local development setup
 
-Deploy the backend services using AWS SAM:
+## Quick Start
+
+### Backend Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Run backend locally
+npm run start-local
+
+# Deploy to AWS
 npm run deploy
 ```
 
-### Frontend Deployment
-
-The frontend is deployed using AWS Amplify. To deploy:
-
-1. Push your changes to your Git repository
-2. Amplify will automatically build and deploy the frontend
-
-Alternatively, you can manually deploy from your local machine:
+### Frontend Development
 
 ```bash
+# Navigate to frontend directory
 cd clinnet-app
-npm run build
-# Then upload the dist folder to Amplify
-```
 
-## Environment Variables
-
-The frontend requires the following environment variables:
-
-```
-VITE_API_ENDPOINT=https://your-api-gateway-url.execute-api.region.amazonaws.com/prod
-VITE_COGNITO_REGION=your-region
-VITE_USER_POOL_ID=your-user-pool-id
-VITE_USER_POOL_CLIENT_ID=your-user-pool-client-id
-VITE_S3_BUCKET=your-s3-bucket
-VITE_S3_REGION=your-s3-region
-```
-
-These are automatically set in the Amplify console during deployment.
-
-## Troubleshooting Deployment
-
-If you encounter issues with the Amplify deployment:
-
-1. Check the build logs in the Amplify Console
-2. Verify that all environment variables are correctly set
-3. Make sure the amplify.yml file is properly configured
-4. Check that the Vite build is generating the correct output directory (dist)
-
-## Local Development
-
-To run the frontend locally:
-
-```bash
-cd clinnet-app
+# Install dependencies
 npm install
+
+# Start development server
 npm start
 ```
 
-To run the backend locally:
+## Environment Setup
 
-```bash
-npm run start-local
-```
+For local development, create a `.env.local` file in the `clinnet-app` directory with your development environment variables. See [Local Development](docs/local-development.md) for details.
+
+## Deployment
+
+The application is deployed using AWS Amplify for the frontend and AWS SAM for the backend. See [Deployment](docs/deployment.md) for detailed instructions.
+
+## License
+
+This project is proprietary and confidential.

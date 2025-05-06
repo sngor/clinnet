@@ -11,9 +11,12 @@ Clinnet-EMR/
 ├── .gitignore                  # Git ignore file
 ├── README.md                   # Project documentation
 ├── amplify.yml                 # AWS Amplify configuration
-├── architecture.md             # Architecture documentation
-├── project-structure.md        # This file
-├── template.yml                # AWS SAM template
+├── template.yaml               # AWS SAM template
+│
+├── docs/                       # Documentation
+│   ├── architecture.md         # Architecture documentation
+│   ├── deployment.md           # Deployment instructions
+│   └── project-structure.md    # This file
 │
 ├── clinnet-app/                # React frontend application
 │   ├── public/                 # Static assets
