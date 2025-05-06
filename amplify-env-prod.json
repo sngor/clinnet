@@ -1,9 +1,9 @@
 {
-  "API_ENDPOINT": "https://v30yfenncd.execute-api.us-east-2.amazonaws.com/prod",
+  "API_ENDPOINT": "https://u6931ifkej.execute-api.us-east-2.amazonaws.com/prod",
   "COGNITO_REGION": "us-east-2",
-  "USER_POOL_ID": "us-east-2_HU35r96jk",
-  "USER_POOL_CLIENT_ID": "1ltnr3hircmcoip4f6okfr3000",
-  "S3_BUCKET": "clinnet-documents-152296711262",
+  "USER_POOL_ID": "us-east-2_wAnZuNGYW",
+  "USER_POOL_CLIENT_ID": "37o7utn97opjncljpvc0bvpf7e",
+  "S3_BUCKET": "clinnet-documents-prod-152296711262-us-east-2",
   "S3_REGION": "us-east-2",
   "ENVIRONMENT": "prod"
 }
