@@ -14,9 +14,6 @@ import {
   Box,
   Typography
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 /**
  * A consistent text field component
@@ -141,37 +138,45 @@ export const FormDateField = ({
   sx = {},
   ...rest 
 }) => {
-  const handleDateChange = (date) => {
-    // Create a synthetic event to match the onChange API of other form fields
+  // Simple date input implementation without external dependencies
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleDateChange = (e) => {
+    const { value } = e.target;
     onChange({
       target: {
         name,
-        value: date ? date.toISOString().split('T')[0] : null
+        value: value || null
       }
     });
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <DatePicker
-        label={label}
-        value={value ? new Date(value) : null}
-        onChange={handleDateChange}
-        disabled={disabled}
-        slotProps={{
-          textField: {
-            fullWidth: true,
-            margin: "normal",
-            required: required,
-            error: !!error,
-            helperText: error,
-            name: name,
-            sx: { ...sx }
-          }
-        }}
-        {...rest}
-      />
-    </LocalizationProvider>
+    <TextField
+      name={name}
+      label={label}
+      type="date"
+      value={formatDateForInput(value)}
+      onChange={handleDateChange}
+      required={required}
+      disabled={disabled}
+      error={!!error}
+      helperText={error}
+      fullWidth
+      margin="normal"
+      InputLabelProps={{ shrink: true }}
+      sx={{ ...sx }}
+      {...rest}
+    />
   );
 };
 

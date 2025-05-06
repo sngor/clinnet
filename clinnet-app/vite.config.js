@@ -5,23 +5,30 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: 'dist',
-    sourcemap: true,
-    commonjsOptions: {
-      include: [/node_modules/],
-    },
+    outDir: 'build', // Changed from 'dist' to 'build' to match Amplify config
+    sourcemap: false,
+    minify: true,
     rollupOptions: {
-      // Make sure to include all MUI packages in the bundle
-      external: []
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          mui: ['@mui/material', '@mui/icons-material']
+        }
+      }
     }
-  },
-  resolve: {
-    alias: {
-      '@': '/src',
-    },
   },
   server: {
     port: 3000,
-    open: true,
+    strictPort: true,
+    host: true
   },
+  preview: {
+    port: 5000,
+    strictPort: true,
+    host: true
+  },
+  // Add support for process.env in Vite
+  define: {
+    'process.env': process.env
+  }
 })

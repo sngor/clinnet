@@ -5,10 +5,20 @@ Description: >
 
   SAM Template for Clinnet-EMR backend services
   
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - test
+      - prod
+    Description: Environment name (dev, test, prod)
+
 Globals:
   Function:
     Timeout: 30
-    Runtime: python3.9
+    Runtime: python3.12
     MemorySize: 128
     Environment:
       Variables:
@@ -18,6 +28,7 @@ Globals:
         APPOINTMENTS_TABLE: !Ref AppointmentsTable
         MEDICAL_RECORDS_TABLE: !Ref MedicalRecordsTable
         DOCUMENTS_BUCKET: !Ref DocumentsBucket
+        ENVIRONMENT: !Ref Environment
     Architectures:
       - x86_64
   Api:
@@ -31,7 +42,7 @@ Resources:
   PatientsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: clinnet-patients
+      TableName: !Sub clinnet-patients-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -43,7 +54,7 @@ Resources:
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: clinnet-users
+      TableName: !Sub clinnet-users-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -55,7 +66,7 @@ Resources:
   ServicesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: clinnet-services
+      TableName: !Sub clinnet-services-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -67,7 +78,7 @@ Resources:
   AppointmentsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: clinnet-appointments
+      TableName: !Sub clinnet-appointments-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -79,7 +90,7 @@ Resources:
   MedicalRecordsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: clinnet-medical-records
+      TableName: !Sub clinnet-medical-records-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -92,7 +103,7 @@ Resources:
   DocumentsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub clinnet-documents-${AWS::AccountId}
+      BucketName: !Sub clinnet-documents-${Environment}-${AWS::AccountId}
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
@@ -136,7 +147,7 @@ Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: clinnet-user-pool
+      UserPoolName: !Sub clinnet-user-pool-${Environment}
       AutoVerifiedAttributes:
         - email
       UsernameAttributes:
@@ -169,7 +180,7 @@ Resources:
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      ClientName: clinnet-app-client
+      ClientName: !Sub clinnet-app-client-${Environment}
       UserPoolId: !Ref UserPool
       GenerateSecret: false
       ExplicitAuthFlows:
@@ -524,15 +535,29 @@ Outputs:
   ClinicAPI:
     Description: "API Gateway endpoint URL for Prod stage"
     Value: !Sub "https://${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiEndpoint"
   
   UserPoolId:
     Description: "Cognito User Pool ID"
     Value: !Ref UserPool
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolId"
   
   UserPoolClientId:
     Description: "Cognito User Pool Client ID"
     Value: !Ref UserPoolClient
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolClientId"
   
   DocumentsBucket:
     Description: "S3 bucket for document storage"
     Value: !Ref DocumentsBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-DocumentsBucket"
+      
+  Region:
+    Description: "AWS Region"
+    Value: !Ref AWS::Region
+    Export:
+      Name: !Sub "${AWS::StackName}-Region"

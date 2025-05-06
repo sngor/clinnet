@@ -4,9 +4,11 @@
   "description": "Clinnet EMR Backend Services",
   "scripts": {
     "test": "pytest",
-    "deploy": "sam build && sam deploy",
+    "deploy": "sam build && sam deploy --config-file samconfig.toml",
+    "deploy:dev": "sam build && sam deploy --config-file samconfig.toml --parameter-overrides Environment=dev",
+    "deploy:prod": "sam build && sam deploy --config-file samconfig.toml --parameter-overrides Environment=prod",
     "start-local": "sam local start-api",
-    "seed-data": "python scripts/seed_data.py"
+    "seed-data": "bash seed_data.sh"
   },
   "dependencies": {
     "aws-amplify": "^6.14.4"

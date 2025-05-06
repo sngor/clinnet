@@ -2,105 +2,75 @@
 
 /**
  * Validates an email address
- * @param {string} email - The email address to validate
- * @returns {boolean} - True if the email is valid
+ * @param {string} email - Email address to validate
+ * @returns {boolean} - Whether the email is valid
  */
 export const isValidEmail = (email) => {
-  if (!email) return true; // Allow empty email (not required)
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 };
 
 /**
  * Validates a phone number
- * @param {string} phone - The phone number to validate
- * @returns {boolean} - True if the phone number is valid
+ * @param {string} phone - Phone number to validate
+ * @returns {boolean} - Whether the phone number is valid
  */
 export const isValidPhone = (phone) => {
-  if (!phone) return false; // Phone is typically required
-  return /^[0-9+\-() ]{10,15}$/.test(phone);
-};
-
-/**
- * Validates a date string
- * @param {string} dateString - The date string to validate (YYYY-MM-DD)
- * @returns {boolean} - True if the date is valid
- */
-export const isValidDate = (dateString) => {
-  if (!dateString) return false;
-  
-  // Check format (YYYY-MM-DD)
-  const regex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!regex.test(dateString)) return false;
-  
-  // Check if it's a valid date
-  const date = new Date(dateString);
-  const timestamp = date.getTime();
-  if (isNaN(timestamp)) return false;
-  
-  return true;
-};
-
-/**
- * Formats a date object or string to YYYY-MM-DD
- * @param {Date|string} date - The date to format
- * @returns {string} - Formatted date string
- */
-export const formatDateToString = (date) => {
-  if (!date) return '';
-  
-  try {
-    const dateObj = date instanceof Date ? date : new Date(date);
-    return dateObj.toISOString().split('T')[0];
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return '';
-  }
-};
-
-/**
- * Formats a date for display (Month Day, Year)
- * @param {string} dateString - ISO date string
- * @returns {string} - Formatted date for display
- */
-export const formatDateForDisplay = (dateString) => {
-  if (!dateString) return 'N/A';
-  
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric'
-    });
-  } catch (error) {
-    console.error('Error formatting date for display:', error);
-    return dateString;
-  }
+  // Allow various formats like (123) 456-7890, 123-456-7890, 123.456.7890, etc.
+  const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,3}[-\s.]?[0-9]{4,6}$/;
+  return phoneRegex.test(phone);
 };
 
 /**
  * Calculates age from date of birth
- * @param {string} dateOfBirth - ISO date string
- * @returns {number|string} - Age in years or 'N/A'
+ * @param {string} dateOfBirth - Date of birth in YYYY-MM-DD format
+ * @returns {number} - Age in years
  */
 export const calculateAge = (dateOfBirth) => {
-  if (!dateOfBirth) return 'N/A';
+  if (!dateOfBirth) return 0;
   
-  try {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
-  } catch (error) {
-    console.error('Error calculating age:', error);
-    return 'N/A';
+  const dob = new Date(dateOfBirth);
+  const today = new Date();
+  
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
   }
+  
+  return age;
+};
+
+/**
+ * Formats a date string for display
+ * @param {string} dateString - Date in YYYY-MM-DD format
+ * @returns {string} - Formatted date string
+ */
+export const formatDateForDisplay = (dateString) => {
+  if (!dateString) return 'N/A';
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Invalid date';
+  
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+/**
+ * Formats a date object to YYYY-MM-DD string
+ * @param {Date} date - Date object
+ * @returns {string} - Date string in YYYY-MM-DD format
+ */
+export const formatDateToString = (date) => {
+  if (!date) return '';
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
 };
