@@ -1,11 +1,14 @@
 // src/services/medicalRecordService.js
-import api from './api';
+import { get, post, put, del } from 'aws-amplify/api';
 
 // Get all medical records
 export const getMedicalRecords = async () => {
   try {
-    const response = await api.get('/medicalRecords');
-    return response.data;
+    const response = await get({
+      apiName: 'clinnetApi',
+      path: '/medicalRecords'
+    });
+    return response.body;
   } catch (error) {
     console.error('Error fetching medical records:', error);
     throw error;
@@ -15,8 +18,11 @@ export const getMedicalRecords = async () => {
 // Get medical record by ID
 export const getMedicalRecordById = async (recordId) => {
   try {
-    const response = await api.get(`/medicalRecords/${recordId}`);
-    return response.data;
+    const response = await get({
+      apiName: 'clinnetApi',
+      path: `/medicalRecords/${recordId}`
+    });
+    return response.body;
   } catch (error) {
     console.error(`Error fetching medical record ${recordId}:`, error);
     throw error;
@@ -26,8 +32,14 @@ export const getMedicalRecordById = async (recordId) => {
 // Create a new medical record
 export const createMedicalRecord = async (recordData) => {
   try {
-    const response = await api.post('/medicalRecords', recordData);
-    return response.data;
+    const response = await post({
+      apiName: 'clinnetApi',
+      path: '/medicalRecords',
+      options: {
+        body: recordData
+      }
+    });
+    return response.body;
   } catch (error) {
     console.error('Error creating medical record:', error);
     throw error;
@@ -37,8 +49,14 @@ export const createMedicalRecord = async (recordData) => {
 // Update a medical record
 export const updateMedicalRecord = async (recordId, recordData) => {
   try {
-    const response = await api.put(`/medicalRecords/${recordId}`, recordData);
-    return response.data;
+    const response = await put({
+      apiName: 'clinnetApi',
+      path: `/medicalRecords/${recordId}`,
+      options: {
+        body: recordData
+      }
+    });
+    return response.body;
   } catch (error) {
     console.error(`Error updating medical record ${recordId}:`, error);
     throw error;
@@ -48,8 +66,11 @@ export const updateMedicalRecord = async (recordId, recordData) => {
 // Delete a medical record
 export const deleteMedicalRecord = async (recordId) => {
   try {
-    const response = await api.delete(`/medicalRecords/${recordId}`);
-    return response.data;
+    const response = await del({
+      apiName: 'clinnetApi',
+      path: `/medicalRecords/${recordId}`
+    });
+    return response.body;
   } catch (error) {
     console.error(`Error deleting medical record ${recordId}:`, error);
     throw error;
@@ -59,8 +80,16 @@ export const deleteMedicalRecord = async (recordId) => {
 // Get medical records by patient ID
 export const getMedicalRecordsByPatient = async (patientId) => {
   try {
-    const response = await api.get(`/medicalRecords?patientId=${patientId}`);
-    return response.data;
+    const response = await get({
+      apiName: 'clinnetApi',
+      path: '/medicalRecords',
+      options: {
+        queryParams: {
+          patientId: patientId
+        }
+      }
+    });
+    return response.body;
   } catch (error) {
     console.error(`Error fetching medical records for patient ${patientId}:`, error);
     throw error;
@@ -70,8 +99,16 @@ export const getMedicalRecordsByPatient = async (patientId) => {
 // Get medical records by doctor ID
 export const getMedicalRecordsByDoctor = async (doctorId) => {
   try {
-    const response = await api.get(`/medicalRecords?doctorId=${doctorId}`);
-    return response.data;
+    const response = await get({
+      apiName: 'clinnetApi',
+      path: '/medicalRecords',
+      options: {
+        queryParams: {
+          doctorId: doctorId
+        }
+      }
+    });
+    return response.body;
   } catch (error) {
     console.error(`Error fetching medical records for doctor ${doctorId}:`, error);
     throw error;
@@ -81,10 +118,29 @@ export const getMedicalRecordsByDoctor = async (doctorId) => {
 // Get medical record by appointment ID
 export const getMedicalRecordByAppointment = async (appointmentId) => {
   try {
-    const response = await api.get(`/medicalRecords?appointmentId=${appointmentId}`);
-    return response.data[0]; // Assuming one record per appointment
+    const response = await get({
+      apiName: 'clinnetApi',
+      path: '/medicalRecords',
+      options: {
+        queryParams: {
+          appointmentId: appointmentId
+        }
+      }
+    });
+    return response.body[0]; // Assuming one record per appointment
   } catch (error) {
     console.error(`Error fetching medical record for appointment ${appointmentId}:`, error);
     throw error;
   }
+};
+
+export default {
+  getMedicalRecords,
+  getMedicalRecordById,
+  createMedicalRecord,
+  updateMedicalRecord,
+  deleteMedicalRecord,
+  getMedicalRecordsByPatient,
+  getMedicalRecordsByDoctor,
+  getMedicalRecordByAppointment
 };
