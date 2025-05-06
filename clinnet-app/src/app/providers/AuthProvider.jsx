@@ -1,7 +1,7 @@
 // src/app/providers/AuthProvider.jsx
 import React, { createContext, useState, useContext, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Auth } from 'aws-amplify';
+import { Amplify } from 'aws-amplify';
 
 const AuthContext = createContext(null);
 
@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuthState = async () => {
       try {
-        const userData = await Auth.currentAuthenticatedUser();
+        const userData = await Amplify.Auth.currentAuthenticatedUser();
         // Extract role from Cognito attributes or use a default
         const role = userData.attributes['custom:role'] || 'user';
         
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (userData) => {
     try {
       setLoading(true);
-      const cognitoUser = await Auth.signIn(userData.username, userData.password);
+      const cognitoUser = await Amplify.Auth.signIn(userData.username, userData.password);
       
       // Get user attributes
       const userAttributes = cognitoUser.attributes || {};
@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }) => {
   // Logout with Cognito
   const logout = async () => {
     try {
-      await Auth.signOut();
+      await Amplify.Auth.signOut();
       setUser(null);
       navigate("/login", { replace: true });
     } catch (error) {

@@ -1,5 +1,5 @@
 // src/services/serviceApi.js
-import { API } from 'aws-amplify';
+import { Amplify } from 'aws-amplify';
 
 /**
  * Service API functions using AWS Amplify
@@ -12,7 +12,7 @@ const serviceApi = {
   getAll: async () => {
     try {
       console.log('Calling API Gateway to get services');
-      const response = await API.get('clinnetApi', '/services');
+      const response = await Amplify.API.get('clinnetApi', '/services');
       console.log('API response:', response);
       return response;
     } catch (error) {
@@ -28,7 +28,7 @@ const serviceApi = {
    */
   getById: async (serviceId) => {
     try {
-      return await API.get('clinnetApi', `/services/${serviceId}`);
+      return await Amplify.API.get('clinnetApi', `/services/${serviceId}`);
     } catch (error) {
       console.error(`Error fetching service ${serviceId}:`, error);
       throw error;
@@ -42,7 +42,7 @@ const serviceApi = {
    */
   create: async (serviceData) => {
     try {
-      return await API.post('clinnetApi', '/services', { body: serviceData });
+      return await Amplify.API.post('clinnetApi', '/services', { body: serviceData });
     } catch (error) {
       console.error('Error creating service:', error);
       throw error;
@@ -57,7 +57,7 @@ const serviceApi = {
    */
   update: async (serviceId, serviceData) => {
     try {
-      return await API.put('clinnetApi', `/services/${serviceId}`, { body: serviceData });
+      return await Amplify.API.put('clinnetApi', `/services/${serviceId}`, { body: serviceData });
     } catch (error) {
       console.error(`Error updating service ${serviceId}:`, error);
       throw error;
@@ -71,7 +71,7 @@ const serviceApi = {
    */
   delete: async (serviceId) => {
     try {
-      return await API.del('clinnetApi', `/services/${serviceId}`);
+      return await Amplify.API.del('clinnetApi', `/services/${serviceId}`);
     } catch (error) {
       console.error(`Error deleting service ${serviceId}:`, error);
       throw error;

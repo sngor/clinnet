@@ -1,4 +1,36 @@
-undefined
+// src/services/userService.js
+import api from './api';
+
+// Get all users
+export const getUsers = async () => {
+  try {
+    const response = await api.get('/users');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+};
+
+// Get user by ID
+export const getUserById = async (userId) => {
+  try {
+    const response = await api.get(`/users/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching user ${userId}:`, error);
+    throw error;
+  }
+};
+
+// Create a new user
+export const createUser = async (userData) => {
+  try {
+    const response = await api.post('/users', userData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
   }
 };
 
