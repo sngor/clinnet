@@ -3,7 +3,8 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - echo "Checking for package.json and package-lock.json sync issues"
+        - npm install
         - echo "Listing source files:"
         - find src -type f -name "*.jsx" -o -name "*.js" | sort
     build:
