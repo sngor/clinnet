@@ -3,11 +3,11 @@
 
 // Choose which API implementation to use
 import apiAmplify from './api-amplify';
-import apiAxios from './api';
+import api from './api';
 import serviceApi from './serviceApi';
 
-// Use Amplify API in production, Axios API in development
-const api = process.env.NODE_ENV === 'production' ? apiAmplify : apiAxios;
+// Always use Amplify API in production
+const apiService = process.env.NODE_ENV === 'production' ? apiAmplify : api;
 
 // Export individual services
 export { default as authService } from './authService';
@@ -18,4 +18,4 @@ export { default as medicalRecordService } from './medicalRecordService';
 export { serviceApi };
 
 // Export the API
-export default api;
+export default apiService;

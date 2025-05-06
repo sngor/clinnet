@@ -38,9 +38,6 @@ function AppointmentForm() {
     // Add logic to clear form or show success message later
     alert("Appointment data logged to console (MVP)");
   };
-  // Import the useTranslation hook from react-i18next
-  // This hook is used for internationalization of component labels
-  import { useTranslation } from "react-i18next";
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -52,7 +49,7 @@ function AppointmentForm() {
         sx={{ mt: 1, p: 2, border: "1px solid grey", borderRadius: 1 }}
       >
         <Typography variant="h6" gutterBottom>
-          {t("scheduleNewAppointment")}
+          Schedule New Appointment
         </Typography>
         <Autocomplete
           options={mockPatients}
@@ -63,7 +60,7 @@ function AppointmentForm() {
           renderInput={(params) => (
             <TextField
               {...params}
-              label={t("patient")}
+              label="Patient"
               margin="normal"
               required
             />
@@ -78,14 +75,14 @@ function AppointmentForm() {
           renderInput={(params) => (
             <TextField
               {...params}
-              label={t("doctor")}
+              label="Doctor"
               margin="normal"
               required
             />
           )}
         />
         <DateTimePicker
-          label={t("appointmentDateTime")}
+          label="Appointment Date & Time"
           value={dateTime}
           onChange={(newValue) => {
             setDateTime(newValue);

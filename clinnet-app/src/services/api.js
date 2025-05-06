@@ -3,7 +3,8 @@ import axios from 'axios';
 
 // Create an axios instance with base configuration
 const api = axios.create({
-  baseURL: 'http://localhost:3001',
+  // Use environment variables for the API endpoint with fallbacks
+  baseURL: process.env.REACT_APP_API_ENDPOINT || process.env.VITE_API_ENDPOINT || 'https://v30yfenncd.execute-api.us-east-2.amazonaws.com/prod',
   headers: {
     'Content-Type': 'application/json',
   },
