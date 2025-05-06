@@ -1,0 +1,9 @@
+{
+  "API_ENDPOINT": "https://v30yfenncd.execute-api.us-east-2.amazonaws.com/prod",
+  "COGNITO_REGION": "us-east-2",
+  "USER_POOL_ID": "us-east-2_HU35r96jk",
+  "USER_POOL_CLIENT_ID": "1ltnr3hircmcoip4f6okfr3000",
+  "S3_BUCKET": "clinnet-documents-152296711262",
+  "S3_REGION": "us-east-2",
+  "ENVIRONMENT": "dev"
+}

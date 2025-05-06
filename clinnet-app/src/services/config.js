@@ -1,16 +1,32 @@
 // src/services/config.js
 // This file provides configuration values for the application
 
+// Helper function to get environment variables with fallbacks
+const getEnvVar = (viteKey, reactKey, fallback = undefined) => {
+  // Check for Vite environment variables first
+  if (import.meta.env && import.meta.env[viteKey]) {
+    return import.meta.env[viteKey];
+  }
+  
+  // Then check for React environment variables
+  if (process.env && process.env[reactKey]) {
+    return process.env[reactKey];
+  }
+  
+  // Return fallback if provided
+  return fallback;
+};
+
 const config = {
-  API_ENDPOINT: process.env.REACT_APP_API_ENDPOINT || process.env.VITE_API_ENDPOINT,
+  API_ENDPOINT: getEnvVar('VITE_API_ENDPOINT', 'REACT_APP_API_ENDPOINT'),
   COGNITO: {
-    REGION: process.env.REACT_APP_COGNITO_REGION || process.env.VITE_COGNITO_REGION || 'us-east-2',
-    USER_POOL_ID: process.env.REACT_APP_USER_POOL_ID || process.env.VITE_USER_POOL_ID,
-    APP_CLIENT_ID: process.env.REACT_APP_USER_POOL_CLIENT_ID || process.env.VITE_USER_POOL_CLIENT_ID,
+    REGION: getEnvVar('VITE_COGNITO_REGION', 'REACT_APP_COGNITO_REGION', 'us-east-2'),
+    USER_POOL_ID: getEnvVar('VITE_USER_POOL_ID', 'REACT_APP_USER_POOL_ID'),
+    APP_CLIENT_ID: getEnvVar('VITE_USER_POOL_CLIENT_ID', 'REACT_APP_USER_POOL_CLIENT_ID'),
   },
   S3: {
-    BUCKET: process.env.REACT_APP_S3_BUCKET || process.env.VITE_S3_BUCKET,
-    REGION: process.env.REACT_APP_S3_REGION || process.env.VITE_S3_REGION || 'us-east-2',
+    BUCKET: getEnvVar('VITE_S3_BUCKET', 'REACT_APP_S3_BUCKET'),
+    REGION: getEnvVar('VITE_S3_REGION', 'REACT_APP_S3_REGION', 'us-east-2'),
   }
 };
 

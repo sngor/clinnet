@@ -7,7 +7,8 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "echo 'No tests configured'"
+    "test": "echo 'No tests configured'",
+    "prebuild": "node scripts/check-env.js"
   },
   "dependencies": {
     "@emotion/react": "^11.11.0",
