@@ -30,24 +30,13 @@ dist-ssr
 .env.test.local
 .env.production.local
 
-# Debug files
-debug.html
-debug.js
-index-debug.html
-minimal.html
-run-minimal.js
-test.html
-test.js
-vite.config.clean.js
-package.json.bak
-
-#amplify-do-not-edit-begin
+# AWS Amplify
 amplify/\#current-cloud-backend
 amplify/.config/local-*
 amplify/logs
 amplify/mock-data
-amplify/mock-api-resources
 amplify/backend/amplify-meta.json
+amplify/backend/awscloudformation
 amplify/backend/.temp
 build/
 dist/
@@ -61,4 +50,3 @@ amplify-gradle-config.json
 amplifytools.xcconfig
 .secret-*
 **.sample
-#amplify-do-not-edit-end

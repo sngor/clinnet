@@ -36,7 +36,7 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loading: authLoading } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -53,9 +53,10 @@ function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Simulate network delay for better UX feedback
-      await new Promise(resolve => setTimeout(resolve, 800));
-      await login({ username, password });
+      const result = await login({ username, password });
+      if (!result.success) {
+        setError(result.error || "Login failed. Please check your username and password.");
+      }
     } catch (err) {
       console.error("Login failed:", err);
       setError("Login failed. Please check your username and password.");
@@ -259,10 +260,10 @@ function LoginPage() {
                 type="submit"
                 fullWidth
                 size="large"
-                disabled={isLoading || !username || !password}
+                disabled={isLoading || authLoading || !username || !password}
                 sx={{ mt: 1, mb: 3 }}
               >
-                {isLoading ? (
+                {(isLoading || authLoading) ? (
                   <CircularProgress 
                     size={24} 
                     sx={{ 
