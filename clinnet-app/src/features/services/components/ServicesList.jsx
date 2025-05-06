@@ -38,6 +38,7 @@ import {
 import TableContainer from "../../../components/TableContainer";
 import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
 import { serviceApi } from "../../../services";
+import { useAppData } from "../../../app/providers/DataProvider";
 
 // Table column definitions
 const columns = [
@@ -86,6 +87,7 @@ function stableSort(array, comparator) {
 }
 
 function ServicesList() {
+  const { services: apiServices, loading: apiLoading, error: apiError } = useAppData();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -98,25 +100,32 @@ function ServicesList() {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("id");
 
-  // Fetch services from API
+  // Use data from API when available
   useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        setLoading(true);
-        const data = await serviceApi.getAll();
-        console.log("Fetched services:", data);
-        setServices(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching services:", err);
-        setError("Failed to load services. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchServices();
-  }, []);
+    if (apiServices && apiServices.length > 0) {
+      console.log('Using services data from API:', apiServices);
+      
+      // Transform API data to match the expected format if needed
+      const formattedServices = apiServices.map(service => ({
+        id: service.id,
+        name: service.name || '',
+        description: service.description || '',
+        category: service.category || 'consultation',
+        price: service.price || 0,
+        discountPercentage: service.discountPercentage || 0,
+        duration: service.duration || 30,
+        active: service.active !== false,
+      }));
+      
+      setServices(formattedServices);
+      setLoading(false);
+    } else if (apiLoading) {
+      setLoading(true);
+    } else if (apiError) {
+      setError(apiError);
+      setLoading(false);
+    }
+  }, [apiServices, apiLoading, apiError]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -345,8 +354,10 @@ function ServicesList() {
                         <TableCell>
                           <Chip
                             label={
-                              service.category.charAt(0).toUpperCase() +
-                              service.category.slice(1)
+                              service.category
+                                ? service.category.charAt(0).toUpperCase() +
+                                  service.category.slice(1)
+                                : "Consultation"
                             }
                             size="small"
                             color="primary"

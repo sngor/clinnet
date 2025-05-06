@@ -8,6 +8,8 @@ import { Amplify } from 'aws-amplify';
 function AmplifyProvider({ children }) {
   useEffect(() => {
     try {
+      const apiEndpoint = process.env.REACT_APP_API_ENDPOINT || process.env.VITE_API_ENDPOINT || 'https://v30yfenncd.execute-api.us-east-2.amazonaws.com/prod';
+      
       // Configure Amplify with environment variables
       Amplify.configure({
         Auth: {
@@ -20,7 +22,7 @@ function AmplifyProvider({ children }) {
         API: {
           REST: {
             clinnetApi: {
-              endpoint: process.env.REACT_APP_API_ENDPOINT || process.env.VITE_API_ENDPOINT || 'https://v30yfenncd.execute-api.us-east-2.amazonaws.com/prod',
+              endpoint: apiEndpoint,
               region: 'us-east-2',
             }
           }
@@ -33,7 +35,8 @@ function AmplifyProvider({ children }) {
         }
       });
       
-      console.log('Amplify configured successfully');
+      // Add debugging information
+      console.log('Amplify configured successfully with API endpoint:', apiEndpoint);
     } catch (error) {
       console.error('Error configuring Amplify:', error);
     }

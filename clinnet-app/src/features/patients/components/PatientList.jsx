@@ -25,82 +25,10 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PaymentIcon from "@mui/icons-material/Payment";
 import PatientCheckoutButton from "./PatientCheckoutButton";
-
-// Placeholder data - replace with API data
-const mockPatients = [
-  {
-    id: 101,
-    firstName: "John",
-    lastName: "Doe",
-    dob: "1985-05-15",
-    phone: "555-1234",
-    email: "john.doe@example.com",
-    address: "123 Main St, Anytown, USA",
-    insuranceProvider: "Blue Cross",
-    insuranceNumber: "BC12345678",
-    lastVisit: "2023-11-15",
-    upcomingAppointment: "2023-12-10",
-    status: "Active"
-  },
-  {
-    id: 102,
-    firstName: "Jane",
-    lastName: "Smith",
-    dob: "1992-08-22",
-    phone: "555-5678",
-    email: "jane.smith@example.com",
-    address: "456 Oak Ave, Somewhere, USA",
-    insuranceProvider: "Aetna",
-    insuranceNumber: "AE87654321",
-    lastVisit: "2023-10-05",
-    upcomingAppointment: null,
-    status: "Active"
-  },
-  {
-    id: 103,
-    firstName: "Robert",
-    lastName: "Johnson",
-    dob: "1978-03-10",
-    phone: "555-9012",
-    email: "robert.j@example.com",
-    address: "789 Pine Rd, Elsewhere, USA",
-    insuranceProvider: "United Healthcare",
-    insuranceNumber: "UH56781234",
-    lastVisit: "2023-09-20",
-    upcomingAppointment: "2023-12-15",
-    status: "Active"
-  },
-  {
-    id: 104,
-    firstName: "Emily",
-    lastName: "Williams",
-    dob: "1990-11-28",
-    phone: "555-3456",
-    email: "emily.w@example.com",
-    address: "321 Elm St, Nowhere, USA",
-    insuranceProvider: "Cigna",
-    insuranceNumber: "CI43218765",
-    lastVisit: "2023-11-25",
-    upcomingAppointment: "2023-12-05",
-    status: "Active"
-  },
-  {
-    id: 105,
-    firstName: "Michael",
-    lastName: "Brown",
-    dob: "1982-07-14",
-    phone: "555-7890",
-    email: "michael.b@example.com",
-    address: "654 Maple Ave, Anywhere, USA",
-    insuranceProvider: "Humana",
-    insuranceNumber: "HU98761234",
-    lastVisit: "2023-08-30",
-    upcomingAppointment: null,
-    status: "Inactive"
-  }
-];
+import { useAppData } from "../../../app/providers/DataProvider";
 
 function PatientList({ onPatientSelect }) {
+  const { patients: apiPatients, loading: apiLoading, error: apiError } = useAppData();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -125,26 +53,46 @@ function PatientList({ onPatientSelect }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
   
-  // Fetch patients from API (replace with actual API call)
+  // Use data from API when available
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      try {
-        setPatients(mockPatients);
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to load patients: " + err.message);
-        setLoading(false);
-      }
-    }, 1000);
-  }, []);
+    if (apiPatients && apiPatients.length > 0) {
+      console.log('Using patients data from API:', apiPatients);
+      
+      // Transform API data to match the expected format if needed
+      const formattedPatients = apiPatients.map(patient => ({
+        id: patient.id,
+        firstName: patient.firstName,
+        lastName: patient.lastName,
+        dob: patient.dateOfBirth || '',
+        phone: patient.phone || '',
+        email: patient.email || '',
+        address: patient.address || '',
+        insuranceProvider: patient.insuranceProvider || '',
+        insuranceNumber: patient.insuranceNumber || '',
+        lastVisit: patient.lastVisit || null,
+        upcomingAppointment: patient.upcomingAppointment || null,
+        status: patient.status || 'Active',
+        // Add any other fields needed
+      }));
+      
+      setPatients(formattedPatients);
+      setLoading(false);
+    } else if (apiLoading) {
+      setLoading(true);
+    } else if (apiError) {
+      setError(apiError);
+      setLoading(false);
+    }
+  }, [apiPatients, apiLoading, apiError]);
   
   // Filter patients based on search term
   const filteredPatients = patients.filter(patient => {
+    if (!patient.firstName || !patient.lastName) return false;
+    
     const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
     return fullName.includes(searchTerm.toLowerCase()) || 
-           patient.phone.includes(searchTerm) || 
-           patient.email.toLowerCase().includes(searchTerm.toLowerCase());
+           (patient.phone && patient.phone.includes(searchTerm)) || 
+           (patient.email && patient.email.toLowerCase().includes(searchTerm.toLowerCase()));
   });
   
   // Handle search input change
@@ -158,15 +106,15 @@ function PatientList({ onPatientSelect }) {
       // Editing existing patient
       setCurrentPatient(patient);
       setFormData({
-        firstName: patient.firstName,
-        lastName: patient.lastName,
-        dob: patient.dob,
-        phone: patient.phone,
-        email: patient.email,
-        address: patient.address,
+        firstName: patient.firstName || '',
+        lastName: patient.lastName || '',
+        dob: patient.dob || '',
+        phone: patient.phone || '',
+        email: patient.email || '',
+        address: patient.address || '',
         insuranceProvider: patient.insuranceProvider || "",
         insuranceNumber: patient.insuranceNumber || "",
-        status: patient.status
+        status: patient.status || 'Active'
       });
     } else {
       // Adding new patient
@@ -250,12 +198,12 @@ function PatientList({ onPatientSelect }) {
       field: 'name', 
       headerName: 'Name', 
       width: 200,
-      valueGetter: (params) => `${params.row.firstName} ${params.row.lastName}`,
+      valueGetter: (params) => `${params.row.firstName || ''} ${params.row.lastName || ''}`,
       renderCell: (params) => (
         <Box>
           <Typography variant="body2">{params.value}</Typography>
           <Typography variant="caption" color="text.secondary">
-            DOB: {params.row.dob}
+            DOB: {params.row.dob || 'N/A'}
           </Typography>
         </Box>
       )
@@ -264,12 +212,12 @@ function PatientList({ onPatientSelect }) {
       field: 'contact', 
       headerName: 'Contact', 
       width: 200,
-      valueGetter: (params) => params.row.phone,
+      valueGetter: (params) => params.row.phone || 'N/A',
       renderCell: (params) => (
         <Box>
-          <Typography variant="body2">{params.row.phone}</Typography>
+          <Typography variant="body2">{params.row.phone || 'N/A'}</Typography>
           <Typography variant="caption" color="text.secondary">
-            {params.row.email}
+            {params.row.email || 'N/A'}
           </Typography>
         </Box>
       )
@@ -302,8 +250,8 @@ function PatientList({ onPatientSelect }) {
       width: 120,
       renderCell: (params) => (
         <Chip 
-          label={params.value} 
-          color={params.value === 'Active' ? 'success' : 'default'} 
+          label={params.value || 'Active'} 
+          color={(params.value || 'Active') === 'Active' ? 'success' : 'default'} 
           size="small" 
         />
       )

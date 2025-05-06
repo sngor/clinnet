@@ -5,6 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './AuthProvider';
 import AmplifyProvider from './AmplifyProvider';
+import { DataProvider } from './DataProvider';
 
 // Create a theme instance directly in this file
 const theme = createTheme({
@@ -70,7 +71,9 @@ function AppProviders({ children }) {
         <CssBaseline />
         <AmplifyProvider>
           <AuthProvider>
-            {children}
+            <DataProvider>
+              {children}
+            </DataProvider>
           </AuthProvider>
         </AmplifyProvider>
       </ThemeProvider>
