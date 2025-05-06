@@ -53,6 +53,45 @@ function PatientList({ onPatientSelect }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
   
+  // Helper function to format dates
+  const formatDateForInput = (dateString) => {
+    try {
+      // Handle different date formats
+      if (!dateString) return '';
+      
+      // If it's already in YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+      }
+      
+      // Try to parse the date
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return ''; // Invalid date
+      }
+      
+      // Format as YYYY-MM-DD
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return '';
+    }
+  };
+  
+  // Date validation function
+  const isValidDateFormat = (dateString) => {
+    // Check if the string matches YYYY-MM-DD format
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!regex.test(dateString)) return false;
+    
+    // Check if it's a valid date
+    const date = new Date(dateString);
+    const timestamp = date.getTime();
+    if (isNaN(timestamp)) return false;
+    
+    return true;
+  };
+  
   // Use data from API when available
   useEffect(() => {
     if (apiPatients && apiPatients.length > 0) {
@@ -63,7 +102,7 @@ function PatientList({ onPatientSelect }) {
         id: patient.id,
         firstName: patient.firstName,
         lastName: patient.lastName,
-        dob: patient.dateOfBirth || '',
+        dob: formatDateForInput(patient.dateOfBirth || ''),
         phone: patient.phone || '',
         email: patient.email || '',
         address: patient.address || '',
@@ -104,11 +143,14 @@ function PatientList({ onPatientSelect }) {
   const handleOpenDialog = (patient = null) => {
     if (patient) {
       // Editing existing patient
+      // Format the date properly if it exists
+      const formattedDob = formatDateForInput(patient.dob || '');
+      
       setCurrentPatient(patient);
       setFormData({
         firstName: patient.firstName || '',
         lastName: patient.lastName || '',
-        dob: patient.dob || '',
+        dob: formattedDob,
         phone: patient.phone || '',
         email: patient.email || '',
         address: patient.address || '',
@@ -142,31 +184,52 @@ function PatientList({ onPatientSelect }) {
   // Handle form input changes
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    
+    // Special handling for date fields
+    if (name === 'dob') {
+      // Ensure the date is in a valid format
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
   };
   
   // Handle form submission
   const handleSubmit = () => {
-    if (currentPatient) {
-      // Update existing patient
-      const updatedPatients = patients.map(p => 
-        p.id === currentPatient.id ? { ...p, ...formData } : p
-      );
-      setPatients(updatedPatients);
-    } else {
-      // Add new patient
-      const newPatient = {
-        ...formData,
-        id: Date.now(), // Use a proper ID generation in production
-        lastVisit: null,
-        upcomingAppointment: null
-      };
-      setPatients([...patients, newPatient]);
+    try {
+      // Validate date format before submission
+      if (formData.dob && !isValidDateFormat(formData.dob)) {
+        alert("Please enter a valid date in YYYY-MM-DD format");
+        return;
+      }
+      
+      if (currentPatient) {
+        // Update existing patient
+        const updatedPatients = patients.map(p => 
+          p.id === currentPatient.id ? { ...p, ...formData } : p
+        );
+        setPatients(updatedPatients);
+      } else {
+        // Add new patient
+        const newPatient = {
+          ...formData,
+          id: Date.now().toString(), // Use a proper ID generation in production
+          lastVisit: null,
+          upcomingAppointment: null
+        };
+        setPatients([...patients, newPatient]);
+      }
+      handleCloseDialog();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setError("Error saving patient data. Please check all fields and try again.");
     }
-    handleCloseDialog();
   };
   
   // Handle delete button click
@@ -404,6 +467,14 @@ function PatientList({ onPatientSelect }) {
                 fullWidth
                 required
                 InputLabelProps={{ shrink: true }}
+                error={formData.dob && !isValidDateFormat(formData.dob)}
+                helperText={formData.dob && !isValidDateFormat(formData.dob) ? "Please use YYYY-MM-DD format" : ""}
+                onBlur={(e) => {
+                  if (e.target.value) {
+                    const formattedDate = formatDateForInput(e.target.value);
+                    setFormData({...formData, dob: formattedDate});
+                  }
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -459,7 +530,11 @@ function PatientList({ onPatientSelect }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained"
+            disabled={!formData.firstName || !formData.lastName || (formData.dob && !isValidDateFormat(formData.dob))}
+          >
             {currentPatient ? 'Update' : 'Add'}
           </Button>
         </DialogActions>
