@@ -5,12 +5,23 @@ import os
 import json
 import boto3
 import uuid
+import decimal
 from datetime import datetime
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
+
+# Helper class to convert a DynamoDB item to JSON
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            if o % 1 > 0:
+                return float(o)
+            else:
+                return int(o)
+        return super(DecimalEncoder, self).default(o)
 
 def query_table(table_name, **kwargs):
     """
@@ -54,6 +65,26 @@ def get_item_by_id(table_name, item_id):
         return response.get('Item')
     except ClientError as e:
         print(f"Error getting item {item_id} from table {table_name}: {e}")
+        raise
+
+def put_item(table_name, item):
+    """
+    Put item in DynamoDB table
+    
+    Args:
+        table_name (str): DynamoDB table name
+        item (dict): Item data
+        
+    Returns:
+        dict: Created item
+    """
+    table = dynamodb.Table(table_name)
+    
+    try:
+        table.put_item(Item=item)
+        return item
+    except ClientError as e:
+        print(f"Error putting item in table {table_name}: {e}")
         raise
 
 def create_item(table_name, item):
@@ -163,5 +194,5 @@ def generate_response(status_code, body):
             'Access-Control-Allow-Credentials': True,
             'Content-Type': 'application/json'
         },
-        'body': json.dumps(body)
+        'body': json.dumps(body, cls=DecimalEncoder)
     }
