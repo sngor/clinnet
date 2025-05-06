@@ -117,6 +117,20 @@ Resources:
         Authorizers:
           CognitoAuthorizer:
             UserPoolArn: !GetAtt UserPool.Arn
+        AddDefaultAuthorizerToCorsPreflight: false
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
 
   # Cognito User Pool
   UserPool:
@@ -127,6 +141,23 @@ Resources:
         - email
       UsernameAttributes:
         - email
+      Schema:
+        - Name: given_name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: family_name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: custom:role
+          AttributeDataType: String
+          Mutable: true
+          Required: false
       Policies:
         PasswordPolicy:
           MinimumLength: 8
@@ -146,6 +177,8 @@ Resources:
         - ALLOW_REFRESH_TOKEN_AUTH
         - ALLOW_USER_SRP_AUTH
       PreventUserExistenceErrors: ENABLED
+      SupportedIdentityProviders:
+        - COGNITO
 
   # Lambda Functions for Services
   GetServicesFunction:
@@ -163,6 +196,8 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /services
             Method: get
+            Auth:
+              Authorizer: NONE
 
   GetServiceByIdFunction:
     Type: AWS::Serverless::Function
@@ -179,6 +214,8 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /services/{id}
             Method: get
+            Auth:
+              Authorizer: NONE
 
   CreateServiceFunction:
     Type: AWS::Serverless::Function
@@ -244,6 +281,8 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /patients
             Method: get
+            Auth:
+              Authorizer: NONE
 
   GetPatientByIdFunction:
     Type: AWS::Serverless::Function
@@ -260,6 +299,8 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /patients/{id}
             Method: get
+            Auth:
+              Authorizer: NONE
 
   CreatePatientFunction:
     Type: AWS::Serverless::Function
@@ -325,6 +366,8 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /users
             Method: get
+            Auth:
+              Authorizer: NONE
 
   GetUserByIdFunction:
     Type: AWS::Serverless::Function
@@ -341,6 +384,8 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /users/{id}
             Method: get
+            Auth:
+              Authorizer: NONE
 
   CreateUserFunction:
     Type: AWS::Serverless::Function
