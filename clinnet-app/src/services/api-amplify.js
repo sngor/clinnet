@@ -1,5 +1,6 @@
 // src/services/api-amplify.js
-import { Amplify } from 'aws-amplify';
+import { get, post, put, del } from 'aws-amplify/api';
+import { signIn, signOut, getCurrentUser, fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
 
 // API service using AWS Amplify
 const api = {
@@ -7,7 +8,11 @@ const api = {
   users: {
     getAll: async () => {
       try {
-        return await Amplify.API.get('clinnetApi', '/users');
+        const response = await get({
+          apiName: 'clinnetApi',
+          path: '/users'
+        });
+        return response.body;
       } catch (error) {
         console.error('Error fetching users:', error);
         throw error;
@@ -16,7 +21,11 @@ const api = {
     
     getById: async (userId) => {
       try {
-        return await Amplify.API.get('clinnetApi', `/users/${userId}`);
+        const response = await get({
+          apiName: 'clinnetApi',
+          path: `/users/${userId}`
+        });
+        return response.body;
       } catch (error) {
         console.error(`Error fetching user ${userId}:`, error);
         throw error;
@@ -25,7 +34,14 @@ const api = {
     
     create: async (userData) => {
       try {
-        return await Amplify.API.post('clinnetApi', '/users', { body: userData });
+        const response = await post({
+          apiName: 'clinnetApi',
+          path: '/users',
+          options: {
+            body: userData
+          }
+        });
+        return response.body;
       } catch (error) {
         console.error('Error creating user:', error);
         throw error;
@@ -34,7 +50,14 @@ const api = {
     
     update: async (userId, userData) => {
       try {
-        return await Amplify.API.put('clinnetApi', `/users/${userId}`, { body: userData });
+        const response = await put({
+          apiName: 'clinnetApi',
+          path: `/users/${userId}`,
+          options: {
+            body: userData
+          }
+        });
+        return response.body;
       } catch (error) {
         console.error(`Error updating user ${userId}:`, error);
         throw error;
@@ -43,7 +66,11 @@ const api = {
     
     delete: async (userId) => {
       try {
-        return await Amplify.API.del('clinnetApi', `/users/${userId}`);
+        const response = await del({
+          apiName: 'clinnetApi',
+          path: `/users/${userId}`
+        });
+        return response.body;
       } catch (error) {
         console.error(`Error deleting user ${userId}:`, error);
         throw error;
@@ -55,7 +82,11 @@ const api = {
   patients: {
     getAll: async () => {
       try {
-        return await Amplify.API.get('clinnetApi', '/patients');
+        const response = await get({
+          apiName: 'clinnetApi',
+          path: '/patients'
+        });
+        return response.body;
       } catch (error) {
         console.error('Error fetching patients:', error);
         throw error;
@@ -64,7 +95,11 @@ const api = {
     
     getById: async (patientId) => {
       try {
-        return await Amplify.API.get('clinnetApi', `/patients/${patientId}`);
+        const response = await get({
+          apiName: 'clinnetApi',
+          path: `/patients/${patientId}`
+        });
+        return response.body;
       } catch (error) {
         console.error(`Error fetching patient ${patientId}:`, error);
         throw error;
@@ -73,7 +108,14 @@ const api = {
     
     create: async (patientData) => {
       try {
-        return await Amplify.API.post('clinnetApi', '/patients', { body: patientData });
+        const response = await post({
+          apiName: 'clinnetApi',
+          path: '/patients',
+          options: {
+            body: patientData
+          }
+        });
+        return response.body;
       } catch (error) {
         console.error('Error creating patient:', error);
         throw error;
@@ -82,7 +124,14 @@ const api = {
     
     update: async (patientId, patientData) => {
       try {
-        return await Amplify.API.put('clinnetApi', `/patients/${patientId}`, { body: patientData });
+        const response = await put({
+          apiName: 'clinnetApi',
+          path: `/patients/${patientId}`,
+          options: {
+            body: patientData
+          }
+        });
+        return response.body;
       } catch (error) {
         console.error(`Error updating patient ${patientId}:`, error);
         throw error;
@@ -91,7 +140,11 @@ const api = {
     
     delete: async (patientId) => {
       try {
-        return await Amplify.API.del('clinnetApi', `/patients/${patientId}`);
+        const response = await del({
+          apiName: 'clinnetApi',
+          path: `/patients/${patientId}`
+        });
+        return response.body;
       } catch (error) {
         console.error(`Error deleting patient ${patientId}:`, error);
         throw error;
@@ -103,7 +156,11 @@ const api = {
   services: {
     getAll: async () => {
       try {
-        return await Amplify.API.get('clinnetApi', '/services');
+        const response = await get({
+          apiName: 'clinnetApi',
+          path: '/services'
+        });
+        return response.body;
       } catch (error) {
         console.error('Error fetching services:', error);
         throw error;
@@ -112,7 +169,11 @@ const api = {
     
     getById: async (serviceId) => {
       try {
-        return await Amplify.API.get('clinnetApi', `/services/${serviceId}`);
+        const response = await get({
+          apiName: 'clinnetApi',
+          path: `/services/${serviceId}`
+        });
+        return response.body;
       } catch (error) {
         console.error(`Error fetching service ${serviceId}:`, error);
         throw error;
@@ -121,7 +182,14 @@ const api = {
     
     create: async (serviceData) => {
       try {
-        return await Amplify.API.post('clinnetApi', '/services', { body: serviceData });
+        const response = await post({
+          apiName: 'clinnetApi',
+          path: '/services',
+          options: {
+            body: serviceData
+          }
+        });
+        return response.body;
       } catch (error) {
         console.error('Error creating service:', error);
         throw error;
@@ -130,7 +198,14 @@ const api = {
     
     update: async (serviceId, serviceData) => {
       try {
-        return await Amplify.API.put('clinnetApi', `/services/${serviceId}`, { body: serviceData });
+        const response = await put({
+          apiName: 'clinnetApi',
+          path: `/services/${serviceId}`,
+          options: {
+            body: serviceData
+          }
+        });
+        return response.body;
       } catch (error) {
         console.error(`Error updating service ${serviceId}:`, error);
         throw error;
@@ -139,7 +214,11 @@ const api = {
     
     delete: async (serviceId) => {
       try {
-        return await Amplify.API.del('clinnetApi', `/services/${serviceId}`);
+        const response = await del({
+          apiName: 'clinnetApi',
+          path: `/services/${serviceId}`
+        });
+        return response.body;
       } catch (error) {
         console.error(`Error deleting service ${serviceId}:`, error);
         throw error;
@@ -151,7 +230,7 @@ const api = {
   auth: {
     signIn: async (username, password) => {
       try {
-        return await Amplify.Auth.signIn(username, password);
+        return await signIn({ username, password });
       } catch (error) {
         console.error('Error signing in:', error);
         throw error;
@@ -160,7 +239,7 @@ const api = {
     
     signOut: async () => {
       try {
-        return await Amplify.Auth.signOut();
+        return await signOut();
       } catch (error) {
         console.error('Error signing out:', error);
         throw error;
@@ -169,8 +248,7 @@ const api = {
     
     getCurrentUser: async () => {
       try {
-        const user = await Amplify.Auth.currentAuthenticatedUser();
-        return user;
+        return await getCurrentUser();
       } catch (error) {
         console.error('Error getting current user:', error);
         return null;
@@ -179,8 +257,7 @@ const api = {
     
     getCurrentSession: async () => {
       try {
-        const session = await Amplify.Auth.currentSession();
-        return session;
+        return await fetchAuthSession();
       } catch (error) {
         console.error('Error getting current session:', error);
         return null;
