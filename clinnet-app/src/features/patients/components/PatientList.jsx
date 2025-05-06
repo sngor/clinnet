@@ -27,6 +27,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import PaymentIcon from "@mui/icons-material/Payment";
 import PatientCheckoutButton from "./PatientCheckoutButton";
 import { useAppData } from "../../../app/providers/DataProvider";
+import { isValidEmail, isValidPhone, isValidDate, formatDateToString } from "../../../utils/validation";
 
 function PatientList({ onPatientSelect }) {
   const { 
@@ -63,45 +64,6 @@ function PatientList({ onPatientSelect }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
   
-  // Helper function to format dates
-  const formatDateForInput = (dateString) => {
-    try {
-      // Handle different date formats
-      if (!dateString) return '';
-      
-      // If it's already in YYYY-MM-DD format
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-        return dateString;
-      }
-      
-      // Try to parse the date
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return ''; // Invalid date
-      }
-      
-      // Format as YYYY-MM-DD
-      return date.toISOString().split('T')[0];
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return '';
-    }
-  };
-  
-  // Date validation function
-  const isValidDateFormat = (dateString) => {
-    // Check if the string matches YYYY-MM-DD format
-    const regex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!regex.test(dateString)) return false;
-    
-    // Check if it's a valid date
-    const date = new Date(dateString);
-    const timestamp = date.getTime();
-    if (isNaN(timestamp)) return false;
-    
-    return true;
-  };
-  
   // Use data from API when available
   useEffect(() => {
     if (apiPatients && apiPatients.length > 0) {
@@ -112,7 +74,7 @@ function PatientList({ onPatientSelect }) {
         id: patient.id,
         firstName: patient.firstName,
         lastName: patient.lastName,
-        dob: formatDateForInput(patient.dateOfBirth || ''),
+        dob: formatDateToString(patient.dateOfBirth || ''),
         phone: patient.phone || '',
         email: patient.email || '',
         address: patient.address || '',
@@ -153,14 +115,11 @@ function PatientList({ onPatientSelect }) {
   const handleOpenDialog = (patient = null) => {
     if (patient) {
       // Editing existing patient
-      // Format the date properly if it exists
-      const formattedDob = formatDateForInput(patient.dob || '');
-      
       setCurrentPatient(patient);
       setFormData({
         firstName: patient.firstName || '',
         lastName: patient.lastName || '',
-        dob: formattedDob,
+        dob: patient.dob || '',
         phone: patient.phone || '',
         email: patient.email || '',
         address: patient.address || '',
@@ -194,31 +153,56 @@ function PatientList({ onPatientSelect }) {
   // Handle form input changes
   const handleInputChange = (event) => {
     const { name, value } = event.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+  
+  // Validate form
+  const validateForm = () => {
+    const errors = {};
     
-    // Special handling for date fields
-    if (name === 'dob') {
-      // Ensure the date is in a valid format
-      setFormData({
-        ...formData,
-        [name]: value
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
+    // Required fields
+    if (!formData.firstName.trim()) errors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) errors.lastName = 'Last name is required';
+    if (!formData.phone.trim()) errors.phone = 'Phone number is required';
+    if (!formData.dob) errors.dob = 'Date of birth is required';
+    
+    // Validate date
+    if (formData.dob && !isValidDate(formData.dob)) {
+      errors.dob = 'Please enter a valid date in YYYY-MM-DD format';
     }
+    
+    // Validate email if provided
+    if (formData.email && !isValidEmail(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    // Validate phone
+    if (formData.phone && !isValidPhone(formData.phone)) {
+      errors.phone = 'Please enter a valid phone number';
+    }
+    
+    // Return errors and whether form is valid
+    return {
+      errors,
+      isValid: Object.keys(errors).length === 0
+    };
   };
   
   // Handle form submission
   const handleSubmit = async () => {
+    const { errors, isValid } = validateForm();
+    
+    if (!isValid) {
+      // Show first error as alert
+      const firstError = Object.values(errors)[0];
+      alert(firstError);
+      return;
+    }
+    
     try {
-      // Validate date format before submission
-      if (formData.dob && !isValidDateFormat(formData.dob)) {
-        alert("Please enter a valid date in YYYY-MM-DD format");
-        return;
-      }
-      
       setLoading(true);
       
       if (currentPatient) {
@@ -244,10 +228,9 @@ function PatientList({ onPatientSelect }) {
       handleCloseDialog();
     } catch (error) {
       console.error("Error submitting form:", error);
-      setError("Error saving patient data. Please check all fields and try again.");
       setSnackbar({
         open: true,
-        message: 'Error saving patient data',
+        message: 'Error saving patient data: ' + (error.message || 'Unknown error'),
         severity: 'error'
       });
     } finally {
@@ -279,7 +262,7 @@ function PatientList({ onPatientSelect }) {
         console.error("Error deleting patient:", error);
         setSnackbar({
           open: true,
-          message: 'Error deleting patient',
+          message: 'Error deleting patient: ' + (error.message || 'Unknown error'),
           severity: 'error'
         });
       } finally {
@@ -463,10 +446,14 @@ function PatientList({ onPatientSelect }) {
         <DataGrid
           rows={filteredPatients}
           columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
+          initialState={{
+            pagination: {
+              paginationModel: { pageSize: 10 }
+            }
+          }}
+          pageSizeOptions={[10, 25, 50]}
           autoHeight
-          disableSelectionOnClick
+          disableRowSelectionOnClick
           sx={{ 
             '& .MuiDataGrid-cell': { py: 1 },
             border: 1,
@@ -514,14 +501,8 @@ function PatientList({ onPatientSelect }) {
                 fullWidth
                 required
                 InputLabelProps={{ shrink: true }}
-                error={formData.dob && !isValidDateFormat(formData.dob)}
-                helperText={formData.dob && !isValidDateFormat(formData.dob) ? "Please use YYYY-MM-DD format" : ""}
-                onBlur={(e) => {
-                  if (e.target.value) {
-                    const formattedDate = formatDateForInput(e.target.value);
-                    setFormData({...formData, dob: formattedDate});
-                  }
-                }}
+                error={formData.dob && !isValidDate(formData.dob)}
+                helperText={formData.dob && !isValidDate(formData.dob) ? "Please use YYYY-MM-DD format" : ""}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -532,6 +513,8 @@ function PatientList({ onPatientSelect }) {
                 onChange={handleInputChange}
                 fullWidth
                 required
+                error={formData.phone && !isValidPhone(formData.phone)}
+                helperText={formData.phone && !isValidPhone(formData.phone) ? "Please enter a valid phone number" : ""}
               />
             </Grid>
             <Grid item xs={12}>
@@ -542,6 +525,8 @@ function PatientList({ onPatientSelect }) {
                 value={formData.email}
                 onChange={handleInputChange}
                 fullWidth
+                error={formData.email && !isValidEmail(formData.email)}
+                helperText={formData.email && !isValidEmail(formData.email) ? "Please enter a valid email address" : ""}
               />
             </Grid>
             <Grid item xs={12}>
@@ -580,9 +565,9 @@ function PatientList({ onPatientSelect }) {
           <Button 
             onClick={handleSubmit} 
             variant="contained"
-            disabled={!formData.firstName || !formData.lastName || (formData.dob && !isValidDateFormat(formData.dob))}
+            disabled={loading || !formData.firstName || !formData.lastName || !formData.dob || !formData.phone}
           >
-            {currentPatient ? 'Update' : 'Add'}
+            {loading ? 'Saving...' : (currentPatient ? 'Update' : 'Add')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -602,8 +587,13 @@ function PatientList({ onPatientSelect }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained">
-            Delete
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained"
+            disabled={loading}
+          >
+            {loading ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

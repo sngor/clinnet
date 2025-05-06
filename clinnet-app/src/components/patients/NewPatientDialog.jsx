@@ -16,8 +16,8 @@ import {
   Divider,
   Box
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { isValidEmail, isValidPhone } from '../../utils/validation';
+import { useAppData } from '../../app/providers/DataProvider';
 
 const initialPatientData = {
   firstName: '',
@@ -25,7 +25,7 @@ const initialPatientData = {
   email: '',
   phone: '',
   gender: '',
-  dateOfBirth: null,
+  dateOfBirth: '',
   address: '',
   city: '',
   state: '',
@@ -37,8 +37,10 @@ const initialPatientData = {
 };
 
 function NewPatientDialog({ open, onClose, onSave }) {
+  const { addPatient } = useAppData();
   const [patientData, setPatientData] = useState(initialPatientData);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -56,21 +58,6 @@ function NewPatientDialog({ open, onClose, onSave }) {
     }
   };
 
-  const handleDateChange = (date) => {
-    setPatientData(prev => ({
-      ...prev,
-      dateOfBirth: date
-    }));
-    
-    // Clear error when date is changed
-    if (errors.dateOfBirth) {
-      setErrors(prev => ({
-        ...prev,
-        dateOfBirth: null
-      }));
-    }
-  };
-
   const validateForm = () => {
     const newErrors = {};
     
@@ -81,12 +68,12 @@ function NewPatientDialog({ open, onClose, onSave }) {
     if (!patientData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
     
     // Email validation
-    if (patientData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientData.email)) {
+    if (patientData.email && !isValidEmail(patientData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
     
     // Phone validation
-    if (patientData.phone && !/^[0-9+\-() ]{10,15}$/.test(patientData.phone)) {
+    if (patientData.phone && !isValidPhone(patientData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }
     
@@ -94,18 +81,28 @@ function NewPatientDialog({ open, onClose, onSave }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      // Add ID and format data for saving
-      const newPatient = {
-        ...patientData,
-        id: Date.now(), // Simple ID generation for demo
-        lastVisit: null,
-        upcomingAppointment: null
-      };
-      
-      onSave(newPatient);
-      handleClose();
+      setLoading(true);
+      try {
+        // Save patient to DynamoDB via API
+        const newPatient = await addPatient(patientData);
+        
+        // Call the onSave callback with the new patient
+        if (onSave) {
+          onSave(newPatient);
+        }
+        
+        handleClose();
+      } catch (error) {
+        console.error('Error saving patient:', error);
+        setErrors(prev => ({
+          ...prev,
+          submit: 'Failed to save patient: ' + (error.message || 'Unknown error')
+        }));
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -172,21 +169,18 @@ function NewPatientDialog({ open, onClose, onSave }) {
           </Grid>
           
           <Grid item xs={12} sm={6}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="Date of Birth"
-                value={patientData.dateOfBirth}
-                onChange={handleDateChange}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    required: true,
-                    error: !!errors.dateOfBirth,
-                    helperText: errors.dateOfBirth
-                  }
-                }}
-              />
-            </LocalizationProvider>
+            <TextField
+              name="dateOfBirth"
+              label="Date of Birth"
+              type="date"
+              fullWidth
+              required
+              value={patientData.dateOfBirth}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+              error={!!errors.dateOfBirth}
+              helperText={errors.dateOfBirth}
+            />
           </Grid>
           
           <Grid item xs={12} sm={6}>
@@ -333,6 +327,12 @@ function NewPatientDialog({ open, onClose, onSave }) {
               onChange={handleChange}
             />
           </Grid>
+          
+          {errors.submit && (
+            <Grid item xs={12}>
+              <Typography color="error">{errors.submit}</Typography>
+            </Grid>
+          )}
         </Grid>
       </DialogContent>
       
@@ -344,8 +344,9 @@ function NewPatientDialog({ open, onClose, onSave }) {
           onClick={handleSubmit} 
           variant="contained"
           sx={{ px: 3 }}
+          disabled={loading}
         >
-          Register Patient
+          {loading ? 'Registering...' : 'Register Patient'}
         </Button>
       </DialogActions>
     </Dialog>

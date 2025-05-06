@@ -18,23 +18,25 @@ import {
   Alert,
   Snackbar
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { format } from 'date-fns';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
+import { isValidEmail, isValidPhone, formatDateToString } from '../utils/validation';
+import { useAppData } from '../app/providers/DataProvider';
 
 function NewPatientPage() {
   const navigate = useNavigate();
+  const { addPatient } = useAppData();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [loading, setLoading] = useState(false);
   const [patientData, setPatientData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     gender: '',
-    dateOfBirth: null,
+    dateOfBirth: '',
     address: '',
     city: '',
     state: '',
@@ -70,11 +72,11 @@ function NewPatientPage() {
   };
 
   // Handle date change
-  const handleDateChange = (date) => {
-    const formattedDate = date ? format(date, 'yyyy-MM-dd') : null;
+  const handleDateChange = (e) => {
+    const { value } = e.target;
     setPatientData(prev => ({
       ...prev,
-      dateOfBirth: formattedDate
+      dateOfBirth: value
     }));
     
     // Clear error when date is changed
@@ -97,12 +99,12 @@ function NewPatientPage() {
     if (!patientData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
     
     // Email validation
-    if (patientData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientData.email)) {
+    if (patientData.email && !isValidEmail(patientData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
     
     // Phone validation
-    if (patientData.phone && !/^[0-9+\-() ]{10,15}$/.test(patientData.phone)) {
+    if (patientData.phone && !isValidPhone(patientData.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }
     
@@ -111,17 +113,28 @@ function NewPatientPage() {
   };
 
   // Handle save
-  const handleSave = () => {
+  const handleSave = async () => {
     if (validateForm()) {
-      // In a real app, this would be an API call to save the patient
-      console.log('Saving patient:', patientData);
-      
-      // Show success message
-      setSnackbarMessage('Patient added successfully');
-      setSnackbarOpen(true);
-      
-      // Navigate back to patients list after a delay
-      setTimeout(() => navigate('/frontdesk/patients'), 1500);
+      setLoading(true);
+      try {
+        // Save patient to DynamoDB via API
+        await addPatient(patientData);
+        
+        // Show success message
+        setSnackbarMessage('Patient added successfully');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+        
+        // Navigate back to patients list after a delay
+        setTimeout(() => navigate('/frontdesk/patients'), 1500);
+      } catch (error) {
+        console.error('Error saving patient:', error);
+        setSnackbarMessage('Failed to add patient: ' + (error.message || 'Unknown error'));
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -182,21 +195,18 @@ function NewPatientPage() {
           </Grid>
           
           <Grid item xs={12} md={6}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="Date of Birth"
-                value={patientData.dateOfBirth ? new Date(patientData.dateOfBirth) : null}
-                onChange={handleDateChange}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    required: true,
-                    error: !!errors.dateOfBirth,
-                    helperText: errors.dateOfBirth
-                  }
-                }}
-              />
-            </LocalizationProvider>
+            <TextField
+              label="Date of Birth"
+              name="dateOfBirth"
+              type="date"
+              value={patientData.dateOfBirth}
+              onChange={handleDateChange}
+              fullWidth
+              required
+              InputLabelProps={{ shrink: true }}
+              error={!!errors.dateOfBirth}
+              helperText={errors.dateOfBirth}
+            />
           </Grid>
           
           <Grid item xs={12} md={6}>
@@ -430,15 +440,16 @@ function NewPatientPage() {
                 onClick={handleSave}
                 size="large"
                 sx={{ borderRadius: 1.5 }}
+                disabled={loading}
               >
-                Save Patient
+                {loading ? 'Saving...' : 'Save Patient'}
               </Button>
             </Box>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Success Snackbar */}
+      {/* Success/Error Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
@@ -447,7 +458,7 @@ function NewPatientPage() {
       >
         <Alert 
           onClose={() => setSnackbarOpen(false)} 
-          severity="success" 
+          severity={snackbarSeverity} 
           sx={{ width: '100%' }}
         >
           {snackbarMessage}

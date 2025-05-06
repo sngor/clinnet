@@ -36,13 +36,14 @@ export const createPatient = async (patientData) => {
     const transformedData = {
       firstName: patientData.firstName,
       lastName: patientData.lastName,
-      dateOfBirth: patientData.dob,
+      dateOfBirth: patientData.dateOfBirth || patientData.dob,
       phone: patientData.phone,
       email: patientData.email,
       address: patientData.address,
       insuranceProvider: patientData.insuranceProvider,
       insuranceNumber: patientData.insuranceNumber,
-      status: patientData.status
+      status: patientData.status || 'Active',
+      gender: patientData.gender
     };
     
     const response = await post({
@@ -66,13 +67,14 @@ export const updatePatient = async (patientId, patientData) => {
     const transformedData = {
       firstName: patientData.firstName,
       lastName: patientData.lastName,
-      dateOfBirth: patientData.dob,
+      dateOfBirth: patientData.dateOfBirth || patientData.dob,
       phone: patientData.phone,
       email: patientData.email,
       address: patientData.address,
       insuranceProvider: patientData.insuranceProvider,
       insuranceNumber: patientData.insuranceNumber,
-      status: patientData.status
+      status: patientData.status || 'Active',
+      gender: patientData.gender
     };
     
     const response = await put({
@@ -103,7 +105,6 @@ export const deletePatient = async (patientId) => {
   }
 };
 
-// Export as default object for easier imports
 export default {
   getPatients,
   getPatientById,
