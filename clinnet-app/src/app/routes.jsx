@@ -2,13 +2,14 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from '../components/Layout/AppLayout';
-import LoginPage from '../pages/LoginPage';
-import AdminDashboard from '../pages/AdminDashboard';
-import UserManagementPage from '../pages/UserManagementPage';
-import DoctorDashboard from '../pages/DoctorDashboard';
-import FrontdeskDashboard from '../pages/FrontdeskDashboard';
-import NotFoundPage from '../pages/NotFoundPage';
-import UnauthorizedPage from '../pages/UnauthorizedPage';
+import {
+  LoginPage,
+  AdminDashboard,
+  UserManagementPage,
+  DoctorDashboard,
+  FrontdeskDashboard,
+  NotFoundPage
+} from '../pages';
 import { useAuth } from './providers/AuthProvider';
 
 // Simple route guard component
@@ -31,7 +32,6 @@ export default function AppRoutes() {
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/unauthorized" element={<UnauthorizedPage />} />
       
       {/* Protected routes with AppLayout */}
       <Route path="/" element={

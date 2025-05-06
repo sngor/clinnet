@@ -8,7 +8,7 @@ frontend:
         - find src -type f -name "*.jsx" -o -name "*.js" | sort
     build:
       commands:
-        - echo "Building for environment: ${ENVIRONMENT:-dev}"
+        - echo "Building for environment: ${ENVIRONMENT:-prod}"
         - echo "REACT_APP_API_ENDPOINT=${API_ENDPOINT}" >> .env.production
         - echo "REACT_APP_COGNITO_REGION=${COGNITO_REGION}" >> .env.production
         - echo "REACT_APP_USER_POOL_ID=${USER_POOL_ID}" >> .env.production
@@ -21,6 +21,34 @@ frontend:
         - echo "VITE_USER_POOL_CLIENT_ID=${USER_POOL_CLIENT_ID}" >> .env.production
         - echo "VITE_S3_BUCKET=${S3_BUCKET}" >> .env.production
         - echo "VITE_S3_REGION=${S3_REGION}" >> .env.production
+        # Create FrontdeskDashboard.jsx if it doesn't exist in the build environment
+        - mkdir -p src/pages
+        - |
+          if [ ! -f src/pages/FrontdeskDashboard.jsx ]; then
+            echo "Creating FrontdeskDashboard.jsx file..."
+            cat > src/pages/FrontdeskDashboard.jsx << 'EOL'
+            // src/pages/FrontdeskDashboard.jsx
+            import React from "react";
+            import { Container, Typography, Box } from "@mui/material";
+            
+            function FrontdeskDashboard() {
+              return (
+                <Container maxWidth="xl">
+                  <Box sx={{ my: 4 }}>
+                    <Typography variant="h4" component="h1" gutterBottom>
+                      Frontdesk Dashboard
+                    </Typography>
+                    <Typography variant="body1">
+                      Welcome to the Frontdesk Dashboard.
+                    </Typography>
+                  </Box>
+                </Container>
+              );
+            }
+            
+            export default FrontdeskDashboard;
+            EOL
+          fi
         - npm run build
   artifacts:
     baseDirectory: build

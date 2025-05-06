@@ -1,22 +1,24 @@
 // src/app/router.jsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "../pages/LoginPage";
-import AdminDashboard from "../pages/AdminDashboard";
-import DoctorDashboard from "../pages/DoctorDashboard";
-import FrontdeskDashboard from "../pages/FrontdeskDashboard";
-import PatientManagementPage from "../pages/PatientManagementPage";
-import AdminPatientsPage from "../pages/AdminPatientsPage";
-import AdminServicesPage from "../pages/AdminServicesPage";
-import PatientDetailPage from "../pages/PatientDetailPage";
-import NewPatientPage from "../pages/NewPatientPage";
-import NotFoundPage from "../pages/NotFoundPage";
-import UserManagementPage from "../pages/UserManagementPage";
-import AccountSettingsPage from "../pages/AccountSettingsPage";
-import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage";
-import DoctorAppointmentsPage from "../pages/DoctorAppointmentsPage";
-import AdminAppointmentsPage from "../pages/AdminAppointmentsPage";
-import StyleGuidePage from "../pages/StyleGuidePage";
+import {
+  LoginPage,
+  AdminDashboard,
+  DoctorDashboard,
+  FrontdeskDashboard,
+  PatientManagementPage,
+  AdminPatientsPage,
+  AdminServicesPage,
+  PatientDetailPage,
+  NewPatientPage,
+  NotFoundPage,
+  UserManagementPage,
+  AccountSettingsPage,
+  FrontdeskAppointmentsPage,
+  DoctorAppointmentsPage,
+  AdminAppointmentsPage,
+  StyleGuidePage
+} from "../pages";
 import AppLayout from "../components/Layout/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 

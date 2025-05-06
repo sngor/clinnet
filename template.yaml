@@ -103,7 +103,7 @@ Resources:
   DocumentsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub clinnet-documents-${Environment}-${AWS::AccountId}
+      BucketName: !Sub clinnet-documents-${AWS::AccountId}
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:

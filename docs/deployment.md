@@ -1,125 +1,167 @@
 # Deployment Guide
 
-This document provides instructions for deploying the Clinnet EMR application to AWS.
+This document provides comprehensive instructions for deploying the Clinnet EMR application.
 
-## Prerequisites
+## Overview
 
-- AWS CLI configured with appropriate permissions
-- AWS SAM CLI installed
-- Node.js (v16+)
-- Python 3.12+
+The Clinnet EMR application consists of two main components:
+1. **Backend**: AWS Serverless application using Lambda, API Gateway, DynamoDB, and Cognito
+2. **Frontend**: React application deployed using AWS Amplify
 
 ## Backend Deployment
 
-### Using the Deployment Script
+### Prerequisites
 
-The easiest way to deploy the backend is using the provided deployment script:
+- AWS CLI installed and configured
+- AWS SAM CLI installed
+- Python 3.12 installed
+- AWS account with appropriate permissions
+
+### Deployment Steps
+
+1. **Deploy Using the Script**
+
+   ```bash
+   ./deploy.sh [environment]
+   ```
+
+   Where `[environment]` is optional and defaults to `dev`. Valid environments are:
+   - `dev` (development)
+   - `test` (testing)
+   - `prod` (production)
+
+2. **Verify Deployment**
+
+   After deployment, verify that all resources were created correctly:
+
+   ```bash
+   aws cloudformation describe-stacks --stack-name clinnet-emr --query "Stacks[0].Outputs"
+   ```
+
+3. **Seed Initial Data (Optional)**
+
+   To seed initial data into the DynamoDB tables:
+
+   ```bash
+   ./seed_data.sh [environment]
+   ```
+
+For more detailed backend deployment instructions, see [backend-deployment.md](../backend-deployment.md).
+
+## Frontend Deployment
+
+### Prerequisites
+
+- AWS Amplify Console access
+- GitHub repository connected to AWS Amplify
+- Environment variables from backend deployment
+
+### Deployment Steps
+
+1. **Connect Repository to Amplify**
+
+   - Go to the AWS Amplify Console
+   - Click "Connect app"
+   - Select your repository provider (GitHub, BitBucket, etc.)
+   - Select the repository and branch
+
+2. **Configure Build Settings**
+
+   - Confirm the build settings are correct
+   - The default settings should work for most cases
+   - Ensure the build output directory is set to `build`
+
+3. **Add Environment Variables**
+
+   After backend deployment, you'll have an `amplify-env-[environment].json` file. Add these variables to the Amplify Console:
+
+   - `API_ENDPOINT`
+   - `COGNITO_REGION`
+   - `USER_POOL_ID`
+   - `USER_POOL_CLIENT_ID`
+   - `S3_BUCKET`
+   - `S3_REGION`
+   - `ENVIRONMENT`
+
+4. **Deploy the Frontend**
+
+   - Click "Save and deploy"
+   - Amplify will build and deploy your application
+
+5. **Verify Deployment**
+
+   - Once deployment is complete, click the URL provided by Amplify
+   - Verify that you can access the login page
+   - Test login functionality with the seeded admin user
+
+## Continuous Deployment
+
+Both the backend and frontend can be set up for continuous deployment:
+
+### Backend Continuous Deployment
+
+You can set up AWS CodePipeline to automatically deploy the backend when changes are pushed to the repository.
+
+### Frontend Continuous Deployment
+
+AWS Amplify automatically sets up continuous deployment. Any changes pushed to the connected branch will trigger a new build and deployment.
+
+## Environment-Specific Deployments
+
+### Development Environment
 
 ```bash
-./deploy.sh [environment]
+./deploy.sh dev
 ```
 
-Where `[environment]` is optional and defaults to `dev`. Valid options are `dev`, `test`, and `prod`.
-
-The script will:
-1. Deploy the SAM template to AWS
-2. Extract the CloudFormation outputs
-3. Create an environment file for Amplify
-
-### Manual Deployment
-
-If you prefer to deploy manually:
-
-1. Build the SAM application:
-   ```bash
-   sam build
-   ```
-
-2. Deploy the SAM application:
-   ```bash
-   sam deploy --config-file samconfig.toml --parameter-overrides Environment=dev
-   ```
-
-3. Get the CloudFormation outputs:
-   ```bash
-   aws cloudformation describe-stacks --stack-name sam-clinnet --query "Stacks[0].Outputs" --output json
-   ```
-
-## Frontend Deployment with AWS Amplify
-
-### Setting Up Amplify
-
-1. Log in to the AWS Amplify Console
-2. Choose "Host web app"
-3. Connect to your Git repository
-4. Configure build settings:
-   - Build command: `npm run build`
-   - Output directory: `build`
-
-### Environment Variables
-
-Add the following environment variables in the Amplify Console:
-
-- `API_ENDPOINT`: The API Gateway endpoint URL
-- `COGNITO_REGION`: The AWS region (e.g., us-east-2)
-- `USER_POOL_ID`: The Cognito User Pool ID
-- `USER_POOL_CLIENT_ID`: The Cognito User Pool Client ID
-- `S3_BUCKET`: The S3 bucket name for document storage
-- `S3_REGION`: The AWS region for the S3 bucket
-- `ENVIRONMENT`: The environment name (dev, test, prod)
-
-You can import these variables from the JSON file created by the deployment script:
+### Testing Environment
 
 ```bash
-cat amplify-env-dev.json
+./deploy.sh test
 ```
 
-### Custom Domain (Optional)
-
-1. In the Amplify Console, go to "Domain management"
-2. Add your custom domain
-3. Follow the instructions to verify domain ownership
-4. Configure SSL/TLS certificate
-
-## Data Seeding
-
-After deployment, you can seed the database with initial data:
+### Production Environment
 
 ```bash
-./seed_data.sh
+./deploy.sh prod
 ```
-
-## Verification
-
-1. Check that the API Gateway endpoints are accessible:
-   ```bash
-   curl <API_ENDPOINT>/services
-   ```
-
-2. Verify that the Amplify app is deployed and accessible
-3. Test authentication with Cognito
-4. Verify S3 bucket permissions
 
 ## Troubleshooting
 
-### Common Issues
+### Backend Deployment Issues
 
-1. **CORS errors**: Ensure CORS is properly configured in API Gateway
-2. **Authentication failures**: Check Cognito User Pool and Client settings
-3. **Missing environment variables**: Verify all required variables are set in Amplify
+- Check CloudWatch Logs for Lambda function errors
+- Verify that the SAM template is valid
+- Ensure AWS CLI credentials have sufficient permissions
 
-### Logs
+### Frontend Deployment Issues
 
-- CloudWatch Logs for Lambda functions
-- Amplify build logs
-- API Gateway access logs
+- Check the build logs in the Amplify Console
+- Verify that all environment variables are set correctly
+- Ensure the build output directory is set to `build`
+- Check for any JavaScript errors in the browser console
 
-## Cleanup
+## Rollback Procedures
 
-To remove all deployed resources:
+### Backend Rollback
+
+To roll back to a previous deployment:
 
 ```bash
-sam delete --stack-name sam-clinnet
+aws cloudformation rollback-stack --stack-name clinnet-emr
 ```
 
-And delete the Amplify app from the Amplify Console.
+### Frontend Rollback
+
+In the Amplify Console:
+1. Go to the "Hosting" tab
+2. Find the previous deployment
+3. Click "Deploy" next to that version
+
+## Security Considerations
+
+- Ensure that the Cognito User Pool is configured with appropriate security settings
+- Review IAM roles and policies to ensure least privilege
+- Enable CloudTrail for auditing
+- Consider enabling AWS WAF for the API Gateway
+- Implement proper CORS settings for the API Gateway
