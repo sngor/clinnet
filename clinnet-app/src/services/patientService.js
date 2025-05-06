@@ -1,11 +1,14 @@
 // src/services/patientService.js
-import api from './api';
+import { get, post, put, del } from 'aws-amplify/api';
 
 // Get all patients
 export const getPatients = async () => {
   try {
-    const response = await api.get('/patients');
-    return response.data;
+    const response = await get({
+      apiName: 'clinnetApi',
+      path: '/patients'
+    });
+    return response.body;
   } catch (error) {
     console.error('Error fetching patients:', error);
     throw error;
@@ -15,8 +18,11 @@ export const getPatients = async () => {
 // Get patient by ID
 export const getPatientById = async (patientId) => {
   try {
-    const response = await api.get(`/patients/${patientId}`);
-    return response.data;
+    const response = await get({
+      apiName: 'clinnetApi',
+      path: `/patients/${patientId}`
+    });
+    return response.body;
   } catch (error) {
     console.error(`Error fetching patient ${patientId}:`, error);
     throw error;
@@ -26,8 +32,27 @@ export const getPatientById = async (patientId) => {
 // Create a new patient
 export const createPatient = async (patientData) => {
   try {
-    const response = await api.post('/patients', patientData);
-    return response.data;
+    // Transform the data to match the backend expectations
+    const transformedData = {
+      firstName: patientData.firstName,
+      lastName: patientData.lastName,
+      dateOfBirth: patientData.dob,
+      phone: patientData.phone,
+      email: patientData.email,
+      address: patientData.address,
+      insuranceProvider: patientData.insuranceProvider,
+      insuranceNumber: patientData.insuranceNumber,
+      status: patientData.status
+    };
+    
+    const response = await post({
+      apiName: 'clinnetApi',
+      path: '/patients',
+      options: {
+        body: transformedData
+      }
+    });
+    return response.body;
   } catch (error) {
     console.error('Error creating patient:', error);
     throw error;
@@ -37,8 +62,27 @@ export const createPatient = async (patientData) => {
 // Update a patient
 export const updatePatient = async (patientId, patientData) => {
   try {
-    const response = await api.put(`/patients/${patientId}`, patientData);
-    return response.data;
+    // Transform the data to match the backend expectations
+    const transformedData = {
+      firstName: patientData.firstName,
+      lastName: patientData.lastName,
+      dateOfBirth: patientData.dob,
+      phone: patientData.phone,
+      email: patientData.email,
+      address: patientData.address,
+      insuranceProvider: patientData.insuranceProvider,
+      insuranceNumber: patientData.insuranceNumber,
+      status: patientData.status
+    };
+    
+    const response = await put({
+      apiName: 'clinnetApi',
+      path: `/patients/${patientId}`,
+      options: {
+        body: transformedData
+      }
+    });
+    return response.body;
   } catch (error) {
     console.error(`Error updating patient ${patientId}:`, error);
     throw error;
@@ -48,8 +92,11 @@ export const updatePatient = async (patientId, patientData) => {
 // Delete a patient
 export const deletePatient = async (patientId) => {
   try {
-    const response = await api.delete(`/patients/${patientId}`);
-    return response.data;
+    const response = await del({
+      apiName: 'clinnetApi',
+      path: `/patients/${patientId}`
+    });
+    return response.body;
   } catch (error) {
     console.error(`Error deleting patient ${patientId}:`, error);
     throw error;

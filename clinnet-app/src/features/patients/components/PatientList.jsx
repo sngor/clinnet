@@ -16,6 +16,7 @@ import {
   DialogActions,
   Grid,
   Chip,
+  Snackbar,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,11 +29,20 @@ import PatientCheckoutButton from "./PatientCheckoutButton";
 import { useAppData } from "../../../app/providers/DataProvider";
 
 function PatientList({ onPatientSelect }) {
-  const { patients: apiPatients, loading: apiLoading, error: apiError } = useAppData();
+  const { 
+    patients: apiPatients, 
+    loading: apiLoading, 
+    error: apiError,
+    addPatient,
+    updatePatient,
+    deletePatient
+  } = useAppData();
+  
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   
   // State for patient form dialog
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -201,7 +211,7 @@ function PatientList({ onPatientSelect }) {
   };
   
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     try {
       // Validate date format before submission
       if (formData.dob && !isValidDateFormat(formData.dob)) {
@@ -209,26 +219,39 @@ function PatientList({ onPatientSelect }) {
         return;
       }
       
+      setLoading(true);
+      
       if (currentPatient) {
-        // Update existing patient
-        const updatedPatients = patients.map(p => 
-          p.id === currentPatient.id ? { ...p, ...formData } : p
-        );
-        setPatients(updatedPatients);
+        // Update existing patient in DynamoDB
+        await updatePatient(currentPatient.id, formData);
+        
+        setSnackbar({
+          open: true,
+          message: 'Patient updated successfully',
+          severity: 'success'
+        });
       } else {
-        // Add new patient
-        const newPatient = {
-          ...formData,
-          id: Date.now().toString(), // Use a proper ID generation in production
-          lastVisit: null,
-          upcomingAppointment: null
-        };
-        setPatients([...patients, newPatient]);
+        // Add new patient to DynamoDB
+        await addPatient(formData);
+        
+        setSnackbar({
+          open: true,
+          message: 'Patient added successfully',
+          severity: 'success'
+        });
       }
+      
       handleCloseDialog();
     } catch (error) {
       console.error("Error submitting form:", error);
       setError("Error saving patient data. Please check all fields and try again.");
+      setSnackbar({
+        open: true,
+        message: 'Error saving patient data',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -239,12 +262,31 @@ function PatientList({ onPatientSelect }) {
   };
   
   // Handle confirming patient deletion
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (patientToDelete) {
-      const updatedPatients = patients.filter(p => p.id !== patientToDelete.id);
-      setPatients(updatedPatients);
-      setDeleteDialogOpen(false);
-      setPatientToDelete(null);
+      try {
+        setLoading(true);
+        
+        // Delete from DynamoDB
+        await deletePatient(patientToDelete.id);
+        
+        setSnackbar({
+          open: true,
+          message: 'Patient deleted successfully',
+          severity: 'success'
+        });
+      } catch (error) {
+        console.error("Error deleting patient:", error);
+        setSnackbar({
+          open: true,
+          message: 'Error deleting patient',
+          severity: 'error'
+        });
+      } finally {
+        setLoading(false);
+        setDeleteDialogOpen(false);
+        setPatientToDelete(null);
+      }
     }
   };
   
@@ -253,6 +295,11 @@ function PatientList({ onPatientSelect }) {
     if (onPatientSelect) {
       onPatientSelect(patient);
     }
+  };
+  
+  // Handle closing snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
   
   // Define columns for the data grid
@@ -560,6 +607,19 @@ function PatientList({ onPatientSelect }) {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message={snackbar.message}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

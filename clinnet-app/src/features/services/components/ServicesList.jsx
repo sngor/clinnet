@@ -25,6 +25,7 @@ import {
   Typography,
   CircularProgress,
   Alert,
+  Snackbar,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -37,7 +38,6 @@ import {
 } from "../models/serviceModel";
 import TableContainer from "../../../components/TableContainer";
 import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
-import { serviceApi } from "../../../services";
 import { useAppData } from "../../../app/providers/DataProvider";
 
 // Table column definitions
@@ -87,7 +87,15 @@ function stableSort(array, comparator) {
 }
 
 function ServicesList() {
-  const { services: apiServices, loading: apiLoading, error: apiError } = useAppData();
+  const { 
+    services: apiServices, 
+    loading: apiLoading, 
+    error: apiError,
+    addService,
+    updateService,
+    deleteService
+  } = useAppData();
+  
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -95,6 +103,7 @@ function ServicesList() {
   const [openDelete, setOpenDelete] = useState(false);
   const [currentService, setCurrentService] = useState(null);
   const [formData, setFormData] = useState({ ...initialServiceFormData });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Sorting state
   const [order, setOrder] = useState("asc");
@@ -183,6 +192,11 @@ function ServicesList() {
     setOpenDelete(false);
   };
 
+  // Handle closing snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   // Save service (add or edit)
   const handleSaveService = async () => {
     try {
@@ -190,19 +204,22 @@ function ServicesList() {
 
       if (currentService) {
         // Edit existing service
-        const updatedService = await serviceApi.update(
-          currentService.id,
-          formData
-        );
-        setServices(
-          services.map((service) =>
-            service.id === currentService.id ? updatedService : service
-          )
-        );
+        await updateService(currentService.id, formData);
+        
+        setSnackbar({
+          open: true,
+          message: 'Service updated successfully',
+          severity: 'success'
+        });
       } else {
         // Add new service
-        const newService = await serviceApi.create(formData);
-        setServices([...services, newService]);
+        await addService(formData);
+        
+        setSnackbar({
+          open: true,
+          message: 'Service added successfully',
+          severity: 'success'
+        });
       }
 
       setOpenAddEdit(false);
@@ -210,6 +227,11 @@ function ServicesList() {
     } catch (err) {
       console.error("Error saving service:", err);
       setError("Failed to save service. Please try again.");
+      setSnackbar({
+        open: true,
+        message: 'Error saving service',
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -220,16 +242,24 @@ function ServicesList() {
     try {
       setLoading(true);
 
-      await serviceApi.delete(currentService.id);
-      setServices(
-        services.filter((service) => service.id !== currentService.id)
-      );
+      await deleteService(currentService.id);
+      
+      setSnackbar({
+        open: true,
+        message: 'Service deleted successfully',
+        severity: 'success'
+      });
 
       setOpenDelete(false);
       setError(null);
     } catch (err) {
       console.error("Error deleting service:", err);
       setError("Failed to delete service. Please try again.");
+      setSnackbar({
+        open: true,
+        message: 'Error deleting service',
+        severity: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -557,6 +587,19 @@ function ServicesList() {
         itemName={currentService?.name}
         itemType="service"
       />
+      
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message={snackbar.message}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
