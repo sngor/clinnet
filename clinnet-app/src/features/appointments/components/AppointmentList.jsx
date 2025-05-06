@@ -22,9 +22,6 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
@@ -56,7 +53,7 @@ function AppointmentList() {
     patientId: "",
     serviceId: "",
     doctorId: "",
-    startTime: new Date(),
+    startTime: new Date().toISOString(),
     duration: 30,
     status: "scheduled",
     notes: ""
@@ -137,7 +134,7 @@ function AppointmentList() {
         patientId: appointment.patientId,
         serviceId: appointment.serviceId,
         doctorId: appointment.doctorId || '',
-        startTime: new Date(appointment.startTime),
+        startTime: appointment.startTime,
         duration: appointment.duration || 30,
         status: appointment.status || 'scheduled',
         notes: appointment.notes || ''
@@ -149,7 +146,7 @@ function AppointmentList() {
         patientId: "",
         serviceId: "",
         doctorId: "",
-        startTime: new Date(),
+        startTime: new Date().toISOString(),
         duration: 30,
         status: "scheduled",
         notes: ""
@@ -172,11 +169,11 @@ function AppointmentList() {
     });
   };
   
-  // Handle date change
-  const handleDateChange = (newDate) => {
+  // Handle date change - simplified to use a text field
+  const handleDateTimeChange = (event) => {
     setFormData({
       ...formData,
-      startTime: newDate
+      startTime: event.target.value
     });
   };
   
@@ -187,8 +184,7 @@ function AppointmentList() {
       
       // Prepare appointment data
       const appointmentData = {
-        ...formData,
-        startTime: formData.startTime.toISOString()
+        ...formData
       };
       
       if (currentAppointment) {
@@ -404,10 +400,14 @@ function AppointmentList() {
         <DataGrid
           rows={filteredAppointments}
           columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
+          initialState={{
+            pagination: {
+              paginationModel: { pageSize: 10 }
+            }
+          }}
+          pageSizeOptions={[10, 25, 50]}
           autoHeight
-          disableSelectionOnClick
+          disableRowSelectionOnClick
           sx={{ 
             '& .MuiDataGrid-cell': { py: 1 },
             border: 1,
@@ -460,14 +460,16 @@ function AppointmentList() {
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DateTimePicker
-                  label="Date & Time"
-                  value={formData.startTime}
-                  onChange={handleDateChange}
-                  renderInput={(params) => <TextField {...params} fullWidth required />}
-                />
-              </LocalizationProvider>
+              <TextField
+                name="startTime"
+                label="Date & Time"
+                type="datetime-local"
+                value={formData.startTime.substring(0, 16)}
+                onChange={handleDateTimeChange}
+                fullWidth
+                required
+                InputLabelProps={{ shrink: true }}
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
