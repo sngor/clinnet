@@ -1,99 +1,85 @@
-# Clinnet-EMR Frontend
+# Clinnet EMR Frontend
 
-This is the frontend application for the Clinnet-EMR healthcare management system.
+This is the frontend application for the Clinnet EMR system.
 
-## Prerequisites
+## Project Structure
 
-- Node.js 16.x - 18.x (recommended: 18.18.0)
-- npm 8.x or later
+The project follows a feature-based architecture with the following structure:
 
-## Setup Instructions
-
-### Node.js Version Management
-
-This project requires Node.js version 18.x. We recommend using NVM (Node Version Manager) to manage your Node.js versions.
-
-```bash
-# Install NVM (if not already installed)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-
-# Restart your terminal or source your profile
-source ~/.zshrc  # or ~/.bashrc depending on your shell
-
-# Install and use the correct Node.js version
-nvm install 18.18.0
-nvm use 18.18.0
 ```
-
-### Installation
-
-```bash
-# Install dependencies
-npm install
-
-# Start the development server
-npm run dev
-
-# In a separate terminal, start the mock API server
-npm run server
+src/
+├── app/                  # Application-specific code
+│   ├── providers/        # Legacy providers (being migrated to core)
+│   ├── router.jsx        # Application router
+│   └── App.jsx           # Main application component
+├── assets/               # Static assets (images, fonts, etc.)
+├── components/           # Shared UI components
+├── config/               # Application configuration
+│   ├── aws-config.js     # AWS configuration
+│   └── constants.js      # Application constants
+├── core/                 # Core application functionality
+│   ├── providers/        # Core providers (ThemeProvider, AmplifyProvider, etc.)
+│   ├── theme/            # Theme configuration
+│   └── utils/            # Core utilities
+├── features/             # Feature modules
+│   ├── appointments/     # Appointment management feature
+│   ├── patients/         # Patient management feature
+│   └── users/            # User management feature
+├── hooks/                # Custom React hooks
+├── pages/                # Page components
+├── services/             # API and service layer
+│   ├── api/              # API implementations
+│   └── index.js          # Service exports
+├── store/                # State management
+├── styles/               # Global styles
+├── utils/                # Utility functions
+├── App.jsx               # Root App component
+└── main.jsx              # Application entry point
 ```
 
 ## Available Scripts
 
-- `npm run dev` - Start the development server
-- `npm run build` - Build the application for production
-- `npm run preview` - Preview the production build locally
-- `npm run server` - Start the JSON server for API mocking
-- `npm run lint` - Run ESLint to check code quality
-- `npm run clean` - Clean and reinstall dependencies
+In the project directory, you can run:
+
+### `npm start`
+
+Runs the app in development mode using Vite.
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+### `npm run build`
+
+Builds the app for production to the `build` folder.
+
+### `npm run preview`
+
+Previews the production build locally.
 
 ## Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+The application uses the following environment variables:
 
 ```
-VITE_API_URL=http://localhost:3001
+# API Configuration
+VITE_API_ENDPOINT=https://your-api-gateway-id.execute-api.region.amazonaws.com/prod
+REACT_APP_API_ENDPOINT=https://your-api-gateway-id.execute-api.region.amazonaws.com/prod
+
+# Cognito Configuration
+VITE_COGNITO_REGION=us-east-2
+VITE_USER_POOL_ID=us-east-2_xxxxxxxx
+VITE_USER_POOL_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+REACT_APP_COGNITO_REGION=us-east-2
+REACT_APP_USER_POOL_ID=us-east-2_xxxxxxxx
+REACT_APP_USER_POOL_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# S3 Configuration
+VITE_S3_BUCKET=clinnet-documents-your-account-id
+VITE_S3_REGION=us-east-2
+REACT_APP_S3_BUCKET=clinnet-documents-your-account-id
+REACT_APP_S3_REGION=us-east-2
 ```
 
-For production, you'll need to set AWS-specific variables:
+Both `VITE_` and `REACT_APP_` prefixes are supported for compatibility.
 
-```
-VITE_API_ENDPOINT=https://your-api-id.execute-api.your-region.amazonaws.com/prod
-VITE_COGNITO_REGION=us-east-1
-VITE_USER_POOL_ID=your-user-pool-id
-VITE_USER_POOL_CLIENT_ID=your-app-client-id
-VITE_S3_BUCKET=your-documents-bucket
-VITE_S3_REGION=us-east-1
-```
+## Deployment
 
-## Project Structure
-
-```
-clinnet-app/
-├── public/              # Static assets
-├── src/
-│   ├── app/             # App configuration
-│   │   └── providers/   # Context providers
-│   ├── components/      # Shared UI components
-│   │   └── ui/          # Base UI components
-│   ├── features/        # Feature modules
-│   │   ├── patients/    # Patient management
-│   │   ├── services/    # Medical services
-│   │   └── users/       # User management
-│   ├── pages/           # Page components
-│   ├── services/        # API services
-│   └── main.jsx         # Application entry point
-├── index.html           # HTML entry point
-└── vite.config.js       # Vite configuration
-```
-
-## Troubleshooting
-
-If you encounter issues:
-
-1. Make sure you're using Node.js version 18.x
-2. Run the clean script to reinstall dependencies:
-   ```bash
-   npm run clean
-   ```
-3. Check the browser console for error messages
+The application is deployed using AWS Amplify. See the [deployment documentation](../docs/deployment.md) for more information.

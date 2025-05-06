@@ -4,6 +4,8 @@ frontend:
     preBuild:
       commands:
         - npm ci
+        - echo "Listing source files:"
+        - find src -type f -name "*.jsx" -o -name "*.js" | sort
     build:
       commands:
         - echo "Building for environment: ${ENVIRONMENT:-dev}"

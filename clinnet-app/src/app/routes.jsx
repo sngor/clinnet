@@ -6,7 +6,7 @@ import LoginPage from '../pages/LoginPage';
 import AdminDashboard from '../pages/AdminDashboard';
 import UserManagementPage from '../pages/UserManagementPage';
 import DoctorDashboard from '../pages/DoctorDashboard';
-import FrontDeskDashboard from '../pages/FrontDeskDashboard';
+import FrontdeskDashboard from '../pages/FrontdeskDashboard';
 import NotFoundPage from '../pages/NotFoundPage';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
 import { useAuth } from './providers/AuthProvider';
@@ -61,7 +61,7 @@ export default function AppRoutes() {
         {/* Front Desk routes */}
         <Route path="frontdesk" element={
           <ProtectedRoute allowedRoles={['frontdesk']}>
-            <FrontDeskDashboard />
+            <FrontdeskDashboard />
           </ProtectedRoute>
         } />
         

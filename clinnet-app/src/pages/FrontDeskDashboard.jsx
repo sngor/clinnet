@@ -1,4 +1,4 @@
-// src/pages/FrontDeskDashboard.jsx
+// src/pages/FrontdeskDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
 import { 
@@ -64,7 +64,7 @@ const mockDoctors = [
   { id: 4, name: "Dr. Taylor", specialty: "Dermatology" }
 ];
 
-function FrontDeskDashboard() {
+function FrontdeskDashboard() {
   const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -298,4 +298,4 @@ function FrontDeskDashboard() {
   );
 }
 
-export default FrontDeskDashboard;
+export default FrontdeskDashboard;

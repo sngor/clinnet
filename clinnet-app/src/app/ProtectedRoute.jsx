@@ -1,8 +1,17 @@
 // src/app/ProtectedRoute.jsx
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "./providers/AuthProvider"; // Adjust path as needed
+import { useAuth } from "./providers/AuthProvider";
 
+/**
+ * Protected route component
+ * Redirects to login if user is not authenticated or not authorized
+ * 
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Child components to render if authorized
+ * @param {string[]} [props.allowedRoles] - Roles allowed to access this route
+ * @returns {React.ReactNode} The protected component or a redirect
+ */
 export const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
@@ -21,16 +30,13 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (!isAuthorized) {
     // Redirect to an unauthorized page or a default dashboard
-    // For MVP, maybe redirect to a simple "Unauthorized" page or back to login/home
     console.warn(
       `User role '${
         user?.role
       }' not authorized for route requiring roles: ${allowedRoles.join(", ")}`
     );
-    // Option 1: Redirect to a dedicated unauthorized page (create this page)
-    // return <Navigate to="/unauthorized" replace />;
-    // Option 2: Redirect to login (or home/default dashboard)
-    return <Navigate to="/login" replace />; // Or '/' or role-specific default
+    // Redirect to login
+    return <Navigate to="/login" replace />;
   }
 
   // If authenticated and authorized, render the child component

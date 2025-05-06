@@ -17,7 +17,8 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
-            mui: ['@mui/material', '@mui/icons-material']
+            mui: ['@mui/material', '@mui/icons-material'],
+            amplify: ['aws-amplify']
           }
         }
       }
@@ -35,6 +36,20 @@ export default defineConfig(({ mode }) => {
     // Add support for process.env in Vite
     define: {
       'process.env': env
+    },
+    resolve: {
+      alias: {
+        '@': '/src',
+        '@core': '/src/core',
+        '@components': '/src/components',
+        '@services': '/src/services',
+        '@utils': '/src/utils',
+        '@hooks': '/src/hooks',
+        '@features': '/src/features',
+        '@pages': '/src/pages',
+        '@assets': '/src/assets',
+        '@config': '/src/config'
+      }
     }
   }
 })

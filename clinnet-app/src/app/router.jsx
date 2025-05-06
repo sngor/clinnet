@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard";
 import DoctorDashboard from "../pages/DoctorDashboard";
-import FrontDeskDashboard from "../pages/FrontDeskDashboard";
+import FrontdeskDashboard from "../pages/FrontdeskDashboard";
 import PatientManagementPage from "../pages/PatientManagementPage";
 import AdminPatientsPage from "../pages/AdminPatientsPage";
 import AdminServicesPage from "../pages/AdminServicesPage";
@@ -20,6 +20,10 @@ import StyleGuidePage from "../pages/StyleGuidePage";
 import AppLayout from "../components/Layout/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 
+/**
+ * Application router
+ * Defines all routes and their corresponding components
+ */
 function AppRouter() {
   return (
     <Routes>
@@ -139,7 +143,7 @@ function AppRouter() {
           path="/frontdesk"
           element={
             <ProtectedRoute allowedRoles={["frontdesk"]}>
-              <FrontDeskDashboard />
+              <FrontdeskDashboard />
             </ProtectedRoute>
           }
         />
@@ -187,7 +191,7 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
-        {/* Example: Redirect root path to login or a default dashboard */}
+        {/* Redirect root path to login or a default dashboard */}
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Route>
 

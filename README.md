@@ -36,17 +36,20 @@ The application is built using:
 ### Installation
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/yourusername/clinnet-emr.git
    cd clinnet-emr
    ```
 
 2. Install backend dependencies:
+
    ```
    pip install -r requirements.txt
    ```
 
 3. Install frontend dependencies:
+
    ```
    cd clinnet-app
    npm install
@@ -59,11 +62,13 @@ The application is built using:
 ### Local Development
 
 1. Start the backend API locally:
+
    ```
    sam local start-api
    ```
 
 2. Start the frontend development server:
+
    ```
    cd clinnet-app
    npm start
@@ -76,9 +81,11 @@ The application is built using:
 We provide a streamlined deployment process for both the backend and frontend:
 
 1. Deploy the backend using our deployment script:
+
    ```
    ./deploy.sh [environment]
    ```
+
    Where `[environment]` is optional and defaults to `dev`.
 
 2. Deploy the frontend to AWS Amplify:
@@ -132,4 +139,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contributors
 
-- Your Name - Initial work
+- Seng Ngor - Initial work
