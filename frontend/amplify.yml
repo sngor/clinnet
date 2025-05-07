@@ -3,12 +3,19 @@ frontend:
   phases:
     preBuild:
       commands:
-        # Install dependencies
+        # Install dependencies 
+        - echo "Installing dependencies..."
+
+        # Use npm ci for a clean install of dependencies
         - npm ci
+
+
     build:
       commands:
         # Build the project
         - npm run build
+
+        
   artifacts:
     # Specify the directory where the build output is located
     baseDirectory: build
