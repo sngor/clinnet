@@ -50,6 +50,7 @@ Resources:
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+    # This table stores patient records, with 'id' as the partition key
 
   UsersTable:
     Type: AWS::DynamoDB::Table
@@ -117,14 +118,19 @@ Resources:
             AllowedOrigins:
               - '*'
             MaxAge: 3000
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireTemporaryFiles
+            Status: Enabled
+            ExpirationInDays: 30 # Automatically delete objects after 30 days
 
   # API Gateway
   ClinicAPI:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: prod # Using 'prod' stage name, consider using ${Environment} if needed
+      StageName: !Ref Environment # Use the Environment parameter for stage name
       Auth:
-        DefaultAuthorizer: CognitoAuthorizer # Default to Cognito Auth
+        DefaultAuthorizer: CognitoAuthorizer
         Authorizers:
           CognitoAuthorizer:
             UserPoolArn: !GetAtt UserPool.Arn
@@ -297,6 +303,7 @@ Resources:
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer # CHANGED: Protect patient list
+    DependsOn: PatientsTable
 
   GetPatientByIdFunction:
     Type: AWS::Serverless::Function
@@ -548,8 +555,8 @@ Resources:
 
 Outputs:
   ClinicAPI:
-    Description: "API Gateway endpoint URL for Prod stage"
-    Value: !Sub "https://${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Description: "API Gateway endpoint URL for the current environment"
+    Value: !Sub "https://${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
     Export:
       Name: !Sub "${AWS::StackName}-ApiEndpoint"
 
