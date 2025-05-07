@@ -10,7 +10,7 @@ import serviceApi from './serviceApi';
 const apiService = process.env.NODE_ENV === 'production' ? apiAmplify : api;
 
 // Export individual services
-export { default as authService } from './authService';
+export { default as authService } from './authService'; 
 export { default as patientService } from './patientService';
 export { default as userService } from './userService';
 export { default as appointmentService } from './appointmentService';

@@ -54,3 +54,13 @@ export const login = async (credentials) => {
     throw error;
   }
 };
+
+// Default export
+const userService = {
+  getUsers,
+  getUserById,
+  createUser,
+  login,
+};
+
+export default userService;

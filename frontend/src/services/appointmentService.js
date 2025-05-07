@@ -116,3 +116,12 @@ export const updateAppointmentStatus = async (appointmentId, status) => {
     throw error;
   }
 };
+
+// Default export
+const appointmentService = {
+  getAppointments,
+  getAppointmentById,
+  createAppointment,
+};
+
+export default appointmentService;
