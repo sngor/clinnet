@@ -1,0 +1,20 @@
+[
+    {
+      "username": "admin_user",
+      "email": "admin@@clinnet.com",
+      "role": "admin",
+      "temporaryPassword": "Admin@123!"
+    },
+    {
+      "username": "doctor_user",
+      "email": "doctor@clinnet.com",
+      "role": "doctor",
+      "temporaryPassword": "Doctor@123!"
+    },
+    {
+      "username": "frontdesk_user",
+      "email": "frontdesk@clinnet.com",
+      "role": "frontdesk",
+      "temporaryPassword": "Frontdesk@123!"
+    }
+  ]
