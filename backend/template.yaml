@@ -4,11 +4,21 @@ Description: >
   Clinnet-EMR
 
   SAM Template for Clinnet-EMR backend services
-  
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - test
+      - prod
+    Description: Environment name (dev, test, prod)
+
 Globals:
   Function:
     Timeout: 30
-    Runtime: python3.9
+    Runtime: python3.12
     MemorySize: 128
     Environment:
       Variables:
@@ -18,6 +28,7 @@ Globals:
         APPOINTMENTS_TABLE: !Ref AppointmentsTable
         MEDICAL_RECORDS_TABLE: !Ref MedicalRecordsTable
         DOCUMENTS_BUCKET: !Ref DocumentsBucket
+        ENVIRONMENT: !Ref Environment
     Architectures:
       - x86_64
   Api:
@@ -31,7 +42,7 @@ Resources:
   PatientsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: clinnet-patients
+      TableName: !Sub clinnet-patients-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -43,7 +54,7 @@ Resources:
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: clinnet-users
+      TableName: !Sub clinnet-users-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -55,7 +66,7 @@ Resources:
   ServicesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: clinnet-services
+      TableName: !Sub clinnet-services-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -67,7 +78,7 @@ Resources:
   AppointmentsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: clinnet-appointments
+      TableName: !Sub clinnet-appointments-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -79,7 +90,7 @@ Resources:
   MedicalRecordsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: clinnet-medical-records
+      TableName: !Sub clinnet-medical-records-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -92,7 +103,7 @@ Resources:
   DocumentsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub clinnet-documents-${AWS::AccountId}
+      BucketName: !Sub clinnet-documents-${Environment}-${AWS::AccountId}-${AWS::Region}
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
@@ -111,9 +122,9 @@ Resources:
   ClinicAPI:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: prod
+      StageName: prod # Using 'prod' stage name, consider using ${Environment} if needed
       Auth:
-        DefaultAuthorizer: CognitoAuthorizer
+        DefaultAuthorizer: CognitoAuthorizer # Default to Cognito Auth
         Authorizers:
           CognitoAuthorizer:
             UserPoolArn: !GetAtt UserPool.Arn
@@ -136,7 +147,7 @@ Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: clinnet-user-pool
+      UserPoolName: !Sub clinnet-user-pool-${Environment}
       AutoVerifiedAttributes:
         - email
       UsernameAttributes:
@@ -154,7 +165,7 @@ Resources:
           AttributeDataType: String
           Mutable: true
           Required: true
-        - Name: custom:role
+        - Name: custom:role # Using custom attribute for role
           AttributeDataType: String
           Mutable: true
           Required: false
@@ -169,7 +180,7 @@ Resources:
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      ClientName: clinnet-app-client
+      ClientName: !Sub clinnet-app-client-${Environment}
       UserPoolId: !Ref UserPool
       GenerateSecret: false
       ExplicitAuthFlows:
@@ -184,7 +195,7 @@ Resources:
   GetServicesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/services/
+      CodeUri: src/handlers/services/
       Handler: get_services.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -197,12 +208,12 @@ Resources:
             Path: /services
             Method: get
             Auth:
-              Authorizer: NONE
+              Authorizer: NONE # Services endpoint is public
 
   GetServiceByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/services/
+      CodeUri: src/handlers/services/
       Handler: get_service_by_id.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -215,12 +226,12 @@ Resources:
             Path: /services/{id}
             Method: get
             Auth:
-              Authorizer: NONE
+              Authorizer: NONE # Getting a specific service is public
 
   CreateServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/services/
+      CodeUri: src/handlers/services/
       Handler: create_service.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -232,11 +243,12 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /services
             Method: post
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
   UpdateServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/services/
+      CodeUri: src/handlers/services/
       Handler: update_service.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -248,11 +260,12 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /services/{id}
             Method: put
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
   DeleteServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/services/
+      CodeUri: src/handlers/services/
       Handler: delete_service.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -264,12 +277,13 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /services/{id}
             Method: delete
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
   # Lambda Functions for Patients
   GetPatientsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/patients/
+      CodeUri: src/handlers/patients/
       Handler: get_patients.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -282,12 +296,12 @@ Resources:
             Path: /patients
             Method: get
             Auth:
-              Authorizer: NONE
+              Authorizer: CognitoAuthorizer # CHANGED: Protect patient list
 
   GetPatientByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/patients/
+      CodeUri: src/handlers/patients/
       Handler: get_patient_by_id.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -300,12 +314,12 @@ Resources:
             Path: /patients/{id}
             Method: get
             Auth:
-              Authorizer: NONE
+              Authorizer: CognitoAuthorizer # CHANGED: Protect specific patient
 
   CreatePatientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/patients/
+      CodeUri: src/handlers/patients/
       Handler: create_patient.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -317,11 +331,12 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /patients
             Method: post
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
   UpdatePatientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/patients/
+      CodeUri: src/handlers/patients/
       Handler: update_patient.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -333,11 +348,12 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /patients/{id}
             Method: put
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
   DeletePatientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/patients/
+      CodeUri: src/handlers/patients/
       Handler: delete_patient.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -349,12 +365,13 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /patients/{id}
             Method: delete
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
-  # Lambda Functions for Users
+  # Lambda Functions for Users (Profiles)
   GetUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/users/
+      CodeUri: src/handlers/users/
       Handler: get_users.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -367,12 +384,12 @@ Resources:
             Path: /users
             Method: get
             Auth:
-              Authorizer: NONE
+              Authorizer: CognitoAuthorizer # CHANGED: Protect user list
 
   GetUserByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/users/
+      CodeUri: src/handlers/users/
       Handler: get_user_by_id.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -385,16 +402,17 @@ Resources:
             Path: /users/{id}
             Method: get
             Auth:
-              Authorizer: NONE
+              Authorizer: CognitoAuthorizer # CHANGED: Protect specific user
 
-  CreateUserFunction:
+  CreateUserFunction: # Note: This function should likely be removed or repurposed
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/users/
+      CodeUri: src/handlers/users/
       Handler: create_user.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
+        # - AmazonCognitoPowerUser # Consider adding Cognito permissions if creating users via SDK
       Events:
         CreateUser:
           Type: Api
@@ -402,15 +420,17 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /users
             Method: post
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
-  UpdateUserFunction:
+  UpdateUserFunction: # Note: This function should likely be removed or repurposed for profile updates only
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/users/
+      CodeUri: src/handlers/users/
       Handler: update_user.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
+        # - AmazonCognitoPowerUser # Consider adding Cognito permissions if updating users via SDK
       Events:
         UpdateUser:
           Type: Api
@@ -418,15 +438,17 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /users/{id}
             Method: put
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
-  DeleteUserFunction:
+  DeleteUserFunction: # Note: This function should likely be removed or trigger Cognito deletion
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: handlers/users/
+      CodeUri: src/handlers/users/
       Handler: delete_user.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
+        # - AmazonCognitoPowerUser # Consider adding Cognito permissions if deleting users via SDK
       Events:
         DeleteUser:
           Type: Api
@@ -434,20 +456,123 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /users/{id}
             Method: delete
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
+
+  # Lambda Functions for Appointments
+  GetAppointmentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/appointments/
+      Handler: get_appointments.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref AppointmentsTable
+      Events:
+        GetAppointments:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /appointments
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer # CHANGED: Protect appointment list
+
+  GetAppointmentByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/appointments/
+      Handler: get_appointment_by_id.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref AppointmentsTable
+      Events:
+        GetAppointmentById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /appointments/{id}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer # CHANGED: Protect specific appointment
+
+  CreateAppointmentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/appointments/
+      Handler: create_appointment.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AppointmentsTable
+      Events:
+        CreateAppointment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /appointments
+            Method: post
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
+
+  UpdateAppointmentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/appointments/
+      Handler: update_appointment.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AppointmentsTable
+      Events:
+        UpdateAppointment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /appointments/{id}
+            Method: put
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
+
+  DeleteAppointmentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/appointments/
+      Handler: delete_appointment.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AppointmentsTable
+      Events:
+        DeleteAppointment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /appointments/{id}
+            Method: delete
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
 Outputs:
   ClinicAPI:
     Description: "API Gateway endpoint URL for Prod stage"
     Value: !Sub "https://${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com/prod"
-  
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiEndpoint"
+
   UserPoolId:
     Description: "Cognito User Pool ID"
     Value: !Ref UserPool
-  
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolId"
+
   UserPoolClientId:
     Description: "Cognito User Pool Client ID"
     Value: !Ref UserPoolClient
-  
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolClientId"
+
   DocumentsBucket:
     Description: "S3 bucket for document storage"
     Value: !Ref DocumentsBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-DocumentsBucket"
+
+  Region:
+    Description: "AWS Region"
+    Value: !Ref AWS::Region
+    Export:
+      Name: !Sub "${AWS::StackName}-Region"
