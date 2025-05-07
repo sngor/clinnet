@@ -184,7 +184,7 @@ Resources:
   GetServicesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/services/
+      CodeUri: handlers/services/
       Handler: get_services.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -202,7 +202,7 @@ Resources:
   GetServiceByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/services/
+      CodeUri: handlers/services/
       Handler: get_service_by_id.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -220,7 +220,7 @@ Resources:
   CreateServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/services/
+      CodeUri: handlers/services/
       Handler: create_service.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -236,7 +236,7 @@ Resources:
   UpdateServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/services/
+      CodeUri: handlers/services/
       Handler: update_service.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -252,7 +252,7 @@ Resources:
   DeleteServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/services/
+      CodeUri: handlers/services/
       Handler: delete_service.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -269,7 +269,7 @@ Resources:
   GetPatientsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/patients/
+      CodeUri: handlers/patients/
       Handler: get_patients.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -287,7 +287,7 @@ Resources:
   GetPatientByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/patients/
+      CodeUri: handlers/patients/
       Handler: get_patient_by_id.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -305,7 +305,7 @@ Resources:
   CreatePatientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/patients/
+      CodeUri: handlers/patients/
       Handler: create_patient.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -321,7 +321,7 @@ Resources:
   UpdatePatientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/patients/
+      CodeUri: handlers/patients/
       Handler: update_patient.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -337,7 +337,7 @@ Resources:
   DeletePatientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/patients/
+      CodeUri: handlers/patients/
       Handler: delete_patient.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -354,7 +354,7 @@ Resources:
   GetUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/users/
+      CodeUri: handlers/users/
       Handler: get_users.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -372,7 +372,7 @@ Resources:
   GetUserByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/users/
+      CodeUri: handlers/users/
       Handler: get_user_by_id.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
@@ -390,7 +390,7 @@ Resources:
   CreateUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/users/
+      CodeUri: handlers/users/
       Handler: create_user.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -406,7 +406,7 @@ Resources:
   UpdateUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/users/
+      CodeUri: handlers/users/
       Handler: update_user.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -422,7 +422,7 @@ Resources:
   DeleteUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/users/
+      CodeUri: handlers/users/
       Handler: delete_user.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:

@@ -1,14 +1,20 @@
 {
-  "name": "clinnet-emr",
+  "name": "clinnet-emr-frontend",
   "version": "1.0.0",
-  "description": "Clinnet EMR Backend Services",
+  "description": "Clinnet EMR Frontend Application",
   "scripts": {
-    "test": "pytest",
-    "deploy": "sam build && sam deploy",
-    "start-local": "sam local start-api",
-    "seed-data": "python scripts/seed_data.py"
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "test": "vitest"
   },
   "dependencies": {
     "aws-amplify": "^6.14.4"
+  },
+  "devDependencies": {
+    "vite": "^4.0.0",
+    "eslint": "^8.0.0",
+    "vitest": "^0.30.0"
   }
 }
