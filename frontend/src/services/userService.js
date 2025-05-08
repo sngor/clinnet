@@ -1,9 +1,10 @@
 // src/services/userService.js
 import { 
   updateUserAttributes, 
-  changePassword,
-  fetchUserAttributes
+  fetchUserAttributes,
+  getCurrentUser
 } from 'aws-amplify/auth';
+import { updatePassword } from 'aws-amplify/auth';
 
 /**
  * Service for handling user-related operations
@@ -55,7 +56,8 @@ export const userService = {
     try {
       console.log('Changing user password');
       
-      await changePassword({
+      // Use updatePassword from aws-amplify/auth
+      await updatePassword({
         oldPassword,
         newPassword
       });
