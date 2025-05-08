@@ -1,12 +1,12 @@
 // src/config/amplify-config.js
 
-// Configuration for AWS Amplify v6
+// Configuration for AWS Amplify v6 using environment variables
 const amplifyConfig = {
   Auth: {
     Cognito: {
-      userPoolId: 'us-east-2_sQHTbURkW',
-      userPoolClientId: '6hg0umclddagog2sr52ij8lq36',
-      region: 'us-east-2',
+      userPoolId: import.meta.env.VITE_USER_POOL_ID,
+      userPoolClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
+      region: import.meta.env.VITE_COGNITO_REGION,
       loginWith: {
         email: true,
         username: true
@@ -15,9 +15,10 @@ const amplifyConfig = {
   }
 };
 
-console.log('Amplify v6 config loaded with:', {
-  userPoolId: amplifyConfig.Auth.Cognito.userPoolId,
-  userPoolClientId: amplifyConfig.Auth.Cognito.userPoolClientId,
+// Log configuration without exposing full values
+console.log('Amplify v6 config loaded with environment variables', {
+  userPoolId: amplifyConfig.Auth.Cognito.userPoolId ? '***' + amplifyConfig.Auth.Cognito.userPoolId.slice(-6) : 'undefined',
+  userPoolClientId: amplifyConfig.Auth.Cognito.userPoolClientId ? '***' + amplifyConfig.Auth.Cognito.userPoolClientId.slice(-6) : 'undefined',
   region: amplifyConfig.Auth.Cognito.region
 });
 

@@ -20,6 +20,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
+import { demoCredentials } from "../config/auth-config";
 
 import {
   PageContainer,
@@ -40,13 +41,6 @@ function LoginPage() {
   const { login, loading: authLoading } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  // Demo credentials using email addresses as usernames
-  const demoCredentials = [
-    { role: "Admin", username: "admin@clinnet.com", password: "Admin123!" },
-    { role: "Doctor", username: "doctor@clinnet.com", password: "Doctor123!" },
-    { role: "Front Desk", username: "frontdesk@clinnet.com", password: "Frontdesk123!" },
-  ];
 
   const handleSubmit = async (event) => {
     event.preventDefault();

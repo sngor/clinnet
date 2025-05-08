@@ -6,35 +6,46 @@ A comprehensive Electronic Medical Records (EMR) system for healthcare providers
 
 The application uses AWS Cognito for authentication. The following users are available:
 
-| Role      | Username               | Password      |
-|-----------|------------------------|---------------|
-| Admin     | admin@clinnet.com      | Admin123!     |
-| Doctor    | doctor@clinnet.com     | Doctor123!    |
-| Front Desk| frontdesk@clinnet.com  | Frontdesk123! |
+| Role       | Username              | Password       |
+| ---------- | --------------------- | -------------- |
+| Admin      | admin@clinnet.com     | Admin@123!     |
+| Doctor     | doctor@clinnet.com    | Doctor@123!    |
+| Front Desk | frontdesk@clinnet.com | Frontdesk@123! |
 
-## Troubleshooting Authentication
+## Environment Configuration
 
-If you encounter authentication issues:
+The application uses environment variables for configuration. Create a `.env.local` file in the frontend directory with the following variables:
 
-1. Make sure the Cognito User Pool and App Client are correctly configured
-2. Check that the users exist in the Cognito User Pool
-3. Verify that the users have the correct custom:role attribute set
-4. Ensure the Amplify configuration is using the v6 format:
+```
+# API Configuration
+VITE_API_ENDPOINT=https://your-api-endpoint.execute-api.region.amazonaws.com/stage
 
-```javascript
-const amplifyConfig = {
-  Auth: {
-    Cognito: {
-      userPoolId: 'us-east-2_sQHTbURkW',
-      userPoolClientId: '6hg0umclddagog2sr52ij8lq36',
-      region: 'us-east-2',
-      loginWith: {
-        email: true,
-        username: true
-      }
-    }
-  }
-};
+# Cognito Configuration
+VITE_COGNITO_REGION=us-east-2
+VITE_USER_POOL_ID=us-east-2_yourUserPoolId
+VITE_USER_POOL_CLIENT_ID=yourUserPoolClientId
+
+# S3 Configuration
+VITE_S3_BUCKET=your-s3-bucket-name
+VITE_S3_REGION=us-east-2
+
+# Demo User Emails (optional)
+VITE_ADMIN_EMAIL=admin@clinnet.com
+VITE_DOCTOR_EMAIL=doctor@clinnet.com
+VITE_FRONTDESK_EMAIL=frontdesk@clinnet.com
+```
+
+For the backend, create a `.env` file in the backend directory:
+
+```
+# Cognito User Pool Configuration
+USER_POOL_ID=us-east-2_yourUserPoolId
+AWS_REGION=us-east-2
+
+# User passwords for create_users.sh script
+ADMIN_USER_PASSWORD=Admin123!
+DOCTOR_USER_PASSWORD=Doctor123!
+FRONTDESK_USER_PASSWORD=Frontdesk123!
 ```
 
 ## Project Structure
@@ -83,13 +94,7 @@ To create or reset Cognito users:
 
 ```bash
 cd backend
-# Create .env file with the following content:
-# USER_POOL_ID=your-user-pool-id
-# AWS_REGION=your-aws-region
-# ADMIN_USER_PASSWORD=Admin123!
-# DOCTOR_USER_PASSWORD=Doctor123!
-# FRONTDESK_USER_PASSWORD=Frontdesk123!
-
+# Ensure .env file exists with proper configuration
 cd scripts
 ./create_users.sh
 ```
