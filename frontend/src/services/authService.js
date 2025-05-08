@@ -14,6 +14,14 @@ export const authService = {
   async signIn(username, password) {
     try {
       console.log('AuthService: Attempting to sign in with:', username);
+      
+      // Log the environment variables for debugging
+      console.log('Auth Config:', {
+        region: import.meta.env.VITE_COGNITO_REGION,
+        userPoolId: import.meta.env.VITE_USER_POOL_ID,
+        clientId: import.meta.env.VITE_USER_POOL_CLIENT_ID
+      });
+      
       const signInResult = await signIn({
         username,
         password,
@@ -23,6 +31,11 @@ export const authService = {
       return signInResult;
     } catch (error) {
       console.error('AuthService: Error signing in:', error);
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        code: error.code
+      });
       throw error;
     }
   },

@@ -1,7 +1,7 @@
 // src/app/providers/AuthProvider.jsx
 import React, { createContext, useState, useContext, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import authService from "../../services/authService";
+import { signIn, signOut, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
 
 const AuthContext = createContext(null);
 
@@ -14,12 +14,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuthState = async () => {
       try {
-        const userData = await authService.getCurrentUser();
-        if (!userData) {
-          throw new Error('No authenticated user');
-        }
-        
-        const attributes = await authService.getUserAttributes();
+        const userData = await getCurrentUser();
+        const attributes = await fetchUserAttributes();
         
         // Extract role from Cognito attributes or use a default
         const role = attributes['custom:role'] || 'user';
@@ -60,19 +56,18 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       console.log('Attempting to sign in with:', userData.username);
       
-      // Use email as username if it looks like an email
-      const loginUsername = userData.username.includes('@') ? 
-        userData.username : 
-        userData.username;
+      // Direct call to Amplify Auth
+      const signInResult = await signIn({
+        username: userData.username,
+        password: userData.password
+      });
       
-      const { isSignedIn, nextStep } = await authService.signIn(loginUsername, userData.password);
+      console.log('Sign in result:', signInResult);
       
-      console.log('Sign in result:', { isSignedIn, nextStep });
-      
-      if (isSignedIn) {
+      if (signInResult.isSignedIn) {
         // Get user attributes
-        const currentUser = await authService.getCurrentUser();
-        const attributes = await authService.getUserAttributes();
+        const currentUser = await getCurrentUser();
+        const attributes = await fetchUserAttributes();
         const role = attributes['custom:role'] || 'user';
         
         console.log('User authenticated successfully:', { 
@@ -96,7 +91,7 @@ export const AuthProvider = ({ children }) => {
         else navigate("/"); // Fallback redirect
         
         return { success: true };
-      } else if (nextStep && nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
+      } else if (signInResult.nextStep && signInResult.nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
         // Handle new password required scenario
         return { 
           success: false, 
@@ -122,7 +117,7 @@ export const AuthProvider = ({ children }) => {
   // Logout with Cognito
   const logout = async () => {
     try {
-      await authService.signOut();
+      await signOut();
       setUser(null);
       navigate("/login", { replace: true });
     } catch (error) {

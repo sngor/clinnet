@@ -13,8 +13,12 @@ function AmplifyProvider({ children }) {
       Amplify.configure(amplifyConfig);
       
       console.log(
-        "Amplify configured successfully with API endpoint:",
-        amplifyConfig.API.endpoints[0].endpoint
+        "Amplify configured successfully with Auth:",
+        {
+          region: amplifyConfig.Auth.region,
+          userPoolId: amplifyConfig.Auth.userPoolId,
+          clientId: amplifyConfig.Auth.userPoolWebClientId
+        }
       );
     } catch (error) {
       console.error("Error configuring Amplify:", error);

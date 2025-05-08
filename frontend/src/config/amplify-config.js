@@ -1,35 +1,16 @@
 // src/config/amplify-config.js
+
+// Hard-coded configuration for testing
 const amplifyConfig = {
   Auth: {
-    region: import.meta.env.VITE_COGNITO_REGION,
-    userPoolId: import.meta.env.VITE_USER_POOL_ID,
-    userPoolWebClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
+    region: 'us-east-2',
+    userPoolId: 'us-east-2_sQHTbURkW',
+    userPoolWebClientId: '6hg0umclddagog2sr52ij8lq36',
     mandatorySignIn: true,
     authenticationFlowType: 'USER_PASSWORD_AUTH'
-  },
-  API: {
-    endpoints: [
-      {
-        name: 'clinnetApi',
-        endpoint: import.meta.env.VITE_API_ENDPOINT,
-        region: import.meta.env.VITE_COGNITO_REGION,
-      },
-    ],
-  },
-  Storage: {
-    AWSS3: {
-      bucket: import.meta.env.VITE_S3_BUCKET,
-      region: import.meta.env.VITE_S3_REGION,
-    }
   }
 };
 
-// For debugging
-console.log('Amplify config loaded with:', {
-  region: import.meta.env.VITE_COGNITO_REGION,
-  userPoolId: import.meta.env.VITE_USER_POOL_ID,
-  clientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
-  apiEndpoint: import.meta.env.VITE_API_ENDPOINT
-});
+console.log('Amplify config loaded with hard-coded values for testing');
 
 export default amplifyConfig;

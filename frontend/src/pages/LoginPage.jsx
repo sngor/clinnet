@@ -1,5 +1,5 @@
 // src/pages/LoginPage.jsx
-import React, { useState } from "react"; // Make sure useState is imported
+import React, { useState } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
 import {
   Box,
@@ -35,14 +35,13 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  // Add the showPassword state here:
   const [showPassword, setShowPassword] = useState(false);
 
   const { login, loading: authLoading } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Demo credentials for quick login - using the email addresses as usernames
+  // Demo credentials using email addresses as usernames
   const demoCredentials = [
     { role: "Admin", username: "admin@clinnet.com", password: "Admin123!" },
     { role: "Doctor", username: "doctor@clinnet.com", password: "Doctor123!" },
@@ -55,16 +54,15 @@ function LoginPage() {
     setIsLoading(true);
 
     try {
+      console.log('Login attempt with:', { username });
+      
       const result = await login({ username, password });
       if (!result.success) {
-        setError(
-          result.error ||
-            "Login failed. Please check your username and password."
-        );
+        setError(result.error || "Login failed. Please check your credentials.");
       }
     } catch (err) {
       console.error("Login failed:", err);
-      setError("Login failed. Please check your username and password.");
+      setError(`Login failed: ${err.message || "Please check your credentials."}`);
     } finally {
       setIsLoading(false);
     }
@@ -215,9 +213,9 @@ function LoginPage() {
                 required
                 fullWidth
                 id="username"
-                label="Username"
+                label="Email"
                 name="username"
-                autoComplete="username"
+                autoComplete="email"
                 autoFocus
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
