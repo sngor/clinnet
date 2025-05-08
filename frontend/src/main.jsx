@@ -1,10 +1,9 @@
 // src/main.jsx
-// REMOVE this import: import "./aws-exports.js";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App";
 import AppProviders from "./app/providers/AppProviders";
-import "./index.css"; // Ensure this file exists and is correctly imported
+import "./index.css";
 
 // Add error handler for debugging
 window.addEventListener("error", function (e) {
@@ -20,8 +19,11 @@ window.addEventListener("error", function (e) {
   `;
 });
 
-// Remove this line (if it wasn't already removed)
-// console.log("Amplify config:", amplifyConfig);
+// Log environment for debugging
+console.log('Environment:', {
+  NODE_ENV: import.meta.env.MODE,
+  BASE_URL: import.meta.env.BASE_URL,
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

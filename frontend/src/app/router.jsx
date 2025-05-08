@@ -11,6 +11,7 @@ import AdminServicesPage from "../pages/AdminServicesPage";
 import PatientDetailPage from "../pages/PatientDetailPage";
 import NewPatientPage from "../pages/NewPatientPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import UnauthorizedPage from "../pages/UnauthorizedPage";
 import UserManagementPage from "../pages/UserManagementPage";
 import AccountSettingsPage from "../pages/AccountSettingsPage";
 import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage";
@@ -18,7 +19,7 @@ import DoctorAppointmentsPage from "../pages/DoctorAppointmentsPage";
 import AdminAppointmentsPage from "../pages/AdminAppointmentsPage";
 import StyleGuidePage from "../pages/StyleGuidePage";
 import AppLayout from "../components/Layout/AppLayout";
-import { ProtectedRoute } from "./ProtectedRoute";
+import ProtectedRoute from "./ProtectedRoute";
 
 function AppRouter() {
   return (

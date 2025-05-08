@@ -1,7 +1,7 @@
 // src/app/providers/AuthProvider.jsx
 import React, { createContext, useState, useContext, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { signIn, signOut, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
+import authService from "../../services/authService";
 
 const AuthContext = createContext(null);
 
@@ -14,29 +14,33 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuthState = async () => {
       try {
-        const userData = await getCurrentUser();
-        const attributes = await fetchUserAttributes();
+        const userData = await authService.getCurrentUser();
+        if (!userData) {
+          throw new Error('No authenticated user');
+        }
+        
+        const attributes = await authService.getUserAttributes();
         
         // Extract role from Cognito attributes or use a default
         const role = attributes['custom:role'] || 'user';
         
         setUser({
           username: userData.username,
-          firstName: attributes.given_name,
-          lastName: attributes.family_name,
-          email: attributes.email,
-          role: role,
+          firstName: attributes.given_name || '',
+          lastName: attributes.family_name || '',
+          email: attributes.email || '',
+          role: role.toLowerCase(), // Ensure role is lowercase for consistency
           sub: attributes.sub
         });
         
         // Redirect based on role if at login page
         if (window.location.pathname === '/login') {
-          if (role === "admin") navigate("/admin");
-          else if (role === "doctor") navigate("/doctor");
-          else if (role === "frontdesk") navigate("/frontdesk");
+          if (role.toLowerCase() === "admin") navigate("/admin");
+          else if (role.toLowerCase() === "doctor") navigate("/doctor");
+          else if (role.toLowerCase() === "frontdesk") navigate("/frontdesk");
         }
       } catch (error) {
-        console.log('No authenticated user found');
+        console.log('No authenticated user found', error);
         setUser(null);
         // Only redirect to login if not already there
         if (window.location.pathname !== '/login') {
@@ -54,33 +58,50 @@ export const AuthProvider = ({ children }) => {
   const login = async (userData) => {
     try {
       setLoading(true);
-      const { isSignedIn } = await signIn({
-        username: userData.username,
-        password: userData.password
-      });
+      console.log('Attempting to sign in with:', userData.username);
+      
+      // Use email as username if it looks like an email
+      const loginUsername = userData.username.includes('@') ? 
+        userData.username : 
+        userData.username;
+      
+      const { isSignedIn, nextStep } = await authService.signIn(loginUsername, userData.password);
+      
+      console.log('Sign in result:', { isSignedIn, nextStep });
       
       if (isSignedIn) {
         // Get user attributes
-        const currentUser = await getCurrentUser();
-        const attributes = await fetchUserAttributes();
+        const currentUser = await authService.getCurrentUser();
+        const attributes = await authService.getUserAttributes();
         const role = attributes['custom:role'] || 'user';
+        
+        console.log('User authenticated successfully:', { 
+          username: currentUser.username,
+          role: role
+        });
         
         setUser({
           username: currentUser.username,
-          firstName: attributes.given_name,
-          lastName: attributes.family_name,
-          email: attributes.email,
-          role: role,
+          firstName: attributes.given_name || '',
+          lastName: attributes.family_name || '',
+          email: attributes.email || '',
+          role: role.toLowerCase(), // Ensure role is lowercase for consistency
           sub: attributes.sub
         });
         
         // Redirect based on role
-        if (role === "admin") navigate("/admin");
-        else if (role === "doctor") navigate("/doctor");
-        else if (role === "frontdesk") navigate("/frontdesk");
+        if (role.toLowerCase() === "admin") navigate("/admin");
+        else if (role.toLowerCase() === "doctor") navigate("/doctor");
+        else if (role.toLowerCase() === "frontdesk") navigate("/frontdesk");
         else navigate("/"); // Fallback redirect
         
         return { success: true };
+      } else if (nextStep && nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
+        // Handle new password required scenario
+        return { 
+          success: false, 
+          error: 'You need to change your password. Please contact your administrator.' 
+        };
       } else {
         return { 
           success: false, 
@@ -101,7 +122,7 @@ export const AuthProvider = ({ children }) => {
   // Logout with Cognito
   const logout = async () => {
     try {
-      await signOut();
+      await authService.signOut();
       setUser(null);
       navigate("/login", { replace: true });
     } catch (error) {

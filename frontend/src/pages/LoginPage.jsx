@@ -42,11 +42,11 @@ function LoginPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Demo credentials for quick login
+  // Demo credentials for quick login - using the email addresses as usernames
   const demoCredentials = [
-    { role: "Admin", username: "admin", password: "password" },
-    { role: "Doctor", username: "doctor", password: "password" },
-    { role: "Front Desk", username: "frontdesk", password: "password" },
+    { role: "Admin", username: "admin@clinnet.com", password: "Admin123!" },
+    { role: "Doctor", username: "doctor@clinnet.com", password: "Doctor123!" },
+    { role: "Front Desk", username: "frontdesk@clinnet.com", password: "Frontdesk123!" },
   ];
 
   const handleSubmit = async (event) => {

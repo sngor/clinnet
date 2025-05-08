@@ -1,70 +1,79 @@
-# Clinnet EMR
+# Clinnet EMR - Healthcare Management System
 
-Clinnet EMR is a modern Electronic Medical Records (EMR) system tailored for healthcare clinics. It leverages a React-based frontend and AWS serverless backend to deliver a secure, scalable, and user-friendly platform for managing clinical workflows.
+A comprehensive Electronic Medical Records (EMR) system for healthcare providers.
 
-## Key Features
+## Authentication Setup
 
-- Patient management and profiles
-- Appointment scheduling and calendar integration
-- Comprehensive medical records and documentation
-- Role-based user management and authentication
-- Secure document storage and retrieval
-- Billing and clinic service management
+The application uses AWS Cognito for authentication. The following users are available:
+
+| Role      | Username               | Password      |
+|-----------|------------------------|---------------|
+| Admin     | admin@clinnet.com      | Admin123!     |
+| Doctor    | doctor@clinnet.com     | Doctor123!    |
+| Front Desk| frontdesk@clinnet.com  | Frontdesk123! |
 
 ## Project Structure
 
-- [`/frontend`](frontend/) &mdash; React frontend application
-- [`/backend`](backend/) &mdash; AWS Lambda functions and backend API
-- [`/docs`](docs/) &mdash; Project documentation
-- [`/backend/template.yaml`](backend/template.yaml) &mdash; AWS SAM template for backend infrastructure
-- [`amplify.yml`](amplify.yml) &mdash; AWS Amplify configuration for frontend
+- `/frontend` - React application
+- `/backend` - AWS SAM serverless application
+- `/docs` - Project documentation
 
-## Documentation
-
-- [Project Structure](docs/project-structure.md)
-- [Architecture](docs/architecture.md)
-- [Deployment Guide](docs/deployment.md)
-- [Local Development](docs/local-development.md)
-
-## Getting Started
-
-### Backend
-
-```bash
-# Move to backend directory
-cd backend
-
-# Install backend dependencies
-pip install -r requirements.txt
-
-# Start backend locally (using AWS SAM CLI)
-sam local start-api
-```
+## Local Development
 
 ### Frontend
 
 ```bash
-# Move to frontend directory
 cd frontend
-
-# Install frontend dependencies
 npm install
-
-# Start frontend development server
-npm start
+npm run dev
 ```
 
-## Environment Configuration
+### Backend
 
-For local development, add a `.env.local` file in the `frontend` directory with the required environment variables. Refer to [Local Development](docs/local-development.md) for configuration details.
+```bash
+cd backend
+sam build
+sam local start-api
+```
 
 ## Deployment
 
-- **Frontend:** Deployed via AWS Amplify ([amplify.yml](amplify.yml))
-- **Backend:** Deployed using AWS SAM ([backend/template.yaml](backend/template.yaml))
+### Frontend
 
-See [Deployment Guide](docs/deployment.md) for step-by-step instructions.
+The frontend is deployed to AWS Amplify.
 
-## License
+### Backend
 
-This project is proprietary and confidential. All rights reserved.
+The backend is deployed using AWS SAM.
+
+```bash
+cd backend
+sam build
+sam deploy
+```
+
+## Creating Cognito Users
+
+To create or reset Cognito users:
+
+```bash
+cd backend
+# Create .env file with the following content:
+# USER_POOL_ID=your-user-pool-id
+# AWS_REGION=your-aws-region
+# ADMIN_USER_PASSWORD=Admin123!
+# DOCTOR_USER_PASSWORD=Doctor123!
+# FRONTDESK_USER_PASSWORD=Frontdesk123!
+
+cd scripts
+./create_users.sh
+```
+
+## Features
+
+- Patient management
+- Appointment scheduling
+- Medical records
+- Billing and invoicing
+- User management
+- Role-based access control

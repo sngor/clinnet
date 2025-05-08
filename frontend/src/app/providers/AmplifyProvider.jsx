@@ -1,8 +1,7 @@
 // src/app/providers/AmplifyProvider.jsx
 import React, { useEffect } from "react";
 import { Amplify } from "aws-amplify";
-// Make sure this import is correct:
-import amplifyConfig from "../../config/amplify-config"; // Import amplifyConfig from its definition file
+import amplifyConfig from "../../config/amplify-config";
 
 /**
  * Provider component to initialize AWS Amplify
@@ -10,12 +9,12 @@ import amplifyConfig from "../../config/amplify-config"; // Import amplifyConfig
 function AmplifyProvider({ children }) {
   useEffect(() => {
     try {
-      // Use the imported amplifyConfig object
+      // Configure Amplify with our config
       Amplify.configure(amplifyConfig);
-
+      
       console.log(
         "Amplify configured successfully with API endpoint:",
-        amplifyConfig.API.REST.clinnetApi.endpoint // Example of accessing config
+        amplifyConfig.API.endpoints[0].endpoint
       );
     } catch (error) {
       console.error("Error configuring Amplify:", error);

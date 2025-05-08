@@ -4,6 +4,8 @@ const amplifyConfig = {
     region: import.meta.env.VITE_COGNITO_REGION,
     userPoolId: import.meta.env.VITE_USER_POOL_ID,
     userPoolWebClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
+    mandatorySignIn: true,
+    authenticationFlowType: 'USER_PASSWORD_AUTH'
   },
   API: {
     endpoints: [
@@ -21,5 +23,13 @@ const amplifyConfig = {
     }
   }
 };
+
+// For debugging
+console.log('Amplify config loaded with:', {
+  region: import.meta.env.VITE_COGNITO_REGION,
+  userPoolId: import.meta.env.VITE_USER_POOL_ID,
+  clientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
+  apiEndpoint: import.meta.env.VITE_API_ENDPOINT
+});
 
 export default amplifyConfig;
