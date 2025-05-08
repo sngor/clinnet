@@ -1,5 +1,5 @@
 // src/main.jsx
-import "./aws-exports.js";
+// Remove this import: import "./aws-exports.js";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App";
@@ -20,8 +20,8 @@ window.addEventListener("error", function (e) {
   `;
 });
 
-// Correct the variable name here from amplifyConfig to awsmobile
-console.log("Amplify config:", awsmobile);
+// REMOVE this line as amplifyConfig (or awsmobile) is not defined in this file's scope
+// console.log("Amplify config:", amplifyConfig);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
