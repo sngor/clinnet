@@ -1,74 +1,29 @@
 // src/services/adminService.js
-import { Amplify } from 'aws-amplify';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { get, post, put, del } from 'aws-amplify/api';
 
 /**
  * Service for admin-specific operations with Cognito
- * 
- * Note: For Amplify v6, we need to use the AWS SDK directly for admin operations
- * since the Amplify v6 library doesn't expose these admin methods directly.
- * 
- * This is a simplified version that doesn't include admin operations.
- * In a production environment, you would need to implement these operations
- * through a secure backend API that has the necessary IAM permissions.
  */
 export const adminService = {
   /**
    * List all users in the Cognito user pool
+   * @param {Object} options - Pagination options
    * @returns {Promise<Object>} - List of users
    */
-  async listUsers() {
+  async listUsers(options = {}) {
     try {
       console.log('Listing users');
       
-      // In Amplify v6, we would need to call a backend API that uses the AWS SDK
-      // For now, return mock data
-      const mockUsers = [
-        {
-          username: 'admin@clinnet.com',
-          enabled: true,
-          userStatus: 'CONFIRMED',
-          userCreateDate: new Date(),
-          userLastModifiedDate: new Date(),
-          firstName: 'Clinnet',
-          lastName: 'Admin',
-          email: 'admin@clinnet.com',
-          phone: '',
-          role: 'admin',
-          sub: '12345'
-        },
-        {
-          username: 'doctor@clinnet.com',
-          enabled: true,
-          userStatus: 'CONFIRMED',
-          userCreateDate: new Date(),
-          userLastModifiedDate: new Date(),
-          firstName: 'Clinnet',
-          lastName: 'Doctor',
-          email: 'doctor@clinnet.com',
-          phone: '',
-          role: 'doctor',
-          sub: '67890'
-        },
-        {
-          username: 'frontdesk@clinnet.com',
-          enabled: true,
-          userStatus: 'CONFIRMED',
-          userCreateDate: new Date(),
-          userLastModifiedDate: new Date(),
-          firstName: 'Clinnet',
-          lastName: 'Frontdesk',
-          email: 'frontdesk@clinnet.com',
-          phone: '',
-          role: 'frontdesk',
-          sub: '54321'
+      // Call the API Gateway endpoint
+      const response = await get({
+        apiName: 'clinnetApi',
+        path: '/users',
+        options: {
+          queryParams: options
         }
-      ];
+      });
       
-      return {
-        users: mockUsers,
-        nextToken: null
-      };
+      return response.body.json();
     } catch (error) {
       console.error('Error listing users:', error);
       throw error;
@@ -84,63 +39,13 @@ export const adminService = {
     try {
       console.log(`Getting user: ${username}`);
       
-      // In Amplify v6, we would need to call a backend API
-      // For now, return mock data
-      const mockUsers = {
-        'admin@clinnet.com': {
-          username: 'admin@clinnet.com',
-          enabled: true,
-          userStatus: 'CONFIRMED',
-          userCreateDate: new Date(),
-          userLastModifiedDate: new Date(),
-          firstName: 'Clinnet',
-          lastName: 'Admin',
-          email: 'admin@clinnet.com',
-          phone: '',
-          role: 'admin',
-          sub: '12345'
-        },
-        'doctor@clinnet.com': {
-          username: 'doctor@clinnet.com',
-          enabled: true,
-          userStatus: 'CONFIRMED',
-          userCreateDate: new Date(),
-          userLastModifiedDate: new Date(),
-          firstName: 'Clinnet',
-          lastName: 'Doctor',
-          email: 'doctor@clinnet.com',
-          phone: '',
-          role: 'doctor',
-          sub: '67890'
-        },
-        'frontdesk@clinnet.com': {
-          username: 'frontdesk@clinnet.com',
-          enabled: true,
-          userStatus: 'CONFIRMED',
-          userCreateDate: new Date(),
-          userLastModifiedDate: new Date(),
-          firstName: 'Clinnet',
-          lastName: 'Frontdesk',
-          email: 'frontdesk@clinnet.com',
-          phone: '',
-          role: 'frontdesk',
-          sub: '54321'
-        }
-      };
+      // Call the API Gateway endpoint
+      const response = await get({
+        apiName: 'clinnetApi',
+        path: `/users/${username}`
+      });
       
-      return mockUsers[username] || {
-        username,
-        enabled: true,
-        userStatus: 'CONFIRMED',
-        userCreateDate: new Date(),
-        userLastModifiedDate: new Date(),
-        firstName: '',
-        lastName: '',
-        email: username,
-        phone: '',
-        role: 'user',
-        sub: Math.random().toString(36).substring(2)
-      };
+      return response.body.json();
     } catch (error) {
       console.error(`Error getting user ${username}:`, error);
       throw error;
@@ -156,21 +61,16 @@ export const adminService = {
     try {
       console.log('Creating new user:', userData);
       
-      // In Amplify v6, we would need to call a backend API
-      // For now, return mock data
-      return {
-        username: userData.username,
-        enabled: true,
-        userStatus: 'CONFIRMED',
-        userCreateDate: new Date(),
-        userLastModifiedDate: new Date(),
-        firstName: userData.firstName || '',
-        lastName: userData.lastName || '',
-        email: userData.email || userData.username,
-        phone: userData.phone || '',
-        role: userData.role || 'user',
-        sub: Math.random().toString(36).substring(2)
-      };
+      // Call the API Gateway endpoint
+      const response = await post({
+        apiName: 'clinnetApi',
+        path: '/users',
+        options: {
+          body: userData
+        }
+      });
+      
+      return response.body.json();
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
@@ -187,21 +87,16 @@ export const adminService = {
     try {
       console.log(`Updating user ${username}:`, userData);
       
-      // In Amplify v6, we would need to call a backend API
-      // For now, return mock data
-      return {
-        username,
-        enabled: userData.enabled !== undefined ? userData.enabled : true,
-        userStatus: 'CONFIRMED',
-        userCreateDate: new Date(),
-        userLastModifiedDate: new Date(),
-        firstName: userData.firstName || '',
-        lastName: userData.lastName || '',
-        email: userData.email || username,
-        phone: userData.phone || '',
-        role: userData.role || 'user',
-        sub: Math.random().toString(36).substring(2)
-      };
+      // Call the API Gateway endpoint
+      const response = await put({
+        apiName: 'clinnetApi',
+        path: `/users/${username}`,
+        options: {
+          body: userData
+        }
+      });
+      
+      return response.body.json();
     } catch (error) {
       console.error(`Error updating user ${username}:`, error);
       throw error;
@@ -217,12 +112,13 @@ export const adminService = {
     try {
       console.log(`Deleting user: ${username}`);
       
-      // In Amplify v6, we would need to call a backend API
-      // For now, return success
-      return {
-        success: true,
-        message: `User ${username} deleted successfully`
-      };
+      // Call the API Gateway endpoint
+      const response = await del({
+        apiName: 'clinnetApi',
+        path: `/users/${username}`
+      });
+      
+      return response.body.json();
     } catch (error) {
       console.error(`Error deleting user ${username}:`, error);
       throw error;
@@ -238,12 +134,13 @@ export const adminService = {
     try {
       console.log(`Enabling user: ${username}`);
       
-      // In Amplify v6, we would need to call a backend API
-      // For now, return success
-      return {
-        success: true,
-        message: `User ${username} enabled successfully`
-      };
+      // Call the API Gateway endpoint
+      const response = await post({
+        apiName: 'clinnetApi',
+        path: `/users/${username}/enable`
+      });
+      
+      return response.body.json();
     } catch (error) {
       console.error(`Error enabling user ${username}:`, error);
       throw error;
@@ -259,12 +156,13 @@ export const adminService = {
     try {
       console.log(`Disabling user: ${username}`);
       
-      // In Amplify v6, we would need to call a backend API
-      // For now, return success
-      return {
-        success: true,
-        message: `User ${username} disabled successfully`
-      };
+      // Call the API Gateway endpoint
+      const response = await post({
+        apiName: 'clinnetApi',
+        path: `/users/${username}/disable`
+      });
+      
+      return response.body.json();
     } catch (error) {
       console.error(`Error disabling user ${username}:`, error);
       throw error;

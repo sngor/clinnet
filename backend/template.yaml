@@ -374,52 +374,45 @@ Resources:
             Method: delete
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
-  # Lambda Functions for Users (Profiles)
-  GetUsersFunction:
+   # Lambda Functions for User Management
+  ListUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/users/
-      Handler: get_users.lambda_handler
+      Handler: list_users.lambda_handler
       Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref UsersTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:ListUsers
+              Resource: !GetAtt UserPool.Arn
       Events:
-        GetUsers:
+        ListUsers:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
             Path: /users
             Method: get
             Auth:
-              Authorizer: CognitoAuthorizer # CHANGED: Protect user list
+              Authorizer: CognitoAuthorizer
 
-  GetUserByIdFunction:
+  CreateUserFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/users/
-      Handler: get_user_by_id.lambda_handler
+      Handler: create_cognito_user.lambda_handler
       Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref UsersTable
-      Events:
-        GetUserById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /users/{id}
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer # CHANGED: Protect specific user
-
-  CreateUserFunction: # Note: This function should likely be removed or repurposed
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/users/
-      Handler: create_user.lambda_handler
-      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminSetUserPassword
+                - cognito-idp:AdminGetUser
+              Resource: !GetAtt UserPool.Arn
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
-        # - AmazonCognitoPowerUser # Consider adding Cognito permissions if creating users via SDK
       Events:
         CreateUser:
           Type: Api
@@ -427,43 +420,108 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /users
             Method: post
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
+            Auth:
+              Authorizer: CognitoAuthorizer
 
-  UpdateUserFunction: # Note: This function should likely be removed or repurposed for profile updates only
+  UpdateUserFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/users/
       Handler: update_user.lambda_handler
       Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminUpdateUserAttributes
+                - cognito-idp:AdminSetUserPassword
+                - cognito-idp:AdminEnableUser
+                - cognito-idp:AdminDisableUser
+                - cognito-idp:AdminGetUser
+              Resource: !GetAtt UserPool.Arn
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
-        # - AmazonCognitoPowerUser # Consider adding Cognito permissions if updating users via SDK
       Events:
         UpdateUser:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{id}
+            Path: /users/{username}
             Method: put
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
+            Auth:
+              Authorizer: CognitoAuthorizer
 
-  DeleteUserFunction: # Note: This function should likely be removed or trigger Cognito deletion
+  DeleteUserFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/users/
       Handler: delete_user.lambda_handler
       Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminDeleteUser
+              Resource: !GetAtt UserPool.Arn
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
-        # - AmazonCognitoPowerUser # Consider adding Cognito permissions if deleting users via SDK
       Events:
         DeleteUser:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{id}
+            Path: /users/{username}
             Method: delete
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  EnableUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: enable_user.lambda_handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminEnableUser
+              Resource: !GetAtt UserPool.Arn
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        EnableUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users/{username}/enable
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  DisableUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: disable_user.lambda_handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminDisableUser
+              Resource: !GetAtt UserPool.Arn
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        DisableUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users/{username}/disable
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   # Lambda Functions for Appointments
   GetAppointmentsFunction:

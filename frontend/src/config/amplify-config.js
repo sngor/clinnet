@@ -1,6 +1,6 @@
 // src/config/amplify-config.js
+import { fetchAuthSession } from 'aws-amplify/auth';
 
-// Configuration for AWS Amplify v6 using environment variables
 const amplifyConfig = {
   Auth: {
     Cognito: {
@@ -12,14 +12,28 @@ const amplifyConfig = {
         username: true
       }
     }
+  },
+  API: {
+    REST: {
+      clinnetApi: {
+        endpoint: import.meta.env.VITE_API_ENDPOINT,
+        region: import.meta.env.VITE_COGNITO_REGION,
+        custom_header: async () => {
+          try {
+            const { tokens } = await fetchAuthSession();
+            return {
+              Authorization: `Bearer ${tokens.idToken.toString()}`
+            };
+          } catch (error) {
+            console.error('Error getting auth token:', error);
+            return {};
+          }
+        }
+      }
+    }
   }
 };
 
-// Log configuration without exposing full values
-console.log('Amplify v6 config loaded with environment variables', {
-  userPoolId: amplifyConfig.Auth.Cognito.userPoolId ? '***' + amplifyConfig.Auth.Cognito.userPoolId.slice(-6) : 'undefined',
-  userPoolClientId: amplifyConfig.Auth.Cognito.userPoolClientId ? '***' + amplifyConfig.Auth.Cognito.userPoolClientId.slice(-6) : 'undefined',
-  region: amplifyConfig.Auth.Cognito.region
-});
+console.log('Amplify v6 config loaded with API configuration');
 
 export default amplifyConfig;

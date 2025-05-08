@@ -1,7 +1,7 @@
-# backend/src/handlers/users/delete_user.py
+# backend/src/handlers/users/enable_user.py
 """
-Lambda function to delete a user from AWS Cognito.
-This function provides admin functionality to remove users from the system.
+Lambda function to enable a user in AWS Cognito.
+This function provides admin functionality to activate disabled users.
 """
 import os
 import json
@@ -22,7 +22,7 @@ from utils.response_helper import build_error_response, handle_exception
 
 def lambda_handler(event, context):
     """
-    Handle Lambda event for DELETE /users/{username} (Deletes a user from Cognito)
+    Handle Lambda event for POST /users/{username}/enable (Enables a user in Cognito)
     
     Args:
         event (dict): Lambda event
@@ -49,15 +49,15 @@ def lambda_handler(event, context):
         # Initialize Cognito client
         cognito = boto3.client('cognito-idp')
         
-        # Delete the user
+        # Enable the user
         params = {
             'UserPoolId': user_pool_id,
             'Username': username
         }
         
-        cognito.admin_delete_user(**params)
+        cognito.admin_enable_user(**params)
         
-        # Also delete the profile from DynamoDB if needed
+        # Also update the profile in DynamoDB if needed
         
         return {
             'statusCode': 200,
@@ -68,13 +68,13 @@ def lambda_handler(event, context):
             },
             'body': json.dumps({
                 'success': True,
-                'message': f'User {username} deleted successfully'
+                'message': f'User {username} enabled successfully'
             })
         }
     
     except ClientError as ce:
-        logger.error(f"AWS ClientError deleting user: {ce}")
+        logger.error(f"AWS ClientError enabling user: {ce}")
         return handle_exception(ce)
     except Exception as e:
-        logger.error(f"Unexpected error deleting user: {e}", exc_info=True)
+        logger.error(f"Unexpected error enabling user: {e}", exc_info=True)
         return handle_exception(e)

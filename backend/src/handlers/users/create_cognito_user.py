@@ -1,7 +1,7 @@
-# backend/src/handlers/users/update_user.py
+# backend/src/handlers/users/create_cognito_user.py
 """
-Lambda function to update a user in AWS Cognito.
-This function provides admin functionality to update user attributes and status.
+Lambda function to create a new user in AWS Cognito.
+This function provides admin functionality to create users with specific roles.
 """
 import os
 import json
@@ -22,7 +22,7 @@ from utils.response_helper import build_error_response, handle_exception
 
 def lambda_handler(event, context):
     """
-    Handle Lambda event for PUT /users/{username} (Updates a user in Cognito)
+    Handle Lambda event for POST /admin/users (Creates a new user in Cognito)
     
     Args:
         event (dict): Lambda event
@@ -34,16 +34,32 @@ def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event)}")
     
     try:
-        # Parse the request body and get the username from path parameters
+        # Parse the request body
         if not event.get('body'):
             return build_error_response(400, 'Bad Request', 'Request body is required')
         
         request_body = json.loads(event['body'])
         
-        if not event.get('pathParameters') or not event['pathParameters'].get('username'):
-            return build_error_response(400, 'Bad Request', 'Username path parameter is required')
+        # Validate required fields
+        required_fields = ['username', 'password', 'firstName', 'lastName', 'role']
+        missing_fields = [field for field in required_fields if not request_body.get(field)]
         
-        username = event['pathParameters']['username']
+        if missing_fields:
+            return build_error_response(400, 'Validation Error',
+                f"Missing required fields: {', '.join(missing_fields)}")
+        
+        # Ensure role is one of the expected values
+        user_role = request_body.get('role')
+        allowed_roles = ['admin', 'doctor', 'frontdesk']
+        if user_role not in allowed_roles:
+            # Standardize 'receptionist' to 'frontdesk'
+            if user_role == 'receptionist':
+                user_role = 'frontdesk'
+                logger.info("Standardized role 'receptionist' to 'frontdesk'.")
+            else:
+                logger.warning(f"Invalid role specified: {user_role}")
+                return build_error_response(400, 'Validation Error',
+                    f"Invalid role specified. Allowed roles: {', '.join(allowed_roles)}")
         
         # Extract user pool ID from environment variable
         user_pool_id = os.environ.get('USER_POOL_ID')
@@ -57,6 +73,11 @@ def lambda_handler(event, context):
         # Prepare user attributes
         user_attributes = []
         
+        if request_body.get('email'):
+            user_attributes.append({'Name': 'email', 'Value': request_body['email']})
+            # Add email_verified attribute if email is provided
+            user_attributes.append({'Name': 'email_verified', 'Value': 'true'})
+            
         if request_body.get('firstName'):
             user_attributes.append({'Name': 'given_name', 'Value': request_body['firstName']})
             
@@ -66,60 +87,35 @@ def lambda_handler(event, context):
         if request_body.get('phone'):
             user_attributes.append({'Name': 'phone_number', 'Value': request_body['phone']})
             
-        if request_body.get('role'):
-            # Validate role
-            user_role = request_body.get('role')
-            allowed_roles = ['admin', 'doctor', 'frontdesk']
-            if user_role not in allowed_roles:
-                # Standardize 'receptionist' to 'frontdesk'
-                if user_role == 'receptionist':
-                    user_role = 'frontdesk'
-                    logger.info("Standardized role 'receptionist' to 'frontdesk'.")
-                else:
-                    logger.warning(f"Invalid role specified: {user_role}")
-                    return build_error_response(400, 'Validation Error',
-                        f"Invalid role specified. Allowed roles: {', '.join(allowed_roles)}")
-            
-            user_attributes.append({'Name': 'custom:role', 'Value': user_role})
+        # Add the role as a custom attribute
+        user_attributes.append({'Name': 'custom:role', 'Value': user_role})
         
-        # Update user attributes if there are any to update
-        if user_attributes:
-            update_params = {
-                'UserPoolId': user_pool_id,
-                'Username': username,
-                'UserAttributes': user_attributes
-            }
-            
-            cognito.admin_update_user_attributes(**update_params)
+        # Create the user in Cognito
+        create_params = {
+            'UserPoolId': user_pool_id,
+            'Username': request_body['username'],
+            'TemporaryPassword': request_body['password'],
+            'UserAttributes': user_attributes,
+            'MessageAction': 'SUPPRESS'  # Don't send welcome email
+        }
         
-        # If a new password is provided, set it
+        create_result = cognito.admin_create_user(**create_params)
+        
+        # If a permanent password is provided, set it
         if request_body.get('password'):
             password_params = {
                 'UserPoolId': user_pool_id,
-                'Username': username,
+                'Username': request_body['username'],
                 'Password': request_body['password'],
                 'Permanent': True
             }
             
             cognito.admin_set_user_password(**password_params)
         
-        # Update user status if needed
-        if request_body.get('enabled') is not None:
-            if request_body['enabled']:
-                cognito.admin_enable_user(
-                    UserPoolId=user_pool_id,
-                    Username=username
-                )
-            else:
-                cognito.admin_disable_user(
-                    UserPoolId=user_pool_id,
-                    Username=username
-                )
-        
-        # Get the updated user
+        # Get the user attributes
         get_user_params = {
             'UserPoolId': user_pool_id,
-            'Username': username
+            'Username': request_body['username']
         }
         
         user_result = cognito.admin_get_user(**get_user_params)
@@ -152,10 +148,12 @@ def lambda_handler(event, context):
             'sub': attributes.get('sub', '')
         }
         
-        # Also update the profile in DynamoDB if needed
+        # Also create a profile in DynamoDB if needed
+        # This can call your existing create_user.lambda_handler function
+        # or directly use the create_item function
         
         return {
-            'statusCode': 200,
+            'statusCode': 201,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type,Authorization',
@@ -165,8 +163,8 @@ def lambda_handler(event, context):
         }
     
     except ClientError as ce:
-        logger.error(f"AWS ClientError updating user: {ce}")
+        logger.error(f"AWS ClientError creating user: {ce}")
         return handle_exception(ce)
     except Exception as e:
-        logger.error(f"Unexpected error updating user: {e}", exc_info=True)
+        logger.error(f"Unexpected error creating user: {e}", exc_info=True)
         return handle_exception(e)
