@@ -1,7 +1,11 @@
 // src/services/patientService.js
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { get, post, put, del } from 'aws-amplify/api';
 import { formatPatientForApi } from '../utils/syncUtils';
+=======
+import api from './api';
+>>>>>>> parent of c7450fb (Implement data synchronization between frontend and DynamoDB)
 =======
 import api from './api';
 >>>>>>> parent of c7450fb (Implement data synchronization between frontend and DynamoDB)
@@ -32,6 +36,7 @@ export const getPatientById = async (patientId) => {
 export const createPatient = async (patientData) => {
   try {
 <<<<<<< HEAD
+<<<<<<< HEAD
     // Transform the data to match the backend expectations using the utility function
     const transformedData = formatPatientForApi(patientData);
     
@@ -51,6 +56,10 @@ export const createPatient = async (patientData) => {
     const response = await api.post('/patients', patientData);
     return response.data;
 >>>>>>> parent of c7450fb (Implement data synchronization between frontend and DynamoDB)
+=======
+    const response = await api.post('/patients', patientData);
+    return response.data;
+>>>>>>> parent of c7450fb (Implement data synchronization between frontend and DynamoDB)
   } catch (error) {
     console.error('Error creating patient:', error);
     throw error;
@@ -60,6 +69,7 @@ export const createPatient = async (patientData) => {
 // Update a patient
 export const updatePatient = async (patientId, patientData) => {
   try {
+<<<<<<< HEAD
 <<<<<<< HEAD
     // Transform the data to match the backend expectations using the utility function
     const transformedData = formatPatientForApi(patientData);
@@ -76,6 +86,10 @@ export const updatePatient = async (patientId, patientData) => {
     
     console.log(`Patient ${patientId} updated successfully:`, response);
     return response.body;
+=======
+    const response = await api.put(`/patients/${patientId}`, patientData);
+    return response.data;
+>>>>>>> parent of c7450fb (Implement data synchronization between frontend and DynamoDB)
 =======
     const response = await api.put(`/patients/${patientId}`, patientData);
     return response.data;
