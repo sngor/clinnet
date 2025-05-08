@@ -14,8 +14,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuthState = async () => {
       try {
+        console.log("Checking auth state...");
         const userData = await getCurrentUser();
+        console.log("Current user:", userData);
+        
         const attributes = await fetchUserAttributes();
+        console.log("User attributes:", attributes);
         
         // Extract role from Cognito attributes or use a default
         const role = attributes['custom:role'] || 'user';
@@ -56,7 +60,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       console.log('Attempting to sign in with:', userData.username);
       
-      // Direct call to Amplify Auth
+      // Direct call to Amplify Auth with v6 format
       const signInResult = await signIn({
         username: userData.username,
         password: userData.password

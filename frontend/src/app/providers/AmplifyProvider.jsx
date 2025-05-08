@@ -13,11 +13,11 @@ function AmplifyProvider({ children }) {
       Amplify.configure(amplifyConfig);
       
       console.log(
-        "Amplify configured successfully with Auth:",
+        "Amplify v6 configured successfully with Auth:",
         {
-          region: amplifyConfig.Auth.region,
-          userPoolId: amplifyConfig.Auth.userPoolId,
-          clientId: amplifyConfig.Auth.userPoolWebClientId
+          userPoolId: amplifyConfig.Auth.Cognito.userPoolId,
+          userPoolClientId: amplifyConfig.Auth.Cognito.userPoolClientId,
+          region: amplifyConfig.Auth.Cognito.region
         }
       );
     } catch (error) {

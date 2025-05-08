@@ -12,6 +12,31 @@ The application uses AWS Cognito for authentication. The following users are ava
 | Doctor    | doctor@clinnet.com     | Doctor123!    |
 | Front Desk| frontdesk@clinnet.com  | Frontdesk123! |
 
+## Troubleshooting Authentication
+
+If you encounter authentication issues:
+
+1. Make sure the Cognito User Pool and App Client are correctly configured
+2. Check that the users exist in the Cognito User Pool
+3. Verify that the users have the correct custom:role attribute set
+4. Ensure the Amplify configuration is using the v6 format:
+
+```javascript
+const amplifyConfig = {
+  Auth: {
+    Cognito: {
+      userPoolId: 'us-east-2_sQHTbURkW',
+      userPoolClientId: '6hg0umclddagog2sr52ij8lq36',
+      region: 'us-east-2',
+      loginWith: {
+        email: true,
+        username: true
+      }
+    }
+  }
+};
+```
+
 ## Project Structure
 
 - `/frontend` - React application
