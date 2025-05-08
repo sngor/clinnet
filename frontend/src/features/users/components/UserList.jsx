@@ -1,5 +1,5 @@
 // src/features/users/components/UserList.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -21,74 +21,39 @@ import {
   MenuItem,
   IconButton,
   Chip,
+  CircularProgress,
+  Alert,
+  Snackbar,
+  FormHelperText,
+  Switch,
+  FormControlLabel,
+  Typography,
+  Tooltip
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import BlockIcon from "@mui/icons-material/Block";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import TableContainer from "../../../components/TableContainer";
 import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
-
-// Placeholder data - replace with API data later via React Query
-const initialUsers = [
-  {
-    id: 1,
-    username: "admin",
-    firstName: "Super",
-    lastName: "Admin",
-    email: "admin@clinnet.com",
-    phone: "+1 (555) 123-4567",
-    role: "admin",
-  },
-  {
-    id: 2,
-    username: "doctor1",
-    firstName: "Alice",
-    lastName: "Smith",
-    email: "alice.smith@clinnet.com",
-    phone: "+1 (555) 234-5678",
-    role: "doctor",
-  },
-  {
-    id: 3,
-    username: "frontdesk1",
-    firstName: "Bob",
-    lastName: "Johnson",
-    email: "bob.johnson@clinnet.com",
-    phone: "+1 (555) 345-6789",
-    role: "frontdesk",
-  },
-  {
-    id: 4,
-    username: "doctor2",
-    firstName: "Carol",
-    lastName: "Williams",
-    email: "carol.williams@clinnet.com",
-    phone: "+1 (555) 456-7890",
-    role: "doctor",
-  },
-  {
-    id: 5,
-    username: "frontdesk2",
-    firstName: "David",
-    lastName: "Brown",
-    email: "david.brown@clinnet.com",
-    phone: "+1 (555) 567-8901",
-    role: "frontdesk",
-  },
-];
-
-const roles = ["admin", "doctor", "frontdesk"];
+import PasswordStrengthMeter from "../../../components/PasswordStrengthMeter";
+import { validatePassword } from "../../../utils/password-validator";
+import useUserManagement from "../hooks/useUserManagement";
 
 // Table column definitions
 const columns = [
-  { id: "id", label: "ID", numeric: true },
   { id: "username", label: "Username", numeric: false },
   { id: "firstName", label: "First Name", numeric: false },
   { id: "lastName", label: "Last Name", numeric: false },
   { id: "email", label: "Email", numeric: false },
   { id: "phone", label: "Phone", numeric: false },
   { id: "role", label: "Role", numeric: false },
+  { id: "status", label: "Status", numeric: false },
 ];
+
+const roles = ["admin", "doctor", "frontdesk"];
 
 function descendingComparator(a, b, orderBy) {
   // Handle null or undefined values
@@ -126,7 +91,20 @@ function stableSort(array, comparator) {
 }
 
 function UserList() {
-  const [users, setUsers] = useState(initialUsers);
+  // Use the custom hook for user management
+  const {
+    users,
+    loading,
+    error,
+    fetchUsers,
+    createUser,
+    updateUser,
+    deleteUser,
+    enableUser,
+    disableUser,
+    refreshUsers
+  } = useUserManagement();
+
   const [openAddEdit, setOpenAddEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -138,19 +116,54 @@ function UserList() {
     phone: "",
     role: "",
     password: "",
+    enabled: true
   });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+  const [passwordError, setPasswordError] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Sorting state
   const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState("id");
+  const [orderBy, setOrderBy] = useState("username");
+
+  // Load users on component mount
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value,
-    });
+    }));
+    
+    // Clear specific field error
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: null
+      }));
+    }
+    
+    // Clear password error when password field changes
+    if (name === 'password') {
+      setPasswordError(null);
+    }
+  };
+
+  // Handle switch toggle for enabled status
+  const handleSwitchChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      enabled: e.target.checked
+    }));
   };
 
   // Open add user dialog
@@ -164,7 +177,10 @@ function UserList() {
       phone: "",
       role: "",
       password: "",
+      enabled: true
     });
+    setFormErrors({});
+    setPasswordError(null);
     setOpenAddEdit(true);
   };
 
@@ -173,13 +189,16 @@ function UserList() {
     setCurrentUser(user);
     setFormData({
       username: user.username,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
       email: user.email || "",
       phone: user.phone || "",
-      role: user.role,
+      role: user.role || "",
       password: "", // Don't pre-fill password
+      enabled: user.enabled
     });
+    setFormErrors({});
+    setPasswordError(null);
     setOpenAddEdit(true);
   };
 
@@ -195,32 +214,118 @@ function UserList() {
     setOpenDelete(false);
   };
 
-  // Save user (add or edit)
-  const handleSaveUser = () => {
-    if (currentUser) {
-      // Edit existing user
-      setUsers(
-        users.map((user) =>
-          user.id === currentUser.id
-            ? { ...user, ...formData, id: currentUser.id }
-            : user
-        )
-      );
-    } else {
-      // Add new user
-      const newUser = {
-        ...formData,
-        id: Math.max(...users.map((u) => u.id)) + 1, // Simple ID generation
-      };
-      setUsers([...users, newUser]);
+  // Handle snackbar close
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  // Show notification
+  const showNotification = (message, severity = 'success') => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
+  };
+
+  // Toggle user enabled status
+  const handleToggleUserStatus = async (user) => {
+    setActionLoading(true);
+    
+    try {
+      if (user.enabled) {
+        await disableUser(user.username);
+        showNotification(`User ${user.username} disabled successfully`);
+      } else {
+        await enableUser(user.username);
+        showNotification(`User ${user.username} enabled successfully`);
+      }
+    } catch (err) {
+      showNotification(`Failed to update user status: ${err.message}`, "error");
+    } finally {
+      setActionLoading(false);
     }
-    setOpenAddEdit(false);
+  };
+
+  // Handle refresh button click
+  const handleRefresh = () => {
+    refreshUsers();
+  };
+
+  // Validate form data
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.username) errors.username = "Username is required";
+    if (!formData.firstName) errors.firstName = "First name is required";
+    if (!formData.lastName) errors.lastName = "Last name is required";
+    if (!formData.role) errors.role = "Role is required";
+    
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Invalid email address";
+    }
+    
+    // Validate password for new users
+    if (!currentUser && !formData.password) {
+      errors.password = "Password is required for new users";
+    }
+    
+    // Validate password strength if provided
+    if (formData.password) {
+      const passwordValidation = validatePassword(formData.password);
+      if (!passwordValidation.isValid) {
+        errors.password = passwordValidation.message;
+        setPasswordError(passwordValidation.message);
+      }
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Save user (add or edit)
+  const handleSaveUser = async () => {
+    // Validate form
+    if (!validateForm()) return;
+    
+    setActionLoading(true);
+    
+    try {
+      if (currentUser) {
+        // Edit existing user
+        const updatedUser = await updateUser(
+          currentUser.username,
+          formData
+        );
+        
+        showNotification(`User ${updatedUser.username} updated successfully`);
+      } else {
+        // Add new user
+        const newUser = await createUser(formData);
+        showNotification(`User ${newUser.username} created successfully`);
+      }
+      
+      setOpenAddEdit(false);
+    } catch (err) {
+      showNotification(`Failed to save user: ${err.message}`, "error");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   // Delete user
-  const handleDeleteUser = () => {
-    setUsers(users.filter((user) => user.id !== currentUser.id));
-    setOpenDelete(false);
+  const handleDeleteUser = async () => {
+    setActionLoading(true);
+    
+    try {
+      await deleteUser(currentUser.username);
+      showNotification(`User ${currentUser.username} deleted successfully`);
+      setOpenDelete(false);
+    } catch (err) {
+      showNotification(`Failed to delete user: ${err.message}`, "error");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   // Handle sort request
@@ -235,126 +340,181 @@ function UserList() {
     handleRequestSort(property);
   };
 
-  // Action button for the table
-  const actionButton = (
-    <Button
-      variant="contained"
-      startIcon={<AddIcon />}
-      onClick={handleAddUser}
-      sx={{ borderRadius: 1.5 }}
-    >
-      Add User
-    </Button>
+  // Action buttons for the table
+  const actionButtons = (
+    <Box sx={{ display: 'flex', gap: 1 }}>
+      <Tooltip title="Refresh Users">
+        <IconButton 
+          onClick={handleRefresh} 
+          disabled={loading}
+          sx={{ mr: 1 }}
+        >
+          <RefreshIcon />
+        </IconButton>
+      </Tooltip>
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={handleAddUser}
+        sx={{ borderRadius: 1.5 }}
+      >
+        Add User
+      </Button>
+    </Box>
   );
 
   return (
     <Box sx={{ width: "100%" }}>
-      <TableContainer title="Users" action={actionButton}>
-        <MuiTableContainer sx={{ boxShadow: "none" }}>
-          <Table
-            sx={{
-              minWidth: 650,
-              "& .MuiTableCell-root": {
-                borderBottom: "none",
-                padding: "16px",
-              },
-              "& tbody tr": {
-                borderBottom: "1px solid rgba(224, 224, 224, 0.4)",
-              },
-              "& tbody tr:last-child": {
-                border: 0,
-              },
-              borderCollapse: "separate",
-              borderSpacing: 0,
-              "& thead tr th:first-of-type": {
-                borderRadius: "8px 0 0 8px",
-              },
-              "& thead tr th:last-of-type": {
-                borderRadius: "0 8px 8px 0",
-              },
-            }}
-            aria-label="users table"
-          >
-            <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-              <TableRow>
-                {columns.map((column, index) => (
-                  <TableCell
-                    key={column.id}
-                    sortDirection={orderBy === column.id ? order : false}
-                  >
-                    <TableSortLabel
-                      active={orderBy === column.id}
-                      direction={orderBy === column.id ? order : "asc"}
-                      onClick={createSortHandler(column.id)}
+      <TableContainer title="Users" action={actionButtons}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+        
+        {loading && !openAddEdit && !openDelete ? (
+          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <MuiTableContainer sx={{ boxShadow: "none" }}>
+            <Table
+              sx={{
+                minWidth: 650,
+                "& .MuiTableCell-root": {
+                  borderBottom: "none",
+                  padding: "16px",
+                },
+                "& tbody tr": {
+                  borderBottom: "1px solid rgba(224, 224, 224, 0.4)",
+                },
+                "& tbody tr:last-child": {
+                  border: 0,
+                },
+                borderCollapse: "separate",
+                borderSpacing: 0,
+                "& thead tr th:first-of-type": {
+                  borderRadius: "8px 0 0 8px",
+                },
+                "& thead tr th:last-of-type": {
+                  borderRadius: "0 8px 8px 0",
+                },
+              }}
+              aria-label="users table"
+            >
+              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      sortDirection={orderBy === column.id ? order : false}
                     >
-                      {column.label}
-                    </TableSortLabel>
-                  </TableCell>
-                ))}
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {stableSort(users, getComparator(order, orderBy)).map((user) => (
-                <TableRow
-                  key={user.id}
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell component="th" scope="row">
-                    {user.id}
-                  </TableCell>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.firstName}</TableCell>
-                  <TableCell>{user.lastName}</TableCell>
-                  <TableCell>{user.email || "-"}</TableCell>
-                  <TableCell>{user.phone || "-"}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={
-                        user.role.charAt(0).toUpperCase() + user.role.slice(1)
-                      }
-                      size="small"
-                      color={
-                        user.role === "admin"
-                          ? "error"
-                          : user.role === "doctor"
-                          ? "primary"
-                          : "secondary"
-                      }
-                      variant="outlined"
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      color="primary"
-                      size="small"
-                      onClick={() => handleEditUser(user)}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      size="small"
-                      onClick={() => handleDeleteClick(user)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </TableCell>
+                      <TableSortLabel
+                        active={orderBy === column.id}
+                        direction={orderBy === column.id ? order : "asc"}
+                        onClick={createSortHandler(column.id)}
+                      >
+                        {column.label}
+                      </TableSortLabel>
+                    </TableCell>
+                  ))}
+                  <TableCell align="center">Actions</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </MuiTableContainer>
+              </TableHead>
+              <TableBody>
+                {users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length + 1} align="center">
+                      No users found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  stableSort(users, getComparator(order, orderBy)).map((user) => (
+                    <TableRow
+                      key={user.username}
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                    >
+                      <TableCell>{user.username}</TableCell>
+                      <TableCell>{user.firstName || "-"}</TableCell>
+                      <TableCell>{user.lastName || "-"}</TableCell>
+                      <TableCell>{user.email || "-"}</TableCell>
+                      <TableCell>{user.phone || "-"}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={
+                            user.role.charAt(0).toUpperCase() + user.role.slice(1)
+                          }
+                          size="small"
+                          color={
+                            user.role === "admin"
+                              ? "error"
+                              : user.role === "doctor"
+                              ? "primary"
+                              : "secondary"
+                          }
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          icon={user.enabled ? <CheckCircleIcon /> : <BlockIcon />}
+                          label={user.enabled ? "Active" : "Disabled"}
+                          size="small"
+                          color={user.enabled ? "success" : "default"}
+                          variant={user.enabled ? "filled" : "outlined"}
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Tooltip title="Edit User">
+                          <IconButton
+                            color="primary"
+                            size="small"
+                            onClick={() => handleEditUser(user)}
+                            disabled={actionLoading}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete User">
+                          <IconButton
+                            color="error"
+                            size="small"
+                            onClick={() => handleDeleteClick(user)}
+                            disabled={actionLoading}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={user.enabled ? "Disable User" : "Enable User"}>
+                          <IconButton
+                            color={user.enabled ? "default" : "success"}
+                            size="small"
+                            onClick={() => handleToggleUserStatus(user)}
+                            disabled={actionLoading}
+                          >
+                            {user.enabled ? <BlockIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </MuiTableContainer>
+        )}
       </TableContainer>
 
       {/* Add/Edit User Dialog */}
       <Dialog
         open={openAddEdit}
-        onClose={handleCloseDialog}
+        onClose={!actionLoading ? handleCloseDialog : undefined}
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>{currentUser ? "Edit User" : "Add New User"}</DialogTitle>
+        <DialogTitle>
+          {currentUser ? `Edit User: ${currentUser.username}` : "Add New User"}
+        </DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
             <TextField
@@ -364,18 +524,51 @@ function UserList() {
               value={formData.username}
               onChange={handleInputChange}
               required
+              disabled={!!currentUser} // Disable username field when editing
+              error={!!formErrors.username}
+              helperText={formErrors.username}
             />
 
             {!currentUser && (
+              <>
+                <TextField
+                  name="password"
+                  label="Password"
+                  type="password"
+                  fullWidth
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  error={!!formErrors.password}
+                  helperText={formErrors.password}
+                />
+                <PasswordStrengthMeter password={formData.password} />
+                <FormHelperText>
+                  Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                </FormHelperText>
+              </>
+            )}
+
+            {currentUser && (
               <TextField
                 name="password"
-                label="Password"
+                label="New Password (leave blank to keep current)"
                 type="password"
                 fullWidth
                 value={formData.password}
                 onChange={handleInputChange}
-                required
+                error={!!formErrors.password}
+                helperText={formErrors.password}
               />
+            )}
+
+            {currentUser && formData.password && (
+              <>
+                <PasswordStrengthMeter password={formData.password} />
+                <FormHelperText>
+                  Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                </FormHelperText>
+              </>
             )}
 
             <TextField
@@ -385,6 +578,8 @@ function UserList() {
               value={formData.firstName}
               onChange={handleInputChange}
               required
+              error={!!formErrors.firstName}
+              helperText={formErrors.firstName}
             />
 
             <TextField
@@ -394,6 +589,8 @@ function UserList() {
               value={formData.lastName}
               onChange={handleInputChange}
               required
+              error={!!formErrors.lastName}
+              helperText={formErrors.lastName}
             />
 
             <TextField
@@ -404,6 +601,8 @@ function UserList() {
               value={formData.email}
               onChange={handleInputChange}
               placeholder="user@example.com"
+              error={!!formErrors.email}
+              helperText={formErrors.email}
             />
 
             <TextField
@@ -413,9 +612,11 @@ function UserList() {
               value={formData.phone}
               onChange={handleInputChange}
               placeholder="+1 (555) 123-4567"
+              error={!!formErrors.phone}
+              helperText={formErrors.phone}
             />
 
-            <FormControl fullWidth required>
+            <FormControl fullWidth required error={!!formErrors.role}>
               <InputLabel>Role</InputLabel>
               <Select
                 name="role"
@@ -429,22 +630,48 @@ function UserList() {
                   </MenuItem>
                 ))}
               </Select>
+              {formErrors.role && (
+                <FormHelperText>{formErrors.role}</FormHelperText>
+              )}
             </FormControl>
+
+            {currentUser && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.enabled}
+                    onChange={handleSwitchChange}
+                    color="success"
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    {formData.enabled ? "User is active" : "User is disabled"}
+                  </Typography>
+                }
+              />
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button 
+            onClick={handleCloseDialog}
+            disabled={actionLoading}
+          >
+            Cancel
+          </Button>
           <Button
             onClick={handleSaveUser}
             variant="contained"
-            disabled={
-              !formData.username ||
-              !formData.firstName ||
-              !formData.lastName ||
-              !formData.role
-            }
+            disabled={actionLoading}
           >
-            {currentUser ? "Save Changes" : "Add User"}
+            {actionLoading ? (
+              <CircularProgress size={24} />
+            ) : currentUser ? (
+              "Save Changes"
+            ) : (
+              "Add User"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
@@ -456,7 +683,25 @@ function UserList() {
         onConfirm={handleDeleteUser}
         itemName={currentUser?.username}
         itemType="user"
+        loading={actionLoading}
       />
+      
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity} 
+          sx={{ width: '100%' }}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
