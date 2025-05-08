@@ -1,5 +1,5 @@
 // src/pages/LoginPage.jsx
-import React, { useState } from "react";
+import React, { useState } from "react"; // Make sure useState is imported
 import { useAuth } from "../app/providers/AuthProvider";
 import {
   Box,
@@ -35,6 +35,9 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  // Add the showPassword state here:
+  const [showPassword, setShowPassword] = useState(false);
+
   const { login, loading: authLoading } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
