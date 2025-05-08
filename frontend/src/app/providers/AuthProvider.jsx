@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }) => {
           firstName: attributes.given_name || '',
           lastName: attributes.family_name || '',
           email: attributes.email || '',
+          phone: attributes.phone_number || '',
           role: role.toLowerCase(), // Ensure role is lowercase for consistency
           sub: attributes.sub
         });
@@ -84,6 +85,7 @@ export const AuthProvider = ({ children }) => {
           firstName: attributes.given_name || '',
           lastName: attributes.family_name || '',
           email: attributes.email || '',
+          phone: attributes.phone_number || '',
           role: role.toLowerCase(), // Ensure role is lowercase for consistency
           sub: attributes.sub
         });
@@ -129,14 +131,36 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Update user information in context
+  const updateUserInfo = async () => {
+    try {
+      const attributes = await fetchUserAttributes();
+      
+      setUser(prev => ({
+        ...prev,
+        firstName: attributes.given_name || '',
+        lastName: attributes.family_name || '',
+        email: attributes.email || '',
+        phone: attributes.phone_number || ''
+      }));
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user info:', error);
+      return { success: false, error };
+    }
+  };
+
   // Use useMemo to prevent unnecessary re-renders of context consumers
   const value = useMemo(
     () => ({
       user,
+      setUser,
       isAuthenticated: !!user,
       login,
       logout,
-      loading
+      loading,
+      updateUserInfo
     }),
     [user, loading]
   );

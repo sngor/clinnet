@@ -1,66 +1,90 @@
 // src/services/userService.js
-import api from './api';
+import { 
+  updateUserAttributes, 
+  changePassword,
+  fetchUserAttributes
+} from 'aws-amplify/auth';
 
-// Get all users
-export const getUsers = async () => {
-  try {
-    const response = await api.get('/users');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    throw error;
-  }
-};
-
-// Get user by ID
-export const getUserById = async (userId) => {
-  try {
-    const response = await api.get(`/users/${userId}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching user ${userId}:`, error);
-    throw error;
-  }
-};
-
-// Create a new user
-export const createUser = async (userData) => {
-  try {
-    const response = await api.post('/users', userData);
-    return response.data;
-  } catch (error) {
-    console.error('Error creating user:', error);
-    throw error;
-  }
-};
-
-// Login (simulated with JSON Server)
-export const login = async (credentials) => {
-  try {
-    // With JSON Server, we need to fetch users and filter manually
-    const response = await api.get(`/users?username=${credentials.username}`);
-    const user = response.data[0];
-    
-    if (user && user.password === credentials.password) {
-      // In a real app, you would get a token from the server
-      // For now, we'll just return the user without the password
-      const { password, ...userWithoutPassword } = user;
-      return { user: userWithoutPassword, success: true };
-    } else {
-      throw new Error('Invalid username or password');
+/**
+ * Service for handling user-related operations
+ */
+export const userService = {
+  /**
+   * Update user profile information in Cognito
+   * @param {Object} userData - User data to update
+   * @returns {Promise<Object>} - Updated user attributes
+   */
+  async updateUserProfile(userData) {
+    try {
+      console.log('Updating user profile:', userData);
+      
+      // Prepare attributes object for Cognito
+      const attributes = {};
+      
+      if (userData.firstName) attributes['given_name'] = userData.firstName;
+      if (userData.lastName) attributes['family_name'] = userData.lastName;
+      if (userData.email) attributes['email'] = userData.email;
+      if (userData.phone) attributes['phone_number'] = userData.phone;
+      
+      // Update user attributes in Cognito
+      await updateUserAttributes({
+        userAttributes: attributes
+      });
+      
+      // Fetch updated attributes
+      const updatedAttributes = await fetchUserAttributes();
+      console.log('User profile updated successfully:', updatedAttributes);
+      
+      return {
+        success: true,
+        attributes: updatedAttributes
+      };
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      throw error;
     }
-  } catch (error) {
-    console.error('Login error:', error);
-    throw error;
+  },
+  
+  /**
+   * Change user password in Cognito
+   * @param {string} oldPassword - Current password
+   * @param {string} newPassword - New password
+   * @returns {Promise<Object>} - Result of the operation
+   */
+  async changePassword(oldPassword, newPassword) {
+    try {
+      console.log('Changing user password');
+      
+      await changePassword({
+        oldPassword,
+        newPassword
+      });
+      
+      console.log('Password changed successfully');
+      
+      return {
+        success: true,
+        message: 'Password changed successfully'
+      };
+    } catch (error) {
+      console.error('Error changing password:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Get current user attributes from Cognito
+   * @returns {Promise<Object>} - User attributes
+   */
+  async getUserAttributes() {
+    try {
+      const attributes = await fetchUserAttributes();
+      return attributes;
+    } catch (error) {
+      console.error('Error fetching user attributes:', error);
+      throw error;
+    }
   }
-};
-
-// Default export
-const userService = {
-  getUsers,
-  getUserById,
-  createUser,
-  login,
 };
 
 export default userService;

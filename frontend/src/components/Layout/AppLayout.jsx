@@ -15,6 +15,7 @@ import {
   Menu,
   MenuItem,
   useMediaQuery,
+  Stack,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -56,6 +57,30 @@ function AppLayout() {
     // Close the drawer on mobile when navigating
     if (isMobile) {
       setMobileOpen(false);
+    }
+  };
+
+  // Get user's display name
+  const getUserDisplayName = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    } else if (user?.firstName) {
+      return user.firstName;
+    } else if (user?.email) {
+      return user.email.split('@')[0];
+    } else {
+      return user?.username || 'User';
+    }
+  };
+
+  // Get user's avatar letter
+  const getAvatarLetter = () => {
+    if (user?.firstName) {
+      return user.firstName[0].toUpperCase();
+    } else if (user?.username) {
+      return user.username[0].toUpperCase();
+    } else {
+      return 'U';
     }
   };
 
@@ -197,38 +222,63 @@ function AppLayout() {
               ml: "auto", // Push to the right edge
             }}
           >
-            <IconButton
+            <Stack 
+              direction="row" 
+              spacing={1} 
+              alignItems="center"
               onClick={handleMenuOpen}
-              size={isMobile ? "medium" : "large"}
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              color="inherit"
+              sx={{ 
+                cursor: 'pointer',
+                '&:hover': {
+                  opacity: 0.9
+                }
+              }}
             >
-              {user?.photoURL ? (
-                <Avatar
-                  alt={user.username}
-                  src={user.photoURL}
-                  sx={{ width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } }}
-                />
-              ) : (
-                <Avatar
-                  sx={{
-                    width: { xs: 28, sm: 32 },
-                    height: { xs: 28, sm: 32 },
-                    bgcolor: "secondary.main",
+              {/* User Name - Hide on mobile */}
+              {!isMobile && (
+                <Typography 
+                  variant="body2" 
+                  color="inherit"
+                  sx={{ 
+                    fontWeight: 500,
+                    display: { xs: 'none', sm: 'block' }
                   }}
                 >
-                  {user?.username ? (
-                    user.username[0].toUpperCase()
-                  ) : (
-                    <AccountCircleIcon
-                      fontSize={isMobile ? "small" : "medium"}
-                    />
-                  )}
-                </Avatar>
+                  {getUserDisplayName()}
+                </Typography>
               )}
-            </IconButton>
+              
+              {/* Avatar */}
+              <IconButton
+                size={isMobile ? "medium" : "large"}
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                color="inherit"
+                sx={{ p: { xs: 0.5, sm: 1 } }}
+              >
+                {user?.photoURL ? (
+                  <Avatar
+                    alt={getUserDisplayName()}
+                    src={user.photoURL}
+                    sx={{ width: { xs: 32, sm: 36 }, height: { xs: 32, sm: 36 } }}
+                  />
+                ) : (
+                  <Avatar
+                    sx={{
+                      width: { xs: 32, sm: 36 },
+                      height: { xs: 32, sm: 36 },
+                      bgcolor: "secondary.main",
+                      fontSize: { xs: 16, sm: 18 },
+                      fontWeight: 500
+                    }}
+                  >
+                    {getAvatarLetter()}
+                  </Avatar>
+                )}
+              </IconButton>
+            </Stack>
+            
             <Menu
               id="menu-appbar"
               anchorEl={anchorEl}
@@ -239,7 +289,8 @@ function AppLayout() {
               onClose={handleMenuClose}
               PaperProps={{
                 sx: {
-                  minWidth: 180,
+                  minWidth: 200,
+                  mt: 0.5,
                   "& .MuiMenuItem-root": {
                     px: 2,
                     py: 1,
@@ -251,12 +302,23 @@ function AppLayout() {
                 },
               }}
             >
+              {/* User info in menu */}
+              <Box sx={{ px: 2, py: 1.5 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  {getUserDisplayName()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {user?.email}
+                </Typography>
+              </Box>
+              <Divider />
+              
               <MenuItem onClick={() => handleNavigate("/account-settings")}>
                 <ListItemIcon>
                   <SettingsIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Settings"
+                  primary="Account Settings"
                   primaryTypographyProps={{
                     variant: "body2",
                     sx: { fontWeight: 500 },
