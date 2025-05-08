@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import AdminDashboard from "../pages/AdminDashboard";
 import DoctorDashboard from "../pages/DoctorDashboard";
-import FrontDeskDashboard from "../pages/FrontDeskDashboard";
+import FrontDeskDashboard from "../pages/FrontdeskDashboard";
 import PatientManagementPage from "../pages/PatientManagementPage";
 import AdminPatientsPage from "../pages/AdminPatientsPage";
 import AdminServicesPage from "../pages/AdminServicesPage";
