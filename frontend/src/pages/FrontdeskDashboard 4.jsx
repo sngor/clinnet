@@ -1,11 +1,20 @@
-// src/pages/FrontdeskDashboard.jsx
+// src/pages/FrontDeskDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
 import { 
   Grid, 
+  Paper, 
+  Typography, 
   useMediaQuery, 
   useTheme, 
+  Box, 
+  Button,
   Container,
+  CircularProgress,
+  List,
+  ListItem,
+  Divider,
+  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -14,9 +23,7 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
-  Button,
-  Box
+  MenuItem
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
@@ -25,8 +32,6 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { useNavigate } from "react-router-dom";
 import { PageHeaderWithDivider } from "../components/PageHeader";
 import DashboardCard from "../components/DashboardCard";
-import AppointmentList from "../components/AppointmentList";
-import QuickActions from "../components/QuickActions";
 
 // Mock data for today's appointments
 const mockAppointments = [
@@ -64,7 +69,7 @@ const mockDoctors = [
   { id: 4, name: "Dr. Taylor", specialty: "Dermatology" }
 ];
 
-function FrontdeskDashboard() {
+function FrontDeskDashboard() {
   const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -106,7 +111,23 @@ function FrontdeskDashboard() {
     }, 500); // Simulate network delay
   }, []);
 
-  // Using the shared getStatusColor function from UI components
+  // Get status color
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'Scheduled':
+        return 'primary';
+      case 'Checked-in':
+        return 'success';
+      case 'In Progress':
+        return 'warning';
+      case 'Completed':
+        return 'info';
+      case 'Cancelled':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
 
   // Handle Check-in Action
   const handleCheckIn = (appointmentId) => {
@@ -211,25 +232,101 @@ function FrontdeskDashboard() {
       </Grid>
 
       {/* Quick Actions */}
-      <QuickActions 
-        actions={[
-          {
-            label: "Register Walk-in",
-            icon: <PersonAddIcon />,
-            onClick: handleOpenWalkInModal
-          }
-        ]}
-      />
+      <Box sx={{ mb: 4 }}>
+        <Typography 
+          variant="h5" 
+          color="primary.main"
+          fontWeight="medium"
+          sx={{ mb: 2 }}
+        >
+          Quick Actions
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item>
+            <Button 
+              variant="contained" 
+              startIcon={<PersonAddIcon />}
+              onClick={handleOpenWalkInModal}
+              sx={{ borderRadius: 1.5 }}
+            >
+              Register Walk-in
+            </Button>
+          </Grid>
+        </Grid>
+      </Box>
 
       {/* Appointments List */}
-      <AppointmentList
-        appointments={appointments}
-        loading={loading}
-        title="Upcoming Appointments"
-        onAction={handleCheckIn}
-        actionLabel="Check In"
-        emptyMessage="No appointments scheduled for today."
-      />
+      <Paper 
+        elevation={0}
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <Typography 
+          variant="h5" 
+          color="primary.main"
+          fontWeight="medium"
+          sx={{ mb: 3 }}
+        >
+          Upcoming Appointments
+        </Typography>
+
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <List sx={{ width: '100%' }}>
+            {appointments.map((appt, index) => (
+              <React.Fragment key={appt.id}>
+                <ListItem
+                  sx={{ 
+                    py: 2,
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <Box sx={{ mb: { xs: 2, sm: 0 }, width: { xs: '100%', sm: 'auto' } }}>
+                    <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                      {appt.time} - {appt.patientName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Doctor: {appt.doctorName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Type: {appt.type}
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Chip 
+                      label={appt.status} 
+                      color={getStatusColor(appt.status)}
+                      size="small"
+                      sx={{ fontWeight: 500 }}
+                    />
+                    {appt.status === 'Scheduled' && (
+                      <Button 
+                        size="small" 
+                        variant="outlined"
+                        onClick={() => handleCheckIn(appt.id)}
+                      >
+                        Check In
+                      </Button>
+                    )}
+                  </Box>
+                </ListItem>
+                {index < appointments.length - 1 && <Divider />}
+              </React.Fragment>
+            ))}
+          </List>
+        )}
+      </Paper>
 
       {/* Walk-in Registration Modal */}
       <Dialog 
@@ -298,4 +395,4 @@ function FrontdeskDashboard() {
   );
 }
 
-export default FrontdeskDashboard;
+export default FrontDeskDashboard;
