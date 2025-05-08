@@ -1,6 +1,5 @@
-import Amplify from 'aws-amplify';
+import { Amplify } from 'aws-amplify'; 
 
-// Optionally export the config object for use elsewhere
 const awsmobile = {
   Auth: {
     region: import.meta.env.VITE_COGNITO_REGION,
