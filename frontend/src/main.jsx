@@ -20,7 +20,8 @@ window.addEventListener("error", function (e) {
   `;
 });
 
-console.log("Amplify config:", amplifyConfig);
+// Correct the variable name here from amplifyConfig to awsmobile
+console.log("Amplify config:", awsmobile);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
