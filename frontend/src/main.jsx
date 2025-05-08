@@ -20,6 +20,8 @@ window.addEventListener("error", function (e) {
   `;
 });
 
+console.log("Amplify config:", amplifyConfig);
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AppProviders>
