@@ -5,7 +5,6 @@ import { initializeAppData } from '../../services/dataInitializer';
 <<<<<<< HEAD
 import patientService from '../../services/patientService';
 import { serviceApi } from '../../services';
-import appointmentService from '../../services/appointmentService';
 
 // Create context
 const DataContext = createContext(null);
