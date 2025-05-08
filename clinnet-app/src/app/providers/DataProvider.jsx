@@ -1,9 +1,12 @@
 // src/app/providers/DataProvider.jsx
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { initializeAppData } from '../../services/dataInitializer';
+<<<<<<< HEAD
 import patientService from '../../services/patientService';
 import { serviceApi } from '../../services';
 import appointmentService from '../../services/appointmentService';
+=======
+>>>>>>> parent of c7450fb (Implement data synchronization between frontend and DynamoDB)
 
 // Create context
 const DataContext = createContext(null);
@@ -17,6 +20,7 @@ export const DataProvider = ({ children }) => {
     error: null
   });
 
+<<<<<<< HEAD
   // Function to refresh data from the API
   const refreshData = useCallback(async () => {
     try {
@@ -204,8 +208,33 @@ export const DataProvider = ({ children }) => {
     deleteAppointment
   };
 
+=======
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const appData = await initializeAppData();
+        setData({
+          services: appData.services || [],
+          patients: appData.patients || [],
+          loading: false,
+          error: null
+        });
+      } catch (error) {
+        console.error('Failed to load application data:', error);
+        setData(prevData => ({
+          ...prevData,
+          loading: false,
+          error: 'Failed to load application data. Please try again later.'
+        }));
+      }
+    };
+
+    loadData();
+  }, []);
+
+>>>>>>> parent of c7450fb (Implement data synchronization between frontend and DynamoDB)
   return (
-    <DataContext.Provider value={contextValue}>
+    <DataContext.Provider value={data}>
       {children}
     </DataContext.Provider>
   );
