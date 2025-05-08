@@ -1,5 +1,5 @@
 // src/main.jsx
-// Remove this import: import "./aws-exports.js";
+// REMOVE this import: import "./aws-exports.js";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App";
@@ -20,7 +20,7 @@ window.addEventListener("error", function (e) {
   `;
 });
 
-// REMOVE this line as amplifyConfig (or awsmobile) is not defined in this file's scope
+// Remove this line (if it wasn't already removed)
 // console.log("Amplify config:", amplifyConfig);
 
 ReactDOM.createRoot(document.getElementById("root")).render(

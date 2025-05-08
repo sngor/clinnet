@@ -1,5 +1,5 @@
-// frontend/src/aws-exports.js
-// import { Amplify } from 'aws-amplify'; // Keep the import if needed for types or other purposes
+// src/aws-exports.js
+// Remove any Amplify import like: import { Amplify } from 'aws-amplify';
 
 const awsmobile = {
   Auth: {
@@ -15,14 +15,14 @@ const awsmobile = {
   API: {
     endpoints: [
       {
-        name: 'clinnetApi', // This name 'api' might conflict with 'clinnetApi' used in api-amplify.js
+        name: 'clinnetApi', // Double-check this name matches your backend API name
         endpoint: import.meta.env.VITE_API_ENDPOINT,
       },
     ],
   },
 };
 
-// Comment out or remove the Amplify.configure call here
-// Amplify.configure(awsmobile);
+// !! IMPORTANT: Ensure there is NO Amplify.configure(awsmobile); call here !!
 
-export default awsmobile;
+
+export default awsmobile; // You can still export this object if needed elsewhere

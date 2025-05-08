@@ -1,28 +1,28 @@
-// src/aws-exports.js
-// import { Amplify } from 'aws-amplify'; // Remove this import if Amplify.configure is removed
+// src/app/providers/AmplifyProvider.jsx
+import React, { useEffect } from "react";
+import { Amplify } from "aws-amplify";
+// Make sure this import is correct:
+import amplifyConfig from "../../config/amplify-config"; // Import amplifyConfig from its definition file
 
-const awsmobile = {
-  Auth: {
-    region: import.meta.env.VITE_COGNITO_REGION,
-    userPoolId: import.meta.env.VITE_USER_POOL_ID,
-    userPoolWebClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
-    mandatorySignIn: true,
-  },
-  Storage: {
-    bucket: import.meta.env.VITE_S3_BUCKET,
-    region: import.meta.env.VITE_S3_REGION,
-  },
-  API: {
-    endpoints: [
-      {
-        name: "clinnetApi", // Double-check this name matches your backend API name
-        endpoint: import.meta.env.VITE_API_ENDPOINT,
-      },
-    ],
-  },
-};
+/**
+ * Provider component to initialize AWS Amplify
+ */
+function AmplifyProvider({ children }) {
+  useEffect(() => {
+    try {
+      // Use the imported amplifyConfig object
+      Amplify.configure(amplifyConfig);
 
-// !! IMPORTANT: Remove or comment out this line !!
-// Amplify.configure(awsmobile);
+      console.log(
+        "Amplify configured successfully with API endpoint:",
+        amplifyConfig.API.REST.clinnetApi.endpoint // Example of accessing config
+      );
+    } catch (error) {
+      console.error("Error configuring Amplify:", error);
+    }
+  }, []); // Empty dependency array means this runs once on mount
 
-export default awsmobile; // You can still export this object if needed elsewhere
+  return <>{children}</>;
+}
+
+export default AmplifyProvider;
