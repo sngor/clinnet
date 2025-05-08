@@ -1,4 +1,5 @@
-import { Amplify } from 'aws-amplify'; 
+import { Amplify } from 'aws-amplify';
+import { Auth } from 'aws-amplify/auth'; // <-- Add this line
 
 const awsmobile = {
   Auth: {
@@ -21,6 +22,6 @@ const awsmobile = {
   },
 };
 
-Amplify.configure(awsmobile);
+Amplify.configure(awsmobile, { Auth }); // <-- Register Auth module
 
 export default awsmobile;
