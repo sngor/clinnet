@@ -12,22 +12,24 @@ function AmplifyProvider({ children }) {
 
       Amplify.configure({
         Auth: {
+          // This object needs to be correctly populated
           region: import.meta.env.VITE_COGNITO_REGION,
           userPoolId: import.meta.env.VITE_USER_POOL_ID,
           userPoolWebClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
         },
         API: {
           REST: {
+            // This nesting is important for the API category
             clinnetApi: {
-              // Make sure API calls use this name if needed
+              // 'clinnetApi' is the name used in your services/api-amplify.js
               endpoint: import.meta.env.VITE_API_ENDPOINT,
-              region: import.meta.env.VITE_COGNITO_REGION, // Assuming API is in same region as Cognito
+              region: import.meta.env.VITE_COGNITO_REGION, // API region is often the same as Cognito region
             },
           },
         },
-        // ... Storage ...
         Storage: {
           S3: {
+            // This nesting is important for the Storage category
             bucket: import.meta.env.VITE_S3_BUCKET,
             region: import.meta.env.VITE_S3_REGION,
           },

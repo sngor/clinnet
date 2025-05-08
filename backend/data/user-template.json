@@ -4,23 +4,23 @@
     "email": "admin@clinnet.com", 
     "role": "admin",
     "firstName": "Clinnet",
-    "lastName": "Admin",
-    "permanentPassword": "Admin@123!" 
+    "lastName": "Admin"
+   
   },
   {
     "username": "doctor_user",
     "email": "doctor@clinnet.com",
     "role": "doctor",
     "firstName": "Clinnet",
-    "lastName": "Doctor",
-    "permanentPassword": "Doctor@123!" 
+    "lastName": "Doctor"
+  
   },
   {
     "username": "frontdesk_user",
     "email": "frontdesk@clinnet.com",
     "role": "frontdesk",
     "firstName": "Clinnet",
-    "lastName": "Frontdesk",
-    "permanentPassword": "Frontdesk@123!"
+    "lastName": "Frontdesk"
+
   }
 ]

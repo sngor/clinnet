@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# --- Configuration ---
-# Ensure the USER_POOL_ID environment variable is set before running.
-# Example: export USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name your-sam-stack-name --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
-# Or set it manually: export USER_POOL_ID=us-east-2_xxxxxxxxx
+# --- Load environment variables from .env if present ---
+if [ -f .env ]; then
+  export $(grep -v '^#' .env | xargs)
+fi
 
+# --- Configuration ---
 USER_TEMPLATE_FILE="../data/user-template.json"
 AWS_REGION=${AWS_REGION:-"us-east-2"} # Default region if not set
 
@@ -33,23 +34,39 @@ echo "---"
 
 # --- Loop through the user template and create users ---
 jq -c '.[]' $USER_TEMPLATE_FILE | while read -r user_json; do
-  # Read email and use it as the Cognito username
   email=$(echo "$user_json" | jq -r '.email')
-  # Optional: you can still read the original username if needed for display/logging
-  original_username=$(echo "$user_json" | jq -r '.username') 
+  original_username=$(echo "$user_json" | jq -r '.username')
   role=$(echo "$user_json" | jq -r '.role')
   first_name=$(echo "$user_json" | jq -r '.firstName')
   last_name=$(echo "$user_json" | jq -r '.lastName')
-  permanentPassword=$(echo "$user_json" | jq -r '.permanentPassword') # Get the password
 
-  # Use email as the primary identifier for Cognito operations
-  cognito_username="$email" 
+  # Map username to environment variable for password
+  case "$original_username" in
+    admin_user)
+      permanentPassword="$ADMIN_USER_PASSWORD"
+      ;;
+    doctor_user)
+      permanentPassword="$DOCTOR_USER_PASSWORD"
+      ;;
+    frontdesk_user)
+      permanentPassword="$FRONTDESK_USER_PASSWORD"
+      ;;
+    *)
+      echo "  [ERROR] No password set for $original_username. Skipping."
+      continue
+      ;;
+  esac
+
+  if [ -z "$permanentPassword" ]; then
+    echo "  [ERROR] Password environment variable not set for $original_username. Skipping."
+    continue
+  fi
+
+  cognito_username="$email"
 
   echo "Processing user: $original_username ($cognito_username) with role: $role"
 
   # --- Step 1: Create the user (using EMAIL as the username) ---
-  # Note: User status will be UNCONFIRMED initially if email verification is on.
-  # We will confirm them and set the password permanently.
   aws cognito-idp admin-create-user \
     --region $AWS_REGION \
     --user-pool-id "$USER_POOL_ID" \
@@ -57,28 +74,24 @@ jq -c '.[]' $USER_TEMPLATE_FILE | while read -r user_json; do
     --user-attributes \
         Name=email,Value="$email" \
         Name=email_verified,Value=true \
-        Name=custom:custom:role,Value="$role" \
+        Name=custom:role,Value="$role" \
         Name=given_name,Value="$first_name" \
         Name=family_name,Value="$last_name" \
-    --message-action SUPPRESS > /dev/null # Suppress email notification
+    --message-action SUPPRESS > /dev/null
 
   create_status=$?
 
   if [ $create_status -ne 0 ]; then
-    # Check if user already exists (error code might be UsernameExistsException)
-    # Attempt to get the user to confirm existence
     aws cognito-idp admin-get-user --user-pool-id "$USER_POOL_ID" --username "$cognito_username" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
        echo "  [INFO] User $cognito_username already exists. Attempting to set password."
-       # Fall through to set password below
     else
         echo "  [ERROR] Failed to create user $cognito_username (Original username: $original_username). Skipping password set."
-        continue # Skip to next user
+        continue
     fi
   else
     echo "  [SUCCESS] User $cognito_username created."
   fi
-
 
   # --- Step 2: Set the permanent password ---
   echo "  Setting permanent password for $cognito_username..."
@@ -98,7 +111,7 @@ jq -c '.[]' $USER_TEMPLATE_FILE | while read -r user_json; do
   fi
 
   echo "---"
-  sleep 1 # Add a small delay to avoid potential rate limiting
+  sleep 1
 
 done
 
