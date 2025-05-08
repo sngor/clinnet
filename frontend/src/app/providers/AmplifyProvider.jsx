@@ -19,11 +19,13 @@ function AmplifyProvider({ children }) {
         API: {
           REST: {
             clinnetApi: {
-              endpoint: apiEndpoint,
-              region: import.meta.env.VITE_COGNITO_REGION,
+              // Make sure API calls use this name if needed
+              endpoint: import.meta.env.VITE_API_ENDPOINT,
+              region: import.meta.env.VITE_COGNITO_REGION, // Assuming API is in same region as Cognito
             },
           },
         },
+        // ... Storage ...
         Storage: {
           S3: {
             bucket: import.meta.env.VITE_S3_BUCKET,
