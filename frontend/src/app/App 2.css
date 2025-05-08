@@ -1,0 +1,6 @@
+/* src/app/App.css */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
