@@ -1,27 +1,18 @@
 version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        # Install dependencies 
-        - echo "Installing dependencies..."
-
-        # Use npm ci for a clean install of dependencies
-        - npm ci
-
-
-    build:
-      commands:
-        # Build the project
-        - npm run build
-
-        
-  artifacts:
-    # Specify the directory where the build output is located
-    baseDirectory: build
-    files:
-      - '**/*'
-  cache:
-    # Cache dependencies to speed up subsequent builds
-    paths:
-      - node_modules/**/*
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - echo "Installing dependencies..."
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
