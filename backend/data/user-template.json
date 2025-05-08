@@ -1,11 +1,11 @@
 [
   {
     "username": "admin_user",
-    "email": "admin@clinnet.com", // Corrected email format
+    "email": "admin@clinnet.com", 
     "role": "admin",
     "firstName": "Clinnet",
     "lastName": "Admin",
-    "permanentPassword": "AdminPassword@123!" // INSECURE - For testing only
+    "permanentPassword": "Admin@123!" 
   },
   {
     "username": "doctor_user",
@@ -13,7 +13,7 @@
     "role": "doctor",
     "firstName": "Clinnet",
     "lastName": "Doctor",
-    "permanentPassword": "DoctorPassword@123!" // INSECURE - For testing only
+    "permanentPassword": "Doctor@123!" 
   },
   {
     "username": "frontdesk_user",
@@ -21,6 +21,6 @@
     "role": "frontdesk",
     "firstName": "Clinnet",
     "lastName": "Frontdesk",
-    "permanentPassword": "FrontdeskPassword@123!" // INSECURE - For testing only
+    "permanentPassword": "Frontdesk@123!"
   }
 ]
