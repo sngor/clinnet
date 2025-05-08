@@ -1,15 +1,5 @@
 // src/services/adminService.js
 import { Auth } from 'aws-amplify';
-import { 
-  adminCreateUser,
-  adminDeleteUser,
-  adminDisableUser,
-  adminEnableUser,
-  adminGetUser,
-  adminUpdateUserAttributes,
-  adminSetUserPassword,
-  listUsers
-} from 'aws-amplify/auth';
 
 /**
  * Service for admin-specific operations with Cognito
@@ -26,28 +16,29 @@ export const adminService = {
       
       const { limit = 60, nextToken } = options;
       
-      const result = await listUsers({
+      // Use Auth.listUsers instead of direct import
+      const result = await Auth.listUsers({
         limit,
         ...(nextToken && { nextToken })
       });
       
-      console.log(`Retrieved ${result.users.length} users`);
+      console.log(`Retrieved ${result.Users.length} users`);
       
       // Transform the users to a more usable format
-      const users = result.users.map(user => {
+      const users = result.Users.map(user => {
         const attributes = {};
         
         // Convert attributes array to object
-        user.attributes.forEach(attr => {
-          attributes[attr.name] = attr.value;
+        user.Attributes.forEach(attr => {
+          attributes[attr.Name] = attr.Value;
         });
         
         return {
-          username: user.username,
-          enabled: user.enabled,
-          userStatus: user.userStatus,
-          userCreateDate: user.userCreateDate,
-          userLastModifiedDate: user.userLastModifiedDate,
+          username: user.Username,
+          enabled: user.Enabled,
+          userStatus: user.UserStatus,
+          userCreateDate: user.UserCreateDate,
+          userLastModifiedDate: user.UserLastModifiedDate,
           firstName: attributes['given_name'] || '',
           lastName: attributes['family_name'] || '',
           email: attributes['email'] || '',
@@ -59,7 +50,7 @@ export const adminService = {
       
       return {
         users,
-        nextToken: result.nextToken
+        nextToken: result.PaginationToken
       };
     } catch (error) {
       console.error('Error listing users:', error);
@@ -76,22 +67,21 @@ export const adminService = {
     try {
       console.log(`Getting user: ${username}`);
       
-      const result = await adminGetUser({
-        username
-      });
+      // Use Auth.adminGetUser instead of direct import
+      const result = await Auth.adminGetUser(username);
       
       // Convert attributes array to object
       const attributes = {};
-      result.userAttributes.forEach(attr => {
-        attributes[attr.name] = attr.value;
+      result.UserAttributes.forEach(attr => {
+        attributes[attr.Name] = attr.Value;
       });
       
       return {
-        username: result.username,
-        enabled: result.enabled,
-        userStatus: result.userStatus,
-        userCreateDate: result.userCreateDate,
-        userLastModifiedDate: result.userLastModifiedDate,
+        username: result.Username,
+        enabled: result.Enabled,
+        userStatus: result.UserStatus,
+        userCreateDate: result.UserCreateDate,
+        userLastModifiedDate: result.UserLastModifiedDate,
         firstName: attributes['given_name'] || '',
         lastName: attributes['family_name'] || '',
         email: attributes['email'] || '',
@@ -117,17 +107,17 @@ export const adminService = {
       // Prepare user attributes
       const userAttributes = [];
       
-      if (userData.email) userAttributes.push({ name: 'email', value: userData.email });
-      if (userData.firstName) userAttributes.push({ name: 'given_name', value: userData.firstName });
-      if (userData.lastName) userAttributes.push({ name: 'family_name', value: userData.lastName });
-      if (userData.phone) userAttributes.push({ name: 'phone_number', value: userData.phone });
-      if (userData.role) userAttributes.push({ name: 'custom:role', value: userData.role });
+      if (userData.email) userAttributes.push({ Name: 'email', Value: userData.email });
+      if (userData.firstName) userAttributes.push({ Name: 'given_name', Value: userData.firstName });
+      if (userData.lastName) userAttributes.push({ Name: 'family_name', Value: userData.lastName });
+      if (userData.phone) userAttributes.push({ Name: 'phone_number', Value: userData.phone });
+      if (userData.role) userAttributes.push({ Name: 'custom:role', Value: userData.role });
       
       // Add email_verified attribute if email is provided
-      if (userData.email) userAttributes.push({ name: 'email_verified', value: 'true' });
+      if (userData.email) userAttributes.push({ Name: 'email_verified', Value: 'true' });
       
-      // Create the user
-      const result = await adminCreateUser({
+      // Create the user using Auth.adminCreateUser
+      const result = await Auth.adminCreateUser({
         username: userData.username,
         temporaryPassword: userData.password,
         userAttributes,
@@ -136,7 +126,7 @@ export const adminService = {
       
       // If a permanent password is provided, set it
       if (userData.password) {
-        await adminSetUserPassword({
+        await Auth.adminSetUserPassword({
           username: userData.username,
           password: userData.password,
           permanent: true
@@ -166,28 +156,37 @@ export const adminService = {
       // Prepare user attributes
       const userAttributes = [];
       
-      if (userData.email) userAttributes.push({ name: 'email', value: userData.email });
-      if (userData.firstName) userAttributes.push({ name: 'given_name', value: userData.firstName });
-      if (userData.lastName) userAttributes.push({ name: 'family_name', value: userData.lastName });
-      if (userData.phone) userAttributes.push({ name: 'phone_number', value: userData.phone });
-      if (userData.role) userAttributes.push({ name: 'custom:role', value: userData.role });
+      if (userData.email) userAttributes.push({ Name: 'email', Value: userData.email });
+      if (userData.firstName) userAttributes.push({ Name: 'given_name', Value: userData.firstName });
+      if (userData.lastName) userAttributes.push({ Name: 'family_name', Value: userData.lastName });
+      if (userData.phone) userAttributes.push({ Name: 'phone_number', Value: userData.phone });
+      if (userData.role) userAttributes.push({ Name: 'custom:role', Value: userData.role });
       
       // Add email_verified attribute if email is changed
-      if (userData.email) userAttributes.push({ name: 'email_verified', value: 'true' });
+      if (userData.email) userAttributes.push({ Name: 'email_verified', Value: 'true' });
       
-      // Update the user attributes
-      await adminUpdateUserAttributes({
+      // Update the user attributes using Auth.adminUpdateUserAttributes
+      await Auth.adminUpdateUserAttributes(
         username,
         userAttributes
-      });
+      );
       
       // If a new password is provided, set it
       if (userData.password) {
-        await adminSetUserPassword({
+        await Auth.adminSetUserPassword({
           username,
           password: userData.password,
           permanent: true
         });
+      }
+      
+      // Update user status if needed
+      if (userData.enabled !== undefined) {
+        if (userData.enabled) {
+          await Auth.adminEnableUser({ username });
+        } else {
+          await Auth.adminDisableUser({ username });
+        }
       }
       
       console.log(`User ${username} updated successfully`);
@@ -209,9 +208,8 @@ export const adminService = {
     try {
       console.log(`Deleting user: ${username}`);
       
-      await adminDeleteUser({
-        username
-      });
+      // Use Auth.adminDeleteUser instead of direct import
+      await Auth.adminDeleteUser(username);
       
       console.log(`User ${username} deleted successfully`);
       
@@ -234,9 +232,8 @@ export const adminService = {
     try {
       console.log(`Enabling user: ${username}`);
       
-      await adminEnableUser({
-        username
-      });
+      // Use Auth.adminEnableUser instead of direct import
+      await Auth.adminEnableUser({ username });
       
       console.log(`User ${username} enabled successfully`);
       
@@ -259,9 +256,8 @@ export const adminService = {
     try {
       console.log(`Disabling user: ${username}`);
       
-      await adminDisableUser({
-        username
-      });
+      // Use Auth.adminDisableUser instead of direct import
+      await Auth.adminDisableUser({ username });
       
       console.log(`User ${username} disabled successfully`);
       
