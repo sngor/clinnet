@@ -1,5 +1,4 @@
 import { Amplify } from 'aws-amplify';
-import { Auth } from 'aws-amplify/auth';
 
 const awsmobile = {
   Auth: {
