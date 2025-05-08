@@ -1,0 +1,22 @@
+{
+    "providers": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-clinnetapp-clinnetemr-b4e74-authRole",
+            "UnauthRoleArn": "arn:aws:iam::152296711262:role/amplify-clinnetapp-clinnetemr-b4e74-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::152296711262:role/amplify-clinnetapp-clinnetemr-b4e74-authRole",
+            "Region": "us-east-2",
+            "DeploymentBucketName": "amplify-clinnetapp-clinnetemr-b4e74-deployment",
+            "UnauthRoleName": "amplify-clinnetapp-clinnetemr-b4e74-unauthRole",
+            "StackName": "amplify-clinnetapp-clinnetemr-b4e74",
+            "StackId": "arn:aws:cloudformation:us-east-2:152296711262:stack/amplify-clinnetapp-clinnetemr-b4e74/42474700-2b9e-11f0-84b1-06096d0adfc3",
+            "AmplifyAppId": "d3kf1stvvv8f14"
+        }
+    },
+    "hosting": {
+        "amplifyhosting": {
+            "service": "amplifyhosting",
+            "type": "cicd",
+            "lastPushTimeStamp": "2025-05-07T23:59:07.682Z"
+        }
+    }
+}
