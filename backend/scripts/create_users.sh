@@ -57,7 +57,7 @@ jq -c '.[]' $USER_TEMPLATE_FILE | while read -r user_json; do
     --user-attributes \
         Name=email,Value="$email" \
         Name=email_verified,Value=true \
-        Name=custom:role,Value="$role" \
+        Name=custom:custom:role,Value="$role" \
         Name=given_name,Value="$first_name" \
         Name=family_name,Value="$last_name" \
     --message-action SUPPRESS > /dev/null # Suppress email notification
