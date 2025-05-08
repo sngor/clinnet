@@ -171,7 +171,7 @@ Resources:
           AttributeDataType: String
           Mutable: true
           Required: true
-        - Name: custom:role # Using custom attribute for role
+        - Name: role # Using custom attribute for role
           AttributeDataType: String
           Mutable: true
           Required: false

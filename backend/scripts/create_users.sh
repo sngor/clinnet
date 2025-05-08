@@ -33,22 +33,27 @@ echo "---"
 
 # --- Loop through the user template and create users ---
 jq -c '.[]' $USER_TEMPLATE_FILE | while read -r user_json; do
-  username=$(echo "$user_json" | jq -r '.username')
+  # Read email and use it as the Cognito username
   email=$(echo "$user_json" | jq -r '.email')
+  # Optional: you can still read the original username if needed for display/logging
+  original_username=$(echo "$user_json" | jq -r '.username') 
   role=$(echo "$user_json" | jq -r '.role')
   first_name=$(echo "$user_json" | jq -r '.firstName')
   last_name=$(echo "$user_json" | jq -r '.lastName')
   permanentPassword=$(echo "$user_json" | jq -r '.permanentPassword') # Get the password
 
-  echo "Processing user: $username ($email) with role: $role"
+  # Use email as the primary identifier for Cognito operations
+  cognito_username="$email" 
 
-  # --- Step 1: Create the user (without temporary password, email verified) ---
+  echo "Processing user: $original_username ($cognito_username) with role: $role"
+
+  # --- Step 1: Create the user (using EMAIL as the username) ---
   # Note: User status will be UNCONFIRMED initially if email verification is on.
   # We will confirm them and set the password permanently.
   aws cognito-idp admin-create-user \
     --region $AWS_REGION \
     --user-pool-id "$USER_POOL_ID" \
-    --username "$username" \
+    --username "$cognito_username" \
     --user-attributes \
         Name=email,Value="$email" \
         Name=email_verified,Value=true \
@@ -60,36 +65,36 @@ jq -c '.[]' $USER_TEMPLATE_FILE | while read -r user_json; do
   create_status=$?
 
   if [ $create_status -ne 0 ]; then
-    echo "  [ERROR] Failed to create user $username. Skipping password set."
-    # Check if user already exists (specific error code might vary)
-    # You might want more robust error handling here
-    aws cognito-idp admin-get-user --user-pool-id "$USER_POOL_ID" --username "$username" > /dev/null 2>&1
+    # Check if user already exists (error code might be UsernameExistsException)
+    # Attempt to get the user to confirm existence
+    aws cognito-idp admin-get-user --user-pool-id "$USER_POOL_ID" --username "$cognito_username" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
-       echo "  [INFO] User $username might already exist. Attempting to set password anyway."
+       echo "  [INFO] User $cognito_username already exists. Attempting to set password."
        # Fall through to set password below
     else
-        continue # Skip to next user if creation failed for other reasons
+        echo "  [ERROR] Failed to create user $cognito_username (Original username: $original_username). Skipping password set."
+        continue # Skip to next user
     fi
   else
-    echo "  [SUCCESS] User $username created."
+    echo "  [SUCCESS] User $cognito_username created."
   fi
 
 
   # --- Step 2: Set the permanent password ---
-  echo "  Setting permanent password for $username..."
+  echo "  Setting permanent password for $cognito_username..."
   aws cognito-idp admin-set-user-password \
     --region $AWS_REGION \
     --user-pool-id "$USER_POOL_ID" \
-    --username "$username" \
+    --username "$cognito_username" \
     --password "$permanentPassword" \
     --permanent
 
   set_password_status=$?
 
   if [ $set_password_status -eq 0 ]; then
-    echo "  [SUCCESS] Permanent password set for $username."
+    echo "  [SUCCESS] Permanent password set for $cognito_username."
   else
-    echo "  [ERROR] Failed to set permanent password for $username."
+    echo "  [ERROR] Failed to set permanent password for $cognito_username."
   fi
 
   echo "---"
