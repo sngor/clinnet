@@ -1,11 +1,12 @@
-// filepath: /Users/sengngor/Desktop/App/Clinnet-EMR/frontend/src/aws-exports.js
 import Amplify from 'aws-amplify';
 
-Amplify.configure({
+// Optionally export the config object for use elsewhere
+const awsmobile = {
   Auth: {
     region: import.meta.env.VITE_COGNITO_REGION,
     userPoolId: import.meta.env.VITE_USER_POOL_ID,
     userPoolWebClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
+    mandatorySignIn: true,
   },
   Storage: {
     bucket: import.meta.env.VITE_S3_BUCKET,
@@ -19,4 +20,8 @@ Amplify.configure({
       },
     ],
   },
-});
+};
+
+Amplify.configure(awsmobile);
+
+export default awsmobile;
