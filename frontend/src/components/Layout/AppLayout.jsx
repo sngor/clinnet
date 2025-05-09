@@ -257,10 +257,10 @@ function AppLayout() {
                 color="inherit"
                 sx={{ p: { xs: 0.5, sm: 1 } }}
               >
-                {user?.photoURL ? (
+                {user?.profileImage ? (
                   <Avatar
                     alt={getUserDisplayName()}
-                    src={user.photoURL}
+                    src={user.profileImage}
                     sx={{ width: { xs: 32, sm: 36 }, height: { xs: 32, sm: 36 } }}
                   />
                 ) : (
@@ -303,13 +303,35 @@ function AppLayout() {
               }}
             >
               {/* User info in menu */}
-              <Box sx={{ px: 2, py: 1.5 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  {getUserDisplayName()}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {user?.email}
-                </Typography>
+              <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center' }}>
+                {user?.profileImage ? (
+                  <Avatar
+                    alt={getUserDisplayName()}
+                    src={user.profileImage}
+                    sx={{ width: 40, height: 40, mr: 1.5 }}
+                  />
+                ) : (
+                  <Avatar
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      mr: 1.5,
+                      bgcolor: "secondary.main",
+                      fontSize: 18,
+                      fontWeight: 500
+                    }}
+                  >
+                    {getAvatarLetter()}
+                  </Avatar>
+                )}
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    {getUserDisplayName()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {user?.email}
+                  </Typography>
+                </Box>
               </Box>
               <Divider />
               

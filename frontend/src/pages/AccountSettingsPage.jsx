@@ -31,7 +31,7 @@ import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
 import { validatePassword } from "../utils/password-validator";
 
 function AccountSettingsPage() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, updateProfileImage } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const fileInputRef = useRef(null);
@@ -69,8 +69,13 @@ function AccountSettingsPage() {
         phone: user.phone || "",
       }));
       
-      // Fetch profile image
-      fetchProfileImage();
+      // Set profile image from user object if available
+      if (user.profileImage) {
+        setProfileImage(user.profileImage);
+      } else {
+        // Fetch profile image if not in user object
+        fetchProfileImage();
+      }
     }
   }, [user]);
 
@@ -79,6 +84,8 @@ function AccountSettingsPage() {
       const result = await userService.getProfileImage();
       if (result.success && result.hasImage) {
         setProfileImage(result.imageUrl);
+        // Also update in auth context
+        updateProfileImage(result.imageUrl);
       }
     } catch (error) {
       console.error('Error fetching profile image:', error);
@@ -233,6 +240,8 @@ function AccountSettingsPage() {
       
       if (result.success) {
         setProfileImage(result.imageUrl);
+        // Also update in auth context
+        updateProfileImage(result.imageUrl);
         showNotification('Profile image updated successfully');
       }
     } catch (error) {

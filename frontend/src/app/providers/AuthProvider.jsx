@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { signIn, signOut, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
+import userService from "../../services/userService";
 
 const AuthContext = createContext(null);
 
@@ -24,7 +25,8 @@ export const AuthProvider = ({ children }) => {
         // Extract role from Cognito attributes or use a default
         const role = attributes['custom:role'] || 'user';
         
-        setUser({
+        // Create the user object
+        const userObj = {
           username: userData.username,
           firstName: attributes.given_name || '',
           lastName: attributes.family_name || '',
@@ -32,7 +34,19 @@ export const AuthProvider = ({ children }) => {
           phone: attributes.phone_number || '',
           role: role.toLowerCase(), // Ensure role is lowercase for consistency
           sub: attributes.sub
-        });
+        };
+        
+        // Fetch profile image if available
+        try {
+          const profileImageResult = await userService.getProfileImage();
+          if (profileImageResult.success && profileImageResult.hasImage) {
+            userObj.profileImage = profileImageResult.imageUrl;
+          }
+        } catch (imageError) {
+          console.error('Error fetching profile image:', imageError);
+        }
+        
+        setUser(userObj);
         
         // Redirect based on role if at login page
         if (window.location.pathname === '/login') {
@@ -80,7 +94,8 @@ export const AuthProvider = ({ children }) => {
           role: role
         });
         
-        setUser({
+        // Create the user object
+        const userObj = {
           username: currentUser.username,
           firstName: attributes.given_name || '',
           lastName: attributes.family_name || '',
@@ -88,7 +103,19 @@ export const AuthProvider = ({ children }) => {
           phone: attributes.phone_number || '',
           role: role.toLowerCase(), // Ensure role is lowercase for consistency
           sub: attributes.sub
-        });
+        };
+        
+        // Fetch profile image if available
+        try {
+          const profileImageResult = await userService.getProfileImage();
+          if (profileImageResult.success && profileImageResult.hasImage) {
+            userObj.profileImage = profileImageResult.imageUrl;
+          }
+        } catch (imageError) {
+          console.error('Error fetching profile image:', imageError);
+        }
+        
+        setUser(userObj);
         
         // Redirect based on role
         if (role.toLowerCase() === "admin") navigate("/admin");
@@ -136,6 +163,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const attributes = await fetchUserAttributes();
       
+      // Update user with attributes
       setUser(prev => ({
         ...prev,
         firstName: attributes.given_name || '',
@@ -144,11 +172,32 @@ export const AuthProvider = ({ children }) => {
         phone: attributes.phone_number || ''
       }));
       
+      // Fetch updated profile image
+      try {
+        const profileImageResult = await userService.getProfileImage();
+        if (profileImageResult.success && profileImageResult.hasImage) {
+          setUser(prev => ({
+            ...prev,
+            profileImage: profileImageResult.imageUrl
+          }));
+        }
+      } catch (imageError) {
+        console.error('Error fetching updated profile image:', imageError);
+      }
+      
       return { success: true };
     } catch (error) {
       console.error('Error updating user info:', error);
       return { success: false, error };
     }
+  };
+
+  // Update profile image in context
+  const updateProfileImage = (imageUrl) => {
+    setUser(prev => ({
+      ...prev,
+      profileImage: imageUrl
+    }));
   };
 
   // Use useMemo to prevent unnecessary re-renders of context consumers
@@ -160,7 +209,8 @@ export const AuthProvider = ({ children }) => {
       login,
       logout,
       loading,
-      updateUserInfo
+      updateUserInfo,
+      updateProfileImage
     }),
     [user, loading]
   );
