@@ -1,5 +1,5 @@
 // src/services/adminService.js
-import { get, post, put, del } from 'aws-amplify/api';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 /**
  * Service for admin-specific operations with Cognito
@@ -14,40 +14,29 @@ export const adminService = {
     try {
       console.log('Listing users');
       
-      // Call the API Gateway endpoint
-      const response = await get({
-        apiName: 'clinnetApi',
-        path: '/users',
-        options: {
-          queryParams: options
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
+      // Call the API Gateway endpoint with proper authorization
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users?limit=${options.limit || 60}${options.nextToken ? `&nextToken=${options.nextToken}` : ''}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
         }
       });
       
-      return response.body.json();
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      console.log('Users data received:', data);
+      
+      return data;
     } catch (error) {
       console.error('Error listing users:', error);
-      throw error;
-    }
-  },
-  
-  /**
-   * Get a specific user by username
-   * @param {string} username - The username to look up
-   * @returns {Promise<Object>} - User details
-   */
-  async getUser(username) {
-    try {
-      console.log(`Getting user: ${username}`);
-      
-      // Call the API Gateway endpoint
-      const response = await get({
-        apiName: 'clinnetApi',
-        path: `/users/${username}`
-      });
-      
-      return response.body.json();
-    } catch (error) {
-      console.error(`Error getting user ${username}:`, error);
       throw error;
     }
   },
@@ -61,16 +50,25 @@ export const adminService = {
     try {
       console.log('Creating new user:', userData);
       
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
       // Call the API Gateway endpoint
-      const response = await post({
-        apiName: 'clinnetApi',
-        path: '/users',
-        options: {
-          body: userData
-        }
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users`, {
+        method: 'POST',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
       });
       
-      return response.body.json();
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
@@ -87,16 +85,25 @@ export const adminService = {
     try {
       console.log(`Updating user ${username}:`, userData);
       
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
       // Call the API Gateway endpoint
-      const response = await put({
-        apiName: 'clinnetApi',
-        path: `/users/${username}`,
-        options: {
-          body: userData
-        }
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
       });
       
-      return response.body.json();
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error(`Error updating user ${username}:`, error);
       throw error;
@@ -112,13 +119,24 @@ export const adminService = {
     try {
       console.log(`Deleting user: ${username}`);
       
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
       // Call the API Gateway endpoint
-      const response = await del({
-        apiName: 'clinnetApi',
-        path: `/users/${username}`
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        }
       });
       
-      return response.body.json();
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error(`Error deleting user ${username}:`, error);
       throw error;
@@ -134,13 +152,24 @@ export const adminService = {
     try {
       console.log(`Enabling user: ${username}`);
       
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
       // Call the API Gateway endpoint
-      const response = await post({
-        apiName: 'clinnetApi',
-        path: `/users/${username}/enable`
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}/enable`, {
+        method: 'POST',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        }
       });
       
-      return response.body.json();
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error(`Error enabling user ${username}:`, error);
       throw error;
@@ -156,13 +185,24 @@ export const adminService = {
     try {
       console.log(`Disabling user: ${username}`);
       
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
       // Call the API Gateway endpoint
-      const response = await post({
-        apiName: 'clinnetApi',
-        path: `/users/${username}/disable`
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}/disable`, {
+        method: 'POST',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        }
       });
       
-      return response.body.json();
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${await response.text()}`);
+      }
+      
+      return await response.json();
     } catch (error) {
       console.error(`Error disabling user ${username}:`, error);
       throw error;
