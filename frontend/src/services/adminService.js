@@ -124,7 +124,243 @@ export const adminService = {
     }
   },
   
-  // ... rest of the methods remain the same
+  /**
+   * Create a new user in Cognito
+   * @param {Object} userData - User data
+   * @returns {Promise<Object>} - Created user
+   */
+  async createUser(userData) {
+    try {
+      console.log('Creating user with data:', userData);
+      
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
+      // Call the API Gateway endpoint with proper authorization
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users`, {
+        method: 'POST',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+      
+      console.log('API response status:', response.status);
+      
+      const responseText = await response.text();
+      console.log('API response text:', responseText);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+      
+      // Parse the response text as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed response data:', data);
+        return data;
+      } catch (parseError) {
+        console.error('Error parsing response as JSON:', parseError);
+        throw new Error(`Failed to parse response as JSON: ${responseText}`);
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Update an existing user in Cognito
+   * @param {string} username - Username to update
+   * @param {Object} userData - User data
+   * @returns {Promise<Object>} - Updated user
+   */
+  async updateUser(username, userData) {
+    try {
+      console.log(`Updating user ${username} with data:`, userData);
+      
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
+      // Call the API Gateway endpoint with proper authorization
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+      
+      console.log('API response status:', response.status);
+      
+      const responseText = await response.text();
+      console.log('API response text:', responseText);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+      
+      // Parse the response text as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed response data:', data);
+        return data;
+      } catch (parseError) {
+        console.error('Error parsing response as JSON:', parseError);
+        throw new Error(`Failed to parse response as JSON: ${responseText}`);
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Delete a user from Cognito
+   * @param {string} username - Username to delete
+   * @returns {Promise<Object>} - Success response
+   */
+  async deleteUser(username) {
+    try {
+      console.log(`Deleting user ${username}`);
+      
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
+      // Call the API Gateway endpoint with proper authorization
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('API response status:', response.status);
+      
+      const responseText = await response.text();
+      console.log('API response text:', responseText);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+      
+      // Parse the response text as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed response data:', data);
+        return data;
+      } catch (parseError) {
+        console.error('Error parsing response as JSON:', parseError);
+        throw new Error(`Failed to parse response as JSON: ${responseText}`);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Enable a user in Cognito
+   * @param {string} username - Username to enable
+   * @returns {Promise<Object>} - Success response
+   */
+  async enableUser(username) {
+    try {
+      console.log(`Enabling user ${username}`);
+      
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
+      // Call the API Gateway endpoint with proper authorization
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}/enable`, {
+        method: 'POST',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('API response status:', response.status);
+      
+      const responseText = await response.text();
+      console.log('API response text:', responseText);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+      
+      // Parse the response text as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed response data:', data);
+        return data;
+      } catch (parseError) {
+        console.error('Error parsing response as JSON:', parseError);
+        throw new Error(`Failed to parse response as JSON: ${responseText}`);
+      }
+    } catch (error) {
+      console.error('Error enabling user:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Disable a user in Cognito
+   * @param {string} username - Username to disable
+   * @returns {Promise<Object>} - Success response
+   */
+  async disableUser(username) {
+    try {
+      console.log(`Disabling user ${username}`);
+      
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
+      // Call the API Gateway endpoint with proper authorization
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}/disable`, {
+        method: 'POST',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('API response status:', response.status);
+      
+      const responseText = await response.text();
+      console.log('API response text:', responseText);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+      
+      // Parse the response text as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed response data:', data);
+        return data;
+      } catch (parseError) {
+        console.error('Error parsing response as JSON:', parseError);
+        throw new Error(`Failed to parse response as JSON: ${responseText}`);
+      }
+    } catch (error) {
+      console.error('Error disabling user:', error);
+      throw error;
+    }
+  }
 };
 
 export default adminService;
