@@ -5,6 +5,7 @@ import {
   getCurrentUser
 } from 'aws-amplify/auth';
 import { updatePassword } from 'aws-amplify/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 /**
  * Service for handling user-related operations
@@ -85,6 +86,87 @@ export const userService = {
     } catch (error) {
       console.error('Error fetching user attributes:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Upload a profile image
+   * @param {string} imageData - Base64 encoded image data
+   * @returns {Promise<Object>} - Upload result with image URL
+   */
+  async uploadProfileImage(imageData) {
+    try {
+      console.log('Uploading profile image');
+      
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
+      // Call the API Gateway endpoint with proper authorization
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          image: imageData
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to upload profile image: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('Profile image uploaded successfully:', result);
+      
+      return result;
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Get the user's profile image URL
+   * @returns {Promise<Object>} - Object containing image URL if available
+   */
+  async getProfileImage() {
+    try {
+      console.log('Getting profile image');
+      
+      // Get the current auth session to include the token
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens.idToken.toString();
+      
+      // Call the API Gateway endpoint with proper authorization
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
+        method: 'GET',
+        headers: {
+          'Authorization': idToken,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to get profile image: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('Profile image retrieved:', result);
+      
+      return result;
+    } catch (error) {
+      console.error('Error getting profile image:', error);
+      // Return a default response instead of throwing
+      return {
+        success: false,
+        hasImage: false,
+        message: 'Failed to retrieve profile image'
+      };
     }
   }
 };

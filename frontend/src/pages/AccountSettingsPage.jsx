@@ -1,5 +1,5 @@
 // src/pages/AccountSettingsPage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Typography,
@@ -16,7 +16,9 @@ import {
   useTheme,
   useMediaQuery,
   Snackbar,
-  FormHelperText
+  FormHelperText,
+  Badge,
+  Tooltip
 } from "@mui/material";
 import { useAuth } from "../app/providers/AuthProvider";
 import userService from "../services/userService";
@@ -32,6 +34,7 @@ function AccountSettingsPage() {
   const { user, setUser } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const fileInputRef = useRef(null);
   
   const [formData, setFormData] = useState({
     firstName: "",
@@ -45,8 +48,10 @@ function AccountSettingsPage() {
   
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
   const [error, setError] = useState(null);
   const [passwordError, setPasswordError] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -63,8 +68,22 @@ function AccountSettingsPage() {
         email: user.email || "",
         phone: user.phone || "",
       }));
+      
+      // Fetch profile image
+      fetchProfileImage();
     }
   }, [user]);
+
+  const fetchProfileImage = async () => {
+    try {
+      const result = await userService.getProfileImage();
+      if (result.success && result.hasImage) {
+        setProfileImage(result.imageUrl);
+      }
+    } catch (error) {
+      console.error('Error fetching profile image:', error);
+    }
+  };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -181,6 +200,58 @@ function AccountSettingsPage() {
     }
   };
 
+  const handleImageClick = () => {
+    // Trigger file input click
+    fileInputRef.current.click();
+  };
+
+  const handleImageChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      showNotification('Please select a valid image file (JPEG, PNG, GIF, WEBP)', 'error');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification('Image size should be less than 5MB', 'error');
+      return;
+    }
+
+    setImageLoading(true);
+
+    try {
+      // Convert file to base64
+      const base64 = await convertFileToBase64(file);
+      
+      // Upload image
+      const result = await userService.uploadProfileImage(base64);
+      
+      if (result.success) {
+        setProfileImage(result.imageUrl);
+        showNotification('Profile image updated successfully');
+      }
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      showNotification('Failed to upload profile image', 'error');
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   if (!user) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -229,32 +300,52 @@ function AccountSettingsPage() {
           <Box component="form" onSubmit={handleProfileUpdate} noValidate>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, mb: 3, alignItems: { xs: 'center', sm: 'flex-start' } }}>
               <Box sx={{ position: 'relative', mr: { xs: 0, sm: 4 }, mb: { xs: 3, sm: 0 } }}>
-                <Avatar
-                  sx={{ 
-                    width: 100, 
-                    height: 100,
-                    bgcolor: 'primary.main',
-                    fontSize: '2.5rem'
-                  }}
+                <Badge
+                  overlap="circular"
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  badgeContent={
+                    <Tooltip title="Upload profile picture">
+                      <IconButton 
+                        onClick={handleImageClick}
+                        disabled={imageLoading}
+                        sx={{ 
+                          bgcolor: 'background.paper',
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          '&:hover': {
+                            bgcolor: 'background.paper',
+                          }
+                        }}
+                        size="small"
+                      >
+                        {imageLoading ? (
+                          <CircularProgress size={16} />
+                        ) : (
+                          <PhotoCameraIcon fontSize="small" />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                  }
                 >
-                  {user?.firstName?.[0] || user?.username?.[0] || "U"}
-                </Avatar>
-                <IconButton 
-                  sx={{ 
-                    position: 'absolute', 
-                    bottom: 0, 
-                    right: 0,
-                    bgcolor: 'background.paper',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    '&:hover': {
-                      bgcolor: 'background.paper',
-                    }
-                  }}
-                  size="small"
-                >
-                  <PhotoCameraIcon fontSize="small" />
-                </IconButton>
+                  <Avatar
+                    src={profileImage}
+                    sx={{ 
+                      width: 100, 
+                      height: 100,
+                      bgcolor: 'primary.main',
+                      fontSize: '2.5rem'
+                    }}
+                  >
+                    {user?.firstName?.[0] || user?.username?.[0] || "U"}
+                  </Avatar>
+                </Badge>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  style={{ display: 'none' }}
+                />
               </Box>
               
               <Grid container spacing={2} sx={{ flexGrow: 1 }}>

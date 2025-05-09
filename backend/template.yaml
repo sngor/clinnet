@@ -29,6 +29,7 @@ Globals:
         MEDICAL_RECORDS_TABLE: !Ref MedicalRecordsTable
         DOCUMENTS_BUCKET: !Ref DocumentsBucket
         ENVIRONMENT: !Ref Environment
+        USER_POOL_ID: !Ref UserPool
     Architectures:
       - x86_64
   Api:
@@ -172,6 +173,10 @@ Resources:
           Mutable: true
           Required: true
         - Name: role # Using custom attribute for role
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+        - Name: profile_image # Custom attribute for profile image
           AttributeDataType: String
           Mutable: true
           Required: false
@@ -520,6 +525,61 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /users/{username}/disable
             Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  # Lambda Functions for Profile Image Management
+  UploadProfileImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: upload_profile_image.lambda_handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminUpdateUserAttributes
+                - cognito-idp:AdminGetUser
+              Resource: !GetAtt UserPool.Arn
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:GetObject
+              Resource: !Sub "${DocumentsBucket.Arn}/profile-images/*"
+      Events:
+        UploadProfileImage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users/profile-image
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetProfileImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: get_profile_image.lambda_handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminGetUser
+              Resource: !GetAtt UserPool.Arn
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource: !Sub "${DocumentsBucket.Arn}/profile-images/*"
+      Events:
+        GetProfileImage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users/profile-image
+            Method: get
             Auth:
               Authorizer: CognitoAuthorizer
 
