@@ -3,28 +3,26 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
 import { 
   Grid, 
-  Paper, 
-  Typography, 
   useMediaQuery, 
   useTheme, 
-  Box, 
-  Container,
-  CircularProgress,
-  List,
-  ListItem,
-  Divider,
-  Chip
+  Container
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import PersonIcon from "@mui/icons-material/Person";
 import { useNavigate } from "react-router-dom";
-import { PageHeaderWithDivider } from "../components/PageHeader";
+
+// Import UI components
+import { 
+  PageHeading, 
+  ContentCard, 
+  AppointmentList
+} from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
 // Import mock data from centralized location
-import { mockTodayAppointments as mockAppointments, getAppointmentStatusColor } from "../mock/mockAppointments";
+import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments";
 import { getTimeBasedGreeting } from "../utils/dateUtils";
 
 function AdminDashboard() {
@@ -52,8 +50,8 @@ function AdminDashboard() {
 
   return (
     <Container maxWidth="xl" disableGutters>
-      {/* Use the PageHeaderWithDivider component for the dashboard */}
-      <PageHeaderWithDivider 
+      {/* Page header */}
+      <PageHeading 
         title={`${getTimeBasedGreeting()}, ${user?.firstName || user?.username || "Admin"}!`}
         subtitle="Here's what's happening in your clinic today"
       />
@@ -102,66 +100,20 @@ function AdminDashboard() {
       </Grid>
 
       {/* Appointments List */}
-      <Paper 
+      <ContentCard
+        title="Recent Appointments"
         elevation={0}
         sx={{ 
-          p: { xs: 2, sm: 3 },
-          borderRadius: 2,
           border: '1px solid',
           borderColor: 'divider'
         }}
       >
-        <Typography 
-          variant="h5" 
-          color="primary.main"
-          fontWeight="medium"
-          sx={{ mb: 3 }}
-        >
-          Recent Appointments
-        </Typography>
-
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', py: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <List sx={{ width: '100%' }}>
-            {appointments.map((appt, index) => (
-              <React.Fragment key={appt.id}>
-                <ListItem
-                  sx={{ 
-                    py: 2,
-                    display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    alignItems: { xs: 'flex-start', sm: 'center' },
-                    justifyContent: 'space-between'
-                  }}
-                >
-                  <Box sx={{ mb: { xs: 2, sm: 0 }, width: { xs: '100%', sm: 'auto' } }}>
-                    <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                      {appt.time} - {appt.patientName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Doctor: {appt.doctorName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Type: {appt.type}
-                    </Typography>
-                  </Box>
-                  
-                  <Chip 
-                    label={appt.status} 
-                    color={getAppointmentStatusColor(appt.status)}
-                    size="small"
-                    sx={{ fontWeight: 500 }}
-                  />
-                </ListItem>
-                {index < appointments.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
-          </List>
-        )}
-      </Paper>
+        <AppointmentList 
+          appointments={appointments}
+          loading={loading}
+          showAction={false}
+        />
+      </ContentCard>
     </Container>
   );
 }

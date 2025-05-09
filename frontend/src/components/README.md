@@ -28,16 +28,68 @@ Located in the `ui` directory:
   - `CardContainer`: Card-style containers
   - `FlexBox`: Flexible layout box
 
+- **PageHeading.jsx**: Consistent page headers
+  - Title, optional subtitle, and optional action button
+  - Consistent spacing and styling
+
+- **SectionHeading.jsx**: Section headers within pages
+  - Title, optional subtitle, and optional action button
+  - Optional divider
+
+- **DialogHeading.jsx**: Consistent dialog headers
+  - Title with optional icon
+  - Consistent styling for all dialogs
+
+- **StatusChip.jsx**: Status indicators
+  - Consistent color coding for different statuses
+  - Uses the centralized status color utility
+
+- **AppointmentCard.jsx**: Cards for displaying appointment information
+  - Consistent layout for appointment details
+  - Status indicator and optional action button
+
+- **AppointmentList.jsx**: Lists for displaying appointments
+  - Consistent layout for appointment lists
+  - Status indicators and optional actions
+
+- **ContentCard.jsx**: Card containers for content sections
+  - Optional title and action button
+  - Consistent padding and styling
+
+- **DataTable.jsx**: Consistent data tables
+  - Pagination, loading states, and empty states
+  - Consistent styling for all tables
+
+- **FormDialog.jsx**: Reusable form dialogs
+  - Consistent layout for form dialogs
+  - Submit and cancel buttons
+
+- **EmptyState.jsx**: Empty state displays
+  - Icon, title, description, and optional action
+  - Consistent styling for empty states
+
+- **LoadingIndicator.jsx**: Loading indicators
+  - Consistent loading indicators with optional message
+  - Different sizes for different contexts
+
 ## Usage Guidelines
 
 1. **Import from the index file**:
    ```jsx
-   import { PrimaryButton, SectionTitle, PageContainer } from '../components/ui';
+   import { 
+     PrimaryButton, 
+     SectionTitle, 
+     PageContainer, 
+     StatusChip, 
+     ContentCard 
+   } from '../components/ui';
    ```
 
 2. **Use appropriate components for their intended purpose**:
    - Use `PrimaryButton` for main actions
    - Use `SecondaryButton` for alternative actions
+   - Use `StatusChip` for status indicators
+   - Use `ContentCard` for content sections
    - Use appropriate typography components based on content hierarchy
 
 3. **Maintain consistent spacing**:
@@ -59,22 +111,34 @@ Located in the `ui` directory:
 
 ```jsx
 import { 
-  PageContainer, 
-  SectionContainer, 
-  PageTitle, 
-  BodyText, 
+  PageHeading, 
+  ContentCard, 
+  AppointmentList, 
   PrimaryButton 
 } from '../components/ui';
 
-function MyPage() {
+function AppointmentsPage() {
   return (
-    <PageContainer>
-      <PageTitle>My Page Title</PageTitle>
-      <SectionContainer>
-        <BodyText>This is the main content of my page.</BodyText>
-        <PrimaryButton>Submit</PrimaryButton>
-      </SectionContainer>
-    </PageContainer>
+    <Container maxWidth="xl" disableGutters>
+      <PageHeading
+        title="Appointments"
+        subtitle="Manage patient appointments"
+        action={
+          <PrimaryButton startIcon={<AddIcon />}>
+            New Appointment
+          </PrimaryButton>
+        }
+      />
+      
+      <ContentCard title="Today's Appointments">
+        <AppointmentList
+          appointments={appointments}
+          loading={loading}
+          onAction={handleCheckIn}
+          actionText="Check In"
+        />
+      </ContentCard>
+    </Container>
   );
 }
 ```

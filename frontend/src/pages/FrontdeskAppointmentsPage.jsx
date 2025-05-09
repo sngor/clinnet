@@ -2,26 +2,29 @@
 import React, { useState } from 'react';
 import { 
   Box, 
-  Typography, 
-  Paper, 
   Tabs, 
   Tab, 
   Grid,
-  Card,
-  CardContent,
-  Chip,
-  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Button,
   Container
 } from '@mui/material';
 import FrontdeskAppointmentCalendar from '../features/appointments/components/FrontdeskAppointmentCalendar';
 import PatientStatusWorkflow from '../features/patients/components/PatientStatusWorkflow';
 
+// Import UI components
+import { 
+  PageHeading, 
+  AppointmentCard, 
+  ContentCard, 
+  LoadingIndicator 
+} from '../components/ui';
+
 // Import mock data from centralized location
-import { mockTodayAppointments as initialAppointments, getAppointmentStatusColor } from '../mock/mockAppointments';
+import { mockTodayAppointments as initialAppointments } from '../mock/mockAppointments';
 import { mockPatients } from '../mock/mockPatients';
 
 function FrontdeskAppointmentsPage() {
@@ -71,32 +74,10 @@ function FrontdeskAppointmentsPage() {
   return (
     <Container maxWidth="xl" disableGutters>
       {/* Page header */}
-      <Box 
-        sx={{ 
-          mb: 4,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          pb: 2
-        }}
-      >
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          sx={{ 
-            fontWeight: 'medium',
-            color: 'primary.main'
-          }}
-        >
-          Appointments
-        </Typography>
-        <Typography 
-          variant="subtitle1" 
-          color="text.secondary"
-          sx={{ mt: 1 }}
-        >
-          Manage patient check-ins and appointments
-        </Typography>
-      </Box>
+      <PageHeading
+        title="Appointments"
+        subtitle="Manage patient check-ins and appointments"
+      />
       
       <Tabs 
         value={tabValue} 
@@ -109,62 +90,25 @@ function FrontdeskAppointmentsPage() {
       </Tabs>
       
       {tabValue === 0 && (
-        <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, width: '100%' }}>
-          <Typography variant="h5" sx={{ mb: 3 }}>
-            Today's Appointments
-          </Typography>
-          
-          <Grid container spacing={2}>
-            {appointments.map((appointment) => (
-              <Grid item xs={12} sm={6} md={4} key={appointment.id}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    borderLeft: 5, 
-                    borderColor: `${getAppointmentStatusColor(appointment.status)}.main`,
-                    transition: 'transform 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4
-                    }
-                  }}
-                >
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="h6" component="div">
-                        {appointment.time}
-                      </Typography>
-                      <Chip 
-                        label={appointment.status} 
-                        color={getAppointmentStatusColor(appointment.status)}
-                        size="small"
-                      />
-                    </Box>
-                    <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                      {appointment.patientName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Doctor: {appointment.doctorName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Type: {appointment.type}
-                    </Typography>
-                    
-                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button 
-                        variant="contained" 
-                        size="small"
-                        onClick={() => handleOpenWorkflow(appointment)}
-                      >
-                        Manage Visit
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Paper>
+        <ContentCard 
+          title="Today's Appointments"
+          elevation={3}
+        >
+          {loading ? (
+            <LoadingIndicator message="Loading appointments..." />
+          ) : (
+            <Grid container spacing={2}>
+              {appointments.map((appointment) => (
+                <Grid item xs={12} sm={6} md={4} key={appointment.id}>
+                  <AppointmentCard
+                    appointment={appointment}
+                    onAction={handleOpenWorkflow}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </ContentCard>
       )}
       
       {tabValue === 1 && (
@@ -185,34 +129,43 @@ function FrontdeskAppointmentsPage() {
           {selectedAppointment && (
             <Box>
               {/* Patient Info */}
-              <Paper sx={{ p: 2, mb: 3, bgcolor: 'background.default' }}>
+              <ContentCard 
+                sx={{ p: 2, mb: 3, bgcolor: 'background.default' }}
+                elevation={0}
+              >
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
-                    <Typography variant="body2" color="text.secondary">
-                      Patient
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                      {selectedAppointment.patientName}
-                    </Typography>
+                    <Box>
+                      <Box sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+                        Patient
+                      </Box>
+                      <Box sx={{ fontWeight: 'medium' }}>
+                        {selectedAppointment.patientName}
+                      </Box>
+                    </Box>
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <Typography variant="body2" color="text.secondary">
-                      Appointment
-                    </Typography>
-                    <Typography variant="body1">
-                      {selectedAppointment.time} - {selectedAppointment.type}
-                    </Typography>
+                    <Box>
+                      <Box sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+                        Appointment
+                      </Box>
+                      <Box>
+                        {selectedAppointment.time} - {selectedAppointment.type}
+                      </Box>
+                    </Box>
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <Typography variant="body2" color="text.secondary">
-                      Doctor
-                    </Typography>
-                    <Typography variant="body1">
-                      {selectedAppointment.doctorName}
-                    </Typography>
+                    <Box>
+                      <Box sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+                        Doctor
+                      </Box>
+                      <Box>
+                        {selectedAppointment.doctorName}
+                      </Box>
+                    </Box>
                   </Grid>
                 </Grid>
-              </Paper>
+              </ContentCard>
               
               {/* Status Workflow */}
               <PatientStatusWorkflow 

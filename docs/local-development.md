@@ -1,140 +1,153 @@
 # Local Development Guide
 
-This guide explains how to set up and run the Clinnet-EMR application locally for development.
+This guide provides instructions for setting up and running the Clinnet-EMR application locally.
 
 ## Prerequisites
 
-- Node.js (version specified in `.nvmrc`)
-- Python 3.9 or higher
-- AWS CLI (for backend development)
-- AWS SAM CLI (for backend development)
+- Node.js 16.x - 18.x (recommended: 18.18.0)
+- npm 8.x or later
 
-## Frontend Development
+## Node.js Version Management
 
-### Setup
+We recommend using NVM (Node Version Manager) to manage your Node.js versions:
 
-1. Navigate to the frontend directory:
+```bash
+# Install NVM (if not already installed)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# Restart your terminal or source your profile
+source ~/.zshrc  # or ~/.bashrc depending on your shell
+
+# Install and use the correct Node.js version
+nvm install 18.18.0
+nvm use 18.18.0
+```
+
+## Frontend Setup
+
+1. **Install dependencies**:
+
    ```bash
-   cd clinnet-app
-   ```
-
-2. Install dependencies:
-   ```bash
+   cd frontend
    npm install
    ```
 
-3. Create a `.env.local` file with your development environment variables:
+2. **Create environment file**:
+
+   Create a `.env` file in the `frontend` directory:
+
    ```
-   VITE_API_ENDPOINT=http://localhost:3000/api
-   VITE_COGNITO_REGION=us-east-2
-   VITE_USER_POOL_ID=your-user-pool-id
-   VITE_USER_POOL_CLIENT_ID=your-user-pool-client-id
-   VITE_S3_BUCKET=your-s3-bucket
-   VITE_S3_REGION=us-east-2
+   VITE_API_URL=http://localhost:3001
    ```
 
-   For local development without AWS services, you can use:
-   ```
-   VITE_USE_LOCAL_API=true
+3. **Start the development server**:
+
+   ```bash
+   npm run dev
    ```
 
-### Running the Frontend
+   The application will be available at http://localhost:5173
 
-Start the development server:
-```bash
-npm start
+4. **Optional: Start the mock API server**:
+
+   If you need to use the JSON server for API mocking:
+
+   ```bash
+   npm run server
+   ```
+
+   The mock API will be available at http://localhost:3001
+
+## Project Structure
+
+The project follows a feature-based structure:
+
+```
+frontend/
+├── src/
+│   ├── app/             # App configuration
+│   ├── components/      # Shared UI components
+│   ├── features/        # Feature modules
+│   │   ├── appointments/# Appointment management
+│   │   ├── patients/    # Patient management
+│   │   └── ...          # Other features
+│   ├── mock/            # Mock data
+│   ├── pages/           # Page components
+│   └── utils/           # Utility functions
 ```
 
-This will start the Vite development server at http://localhost:3000.
+## Development Workflow
 
-### Using Mock API
+1. **Component Development**:
+   - Create reusable UI components in `src/components/ui/`
+   - Implement feature-specific components in their respective feature folders
+   - Use the UI component system for consistent styling
 
-For development without the backend, you can use json-server:
+2. **Page Development**:
+   - Create page components in `src/pages/`
+   - Compose pages using UI and feature components
+   - Use the `PageHeading` component for consistent page headers
 
-1. Start json-server:
-   ```bash
-   npx json-server --watch db.json --port 3001
-   ```
+3. **Feature Development**:
+   - Organize feature code in the appropriate feature folder
+   - Create feature-specific components, hooks, and utilities
+   - Use centralized mock data from the `src/mock/` directory
 
-2. The mock API will be available at http://localhost:3001.
+## UI Component System
 
-## Backend Development
+The application uses a custom UI component library built on top of Material UI:
 
-### Setup
+```jsx
+import { 
+  PageHeading, 
+  ContentCard, 
+  StatusChip, 
+  AppointmentList 
+} from '../components/ui';
 
-1. Create a Python virtual environment:
-   ```bash
-   python -m venv clinnet-venv
-   ```
-
-2. Activate the virtual environment:
-   ```bash
-   # On Windows
-   clinnet-venv\Scripts\activate
-   
-   # On macOS/Linux
-   source clinnet-venv/bin/activate
-   ```
-
-3. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-### Running the Backend Locally
-
-Use AWS SAM CLI to run the backend locally:
-
-```bash
-npm run start-local
+function MyPage() {
+  return (
+    <Container maxWidth="xl" disableGutters>
+      <PageHeading
+        title="My Page"
+        subtitle="Page description"
+      />
+      
+      <ContentCard title="Section Title">
+        {/* Content goes here */}
+      </ContentCard>
+    </Container>
+  );
+}
 ```
 
-This will start the API Gateway locally at http://localhost:3000.
+## Mock Data
 
-### Testing Lambda Functions
+The application uses centralized mock data located in `src/mock/`:
 
-You can test individual Lambda functions:
-
-```bash
-sam local invoke GetPatientsFunction --event events/get-patients.json
+```jsx
+import { mockPatients } from '../mock/mockPatients';
+import { mockAppointments } from '../mock/mockAppointments';
 ```
 
-## Full-Stack Development
+## Utility Functions
 
-For full-stack development:
+Common utility functions are available in `src/utils/`:
 
-1. Start the backend:
-   ```bash
-   npm run start-local
-   ```
-
-2. In another terminal, start the frontend:
-   ```bash
-   cd clinnet-app
-   npm start
-   ```
-
-3. Update your `.env.local` to point to the local backend:
-   ```
-   VITE_API_ENDPOINT=http://localhost:3000
-   ```
+```jsx
+import { formatDate, formatTime } from '../utils/dateUtils';
+import { getAppointmentStatusColor } from '../utils/statusUtils';
+```
 
 ## Troubleshooting
 
-### Node.js Version Issues
+If you encounter issues:
 
-If you encounter Node.js version issues, use the provided script:
-
-```bash
-cd clinnet-app
-./fix-node-version.sh
-```
-
-### Clean Installation
-
-If you encounter dependency issues, perform a clean installation:
-
-```bash
-cd clinnet-app
-./clean-install.sh
-```
+1. **Node.js Version**: Make sure you're using Node.js version 18.x
+2. **Clean Install**: Try reinstalling dependencies:
+   ```bash
+   rm -rf node_modules
+   npm install
+   ```
+3. **Port Conflicts**: If port 5173 is in use, Vite will automatically use the next available port
+4. **Browser Cache**: Try clearing your browser cache or using incognito mode
