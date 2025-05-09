@@ -36,73 +36,10 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
 import AppointmentDetailModal from './AppointmentDetailModal';
 
-// Mock data for patients
-const mockPatients = [
-  { id: 101, name: "Alice Brown" },
-  { id: 102, name: "Bob White" },
-  { id: 103, name: "Charlie Green" },
-  { id: 104, name: "David Black" },
-  { id: 105, name: "Eva Gray" }
-];
-
-// Mock appointments for the doctor
-const mockAppointments = [
-  {
-    id: 1,
-    title: "Alice Brown - Checkup",
-    start: new Date(new Date().setHours(9, 0, 0, 0)),
-    end: new Date(new Date().setHours(10, 0, 0, 0)),
-    patient: "Alice Brown",
-    patientId: 101,
-    status: "Scheduled",
-    type: "Checkup",
-    notes: "Annual physical examination"
-  },
-  {
-    id: 2,
-    title: "Bob White - Consultation",
-    start: new Date(new Date().setHours(11, 0, 0, 0)),
-    end: new Date(new Date().setHours(12, 0, 0, 0)),
-    patient: "Bob White",
-    patientId: 102,
-    status: "Checked-in",
-    type: "Consultation",
-    notes: "Follow-up on medication"
-  },
-  {
-    id: 3,
-    title: "Charlie Green - Follow-up",
-    start: new Date(new Date().setHours(14, 0, 0, 0)),
-    end: new Date(new Date().setHours(15, 0, 0, 0)),
-    patient: "Charlie Green",
-    patientId: 103,
-    status: "Scheduled",
-    type: "Follow-up",
-    notes: "Review test results"
-  },
-  {
-    id: 4,
-    title: "David Black - Checkup",
-    start: addDays(new Date(new Date().setHours(10, 0, 0, 0)), 1),
-    end: addDays(new Date(new Date().setHours(11, 0, 0, 0)), 1),
-    patient: "David Black",
-    patientId: 104,
-    status: "Scheduled",
-    type: "Checkup",
-    notes: "New patient initial visit"
-  },
-  {
-    id: 5,
-    title: "Eva Gray - Consultation",
-    start: addDays(new Date(new Date().setHours(13, 30, 0, 0)), 2),
-    end: addDays(new Date(new Date().setHours(14, 30, 0, 0)), 2),
-    patient: "Eva Gray",
-    patientId: 105,
-    status: "Scheduled",
-    type: "Consultation",
-    notes: "Discuss treatment options"
-  }
-];
+// Import mock data from centralized location
+import { mockPatients } from '../../../mock/mockPatients';
+import { mockAppointments, getAppointmentStatusColor } from '../../../mock/mockAppointments';
+import { formatTime } from '../../../utils/dateUtils';
 
 // Time slots for the calendar
 const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 7 PM
@@ -147,26 +84,6 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
-  // Get color for status chip
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Scheduled':
-        return 'info';
-      case 'Checked-in':
-        return 'primary';
-      case 'In Progress':
-        return 'warning';
-      case 'Ready for Checkout':
-        return 'secondary';
-      case 'Completed':
-        return 'success';
-      case 'Cancelled':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
   const handleOpenDialog = () => {
     setOpenDialog(true);
   };
@@ -199,7 +116,7 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
       setSelectedPatient(value);
       setNewAppointment({
         ...newAppointment,
-        patient: value.name,
+        patient: value.name || `${value.firstName} ${value.lastName}`,
         patientId: value.id
       });
     } else {
@@ -329,11 +246,6 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
     return appointments.filter(appointment => 
       isSameDay(new Date(appointment.start), day)
     );
-  };
-
-  // Format time
-  const formatTime = (date) => {
-    return format(date, 'h:mm a');
   };
 
   // Group appointments by time for list view
@@ -474,14 +386,14 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
                           left: '2px',
                           right: '2px',
                           height: `${height}px`,
-                          backgroundColor: getStatusColor(appointment.status) + '.light',
+                          backgroundColor: getAppointmentStatusColor(appointment.status) + '.light',
                           color: 'white',
                           borderRadius: 1,
                           p: 0.5,
                           overflow: 'hidden',
                           cursor: 'pointer',
                           '&:hover': {
-                            backgroundColor: getStatusColor(appointment.status) + '.main',
+                            backgroundColor: getAppointmentStatusColor(appointment.status) + '.main',
                           }
                         }}
                         onClick={() => handleAppointmentClick(appointment)}
@@ -571,7 +483,7 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
                         <Card 
                           sx={{ 
                             borderLeft: 4, 
-                            borderColor: getStatusColor(appointment.status) + '.main',
+                            borderColor: getAppointmentStatusColor(appointment.status) + '.main',
                             boxShadow: 2,
                             cursor: 'pointer',
                             '&:hover': {
@@ -587,7 +499,7 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
                               </Typography>
                               <Chip 
                                 label={appointment.status} 
-                                color={getStatusColor(appointment.status)} 
+                                color={getAppointmentStatusColor(appointment.status)} 
                                 size="small" 
                               />
                             </Box>
@@ -644,7 +556,7 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
             <Grid item xs={12}>
               <Autocomplete
                 options={mockPatients}
-                getOptionLabel={(option) => option.name}
+                getOptionLabel={(option) => option.name || `${option.firstName} ${option.lastName}`}
                 value={selectedPatient}
                 onChange={handlePatientChange}
                 renderInput={(params) => (
@@ -748,7 +660,7 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
         onEdit={handleEditAppointment}
         onReschedule={handleRescheduleAppointment}
         onCancel={handleCancelAppointment}
-        getStatusColor={getStatusColor}
+        getStatusColor={getAppointmentStatusColor}
       />
 
       {/* Snackbar for notifications */}

@@ -22,7 +22,6 @@ import {
   Divider,
   ToggleButtonGroup,
   ToggleButton,
-  IconButton,
   Tooltip
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
@@ -33,86 +32,11 @@ import CalendarViewWeekIcon from '@mui/icons-material/CalendarViewWeek';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
 
-// Mock data for doctors
-const mockDoctors = [
-  { id: 1, name: "Dr. Smith", specialty: "General Medicine" },
-  { id: 2, name: "Dr. Jones", specialty: "Cardiology" },
-  { id: 3, name: "Dr. Wilson", specialty: "Pediatrics" },
-  { id: 4, name: "Dr. Taylor", specialty: "Dermatology" }
-];
-
-// Mock data for patients
-const mockPatients = [
-  { id: 101, name: "Alice Brown" },
-  { id: 102, name: "Bob White" },
-  { id: 103, name: "Charlie Green" },
-  { id: 104, name: "David Black" },
-  { id: 105, name: "Eva Gray" }
-];
-
-// Placeholder appointments
-const mockAppointments = [
-  {
-    id: 1,
-    title: "Alice Brown - Checkup",
-    start: new Date(new Date().setHours(9, 0, 0, 0)),
-    end: new Date(new Date().setHours(10, 0, 0, 0)),
-    doctor: "Dr. Smith",
-    doctorId: 1,
-    patient: "Alice Brown",
-    patientId: 101,
-    status: "Scheduled",
-    type: "Checkup"
-  },
-  {
-    id: 2,
-    title: "Bob White - Consultation",
-    start: new Date(new Date().setHours(11, 0, 0, 0)),
-    end: new Date(new Date().setHours(12, 0, 0, 0)),
-    doctor: "Dr. Jones",
-    doctorId: 2,
-    patient: "Bob White",
-    patientId: 102,
-    status: "Checked-in",
-    type: "Consultation"
-  },
-  {
-    id: 3,
-    title: "Charlie Green - Follow-up",
-    start: new Date(new Date().setHours(14, 0, 0, 0)),
-    end: new Date(new Date().setHours(15, 0, 0, 0)),
-    doctor: "Dr. Smith",
-    doctorId: 1,
-    patient: "Charlie Green",
-    patientId: 103,
-    status: "Scheduled",
-    type: "Follow-up"
-  },
-  {
-    id: 4,
-    title: "David Black - Checkup",
-    start: addDays(new Date(new Date().setHours(10, 0, 0, 0)), 1),
-    end: addDays(new Date(new Date().setHours(11, 0, 0, 0)), 1),
-    doctor: "Dr. Wilson",
-    doctorId: 3,
-    patient: "David Black",
-    patientId: 104,
-    status: "Scheduled",
-    type: "Checkup"
-  },
-  {
-    id: 5,
-    title: "Eva Gray - Consultation",
-    start: addDays(new Date(new Date().setHours(13, 30, 0, 0)), 2),
-    end: addDays(new Date(new Date().setHours(14, 30, 0, 0)), 2),
-    doctor: "Dr. Taylor",
-    doctorId: 4,
-    patient: "Eva Gray",
-    patientId: 105,
-    status: "Scheduled",
-    type: "Consultation"
-  }
-];
+// Import mock data from centralized location
+import { mockDoctors } from '../../../mock/mockDoctors';
+import { mockPatients } from '../../../mock/mockPatients';
+import { mockAppointments, getAppointmentStatusColor } from '../../../mock/mockAppointments';
+import { formatTime } from '../../../utils/dateUtils';
 
 // Time slots for the calendar
 const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 7 PM
@@ -141,26 +65,6 @@ function FrontdeskAppointmentCalendar() {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start on Monday
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
-
-  // Get color for status chip
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Scheduled':
-        return 'info';
-      case 'Checked-in':
-        return 'primary';
-      case 'In Progress':
-        return 'warning';
-      case 'Ready for Checkout':
-        return 'secondary';
-      case 'Completed':
-        return 'success';
-      case 'Cancelled':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
 
   const handleOpenDialog = () => {
     setOpenDialog(true);
@@ -196,7 +100,7 @@ function FrontdeskAppointmentCalendar() {
       setSelectedPatient(value);
       setNewAppointment({
         ...newAppointment,
-        patient: value.name,
+        patient: value.name || `${value.firstName} ${value.lastName}`,
         patientId: value.id
       });
     } else {
@@ -268,11 +172,6 @@ function FrontdeskAppointmentCalendar() {
     acc[appointment.doctorId].push(appointment);
     return acc;
   }, {});
-
-  // Format time
-  const formatTime = (date) => {
-    return format(date, 'h:mm a');
-  };
 
   // Render week view calendar
   const renderWeekCalendar = () => {
@@ -393,14 +292,14 @@ function FrontdeskAppointmentCalendar() {
                         left: '2px',
                         right: '2px',
                         height: `${height}px`,
-                        backgroundColor: getStatusColor(appointment.status) + '.light',
+                        backgroundColor: getAppointmentStatusColor(appointment.status) + '.light',
                         color: 'white',
                         borderRadius: 1,
                         p: 0.5,
                         overflow: 'hidden',
                         cursor: 'pointer',
                         '&:hover': {
-                          backgroundColor: getStatusColor(appointment.status) + '.main',
+                          backgroundColor: getAppointmentStatusColor(appointment.status) + '.main',
                         }
                       }}
                     >
@@ -519,7 +418,7 @@ function FrontdeskAppointmentCalendar() {
                           sx={{ 
                             mb: 2, 
                             borderLeft: 4, 
-                            borderColor: getStatusColor(appointment.status) + '.main' 
+                            borderColor: getAppointmentStatusColor(appointment.status) + '.main' 
                           }}
                         >
                           <CardContent>
@@ -529,7 +428,7 @@ function FrontdeskAppointmentCalendar() {
                               </Typography>
                               <Chip 
                                 label={appointment.status} 
-                                color={getStatusColor(appointment.status)} 
+                                color={getAppointmentStatusColor(appointment.status)} 
                                 size="small" 
                               />
                             </Box>
@@ -573,7 +472,7 @@ function FrontdeskAppointmentCalendar() {
             <Grid item xs={12} sm={6}>
               <Autocomplete
                 options={mockPatients}
-                getOptionLabel={(option) => option.name}
+                getOptionLabel={(option) => option.name || `${option.firstName} ${option.lastName}`}
                 value={selectedPatient}
                 onChange={handlePatientChange}
                 renderInput={(params) => (

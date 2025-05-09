@@ -18,72 +18,10 @@ import TodayIcon from '@mui/icons-material/Today';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
-// Mock data for appointments
-const mockAppointments = [
-  {
-    id: 101,
-    title: "John Doe - Checkup",
-    start: new Date(new Date().setHours(9, 0, 0, 0)),
-    end: new Date(new Date().setHours(10, 0, 0, 0)),
-    doctor: "Dr. Smith",
-    patient: "John Doe",
-    patientId: 1,
-    doctorId: 1,
-    status: "Scheduled"
-  },
-  {
-    id: 102,
-    title: "Jane Smith - Consultation",
-    start: new Date(new Date().setHours(11, 0, 0, 0)),
-    end: new Date(new Date().setHours(12, 0, 0, 0)),
-    doctor: "Dr. Jones",
-    patient: "Jane Smith",
-    patientId: 2,
-    doctorId: 2,
-    status: "Checked-in"
-  },
-  {
-    id: 103,
-    title: "Michael Johnson - Follow-up",
-    start: new Date(new Date().setHours(14, 0, 0, 0)),
-    end: new Date(new Date().setHours(15, 0, 0, 0)),
-    doctor: "Dr. Smith",
-    patient: "Michael Johnson",
-    patientId: 3,
-    doctorId: 1,
-    status: "Scheduled"
-  },
-  {
-    id: 104,
-    title: "Emily Williams - New Patient",
-    start: addDays(new Date(new Date().setHours(10, 30, 0, 0)), 1),
-    end: addDays(new Date(new Date().setHours(11, 30, 0, 0)), 1),
-    doctor: "Dr. Wilson",
-    patient: "Emily Williams",
-    patientId: 4,
-    doctorId: 3,
-    status: "Scheduled"
-  },
-  {
-    id: 105,
-    title: "David Brown - Follow-up",
-    start: addDays(new Date(new Date().setHours(13, 0, 0, 0)), 2),
-    end: addDays(new Date(new Date().setHours(14, 0, 0, 0)), 2),
-    doctor: "Dr. Jones",
-    patient: "David Brown",
-    patientId: 5,
-    doctorId: 2,
-    status: "Scheduled"
-  }
-];
-
-// Mock data for doctors
-const mockDoctors = [
-  { id: 1, name: "Dr. Smith", specialty: "General Medicine" },
-  { id: 2, name: "Dr. Jones", specialty: "Cardiology" },
-  { id: 3, name: "Dr. Wilson", specialty: "Pediatrics" },
-  { id: 4, name: "Dr. Taylor", specialty: "Dermatology" }
-];
+// Import mock data from centralized location
+import { mockAppointments } from '../../../mock/mockAppointments';
+import { mockDoctors } from '../../../mock/mockDoctors';
+import { formatTime, getWeekDays } from '../../../utils/dateUtils';
 
 // Time slots for the calendar
 const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 7 PM
@@ -138,11 +76,6 @@ function AppointmentCalendar() {
   // Change view
   const handleViewChange = (newView) => {
     setView(newView);
-  };
-
-  // Format time
-  const formatTime = (date) => {
-    return format(date, 'h:mm a');
   };
 
   // Filter appointments by doctor

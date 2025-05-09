@@ -1,5 +1,5 @@
 // src/pages/FrontdeskAppointmentsPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -15,120 +15,14 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress,
-  Alert,
   Container
 } from '@mui/material';
 import FrontdeskAppointmentCalendar from '../features/appointments/components/FrontdeskAppointmentCalendar';
 import PatientStatusWorkflow from '../features/patients/components/PatientStatusWorkflow';
 
-// Mock data for today's appointments
-const initialAppointments = [
-  {
-    id: 201,
-    patientId: 101,
-    patientName: "Alice Brown",
-    time: "09:00 AM",
-    doctorName: "Dr. Smith",
-    status: "Scheduled",
-    type: "Checkup"
-  },
-  {
-    id: 202,
-    patientId: 102,
-    patientName: "Bob White",
-    time: "09:30 AM",
-    doctorName: "Dr. Jones",
-    status: "Checked-in",
-    type: "Follow-up"
-  },
-  {
-    id: 203,
-    patientId: 103,
-    patientName: "Charlie Green",
-    time: "10:00 AM",
-    doctorName: "Dr. Smith",
-    status: "In Progress",
-    type: "Consultation"
-  },
-  {
-    id: 204,
-    patientId: 104,
-    patientName: "David Black",
-    time: "10:30 AM",
-    doctorName: "Dr. Jones",
-    status: "Ready for Checkout",
-    type: "New Patient"
-  },
-  {
-    id: 205,
-    patientId: 105,
-    patientName: "Eva Gray",
-    time: "11:00 AM",
-    doctorName: "Dr. Smith",
-    status: "Completed",
-    type: "Follow-up"
-  },
-];
-
-// Mock patient data
-const mockPatients = [
-  {
-    id: 101,
-    firstName: "Alice",
-    lastName: "Brown",
-    dob: "1985-05-15",
-    phone: "555-1234",
-    email: "alice.b@example.com",
-    address: "123 Main St, Anytown, USA",
-    insuranceProvider: "Blue Cross",
-    insuranceNumber: "BC12345678"
-  },
-  {
-    id: 102,
-    firstName: "Bob",
-    lastName: "White",
-    dob: "1992-08-22",
-    phone: "555-5678",
-    email: "bob.w@example.com",
-    address: "456 Oak Ave, Somewhere, USA",
-    insuranceProvider: "Aetna",
-    insuranceNumber: "AE87654321"
-  },
-  {
-    id: 103,
-    firstName: "Charlie",
-    lastName: "Green",
-    dob: "1978-03-10",
-    phone: "555-9012",
-    email: "charlie.g@example.com",
-    address: "789 Pine Rd, Elsewhere, USA",
-    insuranceProvider: "United Healthcare",
-    insuranceNumber: "UH56781234"
-  },
-  {
-    id: 104,
-    firstName: "David",
-    lastName: "Black",
-    dob: "1990-11-28",
-    phone: "555-3456",
-    email: "david.b@example.com",
-    address: "321 Elm St, Nowhere, USA",
-    insuranceProvider: "Cigna",
-    insuranceNumber: "CI43218765"
-  },
-  {
-    id: 105,
-    firstName: "Eva",
-    lastName: "Gray",
-    dob: "1982-07-14",
-    phone: "555-7890",
-    email: "eva.g@example.com",
-    address: "654 Maple Ave, Anywhere, USA",
-    insuranceProvider: "Humana",
-    insuranceNumber: "HU98761234"
-  }
-];
+// Import mock data from centralized location
+import { mockTodayAppointments as initialAppointments, getAppointmentStatusColor } from '../mock/mockAppointments';
+import { mockPatients } from '../mock/mockPatients';
 
 function FrontdeskAppointmentsPage() {
   const [tabValue, setTabValue] = useState(0);
@@ -171,26 +65,6 @@ function FrontdeskAppointmentsPage() {
     console.log(`Appointment ${selectedAppointment.id} status updated to ${newStatus}`);
     if (notes) {
       console.log(`Notes: ${notes}`);
-    }
-  };
-  
-  // Get color for status chip
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Scheduled':
-        return 'info';
-      case 'Checked-in':
-        return 'primary';
-      case 'In Progress':
-        return 'warning';
-      case 'Ready for Checkout':
-        return 'secondary';
-      case 'Completed':
-        return 'success';
-      case 'Cancelled':
-        return 'error';
-      default:
-        return 'default';
     }
   };
   
@@ -247,7 +121,7 @@ function FrontdeskAppointmentsPage() {
                   sx={{ 
                     height: '100%',
                     borderLeft: 5, 
-                    borderColor: `${getStatusColor(appointment.status)}.main`,
+                    borderColor: `${getAppointmentStatusColor(appointment.status)}.main`,
                     transition: 'transform 0.2s',
                     '&:hover': {
                       transform: 'translateY(-4px)',
@@ -262,7 +136,7 @@ function FrontdeskAppointmentsPage() {
                       </Typography>
                       <Chip 
                         label={appointment.status} 
-                        color={getStatusColor(appointment.status)}
+                        color={getAppointmentStatusColor(appointment.status)}
                         size="small"
                       />
                     </Box>

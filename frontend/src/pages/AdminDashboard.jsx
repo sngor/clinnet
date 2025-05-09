@@ -23,33 +23,9 @@ import { useNavigate } from "react-router-dom";
 import { PageHeaderWithDivider } from "../components/PageHeader";
 import DashboardCard from "../components/DashboardCard";
 
-// Mock data for today's appointments
-const mockAppointments = [
-  {
-    id: 201,
-    patientName: "Alice Brown",
-    time: "09:00 AM",
-    doctorName: "Dr. Smith",
-    status: "Scheduled",
-    type: "Checkup"
-  },
-  {
-    id: 202,
-    patientName: "Bob White",
-    time: "09:30 AM",
-    doctorName: "Dr. Jones",
-    status: "Checked-in",
-    type: "Follow-up"
-  },
-  {
-    id: 203,
-    patientName: "Charlie Green",
-    time: "10:00 AM",
-    doctorName: "Dr. Smith",
-    status: "In Progress",
-    type: "Consultation"
-  }
-];
+// Import mock data from centralized location
+import { mockTodayAppointments as mockAppointments, getAppointmentStatusColor } from "../mock/mockAppointments";
+import { getTimeBasedGreeting } from "../utils/dateUtils";
 
 function AdminDashboard() {
   const { user } = useAuth();
@@ -59,18 +35,6 @@ function AdminDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Function to get time-based greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) {
-      return "Good morning";
-    } else if (hour < 18) {
-      return "Good afternoon";
-    } else {
-      return "Good evening";
-    }
-  };
 
   // Fetch today's appointments (using mock data)
   useEffect(() => {
@@ -86,29 +50,11 @@ function AdminDashboard() {
     }, 500); // Simulate network delay
   }, []);
 
-  // Get status color
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'Scheduled':
-        return 'primary';
-      case 'Checked-in':
-        return 'success';
-      case 'In Progress':
-        return 'warning';
-      case 'Completed':
-        return 'info';
-      case 'Cancelled':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
   return (
     <Container maxWidth="xl" disableGutters>
       {/* Use the PageHeaderWithDivider component for the dashboard */}
       <PageHeaderWithDivider 
-        title={`${getGreeting()}, ${user?.firstName || user?.username || "Admin"}!`}
+        title={`${getTimeBasedGreeting()}, ${user?.firstName || user?.username || "Admin"}!`}
         subtitle="Here's what's happening in your clinic today"
       />
 
@@ -205,7 +151,7 @@ function AdminDashboard() {
                   
                   <Chip 
                     label={appt.status} 
-                    color={getStatusColor(appt.status)}
+                    color={getAppointmentStatusColor(appt.status)}
                     size="small"
                     sx={{ fontWeight: 500 }}
                   />
