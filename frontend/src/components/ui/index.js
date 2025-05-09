@@ -16,3 +16,4 @@ export { default as FormDialog } from './FormDialog';
 export { default as EmptyState } from './EmptyState';
 export { default as LoadingIndicator } from './LoadingIndicator';
 export { default as PageContainer } from './PageContainer';
+export { StyledTableContainer, tableHeaderStyle, actionButtonsStyle } from './TableStyles';

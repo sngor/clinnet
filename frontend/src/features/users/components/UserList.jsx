@@ -3,10 +3,8 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  Table,
   TableBody,
   TableCell,
-  TableContainer as MuiTableContainer,
   TableHead,
   TableRow,
   TableSortLabel,
@@ -28,8 +26,7 @@ import {
   Switch,
   FormControlLabel,
   Typography,
-  Tooltip,
-  Paper
+  Tooltip
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -42,6 +39,7 @@ import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
 import PasswordStrengthMeter from "../../../components/PasswordStrengthMeter";
 import { validatePassword } from "../../../utils/password-validator";
 import useUserManagement from "../hooks/useUserManagement";
+import { StyledTableContainer, tableHeaderStyle, actionButtonsStyle } from "../../../components/ui";
 
 // Table column definitions
 const columns = [
@@ -340,7 +338,7 @@ function UserList() {
 
   // Action buttons for the table
   const actionButtons = (
-    <Box sx={{ display: "flex", gap: 1 }}>
+    <Box sx={actionButtonsStyle}>
       <Tooltip title="Refresh Users">
         <IconButton onClick={handleRefresh} disabled={loading} sx={{ mr: 1 }}>
           <RefreshIcon />
@@ -371,154 +369,121 @@ function UserList() {
             <CircularProgress />
           </Box>
         ) : (
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              borderRadius: 2,
-              overflow: 'hidden'
-            }}
-          >
-            <MuiTableContainer sx={{ boxShadow: "none" }}>
-              <Table
-                sx={{
-                  minWidth: 650,
-                  "& .MuiTableCell-root": {
-                    borderBottom: "none",
-                    padding: "16px",
-                  },
-                  "& tbody tr": {
-                    borderBottom: "1px solid rgba(224, 224, 224, 0.4)",
-                  },
-                  "& tbody tr:last-child": {
-                    border: 0,
-                  },
-                  borderCollapse: "separate",
-                  borderSpacing: 0,
-                  "& thead tr th:first-of-type": {
-                    borderRadius: "8px 0 0 8px",
-                  },
-                  "& thead tr th:last-of-type": {
-                    borderRadius: "0 8px 8px 0",
-                  },
-                }}
-                aria-label="users table"
-              >
-                <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-                  <TableRow>
-                    {columns.map((column) => (
-                      <TableCell
-                        key={column.id}
-                        sortDirection={orderBy === column.id ? order : false}
-                      >
-                        <TableSortLabel
-                          active={orderBy === column.id}
-                          direction={orderBy === column.id ? order : "asc"}
-                          onClick={createSortHandler(column.id)}
-                        >
-                          {column.label}
-                        </TableSortLabel>
+          <StyledTableContainer>
+            <TableHead sx={tableHeaderStyle}>
+              <TableRow>
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.id}
+                    sortDirection={orderBy === column.id ? order : false}
+                  >
+                    <TableSortLabel
+                      active={orderBy === column.id}
+                      direction={orderBy === column.id ? order : "asc"}
+                      onClick={createSortHandler(column.id)}
+                    >
+                      {column.label}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
+                <TableCell align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length + 1} align="center">
+                    No users found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                stableSort(users, getComparator(order, orderBy)).map(
+                  (user) => (
+                    <TableRow
+                      key={user.username}
+                      sx={{
+                        "&:last-child td, &:last-child th": { border: 0 },
+                      }}
+                    >
+                      <TableCell>{user.username}</TableCell>
+                      <TableCell>{user.firstName || "-"}</TableCell>
+                      <TableCell>{user.lastName || "-"}</TableCell>
+                      <TableCell>{user.email || "-"}</TableCell>
+                      <TableCell>{user.phone || "-"}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={
+                            user.role.charAt(0).toUpperCase() +
+                            user.role.slice(1)
+                          }
+                          size="small"
+                          color={
+                            user.role === "admin"
+                              ? "error"
+                              : user.role === "doctor"
+                              ? "primary"
+                              : "secondary"
+                          }
+                          variant="outlined"
+                        />
                       </TableCell>
-                    ))}
-                    <TableCell align="center">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={columns.length + 1} align="center">
-                        No users found
+                      <TableCell>
+                        <Chip
+                          icon={
+                            user.enabled ? <CheckCircleIcon /> : <BlockIcon />
+                          }
+                          label={user.enabled ? "Active" : "Disabled"}
+                          size="small"
+                          color={user.enabled ? "success" : "default"}
+                          variant={user.enabled ? "filled" : "outlined"}
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Tooltip title="Edit User">
+                          <IconButton
+                            color="primary"
+                            size="small"
+                            onClick={() => handleEditUser(user)}
+                            disabled={actionLoading}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete User">
+                          <IconButton
+                            color="error"
+                            size="small"
+                            onClick={() => handleDeleteClick(user)}
+                            disabled={actionLoading}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip
+                          title={
+                            user.enabled ? "Disable User" : "Enable User"
+                          }
+                        >
+                          <IconButton
+                            color={user.enabled ? "default" : "success"}
+                            size="small"
+                            onClick={() => handleToggleUserStatus(user)}
+                            disabled={actionLoading}
+                          >
+                            {user.enabled ? (
+                              <BlockIcon fontSize="small" />
+                            ) : (
+                              <CheckCircleIcon fontSize="small" />
+                            )}
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    stableSort(users, getComparator(order, orderBy)).map(
-                      (user) => (
-                        <TableRow
-                          key={user.username}
-                          sx={{
-                            "&:last-child td, &:last-child th": { border: 0 },
-                          }}
-                        >
-                          <TableCell>{user.username}</TableCell>
-                          <TableCell>{user.firstName || "-"}</TableCell>
-                          <TableCell>{user.lastName || "-"}</TableCell>
-                          <TableCell>{user.email || "-"}</TableCell>
-                          <TableCell>{user.phone || "-"}</TableCell>
-                          <TableCell>
-                            <Chip
-                              label={
-                                user.role.charAt(0).toUpperCase() +
-                                user.role.slice(1)
-                              }
-                              size="small"
-                              color={
-                                user.role === "admin"
-                                  ? "error"
-                                  : user.role === "doctor"
-                                  ? "primary"
-                                  : "secondary"
-                              }
-                              variant="outlined"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              icon={
-                                user.enabled ? <CheckCircleIcon /> : <BlockIcon />
-                              }
-                              label={user.enabled ? "Active" : "Disabled"}
-                              size="small"
-                              color={user.enabled ? "success" : "default"}
-                              variant={user.enabled ? "filled" : "outlined"}
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <Tooltip title="Edit User">
-                              <IconButton
-                                color="primary"
-                                size="small"
-                                onClick={() => handleEditUser(user)}
-                                disabled={actionLoading}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete User">
-                              <IconButton
-                                color="error"
-                                size="small"
-                                onClick={() => handleDeleteClick(user)}
-                                disabled={actionLoading}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip
-                              title={
-                                user.enabled ? "Disable User" : "Enable User"
-                              }
-                            >
-                              <IconButton
-                                color={user.enabled ? "default" : "success"}
-                                size="small"
-                                onClick={() => handleToggleUserStatus(user)}
-                                disabled={actionLoading}
-                              >
-                                {user.enabled ? (
-                                  <BlockIcon fontSize="small" />
-                                ) : (
-                                  <CheckCircleIcon fontSize="small" />
-                                )}
-                              </IconButton>
-                            </Tooltip>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    )
-                  )}
-                </TableBody>
-              </Table>
-            </MuiTableContainer>
-          </Paper>
+                  )
+                )
+              )}
+            </TableBody>
+          </StyledTableContainer>
         )}
       </TableContainer>
 

@@ -16,14 +16,13 @@ import {
   Grid,
   Chip,
   Snackbar,
-  Paper,
-  Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
-  TablePagination
+  TablePagination,
+  TableSortLabel,
+  Tooltip
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -33,6 +32,51 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PaymentIcon from "@mui/icons-material/Payment";
 import { useAppData } from "../../../app/providers/DataProvider";
+import { StyledTableContainer, tableHeaderStyle } from "../../../components/ui";
+
+// Table column definitions
+const columns = [
+  { id: "name", label: "Name", numeric: false },
+  { id: "contact", label: "Contact", numeric: false },
+  { id: "insurance", label: "Insurance", numeric: false },
+  { id: "lastVisit", label: "Last Visit", numeric: false },
+  { id: "status", label: "Status", numeric: false }
+];
+
+function descendingComparator(a, b, orderBy) {
+  // Handle null or undefined values
+  if (b[orderBy] == null) return -1;
+  if (a[orderBy] == null) return 1;
+
+  // Compare based on type
+  if (typeof b[orderBy] === "string") {
+    return b[orderBy].toLowerCase().localeCompare(a[orderBy].toLowerCase());
+  } else {
+    if (b[orderBy] < a[orderBy]) {
+      return -1;
+    }
+    if (b[orderBy] > a[orderBy]) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+function getComparator(order, orderBy) {
+  return order === "desc"
+    ? (a, b) => descendingComparator(a, b, orderBy)
+    : (a, b) => -descendingComparator(a, b, orderBy);
+}
+
+function stableSort(array, comparator) {
+  const stabilizedThis = array.map((el, index) => [el, index]);
+  stabilizedThis.sort((a, b) => {
+    const order = comparator(a[0], b[0]);
+    if (order !== 0) return order;
+    return a[1] - b[1]; // Preserve original order if values are equal
+  });
+  return stabilizedThis.map((el) => el[0]);
+}
 
 function PatientList({ onPatientSelect }) {
   const { 
@@ -53,6 +97,10 @@ function PatientList({ onPatientSelect }) {
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  // Sorting state
+  const [order, setOrder] = useState("asc");
+  const [orderBy, setOrderBy] = useState("name");
   
   // State for patient form dialog
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -322,11 +370,21 @@ function PatientList({ onPatientSelect }) {
     setPage(0);
   };
   
+  // Handle sort request
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
+  // Create sort handler for a column
+  const createSortHandler = (property) => () => {
+    handleRequestSort(property);
+  };
+  
   // Get current page data
-  const currentPatients = filteredPatients.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  const currentPatients = stableSort(filteredPatients, getComparator(order, orderBy))
+    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   
   return (
     <Box sx={{ height: '100%', width: '100%' }}>
@@ -351,6 +409,7 @@ function PatientList({ onPatientSelect }) {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
+          sx={{ borderRadius: 1.5 }}
         >
           Add Patient
         </Button>
@@ -369,128 +428,129 @@ function PatientList({ onPatientSelect }) {
           <CircularProgress />
         </Box>
       ) : (
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            borderRadius: 2,
-            overflow: 'hidden',
-            border: '1px solid',
-            borderColor: 'divider'
-          }}
-        >
-          <TableContainer>
-            <Table sx={{ minWidth: 650 }}>
-              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Contact</TableCell>
-                  <TableCell>Insurance</TableCell>
-                  <TableCell>Last Visit</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="center">Actions</TableCell>
+        <StyledTableContainer>
+          <TableHead sx={tableHeaderStyle}>
+            <TableRow>
+              {columns.map((column) => (
+                <TableCell
+                  key={column.id}
+                  sortDirection={orderBy === column.id ? order : false}
+                >
+                  <TableSortLabel
+                    active={orderBy === column.id}
+                    direction={orderBy === column.id ? order : "asc"}
+                    onClick={createSortHandler(column.id)}
+                  >
+                    {column.label}
+                  </TableSortLabel>
+                </TableCell>
+              ))}
+              <TableCell align="center">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {currentPatients.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  No patients found
+                </TableCell>
+              </TableRow>
+            ) : (
+              currentPatients.map((patient) => (
+                <TableRow key={patient.id}>
+                  <TableCell>
+                    <Box>
+                      <Typography variant="body2" fontWeight="medium">
+                        {patient.firstName} {patient.lastName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        DOB: {patient.dob || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box>
+                      <Typography variant="body2">
+                        {patient.phone || 'N/A'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {patient.email || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box>
+                      <Typography variant="body2">
+                        {patient.insuranceProvider || 'None'}
+                      </Typography>
+                      {patient.insuranceNumber && (
+                        <Typography variant="caption" color="text.secondary">
+                          #{patient.insuranceNumber}
+                        </Typography>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    {patient.lastVisit || 'Never'}
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={patient.status || 'Active'} 
+                      color={(patient.status || 'Active') === 'Active' ? 'success' : 'default'} 
+                      size="small" 
+                    />
+                  </TableCell>
+                  <TableCell align="center">
+                    <Tooltip title="Edit Patient">
+                      <IconButton 
+                        size="small" 
+                        color="primary" 
+                        onClick={() => handleOpenDialog(patient)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Patient">
+                      <IconButton 
+                        size="small" 
+                        color="error" 
+                        onClick={() => handleDeleteClick(patient)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="View Patient Details">
+                      <IconButton 
+                        size="small" 
+                        color="secondary" 
+                        onClick={() => handleViewPatient(patient)}
+                      >
+                        <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Schedule Appointment">
+                      <IconButton 
+                        size="small" 
+                        color="info"
+                      >
+                        <EventNoteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<PaymentIcon />}
+                      onClick={() => handleViewPatient(patient)}
+                      size="small"
+                      sx={{ ml: 1 }}
+                    >
+                      Checkout
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {currentPatients.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      No patients found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  currentPatients.map((patient) => (
-                    <TableRow key={patient.id}>
-                      <TableCell>
-                        <Box>
-                          <Typography variant="body2" fontWeight="medium">
-                            {patient.firstName} {patient.lastName}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            DOB: {patient.dob || 'N/A'}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box>
-                          <Typography variant="body2">
-                            {patient.phone || 'N/A'}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {patient.email || 'N/A'}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box>
-                          <Typography variant="body2">
-                            {patient.insuranceProvider || 'None'}
-                          </Typography>
-                          {patient.insuranceNumber && (
-                            <Typography variant="caption" color="text.secondary">
-                              #{patient.insuranceNumber}
-                            </Typography>
-                          )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        {patient.lastVisit || 'Never'}
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={patient.status || 'Active'} 
-                          color={(patient.status || 'Active') === 'Active' ? 'success' : 'default'} 
-                          size="small" 
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <IconButton 
-                          size="small" 
-                          color="primary" 
-                          onClick={() => handleOpenDialog(patient)}
-                          title="Edit patient"
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton 
-                          size="small" 
-                          color="error" 
-                          onClick={() => handleDeleteClick(patient)}
-                          title="Delete patient"
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton 
-                          size="small" 
-                          color="secondary" 
-                          onClick={() => handleViewPatient(patient)}
-                          title="View patient details"
-                        >
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton 
-                          size="small" 
-                          color="info" 
-                          title="Schedule appointment"
-                        >
-                          <EventNoteIcon fontSize="small" />
-                        </IconButton>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={<PaymentIcon />}
-                          onClick={() => handleViewPatient(patient)}
-                          size="small"
-                          sx={{ ml: 1 }}
-                        >
-                          Checkout
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              ))
+            )}
+          </TableBody>
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
@@ -500,7 +560,7 @@ function PatientList({ onPatientSelect }) {
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
-        </Paper>
+        </StyledTableContainer>
       )}
       
       {/* Patient Form Dialog */}
