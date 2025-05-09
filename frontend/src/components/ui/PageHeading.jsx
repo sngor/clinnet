@@ -1,7 +1,6 @@
 // src/components/ui/PageHeading.jsx
 import React from 'react';
-import { Box, Divider } from '@mui/material';
-import { PageTitle, SecondaryText } from './Typography';
+import { Box, Divider, Typography } from '@mui/material';
 
 /**
  * A consistent page heading component that can be used across all pages
@@ -26,13 +25,14 @@ function PageHeading({ title, subtitle, action, divider = false, sx = {} }) {
           gap: 2,
           pb: 2,
           borderBottom: divider ? 'none' : '1px solid',
-          borderColor: 'grey.200',
+          borderColor: 'divider',
           ...sx
         }}
       >
         <Box sx={{ textAlign: 'left', width: '100%' }}>
-          <PageTitle 
-            variant="h5" 
+          <Typography 
+            variant="h4" 
+            component="h1"
             sx={{ 
               mb: subtitle ? 0.5 : 0, 
               textAlign: 'left',
@@ -42,22 +42,21 @@ function PageHeading({ title, subtitle, action, divider = false, sx = {} }) {
             }}
           >
             {title}
-          </PageTitle>
+          </Typography>
           
           {subtitle && (
-            <SecondaryText 
-              variant="body2" 
+            <Typography 
+              variant="subtitle1" 
+              color="text.secondary"
               sx={{ 
                 mt: 0.5, 
                 mb: 0, 
-                fontSize: '1rem', 
                 textAlign: 'left',
-                lineHeight: 1.4,
-                color: 'text.secondary'
+                lineHeight: 1.4
               }}
             >
               {subtitle}
-            </SecondaryText>
+            </Typography>
           )}
         </Box>
         

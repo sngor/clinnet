@@ -1,7 +1,6 @@
 // src/components/ui/SectionHeading.jsx
 import React from 'react';
-import { Box, Divider } from '@mui/material';
-import { SectionTitle, SecondaryText } from './Typography';
+import { Box, Divider, Typography } from '@mui/material';
 
 /**
  * A consistent section heading component that can be used within pages
@@ -28,8 +27,9 @@ function SectionHeading({ title, subtitle, action, divider = true, sx = {} }) {
         }}
       >
         <Box sx={{ textAlign: 'left', width: '100%' }}>
-          <SectionTitle 
-            variant="h6" 
+          <Typography 
+            variant="h5" 
+            component="h2"
             sx={{ 
               mb: subtitle ? 0.5 : 0, 
               textAlign: 'left',
@@ -39,21 +39,21 @@ function SectionHeading({ title, subtitle, action, divider = true, sx = {} }) {
             }}
           >
             {title}
-          </SectionTitle>
+          </Typography>
           
           {subtitle && (
-            <SecondaryText 
-              variant="body2" 
+            <Typography 
+              variant="subtitle2" 
+              color="text.secondary"
               sx={{ 
                 mt: 0.5, 
                 mb: 0, 
                 textAlign: 'left',
-                lineHeight: 1.4,
-                color: 'text.secondary'
+                lineHeight: 1.4
               }}
             >
               {subtitle}
-            </SecondaryText>
+            </Typography>
           )}
         </Box>
         

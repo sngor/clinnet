@@ -11,8 +11,9 @@ export const DataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Mock data for services
+  // Mock data for services and patients
   const [services, setServices] = useState([]);
+  const [patients, setPatients] = useState([]);
   
   // Initialize data when authenticated
   useEffect(() => {
@@ -49,8 +50,53 @@ export const DataProvider = ({ children }) => {
           }
         ];
         
+        // Mock patients data
+        const mockPatients = [
+          {
+            id: 1,
+            firstName: 'John',
+            lastName: 'Doe',
+            dob: '1980-05-15',
+            phone: '(555) 123-4567',
+            email: 'john.doe@example.com',
+            address: '123 Main St, Anytown, USA',
+            insuranceProvider: 'Blue Cross',
+            insuranceNumber: 'BC12345678',
+            lastVisit: '2023-10-15',
+            status: 'Active'
+          },
+          {
+            id: 2,
+            firstName: 'Jane',
+            lastName: 'Smith',
+            dob: '1975-08-22',
+            phone: '(555) 987-6543',
+            email: 'jane.smith@example.com',
+            address: '456 Oak Ave, Somewhere, USA',
+            insuranceProvider: 'Aetna',
+            insuranceNumber: 'AE98765432',
+            lastVisit: '2023-11-02',
+            status: 'Active'
+          },
+          {
+            id: 3,
+            firstName: 'Robert',
+            lastName: 'Johnson',
+            dob: '1990-03-10',
+            phone: '(555) 456-7890',
+            email: 'robert.johnson@example.com',
+            address: '789 Pine St, Nowhere, USA',
+            insuranceProvider: 'Medicare',
+            insuranceNumber: 'MC45678901',
+            lastVisit: '2023-09-28',
+            status: 'Inactive'
+          }
+        ];
+        
         setServices(mockServices);
+        setPatients(mockPatients);
         console.log('Services loaded:', mockServices);
+        console.log('Patients loaded:', mockPatients);
         
         setInitialized(true);
         console.log('Data initialization complete');
@@ -89,14 +135,44 @@ export const DataProvider = ({ children }) => {
     return true;
   };
   
+  // Mock patient operations
+  const addPatient = async (patientData) => {
+    const newPatient = {
+      id: patients.length + 1,
+      ...patientData
+    };
+    setPatients([...patients, newPatient]);
+    return newPatient;
+  };
+  
+  const updatePatient = async (id, patientData) => {
+    const updatedPatients = patients.map(patient => 
+      patient.id === id ? { ...patient, ...patientData } : patient
+    );
+    setPatients(updatedPatients);
+    return updatedPatients.find(patient => patient.id === id);
+  };
+  
+  const deletePatient = async (id) => {
+    const updatedPatients = patients.filter(patient => patient.id !== id);
+    setPatients(updatedPatients);
+    return true;
+  };
+  
   const value = {
     initialized,
     loading,
     error,
+    // Services
     services,
     addService,
     updateService,
-    deleteService
+    deleteService,
+    // Patients
+    patients,
+    addPatient,
+    updatePatient,
+    deletePatient
   };
   
   return (

@@ -4,8 +4,7 @@ import { useAuth } from "../app/providers/AuthProvider";
 import { 
   Grid, 
   useMediaQuery, 
-  useTheme, 
-  Container
+  useTheme
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
@@ -17,7 +16,8 @@ import { useNavigate } from "react-router-dom";
 import { 
   PageHeading, 
   ContentCard, 
-  AppointmentList
+  AppointmentList,
+  PageContainer
 } from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
@@ -49,7 +49,7 @@ function AdminDashboard() {
   }, []);
 
   return (
-    <Container maxWidth="xl" disableGutters>
+    <PageContainer>
       {/* Page header */}
       <PageHeading 
         title={`${getTimeBasedGreeting()}, ${user?.firstName || user?.username || "Admin"}!`}
@@ -114,7 +114,7 @@ function AdminDashboard() {
           showAction={false}
         />
       </ContentCard>
-    </Container>
+    </PageContainer>
   );
 }
 

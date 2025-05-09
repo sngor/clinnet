@@ -8,7 +8,6 @@ import {
   useTheme, 
   Box, 
   Button,
-  Container,
   Dialog,
   DialogContent,
   DialogActions,
@@ -29,7 +28,8 @@ import {
   PageHeading, 
   ContentCard, 
   AppointmentList,
-  DialogHeading
+  DialogHeading,
+  PageContainer
 } from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
@@ -130,7 +130,7 @@ function FrontdeskDashboard() {
   };
 
   return (
-    <Container maxWidth="xl" disableGutters>
+    <PageContainer>
       {/* Page header */}
       <PageHeading 
         title={`${getTimeBasedGreeting()}, ${user?.firstName || user?.username || "Front Desk"}!`}
@@ -275,7 +275,7 @@ function FrontdeskDashboard() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </PageContainer>
   );
 }
 

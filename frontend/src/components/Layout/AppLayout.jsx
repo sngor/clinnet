@@ -16,22 +16,26 @@ import {
   MenuItem,
   useMediaQuery,
   Stack,
+  Tooltip,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useAuth } from "../../app/providers/AuthProvider";
 import AdminSidebar from "./AdminSidebar";
 import DoctorSidebar from "./DoctorSidebar";
 import FrontdeskSidebar from "./FrontdeskSidebar";
 
 const drawerWidth = 240;
+const collapsedDrawerWidth = 72;
 
 function AppLayout() {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [drawerCollapsed, setDrawerCollapsed] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const open = Boolean(anchorEl);
@@ -40,6 +44,10 @@ function AppLayout() {
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleDrawerCollapse = () => {
+    setDrawerCollapsed(!drawerCollapsed);
   };
 
   const handleMenuOpen = (event) => {
@@ -88,11 +96,11 @@ function AppLayout() {
   const renderSidebar = () => {
     switch (user?.role) {
       case "admin":
-        return <AdminSidebar />;
+        return <AdminSidebar collapsed={drawerCollapsed} />;
       case "doctor":
-        return <DoctorSidebar />;
+        return <DoctorSidebar collapsed={drawerCollapsed} />;
       case "frontdesk":
-        return <FrontdeskSidebar />;
+        return <FrontdeskSidebar collapsed={drawerCollapsed} />;
       default:
         return null;
     }
@@ -100,11 +108,20 @@ function AppLayout() {
 
   const drawer = React.useMemo(
     () => (
-      <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <Box sx={{ 
+        display: "flex", 
+        flexDirection: "column", 
+        height: "100%",
+        width: drawerCollapsed ? collapsedDrawerWidth : drawerWidth,
+        transition: theme => theme.transitions.create('width', {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
+      }}>
         <Toolbar
           sx={{
             display: "flex",
-            flexDirection: "column",
+            flexDirection: drawerCollapsed ? "column" : "column",
             alignItems: "center",
             justifyContent: "center",
             py: { xs: 2, sm: 3 },
@@ -121,7 +138,7 @@ function AppLayout() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              mb: 1.5,
+              mb: drawerCollapsed ? 0 : 1.5,
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
             }}
           >
@@ -134,19 +151,23 @@ function AppLayout() {
               C
             </Typography>
           </Box>
-          {/* App Name */}
-          <Typography
-            variant={isMobile ? "subtitle1" : "h6"}
-            color="primary.main"
-            fontWeight="bold"
-            align="center"
-            sx={{ mb: 0.5 }}
-          >
-            CLINNET
-          </Typography>
-          <Typography variant="caption" color="text.secondary" align="center">
-            Healthcare Management
-          </Typography>
+          {/* App Name - Hide when collapsed */}
+          {!drawerCollapsed && (
+            <>
+              <Typography
+                variant={isMobile ? "subtitle1" : "h6"}
+                color="primary.main"
+                fontWeight="bold"
+                align="center"
+                sx={{ mb: 0.5 }}
+              >
+                CLINNET
+              </Typography>
+              <Typography variant="caption" color="text.secondary" align="center">
+                Healthcare Management
+              </Typography>
+            </>
+          )}
         </Toolbar>
         <Divider />
         <Box
@@ -154,29 +175,61 @@ function AppLayout() {
             width: "100%",
             flexGrow: 1,
             overflow: "auto",
+            py: 1,
           }}
         >
           {renderSidebar()}
         </Box>
         <Divider />
-        <Box sx={{ p: 2 }}>
-          <Typography variant="body2" color="text.secondary" align="center">
-            © {new Date().getFullYear()} Clinnet EMR by Seng
-          </Typography>
+        <Box sx={{ 
+          p: 2, 
+          display: 'flex', 
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          {/* Collapse/Expand button */}
+          <Tooltip title={drawerCollapsed ? "Expand" : "Collapse"}>
+            <IconButton 
+              onClick={handleDrawerCollapse}
+              sx={{
+                borderRadius: '50%',
+                bgcolor: 'background.paper',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                '&:hover': {
+                  bgcolor: 'background.paper',
+                }
+              }}
+            >
+              {drawerCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            </IconButton>
+          </Tooltip>
         </Box>
+        {!drawerCollapsed && (
+          <Box sx={{ p: 2 }}>
+            <Typography variant="body2" color="text.secondary" align="center">
+              © {new Date().getFullYear()} Clinnet EMR
+            </Typography>
+          </Box>
+        )}
       </Box>
     ),
-    [user?.role, isMobile]
+    [user?.role, isMobile, drawerCollapsed, theme]
   );
+
+  const currentDrawerWidth = drawerCollapsed ? collapsedDrawerWidth : drawerWidth;
 
   return (
     <Box sx={{ display: "flex" }}>
       <AppBar
         position="fixed"
         sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
+          width: { sm: `calc(100% - ${currentDrawerWidth}px)` },
+          ml: { sm: `${currentDrawerWidth}px` },
           zIndex: (theme) => theme.zIndex.drawer + 1,
+          transition: theme => theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
         }}
       >
         <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }}>
@@ -366,7 +419,14 @@ function AppLayout() {
       </AppBar>
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{ 
+          width: { sm: currentDrawerWidth }, 
+          flexShrink: { sm: 0 },
+          transition: theme => theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
+        }}
         aria-label="navigation drawer"
       >
         {/* Temporary drawer for mobile */}
@@ -394,10 +454,15 @@ function AppLayout() {
             display: { xs: "none", sm: "block" },
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
-              width: drawerWidth,
+              width: drawerCollapsed ? collapsedDrawerWidth : drawerWidth,
               borderRight: "none",
               boxShadow: "4px 0 10px rgba(0, 0, 0, 0.12)",
               zIndex: (theme) => theme.zIndex.drawer,
+              transition: theme => theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
+              overflowX: 'hidden',
             },
           }}
           open
@@ -410,7 +475,11 @@ function AppLayout() {
         sx={{
           flexGrow: 1,
           p: { xs: 2, sm: 3 },
-          width: "100%",
+          width: { sm: `calc(100% - ${currentDrawerWidth}px)` },
+          transition: theme => theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
         }}
       >
         <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }} />

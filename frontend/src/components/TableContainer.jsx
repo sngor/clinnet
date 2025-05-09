@@ -17,31 +17,25 @@ import {
  */
 function TableContainer({ children, title, action, sx = {} }) {
   return (
-    <Paper 
-      elevation={0} 
-      sx={{ 
-        p: 3,
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-        overflow: 'hidden',
-        ...sx
-      }}
-    >
+    <Box sx={{ width: '100%', ...sx }}>
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
         mb: 3
       }}>
-        <Typography variant="h6">
+        <Typography 
+          variant="h6" 
+          color="primary.main"
+          fontWeight={600}
+        >
           {title}
         </Typography>
         {action}
       </Box>
       
       {children}
-    </Paper>
+    </Box>
   );
 }
 

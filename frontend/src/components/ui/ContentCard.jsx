@@ -1,8 +1,7 @@
 // src/components/ui/ContentCard.jsx
 import React from 'react';
-import { Paper, Box } from '@mui/material';
+import { Paper, Box, Typography, Divider } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import SectionHeading from './SectionHeading';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -39,12 +38,60 @@ function ContentCard({
   return (
     <StyledPaper elevation={elevation} sx={sx}>
       {title && (
-        <SectionHeading 
-          title={title} 
-          subtitle={subtitle} 
-          action={action} 
-          divider={divider} 
-        />
+        <>
+          <Box 
+            sx={{ 
+              mb: divider ? 2 : 3,
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: 2
+            }}
+          >
+            <Box sx={{ textAlign: 'left', width: '100%' }}>
+              <Typography 
+                variant="h6" 
+                component="h3"
+                sx={{ 
+                  mb: subtitle ? 0.5 : 0, 
+                  textAlign: 'left',
+                  fontWeight: 600,
+                  color: 'primary.main',
+                  lineHeight: 1.4
+                }}
+              >
+                {title}
+              </Typography>
+              
+              {subtitle && (
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ 
+                    mt: 0.5, 
+                    mb: 0, 
+                    textAlign: 'left',
+                    lineHeight: 1.4
+                  }}
+                >
+                  {subtitle}
+                </Typography>
+              )}
+            </Box>
+            
+            {action && (
+              <Box sx={{ 
+                alignSelf: { xs: 'flex-start', sm: 'center' },
+                flexShrink: 0
+              }}>
+                {action}
+              </Box>
+            )}
+          </Box>
+          
+          {divider && <Divider sx={{ mb: 3 }} />}
+        </>
       )}
       
       <Box sx={contentSx}>

@@ -1,31 +1,29 @@
 // src/pages/UserManagementPage.jsx
 import React from "react";
 import UserList from "../features/users/components/UserList";
-import { Box, Typography, Paper } from "@mui/material";
-import PageHeader from "../components/PageHeader";
+import { Box } from "@mui/material";
+import { PageHeading, PageContainer, ContentCard } from "../components/ui";
 
 function UserManagementPage() {
   return (
-    <Box sx={{ width: '100%' }}>
+    <PageContainer>
       {/* Page header */}
-      <PageHeader 
+      <PageHeading 
         title="User Management" 
         subtitle="Add, edit, and manage system users"
       />
 
       {/* User list */}
-      <Paper 
+      <ContentCard 
         elevation={0} 
         sx={{ 
-          p: 3,
-          borderRadius: 2,
           border: '1px solid',
           borderColor: 'divider'
         }}
       >
         <UserList />
-      </Paper>
-    </Box>
+      </ContentCard>
+    </PageContainer>
   );
 }
 

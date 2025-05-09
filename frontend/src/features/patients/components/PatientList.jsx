@@ -1,6 +1,5 @@
 // src/features/patients/components/PatientList.jsx
 import React, { useState, useEffect } from "react";
-import { DataGrid } from "@mui/x-data-grid";
 import {
   Box,
   Typography,
@@ -17,6 +16,14 @@ import {
   Grid,
   Chip,
   Snackbar,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -25,7 +32,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PaymentIcon from "@mui/icons-material/Payment";
-import PatientCheckoutButton from "./PatientCheckoutButton";
 import { useAppData } from "../../../app/providers/DataProvider";
 
 function PatientList({ onPatientSelect }) {
@@ -43,6 +49,10 @@ function PatientList({ onPatientSelect }) {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   
   // State for patient form dialog
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -112,7 +122,7 @@ function PatientList({ onPatientSelect }) {
         id: patient.id,
         firstName: patient.firstName,
         lastName: patient.lastName,
-        dob: formatDateForInput(patient.dateOfBirth || ''),
+        dob: formatDateForInput(patient.dob || ''),
         phone: patient.phone || '',
         email: patient.email || '',
         address: patient.address || '',
@@ -302,122 +312,21 @@ function PatientList({ onPatientSelect }) {
     setSnackbar({ ...snackbar, open: false });
   };
   
-  // Define columns for the data grid
-  const columns = [
-    { 
-      field: 'name', 
-      headerName: 'Name', 
-      width: 200,
-      valueGetter: (params) => `${params.row.firstName || ''} ${params.row.lastName || ''}`,
-      renderCell: (params) => (
-        <Box>
-          <Typography variant="body2">{params.value}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            DOB: {params.row.dob || 'N/A'}
-          </Typography>
-        </Box>
-      )
-    },
-    { 
-      field: 'contact', 
-      headerName: 'Contact', 
-      width: 200,
-      valueGetter: (params) => params.row.phone || 'N/A',
-      renderCell: (params) => (
-        <Box>
-          <Typography variant="body2">{params.row.phone || 'N/A'}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {params.row.email || 'N/A'}
-          </Typography>
-        </Box>
-      )
-    },
-    { 
-      field: 'insurance', 
-      headerName: 'Insurance', 
-      width: 200,
-      valueGetter: (params) => params.row.insuranceProvider || 'None',
-      renderCell: (params) => (
-        <Box>
-          <Typography variant="body2">{params.row.insuranceProvider || 'None'}</Typography>
-          {params.row.insuranceNumber && (
-            <Typography variant="caption" color="text.secondary">
-              #{params.row.insuranceNumber}
-            </Typography>
-          )}
-        </Box>
-      )
-    },
-    { 
-      field: 'lastVisit', 
-      headerName: 'Last Visit', 
-      width: 120,
-      valueGetter: (params) => params.row.lastVisit || 'Never',
-    },
-    { 
-      field: 'status', 
-      headerName: 'Status', 
-      width: 120,
-      renderCell: (params) => (
-        <Chip 
-          label={params.value || 'Active'} 
-          color={(params.value || 'Active') === 'Active' ? 'success' : 'default'} 
-          size="small" 
-        />
-      )
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 250,
-      sortable: false,
-      renderCell: (params) => (
-        <Box>
-          <IconButton 
-            size="small" 
-            color="primary" 
-            onClick={() => handleOpenDialog(params.row)}
-            title="Edit patient"
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton 
-            size="small" 
-            color="error" 
-            onClick={() => handleDeleteClick(params.row)}
-            title="Delete patient"
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-          <IconButton 
-            size="small" 
-            color="secondary" 
-            onClick={() => handleViewPatient(params.row)}
-            title="View patient details"
-          >
-            <VisibilityIcon fontSize="small" />
-          </IconButton>
-          <IconButton 
-            size="small" 
-            color="info" 
-            title="Schedule appointment"
-          >
-            <EventNoteIcon fontSize="small" />
-          </IconButton>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<PaymentIcon />}
-            onClick={() => handleViewPatient(params.row)}
-            size="small"
-            sx={{ ml: 1 }}
-          >
-            Checkout
-          </Button>
-        </Box>
-      )
-    }
-  ];
+  // Handle pagination
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+  
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+  
+  // Get current page data
+  const currentPatients = filteredPatients.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
   
   return (
     <Box sx={{ height: '100%', width: '100%' }}>
@@ -454,27 +363,144 @@ function PatientList({ onPatientSelect }) {
         </Alert>
       )}
       
-      {/* Loading indicator or data grid */}
+      {/* Loading indicator or table */}
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <CircularProgress />
         </Box>
       ) : (
-        <DataGrid
-          rows={filteredPatients}
-          columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
-          autoHeight
-          disableSelectionOnClick
+        <Paper 
+          elevation={0} 
           sx={{ 
-            '& .MuiDataGrid-cell': { py: 1 },
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 1,
-            boxShadow: 1
+            borderRadius: 2,
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider'
           }}
-        />
+        >
+          <TableContainer>
+            <Table sx={{ minWidth: 650 }}>
+              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Contact</TableCell>
+                  <TableCell>Insurance</TableCell>
+                  <TableCell>Last Visit</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {currentPatients.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      No patients found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  currentPatients.map((patient) => (
+                    <TableRow key={patient.id}>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2" fontWeight="medium">
+                            {patient.firstName} {patient.lastName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            DOB: {patient.dob || 'N/A'}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2">
+                            {patient.phone || 'N/A'}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {patient.email || 'N/A'}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2">
+                            {patient.insuranceProvider || 'None'}
+                          </Typography>
+                          {patient.insuranceNumber && (
+                            <Typography variant="caption" color="text.secondary">
+                              #{patient.insuranceNumber}
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        {patient.lastVisit || 'Never'}
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={patient.status || 'Active'} 
+                          color={(patient.status || 'Active') === 'Active' ? 'success' : 'default'} 
+                          size="small" 
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton 
+                          size="small" 
+                          color="primary" 
+                          onClick={() => handleOpenDialog(patient)}
+                          title="Edit patient"
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton 
+                          size="small" 
+                          color="error" 
+                          onClick={() => handleDeleteClick(patient)}
+                          title="Delete patient"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton 
+                          size="small" 
+                          color="secondary" 
+                          onClick={() => handleViewPatient(patient)}
+                          title="View patient details"
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton 
+                          size="small" 
+                          color="info" 
+                          title="Schedule appointment"
+                        >
+                          <EventNoteIcon fontSize="small" />
+                        </IconButton>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          startIcon={<PaymentIcon />}
+                          onClick={() => handleViewPatient(patient)}
+                          size="small"
+                          sx={{ ml: 1 }}
+                        >
+                          Checkout
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={filteredPatients.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </Paper>
       )}
       
       {/* Patient Form Dialog */}

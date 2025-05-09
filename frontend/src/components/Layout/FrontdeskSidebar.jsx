@@ -2,27 +2,43 @@
 import React from 'react';
 import { List } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
-import PeopleIcon from '@mui/icons-material/People';
 import EventIcon from '@mui/icons-material/Event';
+import PersonIcon from '@mui/icons-material/Person';
+import PaymentIcon from '@mui/icons-material/Payment';
 import ActiveNavLink from '../ActiveNavLink';
 
-function FrontdeskSidebar() {
+function FrontdeskSidebar({ collapsed = false }) {
   return (
-    <List sx={{ width: '100%' }}>
+    <List sx={{ 
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      p: 0.5 // Reduced padding to give more space to buttons
+    }}>
       <ActiveNavLink
         to="/frontdesk"
         icon={<HomeIcon />}
         primary="Dashboard"
+        collapsed={collapsed}
       />
       <ActiveNavLink
         to="/frontdesk/appointments"
         icon={<EventIcon />}
         primary="Appointments"
+        collapsed={collapsed}
       />
       <ActiveNavLink
         to="/frontdesk/patients"
-        icon={<PeopleIcon />}
+        icon={<PersonIcon />}
         primary="Patients"
+        collapsed={collapsed}
+      />
+      <ActiveNavLink
+        to="/frontdesk/checkout"
+        icon={<PaymentIcon />}
+        primary="Checkout"
+        collapsed={collapsed}
       />
     </List>
   );

@@ -4,8 +4,7 @@ import { useAuth } from "../app/providers/AuthProvider";
 import { 
   Grid, 
   useMediaQuery, 
-  useTheme, 
-  Container
+  useTheme
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
@@ -16,7 +15,8 @@ import { useNavigate } from "react-router-dom";
 import { 
   PageHeading, 
   ContentCard, 
-  AppointmentList
+  AppointmentList,
+  PageContainer
 } from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
@@ -58,7 +58,7 @@ function DoctorDashboard() {
   }, []);
 
   return (
-    <Container maxWidth="xl" disableGutters>
+    <PageContainer>
       {/* Page header */}
       <PageHeading 
         title={`${getTimeBasedGreeting()}, Dr. ${user?.lastName || user?.username || "Smith"}!`}
@@ -114,7 +114,7 @@ function DoctorDashboard() {
           showAction={false}
         />
       </ContentCard>
-    </Container>
+    </PageContainer>
   );
 }
 

@@ -1,7 +1,6 @@
 // src/components/PageHeader.jsx
 import React from 'react';
-import { Box, Divider } from '@mui/material';
-import { PageTitle, SecondaryText } from './ui';
+import { Box, Divider, Typography } from '@mui/material';
 
 /**
  * A consistent page header component that can be used across all pages
@@ -26,14 +25,33 @@ function PageHeader({ title, subtitle, action, sx = {} }) {
       }}
     >
       <Box sx={{ textAlign: 'left', width: '100%' }}>
-        <PageTitle sx={{ mb: subtitle ? 0.5 : 0, textAlign: 'left' }}>
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{ 
+            mb: subtitle ? 0.5 : 0, 
+            textAlign: 'left',
+            fontWeight: 600,
+            color: 'primary.main',
+            lineHeight: 1.3
+          }}
+        >
           {title}
-        </PageTitle>
+        </Typography>
         
         {subtitle && (
-          <SecondaryText sx={{ mt: 0.5, mb: 0, fontSize: '1rem', textAlign: 'left' }}>
+          <Typography 
+            variant="subtitle1" 
+            color="text.secondary"
+            sx={{ 
+              mt: 0.5, 
+              mb: 0, 
+              textAlign: 'left',
+              lineHeight: 1.4
+            }}
+          >
             {subtitle}
-          </SecondaryText>
+          </Typography>
         )}
       </Box>
       

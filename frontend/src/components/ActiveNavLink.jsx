@@ -7,7 +7,7 @@ import { ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
  * A component that combines MUI ListItemButton with React Router's NavLink
  * to create a navigation item that shows active state correctly
  */
-function ActiveNavLink({ to, icon, primary, onClick, ...props }) {
+function ActiveNavLink({ to, icon, primary, onClick, collapsed = false, ...props }) {
   return (
     <ListItemButton
       component={NavLink}
@@ -17,21 +17,30 @@ function ActiveNavLink({ to, icon, primary, onClick, ...props }) {
       className="nav-link"
       sx={(theme) => ({
         py: 1.5, // Consistent vertical padding
-        px: 2, // Consistent horizontal padding
+        px: collapsed ? 1.5 : 2, // Adjust padding based on collapsed state
         display: 'flex',
         alignItems: 'center',
+        justifyContent: collapsed ? 'center' : 'flex-start',
         width: '100%',
+        borderRadius: '12px', // Rounded corners
+        mx: 'auto', // Center in the drawer
+        my: 0.5, // Add some vertical spacing between items
+        maxWidth: collapsed ? '48px' : '95%', // Slightly wider for better appearance
+        transition: theme.transitions.create(['width', 'margin', 'background-color'], {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.standard,
+        }),
         "&:hover": {
-          backgroundColor: "rgba(25, 118, 210, 0.04)", // Very light blue background on hover
+          backgroundColor: "rgba(25, 118, 210, 0.08)", // Light blue background on hover
           "& .MuiListItemText-primary": {
-            color: theme.palette.primary.light, // Light blue text on hover
+            color: theme.palette.primary.main, // Blue text on hover
           },
           "& .MuiListItemIcon-root": {
-            color: theme.palette.primary.light, // Light blue icon on hover
+            color: theme.palette.primary.main, // Blue icon on hover
           }
         },
         "&.active": {
-          backgroundColor: "rgba(25, 118, 210, 0.08)", // Light blue background
+          backgroundColor: "rgba(25, 118, 210, 0.12)", // Slightly darker blue background
           "& .MuiListItemIcon-root": {
             color: theme.palette.primary.main, // Theme primary color for icon
           },
@@ -46,8 +55,8 @@ function ActiveNavLink({ to, icon, primary, onClick, ...props }) {
       {icon && (
         <ListItemIcon 
           sx={{ 
-            minWidth: 36, // Reduced width for better alignment
-            mr: 2, // Consistent margin to the right
+            minWidth: collapsed ? 0 : 36, // No min width when collapsed
+            mr: collapsed ? 0 : 1.5, // Reduced margin for better spacing
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -57,22 +66,25 @@ function ActiveNavLink({ to, icon, primary, onClick, ...props }) {
           {icon}
         </ListItemIcon>
       )}
-      <ListItemText 
-        primary={primary} 
-        disableTypography={false}
-        primaryTypographyProps={{
-          fontSize: { xs: "0.9rem", sm: "1rem" }, // Responsive text size
-          fontWeight: 500, // Medium weight for better readability
-          variant: 'body2'
-        }}
-        sx={{ 
-          my: 0, // Remove default margin for better vertical alignment
-          '& .MuiListItemText-primary': {
-            display: 'block', // Ensure text is on its own line
-            whiteSpace: 'nowrap' // Prevent text wrapping
-          }
-        }} 
-      />
+      {!collapsed && (
+        <ListItemText 
+          primary={primary} 
+          disableTypography={false}
+          primaryTypographyProps={{
+            fontSize: { xs: "0.9rem", sm: "1rem" }, // Responsive text size
+            fontWeight: 500, // Medium weight for better readability
+            variant: 'body2'
+          }}
+          sx={{ 
+            my: 0, // Remove default margin for better vertical alignment
+            opacity: collapsed ? 0 : 1, // Hide text when collapsed
+            '& .MuiListItemText-primary': {
+              display: 'block', // Ensure text is on its own line
+              whiteSpace: 'nowrap' // Prevent text wrapping
+            }
+          }} 
+        />
+      )}
     </ListItemButton>
   );
 }

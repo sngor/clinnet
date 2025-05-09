@@ -15,7 +15,7 @@ function DialogHeading({ title, icon, sx = {} }) {
     <DialogTitle 
       sx={{ 
         bgcolor: 'primary.main', 
-        color: 'white',
+        color: 'primary.contrastText',
         px: 3,
         py: 2,
         fontWeight: 600,

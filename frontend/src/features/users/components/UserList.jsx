@@ -29,6 +29,7 @@ import {
   FormControlLabel,
   Typography,
   Tooltip,
+  Paper
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -370,146 +371,154 @@ function UserList() {
             <CircularProgress />
           </Box>
         ) : (
-          <MuiTableContainer sx={{ boxShadow: "none" }}>
-            <Table
-              sx={{
-                minWidth: 650,
-                "& .MuiTableCell-root": {
-                  borderBottom: "none",
-                  padding: "16px",
-                },
-                "& tbody tr": {
-                  borderBottom: "1px solid rgba(224, 224, 224, 0.4)",
-                },
-                "& tbody tr:last-child": {
-                  border: 0,
-                },
-                borderCollapse: "separate",
-                borderSpacing: 0,
-                "& thead tr th:first-of-type": {
-                  borderRadius: "8px 0 0 8px",
-                },
-                "& thead tr th:last-of-type": {
-                  borderRadius: "0 8px 8px 0",
-                },
-              }}
-              aria-label="users table"
-            >
-              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-                <TableRow>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.id}
-                      sortDirection={orderBy === column.id ? order : false}
-                    >
-                      <TableSortLabel
-                        active={orderBy === column.id}
-                        direction={orderBy === column.id ? order : "asc"}
-                        onClick={createSortHandler(column.id)}
-                      >
-                        {column.label}
-                      </TableSortLabel>
-                    </TableCell>
-                  ))}
-                  <TableCell align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.length === 0 ? (
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 2,
+              overflow: 'hidden'
+            }}
+          >
+            <MuiTableContainer sx={{ boxShadow: "none" }}>
+              <Table
+                sx={{
+                  minWidth: 650,
+                  "& .MuiTableCell-root": {
+                    borderBottom: "none",
+                    padding: "16px",
+                  },
+                  "& tbody tr": {
+                    borderBottom: "1px solid rgba(224, 224, 224, 0.4)",
+                  },
+                  "& tbody tr:last-child": {
+                    border: 0,
+                  },
+                  borderCollapse: "separate",
+                  borderSpacing: 0,
+                  "& thead tr th:first-of-type": {
+                    borderRadius: "8px 0 0 8px",
+                  },
+                  "& thead tr th:last-of-type": {
+                    borderRadius: "0 8px 8px 0",
+                  },
+                }}
+                aria-label="users table"
+              >
+                <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
                   <TableRow>
-                    <TableCell colSpan={columns.length + 1} align="center">
-                      No users found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  stableSort(users, getComparator(order, orderBy)).map(
-                    (user) => (
-                      <TableRow
-                        key={user.username}
-                        sx={{
-                          "&:last-child td, &:last-child th": { border: 0 },
-                        }}
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        sortDirection={orderBy === column.id ? order : false}
                       >
-                        <TableCell>{user.username}</TableCell>
-                        <TableCell>{user.firstName || "-"}</TableCell>
-                        <TableCell>{user.lastName || "-"}</TableCell>
-                        <TableCell>{user.email || "-"}</TableCell>
-                        <TableCell>{user.phone || "-"}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={
-                              user.role.charAt(0).toUpperCase() +
-                              user.role.slice(1)
-                            }
-                            size="small"
-                            color={
-                              user.role === "admin"
-                                ? "error"
-                                : user.role === "doctor"
-                                ? "primary"
-                                : "secondary"
-                            }
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            icon={
-                              user.enabled ? <CheckCircleIcon /> : <BlockIcon />
-                            }
-                            label={user.enabled ? "Active" : "Disabled"}
-                            size="small"
-                            color={user.enabled ? "success" : "default"}
-                            variant={user.enabled ? "filled" : "outlined"}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Tooltip title="Edit User">
-                            <IconButton
-                              color="primary"
+                        <TableSortLabel
+                          active={orderBy === column.id}
+                          direction={orderBy === column.id ? order : "asc"}
+                          onClick={createSortHandler(column.id)}
+                        >
+                          {column.label}
+                        </TableSortLabel>
+                      </TableCell>
+                    ))}
+                    <TableCell align="center">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {users.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={columns.length + 1} align="center">
+                        No users found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    stableSort(users, getComparator(order, orderBy)).map(
+                      (user) => (
+                        <TableRow
+                          key={user.username}
+                          sx={{
+                            "&:last-child td, &:last-child th": { border: 0 },
+                          }}
+                        >
+                          <TableCell>{user.username}</TableCell>
+                          <TableCell>{user.firstName || "-"}</TableCell>
+                          <TableCell>{user.lastName || "-"}</TableCell>
+                          <TableCell>{user.email || "-"}</TableCell>
+                          <TableCell>{user.phone || "-"}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={
+                                user.role.charAt(0).toUpperCase() +
+                                user.role.slice(1)
+                              }
                               size="small"
-                              onClick={() => handleEditUser(user)}
-                              disabled={actionLoading}
-                            >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete User">
-                            <IconButton
-                              color="error"
+                              color={
+                                user.role === "admin"
+                                  ? "error"
+                                  : user.role === "doctor"
+                                  ? "primary"
+                                  : "secondary"
+                              }
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              icon={
+                                user.enabled ? <CheckCircleIcon /> : <BlockIcon />
+                              }
+                              label={user.enabled ? "Active" : "Disabled"}
                               size="small"
-                              onClick={() => handleDeleteClick(user)}
-                              disabled={actionLoading}
+                              color={user.enabled ? "success" : "default"}
+                              variant={user.enabled ? "filled" : "outlined"}
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            <Tooltip title="Edit User">
+                              <IconButton
+                                color="primary"
+                                size="small"
+                                onClick={() => handleEditUser(user)}
+                                disabled={actionLoading}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete User">
+                              <IconButton
+                                color="error"
+                                size="small"
+                                onClick={() => handleDeleteClick(user)}
+                                disabled={actionLoading}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip
+                              title={
+                                user.enabled ? "Disable User" : "Enable User"
+                              }
                             >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip
-                            title={
-                              user.enabled ? "Disable User" : "Enable User"
-                            }
-                          >
-                            <IconButton
-                              color={user.enabled ? "default" : "success"}
-                              size="small"
-                              onClick={() => handleToggleUserStatus(user)}
-                              disabled={actionLoading}
-                            >
-                              {user.enabled ? (
-                                <BlockIcon fontSize="small" />
-                              ) : (
-                                <CheckCircleIcon fontSize="small" />
-                              )}
-                            </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
+                              <IconButton
+                                color={user.enabled ? "default" : "success"}
+                                size="small"
+                                onClick={() => handleToggleUserStatus(user)}
+                                disabled={actionLoading}
+                              >
+                                {user.enabled ? (
+                                  <BlockIcon fontSize="small" />
+                                ) : (
+                                  <CheckCircleIcon fontSize="small" />
+                                )}
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      )
                     )
-                  )
-                )}
-              </TableBody>
-            </Table>
-          </MuiTableContainer>
+                  )}
+                </TableBody>
+              </Table>
+            </MuiTableContainer>
+          </Paper>
         )}
       </TableContainer>
 

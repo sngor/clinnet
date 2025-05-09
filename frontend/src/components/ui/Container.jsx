@@ -3,8 +3,8 @@ import React from 'react';
 import { Box, Paper } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-// Page container with consistent padding
-export const PageContainer = styled(Box)(({ theme }) => ({
+// Legacy page container - use the new PageContainer component instead
+const LegacyPageContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(3),
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(2),
