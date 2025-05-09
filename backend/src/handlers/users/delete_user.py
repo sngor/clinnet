@@ -8,17 +8,61 @@ import json
 import boto3
 import logging
 from botocore.exceptions import ClientError
-import sys
 
 # Setup logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Add the parent directory to sys.path
-# Consider using SAM Layers or packaging for better dependency management
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+def build_error_response(status_code, error_type, message):
+    """
+    Build a standardized error response
+    
+    Args:
+        status_code (int): HTTP status code
+        error_type (str): Type of error
+        message (str): Error message
+        
+    Returns:
+        dict: API Gateway response with error details
+    """
+    return {
+        'statusCode': status_code,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+        },
+        'body': json.dumps({
+            'error': error_type,
+            'message': message
+        })
+    }
 
-from utils.response_helper import build_error_response, handle_exception
+def handle_exception(exception):
+    """
+    Handle exceptions and return appropriate responses
+    
+    Args:
+        exception: The exception to handle
+        
+    Returns:
+        dict: API Gateway response with error details
+    """
+    if isinstance(exception, ClientError):
+        error_code = exception.response.get('Error', {}).get('Code', 'UnknownError')
+        
+        if error_code == 'ResourceNotFoundException':
+            return build_error_response(404, 'Not Found', str(exception))
+        elif error_code == 'ValidationException':
+            return build_error_response(400, 'Validation Error', str(exception))
+        elif error_code == 'AccessDeniedException':
+            return build_error_response(403, 'Access Denied', str(exception))
+        else:
+            logger.error(f"AWS ClientError: {error_code} - {str(exception)}")
+            return build_error_response(500, 'AWS Error', str(exception))
+    else:
+        logger.error(f"Unexpected error: {str(exception)}")
+        return build_error_response(500, 'Internal Server Error', str(exception))
 
 def lambda_handler(event, context):
     """
@@ -55,11 +99,11 @@ def lambda_handler(event, context):
             'Username': username
         }
         
+        logger.info(f"Deleting user: {username}")
         cognito.admin_delete_user(**params)
         
-        # Also delete the profile from DynamoDB if needed
-        
-        return {
+        # Return success response
+        response = {
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
@@ -71,6 +115,8 @@ def lambda_handler(event, context):
                 'message': f'User {username} deleted successfully'
             })
         }
+        logger.info(f"Returning response with status code {response['statusCode']}")
+        return response
     
     except ClientError as ce:
         logger.error(f"AWS ClientError deleting user: {ce}")

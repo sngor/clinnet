@@ -28,7 +28,7 @@ import {
   Switch,
   FormControlLabel,
   Typography,
-  Tooltip
+  Tooltip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -102,7 +102,7 @@ function UserList() {
     deleteUser,
     enableUser,
     disableUser,
-    refreshUsers
+    refreshUsers,
   } = useUserManagement();
 
   const [openAddEdit, setOpenAddEdit] = useState(false);
@@ -116,12 +116,12 @@ function UserList() {
     phone: "",
     role: "",
     password: "",
-    enabled: true
+    enabled: true,
   });
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'success'
+    message: "",
+    severity: "success",
   });
   const [passwordError, setPasswordError] = useState(null);
   const [formErrors, setFormErrors] = useState({});
@@ -139,30 +139,30 @@ function UserList() {
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    
+
     // Clear specific field error
     if (formErrors[name]) {
-      setFormErrors(prev => ({
+      setFormErrors((prev) => ({
         ...prev,
-        [name]: null
+        [name]: null,
       }));
     }
-    
+
     // Clear password error when password field changes
-    if (name === 'password') {
+    if (name === "password") {
       setPasswordError(null);
     }
   };
 
   // Handle switch toggle for enabled status
   const handleSwitchChange = (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      enabled: e.target.checked
+      enabled: e.target.checked,
     }));
   };
 
@@ -177,7 +177,7 @@ function UserList() {
       phone: "",
       role: "",
       password: "",
-      enabled: true
+      enabled: true,
     });
     setFormErrors({});
     setPasswordError(null);
@@ -195,7 +195,7 @@ function UserList() {
       phone: user.phone || "",
       role: user.role || "",
       password: "", // Don't pre-fill password
-      enabled: user.enabled
+      enabled: user.enabled,
     });
     setFormErrors({});
     setPasswordError(null);
@@ -220,18 +220,18 @@ function UserList() {
   };
 
   // Show notification
-  const showNotification = (message, severity = 'success') => {
+  const showNotification = (message, severity = "success") => {
     setSnackbar({
       open: true,
       message,
-      severity
+      severity,
     });
   };
 
   // Toggle user enabled status
   const handleToggleUserStatus = async (user) => {
     setActionLoading(true);
-    
+
     try {
       if (user.enabled) {
         await disableUser(user.username);
@@ -255,21 +255,21 @@ function UserList() {
   // Validate form data
   const validateForm = () => {
     const errors = {};
-    
+
     if (!formData.username) errors.username = "Username is required";
     if (!formData.firstName) errors.firstName = "First name is required";
     if (!formData.lastName) errors.lastName = "Last name is required";
     if (!formData.role) errors.role = "Role is required";
-    
+
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = "Invalid email address";
     }
-    
+
     // Validate password for new users
     if (!currentUser && !formData.password) {
       errors.password = "Password is required for new users";
     }
-    
+
     // Validate password strength if provided
     if (formData.password) {
       const passwordValidation = validatePassword(formData.password);
@@ -278,7 +278,7 @@ function UserList() {
         setPasswordError(passwordValidation.message);
       }
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -287,24 +287,21 @@ function UserList() {
   const handleSaveUser = async () => {
     // Validate form
     if (!validateForm()) return;
-    
+
     setActionLoading(true);
-    
+
     try {
       if (currentUser) {
         // Edit existing user
-        const updatedUser = await updateUser(
-          currentUser.username,
-          formData
-        );
-        
+        const updatedUser = await updateUser(currentUser.username, formData);
+
         showNotification(`User ${updatedUser.username} updated successfully`);
       } else {
         // Add new user
         const newUser = await createUser(formData);
         showNotification(`User ${newUser.username} created successfully`);
       }
-      
+
       setOpenAddEdit(false);
     } catch (err) {
       showNotification(`Failed to save user: ${err.message}`, "error");
@@ -316,7 +313,7 @@ function UserList() {
   // Delete user
   const handleDeleteUser = async () => {
     setActionLoading(true);
-    
+
     try {
       await deleteUser(currentUser.username);
       showNotification(`User ${currentUser.username} deleted successfully`);
@@ -342,13 +339,9 @@ function UserList() {
 
   // Action buttons for the table
   const actionButtons = (
-    <Box sx={{ display: 'flex', gap: 1 }}>
+    <Box sx={{ display: "flex", gap: 1 }}>
       <Tooltip title="Refresh Users">
-        <IconButton 
-          onClick={handleRefresh} 
-          disabled={loading}
-          sx={{ mr: 1 }}
-        >
+        <IconButton onClick={handleRefresh} disabled={loading} sx={{ mr: 1 }}>
           <RefreshIcon />
         </IconButton>
       </Tooltip>
@@ -371,7 +364,7 @@ function UserList() {
             {error}
           </Alert>
         )}
-        
+
         {loading && !openAddEdit && !openDelete ? (
           <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
             <CircularProgress />
@@ -429,75 +422,90 @@ function UserList() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  stableSort(users, getComparator(order, orderBy)).map((user) => (
-                    <TableRow
-                      key={user.username}
-                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                    >
-                      <TableCell>{user.username}</TableCell>
-                      <TableCell>{user.firstName || "-"}</TableCell>
-                      <TableCell>{user.lastName || "-"}</TableCell>
-                      <TableCell>{user.email || "-"}</TableCell>
-                      <TableCell>{user.phone || "-"}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={
-                            user.role.charAt(0).toUpperCase() + user.role.slice(1)
-                          }
-                          size="small"
-                          color={
-                            user.role === "admin"
-                              ? "error"
-                              : user.role === "doctor"
-                              ? "primary"
-                              : "secondary"
-                          }
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          icon={user.enabled ? <CheckCircleIcon /> : <BlockIcon />}
-                          label={user.enabled ? "Active" : "Disabled"}
-                          size="small"
-                          color={user.enabled ? "success" : "default"}
-                          variant={user.enabled ? "filled" : "outlined"}
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip title="Edit User">
-                          <IconButton
-                            color="primary"
+                  stableSort(users, getComparator(order, orderBy)).map(
+                    (user) => (
+                      <TableRow
+                        key={user.username}
+                        sx={{
+                          "&:last-child td, &:last-child th": { border: 0 },
+                        }}
+                      >
+                        <TableCell>{user.username}</TableCell>
+                        <TableCell>{user.firstName || "-"}</TableCell>
+                        <TableCell>{user.lastName || "-"}</TableCell>
+                        <TableCell>{user.email || "-"}</TableCell>
+                        <TableCell>{user.phone || "-"}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={
+                              user.role.charAt(0).toUpperCase() +
+                              user.role.slice(1)
+                            }
                             size="small"
-                            onClick={() => handleEditUser(user)}
-                            disabled={actionLoading}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete User">
-                          <IconButton
-                            color="error"
+                            color={
+                              user.role === "admin"
+                                ? "error"
+                                : user.role === "doctor"
+                                ? "primary"
+                                : "secondary"
+                            }
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            icon={
+                              user.enabled ? <CheckCircleIcon /> : <BlockIcon />
+                            }
+                            label={user.enabled ? "Active" : "Disabled"}
                             size="small"
-                            onClick={() => handleDeleteClick(user)}
-                            disabled={actionLoading}
+                            color={user.enabled ? "success" : "default"}
+                            variant={user.enabled ? "filled" : "outlined"}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Tooltip title="Edit User">
+                            <IconButton
+                              color="primary"
+                              size="small"
+                              onClick={() => handleEditUser(user)}
+                              disabled={actionLoading}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete User">
+                            <IconButton
+                              color="error"
+                              size="small"
+                              onClick={() => handleDeleteClick(user)}
+                              disabled={actionLoading}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip
+                            title={
+                              user.enabled ? "Disable User" : "Enable User"
+                            }
                           >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title={user.enabled ? "Disable User" : "Enable User"}>
-                          <IconButton
-                            color={user.enabled ? "default" : "success"}
-                            size="small"
-                            onClick={() => handleToggleUserStatus(user)}
-                            disabled={actionLoading}
-                          >
-                            {user.enabled ? <BlockIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                            <IconButton
+                              color={user.enabled ? "default" : "success"}
+                              size="small"
+                              onClick={() => handleToggleUserStatus(user)}
+                              disabled={actionLoading}
+                            >
+                              {user.enabled ? (
+                                <BlockIcon fontSize="small" />
+                              ) : (
+                                <CheckCircleIcon fontSize="small" />
+                              )}
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )
                 )}
               </TableBody>
             </Table>
@@ -544,7 +552,8 @@ function UserList() {
                 />
                 <PasswordStrengthMeter password={formData.password} />
                 <FormHelperText>
-                  Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                  Password must be at least 8 characters with uppercase,
+                  lowercase, number, and special character
                 </FormHelperText>
               </>
             )}
@@ -566,7 +575,8 @@ function UserList() {
               <>
                 <PasswordStrengthMeter password={formData.password} />
                 <FormHelperText>
-                  Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                  Password must be at least 8 characters with uppercase,
+                  lowercase, number, and special character
                 </FormHelperText>
               </>
             )}
@@ -654,10 +664,7 @@ function UserList() {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={handleCloseDialog}
-            disabled={actionLoading}
-          >
+          <Button onClick={handleCloseDialog} disabled={actionLoading}>
             Cancel
           </Button>
           <Button
@@ -685,18 +692,18 @@ function UserList() {
         itemType="user"
         loading={actionLoading}
       />
-      
+
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbar.severity} 
-          sx={{ width: '100%' }}
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
           variant="filled"
         >
           {snackbar.message}

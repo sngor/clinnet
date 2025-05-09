@@ -8,21 +8,65 @@ import json
 import boto3
 import logging
 from botocore.exceptions import ClientError
-import sys
 
 # Setup logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Add the parent directory to sys.path
-# Consider using SAM Layers or packaging for better dependency management
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+def build_error_response(status_code, error_type, message):
+    """
+    Build a standardized error response
+    
+    Args:
+        status_code (int): HTTP status code
+        error_type (str): Type of error
+        message (str): Error message
+        
+    Returns:
+        dict: API Gateway response with error details
+    """
+    return {
+        'statusCode': status_code,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+        },
+        'body': json.dumps({
+            'error': error_type,
+            'message': message
+        })
+    }
 
-from utils.response_helper import build_error_response, handle_exception
+def handle_exception(exception):
+    """
+    Handle exceptions and return appropriate responses
+    
+    Args:
+        exception: The exception to handle
+        
+    Returns:
+        dict: API Gateway response with error details
+    """
+    if isinstance(exception, ClientError):
+        error_code = exception.response.get('Error', {}).get('Code', 'UnknownError')
+        
+        if error_code == 'ResourceNotFoundException':
+            return build_error_response(404, 'Not Found', str(exception))
+        elif error_code == 'ValidationException':
+            return build_error_response(400, 'Validation Error', str(exception))
+        elif error_code == 'AccessDeniedException':
+            return build_error_response(403, 'Access Denied', str(exception))
+        else:
+            logger.error(f"AWS ClientError: {error_code} - {str(exception)}")
+            return build_error_response(500, 'AWS Error', str(exception))
+    else:
+        logger.error(f"Unexpected error: {str(exception)}")
+        return build_error_response(500, 'Internal Server Error', str(exception))
 
 def lambda_handler(event, context):
     """
-    Handle Lambda event for POST /admin/users (Creates a new user in Cognito)
+    Handle Lambda event for POST /users (Creates a new user in Cognito)
     
     Args:
         event (dict): Lambda event
@@ -99,7 +143,9 @@ def lambda_handler(event, context):
             'MessageAction': 'SUPPRESS'  # Don't send welcome email
         }
         
+        logger.info(f"Creating user with params: {json.dumps(create_params, default=str)}")
         create_result = cognito.admin_create_user(**create_params)
+        logger.info(f"User created: {json.dumps(create_result, default=str)}")
         
         # If a permanent password is provided, set it
         if request_body.get('password'):
@@ -110,6 +156,7 @@ def lambda_handler(event, context):
                 'Permanent': True
             }
             
+            logger.info(f"Setting permanent password for user: {request_body['username']}")
             cognito.admin_set_user_password(**password_params)
         
         # Get the user attributes
@@ -148,11 +195,8 @@ def lambda_handler(event, context):
             'sub': attributes.get('sub', '')
         }
         
-        # Also create a profile in DynamoDB if needed
-        # This can call your existing create_user.lambda_handler function
-        # or directly use the create_item function
-        
-        return {
+        # Return the formatted response
+        response = {
             'statusCode': 201,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
@@ -161,6 +205,8 @@ def lambda_handler(event, context):
             },
             'body': json.dumps(user)
         }
+        logger.info(f"Returning response with status code {response['statusCode']}")
+        return response
     
     except ClientError as ce:
         logger.error(f"AWS ClientError creating user: {ce}")
