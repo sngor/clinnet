@@ -1,10 +1,7 @@
 // src/features/patients/components/PatientList.jsx
 import React, { useState, useEffect } from "react";
 import {
-  Box,
   Typography,
-  Button,
-  IconButton,
   CircularProgress,
   Alert,
   TextField,
@@ -22,7 +19,7 @@ import {
   TableRow,
   TablePagination,
   TableSortLabel,
-  Tooltip
+  Tooltip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -32,7 +29,15 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PaymentIcon from "@mui/icons-material/Payment";
 import { useAppData } from "../../../app/providers/DataProvider";
-import { StyledTableContainer, tableHeaderStyle } from "../../../components/ui";
+import {
+  PageContainer,
+  SectionContainer,
+  CardContainer,
+  PrimaryButton,
+  DangerButton,
+  AppIconButton,
+  FlexBox,
+} from "../../../components/ui";
 
 // Table column definitions
 const columns = [
@@ -40,7 +45,7 @@ const columns = [
   { id: "contact", label: "Contact", numeric: false },
   { id: "insurance", label: "Insurance", numeric: false },
   { id: "lastVisit", label: "Last Visit", numeric: false },
-  { id: "status", label: "Status", numeric: false }
+  { id: "status", label: "Status", numeric: false },
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -79,29 +84,33 @@ function stableSort(array, comparator) {
 }
 
 function PatientList({ onPatientSelect }) {
-  const { 
-    patients: apiPatients, 
-    loading: apiLoading, 
+  const {
+    patients: apiPatients,
+    loading: apiLoading,
     error: apiError,
     addPatient,
     updatePatient,
-    deletePatient
+    deletePatient,
   } = useAppData();
-  
+
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  
+
   // Sorting state
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("name");
-  
+
   // State for patient form dialog
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentPatient, setCurrentPatient] = useState(null);
@@ -114,74 +123,74 @@ function PatientList({ onPatientSelect }) {
     address: "",
     insuranceProvider: "",
     insuranceNumber: "",
-    status: "Active"
+    status: "Active",
   });
-  
+
   // State for delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
-  
+
   // Helper function to format dates
   const formatDateForInput = (dateString) => {
     try {
       // Handle different date formats
-      if (!dateString) return '';
-      
+      if (!dateString) return "";
+
       // If it's already in YYYY-MM-DD format
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
         return dateString;
       }
-      
+
       // Try to parse the date
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        return ''; // Invalid date
+        return ""; // Invalid date
       }
-      
+
       // Format as YYYY-MM-DD
-      return date.toISOString().split('T')[0];
+      return date.toISOString().split("T")[0];
     } catch (error) {
       console.error("Error formatting date:", error);
-      return '';
+      return "";
     }
   };
-  
+
   // Date validation function
   const isValidDateFormat = (dateString) => {
     // Check if the string matches YYYY-MM-DD format
     const regex = /^\d{4}-\d{2}-\d{2}$/;
     if (!regex.test(dateString)) return false;
-    
+
     // Check if it's a valid date
     const date = new Date(dateString);
     const timestamp = date.getTime();
     if (isNaN(timestamp)) return false;
-    
+
     return true;
   };
-  
+
   // Use data from API when available
   useEffect(() => {
     if (apiPatients && apiPatients.length > 0) {
-      console.log('Using patients data from API:', apiPatients);
-      
+      console.log("Using patients data from API:", apiPatients);
+
       // Transform API data to match the expected format if needed
-      const formattedPatients = apiPatients.map(patient => ({
+      const formattedPatients = apiPatients.map((patient) => ({
         id: patient.id,
         firstName: patient.firstName,
         lastName: patient.lastName,
-        dob: formatDateForInput(patient.dob || ''),
-        phone: patient.phone || '',
-        email: patient.email || '',
-        address: patient.address || '',
-        insuranceProvider: patient.insuranceProvider || '',
-        insuranceNumber: patient.insuranceNumber || '',
+        dob: formatDateForInput(patient.dob || ""),
+        phone: patient.phone || "",
+        email: patient.email || "",
+        address: patient.address || "",
+        insuranceProvider: patient.insuranceProvider || "",
+        insuranceNumber: patient.insuranceNumber || "",
         lastVisit: patient.lastVisit || null,
         upcomingAppointment: patient.upcomingAppointment || null,
-        status: patient.status || 'Active',
+        status: patient.status || "Active",
         // Add any other fields needed
       }));
-      
+
       setPatients(formattedPatients);
       setLoading(false);
     } else if (apiLoading) {
@@ -191,40 +200,43 @@ function PatientList({ onPatientSelect }) {
       setLoading(false);
     }
   }, [apiPatients, apiLoading, apiError]);
-  
+
   // Filter patients based on search term
-  const filteredPatients = patients.filter(patient => {
+  const filteredPatients = patients.filter((patient) => {
     if (!patient.firstName || !patient.lastName) return false;
-    
+
     const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase()) || 
-           (patient.phone && patient.phone.includes(searchTerm)) || 
-           (patient.email && patient.email.toLowerCase().includes(searchTerm.toLowerCase()));
+    return (
+      fullName.includes(searchTerm.toLowerCase()) ||
+      (patient.phone && patient.phone.includes(searchTerm)) ||
+      (patient.email &&
+        patient.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
   });
-  
+
   // Handle search input change
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
-  
+
   // Handle opening the patient form dialog for adding/editing
   const handleOpenDialog = (patient = null) => {
     if (patient) {
       // Editing existing patient
       // Format the date properly if it exists
-      const formattedDob = formatDateForInput(patient.dob || '');
-      
+      const formattedDob = formatDateForInput(patient.dob || "");
+
       setCurrentPatient(patient);
       setFormData({
-        firstName: patient.firstName || '',
-        lastName: patient.lastName || '',
+        firstName: patient.firstName || "",
+        lastName: patient.lastName || "",
         dob: formattedDob,
-        phone: patient.phone || '',
-        email: patient.email || '',
-        address: patient.address || '',
+        phone: patient.phone || "",
+        email: patient.email || "",
+        address: patient.address || "",
         insuranceProvider: patient.insuranceProvider || "",
         insuranceNumber: patient.insuranceNumber || "",
-        status: patient.status || 'Active'
+        status: patient.status || "Active",
       });
     } else {
       // Adding new patient
@@ -238,36 +250,36 @@ function PatientList({ onPatientSelect }) {
         address: "",
         insuranceProvider: "",
         insuranceNumber: "",
-        status: "Active"
+        status: "Active",
       });
     }
     setIsDialogOpen(true);
   };
-  
+
   // Handle closing the patient form dialog
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
   };
-  
+
   // Handle form input changes
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    
+
     // Special handling for date fields
-    if (name === 'dob') {
+    if (name === "dob") {
       // Ensure the date is in a valid format
       setFormData({
         ...formData,
-        [name]: value
+        [name]: value,
       });
     } else {
       setFormData({
         ...formData,
-        [name]: value
+        [name]: value,
       });
     }
   };
-  
+
   // Handle form submission
   const handleSubmit = async () => {
     try {
@@ -276,69 +288,71 @@ function PatientList({ onPatientSelect }) {
         alert("Please enter a valid date in YYYY-MM-DD format");
         return;
       }
-      
+
       setLoading(true);
-      
+
       if (currentPatient) {
         // Update existing patient in DynamoDB
         await updatePatient(currentPatient.id, formData);
-        
+
         setSnackbar({
           open: true,
-          message: 'Patient updated successfully',
-          severity: 'success'
+          message: "Patient updated successfully",
+          severity: "success",
         });
       } else {
         // Add new patient to DynamoDB
         await addPatient(formData);
-        
+
         setSnackbar({
           open: true,
-          message: 'Patient added successfully',
-          severity: 'success'
+          message: "Patient added successfully",
+          severity: "success",
         });
       }
-      
+
       handleCloseDialog();
     } catch (error) {
       console.error("Error submitting form:", error);
-      setError("Error saving patient data. Please check all fields and try again.");
+      setError(
+        "Error saving patient data. Please check all fields and try again."
+      );
       setSnackbar({
         open: true,
-        message: 'Error saving patient data',
-        severity: 'error'
+        message: "Error saving patient data",
+        severity: "error",
       });
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Handle delete button click
   const handleDeleteClick = (patient) => {
     setPatientToDelete(patient);
     setDeleteDialogOpen(true);
   };
-  
+
   // Handle confirming patient deletion
   const handleConfirmDelete = async () => {
     if (patientToDelete) {
       try {
         setLoading(true);
-        
+
         // Delete from DynamoDB
         await deletePatient(patientToDelete.id);
-        
+
         setSnackbar({
           open: true,
-          message: 'Patient deleted successfully',
-          severity: 'success'
+          message: "Patient deleted successfully",
+          severity: "success",
         });
       } catch (error) {
         console.error("Error deleting patient:", error);
         setSnackbar({
           open: true,
-          message: 'Error deleting patient',
-          severity: 'error'
+          message: "Error deleting patient",
+          severity: "error",
         });
       } finally {
         setLoading(false);
@@ -347,29 +361,29 @@ function PatientList({ onPatientSelect }) {
       }
     }
   };
-  
+
   // Handle view patient details
   const handleViewPatient = (patient) => {
     if (onPatientSelect) {
       onPatientSelect(patient);
     }
   };
-  
+
   // Handle closing snackbar
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
-  
+
   // Handle pagination
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
-  
+
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-  
+
   // Handle sort request
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === "asc";
@@ -381,332 +395,346 @@ function PatientList({ onPatientSelect }) {
   const createSortHandler = (property) => () => {
     handleRequestSort(property);
   };
-  
+
   // Get current page data
-  const currentPatients = stableSort(filteredPatients, getComparator(order, orderBy))
-    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  
+  const currentPatients = stableSort(
+    filteredPatients,
+    getComparator(order, orderBy)
+  ).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
   return (
-    <Box sx={{ height: '100%', width: '100%' }}>
-      {/* Header with search and add button */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <TextField
-          placeholder="Search patients..."
-          variant="outlined"
-          size="small"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ width: '300px' }}
-        />
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          sx={{ borderRadius: 1.5 }}
-        >
-          Add Patient
-        </Button>
-      </Box>
-      
-      {/* Error message */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-      
-      {/* Loading indicator or table */}
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : (
-        <StyledTableContainer>
-          <TableHead sx={tableHeaderStyle}>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  sortDirection={orderBy === column.id ? order : false}
-                >
-                  <TableSortLabel
-                    active={orderBy === column.id}
-                    direction={orderBy === column.id ? order : "asc"}
-                    onClick={createSortHandler(column.id)}
-                  >
-                    {column.label}
-                  </TableSortLabel>
-                </TableCell>
-              ))}
-              <TableCell align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {currentPatients.length === 0 ? (
+    <PageContainer>
+      <SectionContainer>
+        <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
+          <TextField
+            placeholder="Search patients..."
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ width: "300px" }}
+          />
+          <PrimaryButton
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+            sx={{ borderRadius: 1.5 }}
+          >
+            Add Patient
+          </PrimaryButton>
+        </FlexBox>
+
+        {/* Error message */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Loading indicator or table */}
+        {loading ? (
+          <FlexBox justify="center" sx={{ mt: 4 }}>
+            <CircularProgress />
+          </FlexBox>
+        ) : (
+          <CardContainer>
+            <TableHead sx={tableHeaderStyle}>
               <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No patients found
-                </TableCell>
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.id}
+                    sortDirection={orderBy === column.id ? order : false}
+                  >
+                    <TableSortLabel
+                      active={orderBy === column.id}
+                      direction={orderBy === column.id ? order : "asc"}
+                      onClick={createSortHandler(column.id)}
+                    >
+                      {column.label}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
+                <TableCell align="center">Actions</TableCell>
               </TableRow>
-            ) : (
-              currentPatients.map((patient) => (
-                <TableRow key={patient.id}>
-                  <TableCell>
-                    <Box>
+            </TableHead>
+            <TableBody>
+              {currentPatients.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center">
+                    No patients found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                currentPatients.map((patient) => (
+                  <TableRow key={patient.id}>
+                    <TableCell>
                       <Typography variant="body2" fontWeight="medium">
                         {patient.firstName} {patient.lastName}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        DOB: {patient.dob || 'N/A'}
+                        DOB: {patient.dob || "N/A"}
                       </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box>
+                    </TableCell>
+                    <TableCell>
                       <Typography variant="body2">
-                        {patient.phone || 'N/A'}
+                        {patient.phone || "N/A"}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {patient.email || 'N/A'}
+                        {patient.email || "N/A"}
                       </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box>
+                    </TableCell>
+                    <TableCell>
                       <Typography variant="body2">
-                        {patient.insuranceProvider || 'None'}
+                        {patient.insuranceProvider || "None"}
                       </Typography>
                       {patient.insuranceNumber && (
                         <Typography variant="caption" color="text.secondary">
                           #{patient.insuranceNumber}
                         </Typography>
                       )}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    {patient.lastVisit || 'Never'}
-                  </TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={patient.status || 'Active'} 
-                      color={(patient.status || 'Active') === 'Active' ? 'success' : 'default'} 
-                      size="small" 
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <Tooltip title="Edit Patient">
-                      <IconButton 
-                        size="small" 
-                        color="primary" 
-                        onClick={() => handleOpenDialog(patient)}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete Patient">
-                      <IconButton 
-                        size="small" 
-                        color="error" 
-                        onClick={() => handleDeleteClick(patient)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="View Patient Details">
-                      <IconButton 
-                        size="small" 
-                        color="secondary" 
+                    </TableCell>
+                    <TableCell>{patient.lastVisit || "Never"}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={patient.status || "Active"}
+                        color={
+                          (patient.status || "Active") === "Active"
+                            ? "success"
+                            : "default"
+                        }
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Edit Patient">
+                        <AppIconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => handleOpenDialog(patient)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </AppIconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete Patient">
+                        <AppIconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeleteClick(patient)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </AppIconButton>
+                      </Tooltip>
+                      <Tooltip title="View Patient Details">
+                        <AppIconButton
+                          size="small"
+                          color="secondary"
+                          onClick={() => handleViewPatient(patient)}
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </AppIconButton>
+                      </Tooltip>
+                      <Tooltip title="Schedule Appointment">
+                        <AppIconButton size="small" color="info">
+                          <EventNoteIcon fontSize="small" />
+                        </AppIconButton>
+                      </Tooltip>
+                      <PrimaryButton
+                        startIcon={<PaymentIcon />}
                         onClick={() => handleViewPatient(patient)}
+                        size="small"
+                        sx={{ ml: 1 }}
                       >
-                        <VisibilityIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Schedule Appointment">
-                      <IconButton 
-                        size="small" 
-                        color="info"
-                      >
-                        <EventNoteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      startIcon={<PaymentIcon />}
-                      onClick={() => handleViewPatient(patient)}
-                      size="small"
-                      sx={{ ml: 1 }}
-                    >
-                      Checkout
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={filteredPatients.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </StyledTableContainer>
-      )}
-      
-      {/* Patient Form Dialog */}
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {currentPatient ? 'Edit Patient' : 'Add New Patient'}
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="firstName"
-                label="First Name"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="lastName"
-                label="Last Name"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="dob"
-                label="Date of Birth"
-                type="date"
-                value={formData.dob}
-                onChange={handleInputChange}
-                fullWidth
-                required
-                InputLabelProps={{ shrink: true }}
-                error={formData.dob && !isValidDateFormat(formData.dob)}
-                helperText={formData.dob && !isValidDateFormat(formData.dob) ? "Please use YYYY-MM-DD format" : ""}
-                onBlur={(e) => {
-                  if (e.target.value) {
-                    const formattedDate = formatDateForInput(e.target.value);
-                    setFormData({...formData, dob: formattedDate});
+                        Checkout
+                      </PrimaryButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={filteredPatients.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </CardContainer>
+        )}
+
+        {/* Patient Form Dialog */}
+        <Dialog
+          open={isDialogOpen}
+          onClose={handleCloseDialog}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            {currentPatient ? "Edit Patient" : "Add New Patient"}
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="firstName"
+                  label="First Name"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="lastName"
+                  label="Last Name"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="dob"
+                  label="Date of Birth"
+                  type="date"
+                  value={formData.dob}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                  InputLabelProps={{ shrink: true }}
+                  error={formData.dob && !isValidDateFormat(formData.dob)}
+                  helperText={
+                    formData.dob && !isValidDateFormat(formData.dob)
+                      ? "Please use YYYY-MM-DD format"
+                      : ""
                   }
-                }}
-              />
+                  onBlur={(e) => {
+                    if (e.target.value) {
+                      const formattedDate = formatDateForInput(e.target.value);
+                      setFormData({ ...formData, dob: formattedDate });
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="phone"
+                  label="Phone Number"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  name="email"
+                  label="Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  name="address"
+                  label="Address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  fullWidth
+                  multiline
+                  rows={2}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="insuranceProvider"
+                  label="Insurance Provider"
+                  value={formData.insuranceProvider}
+                  onChange={handleInputChange}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="insuranceNumber"
+                  label="Insurance Number"
+                  value={formData.insuranceNumber}
+                  onChange={handleInputChange}
+                  fullWidth
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="phone"
-                label="Phone Number"
-                value={formData.phone}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="email"
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="address"
-                label="Address"
-                value={formData.address}
-                onChange={handleInputChange}
-                fullWidth
-                multiline
-                rows={2}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="insuranceProvider"
-                label="Insurance Provider"
-                value={formData.insuranceProvider}
-                onChange={handleInputChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="insuranceNumber"
-                label="Insurance Number"
-                value={formData.insuranceNumber}
-                onChange={handleInputChange}
-                fullWidth
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained"
-            disabled={!formData.firstName || !formData.lastName || (formData.dob && !isValidDateFormat(formData.dob))}
+          </DialogContent>
+          <DialogActions>
+            <TextButton onClick={handleCloseDialog}>Cancel</TextButton>
+            <PrimaryButton
+              onClick={handleSubmit}
+              variant="contained"
+              disabled={
+                !formData.firstName ||
+                !formData.lastName ||
+                (formData.dob && !isValidDateFormat(formData.dob))
+              }
+            >
+              {currentPatient ? "Update" : "Add"}
+            </PrimaryButton>
+          </DialogActions>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            {patientToDelete && (
+              <Typography>
+                Are you sure you want to delete the patient record for{" "}
+                {patientToDelete.firstName} {patientToDelete.lastName}? This
+                action cannot be undone.
+              </Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <TextButton onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </TextButton>
+            <DangerButton onClick={handleConfirmDelete} variant="contained">
+              Delete
+            </DangerButton>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          message={snackbar.message}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
           >
-            {currentPatient ? 'Update' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Delete Confirmation Dialog */}
-      <Dialog 
-        open={deleteDialogOpen} 
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          {patientToDelete && (
-            <Typography>
-              Are you sure you want to delete the patient record for {patientToDelete.firstName} {patientToDelete.lastName}? This action cannot be undone.
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        message={snackbar.message}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </SectionContainer>
+    </PageContainer>
   );
 }
 

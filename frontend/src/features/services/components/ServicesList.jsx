@@ -1,8 +1,6 @@
 // src/features/services/components/ServicesList.jsx
 import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Button,
   TableBody,
   TableCell,
   TableHead,
@@ -17,14 +15,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  IconButton,
   InputAdornment,
   Chip,
   Typography,
   CircularProgress,
   Alert,
   Snackbar,
-  Tooltip
+  Tooltip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -38,7 +35,19 @@ import {
 import TableContainer from "../../../components/TableContainer";
 import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
 import { useAppData } from "../../../app/providers/DataProvider";
-import { StyledTableContainer, tableHeaderStyle, actionButtonsStyle } from "../../../components/ui";
+import {
+  StyledTableContainer,
+  tableHeaderStyle,
+  actionButtonsStyle,
+} from "../../../components/ui";
+import {
+  PageContainer,
+  SectionContainer,
+  CardContainer,
+  PrimaryButton,
+  AppIconButton,
+  FlexBox,
+} from "../../../components/ui";
 
 // Table column definitions
 const columns = [
@@ -87,15 +96,15 @@ function stableSort(array, comparator) {
 }
 
 function ServicesList() {
-  const { 
-    services: apiServices, 
-    loading: apiLoading, 
+  const {
+    services: apiServices,
+    loading: apiLoading,
     error: apiError,
     addService,
     updateService,
-    deleteService
+    deleteService,
   } = useAppData();
-  
+
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -103,7 +112,11 @@ function ServicesList() {
   const [openDelete, setOpenDelete] = useState(false);
   const [currentService, setCurrentService] = useState(null);
   const [formData, setFormData] = useState({ ...initialServiceFormData });
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   // Sorting state
   const [order, setOrder] = useState("asc");
@@ -112,20 +125,20 @@ function ServicesList() {
   // Use data from API when available
   useEffect(() => {
     if (apiServices && apiServices.length > 0) {
-      console.log('Using services data from API:', apiServices);
-      
+      console.log("Using services data from API:", apiServices);
+
       // Transform API data to match the expected format if needed
-      const formattedServices = apiServices.map(service => ({
+      const formattedServices = apiServices.map((service) => ({
         id: service.id,
-        name: service.name || '',
-        description: service.description || '',
-        category: service.category || 'consultation',
+        name: service.name || "",
+        description: service.description || "",
+        category: service.category || "consultation",
         price: service.price || 0,
         discountPercentage: service.discountPercentage || 0,
         duration: service.duration || 30,
         active: service.active !== false,
       }));
-      
+
       setServices(formattedServices);
       setLoading(false);
     } else if (apiLoading) {
@@ -205,20 +218,20 @@ function ServicesList() {
       if (currentService) {
         // Edit existing service
         await updateService(currentService.id, formData);
-        
+
         setSnackbar({
           open: true,
-          message: 'Service updated successfully',
-          severity: 'success'
+          message: "Service updated successfully",
+          severity: "success",
         });
       } else {
         // Add new service
         await addService(formData);
-        
+
         setSnackbar({
           open: true,
-          message: 'Service added successfully',
-          severity: 'success'
+          message: "Service added successfully",
+          severity: "success",
         });
       }
 
@@ -229,8 +242,8 @@ function ServicesList() {
       setError("Failed to save service. Please try again.");
       setSnackbar({
         open: true,
-        message: 'Error saving service',
-        severity: 'error'
+        message: "Error saving service",
+        severity: "error",
       });
     } finally {
       setLoading(false);
@@ -243,11 +256,11 @@ function ServicesList() {
       setLoading(true);
 
       await deleteService(currentService.id);
-      
+
       setSnackbar({
         open: true,
-        message: 'Service deleted successfully',
-        severity: 'success'
+        message: "Service deleted successfully",
+        severity: "success",
       });
 
       setOpenDelete(false);
@@ -257,8 +270,8 @@ function ServicesList() {
       setError("Failed to delete service. Please try again.");
       setSnackbar({
         open: true,
-        message: 'Error deleting service',
-        severity: 'error'
+        message: "Error deleting service",
+        severity: "error",
       });
     } finally {
       setLoading(false);
@@ -279,157 +292,164 @@ function ServicesList() {
 
   // Action button for the table
   const actionButton = (
-    <Button
-      variant="contained"
+    <PrimaryButton
       startIcon={<AddIcon />}
       onClick={handleAddService}
-      sx={{ borderRadius: 1.5 }}
+      size="large"
     >
       Add Service
-    </Button>
+    </PrimaryButton>
   );
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <TableContainer title="Medical Services" action={actionButton}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+    <PageContainer>
+      <SectionContainer>
+        <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
+          <Typography variant="h5">Medical Services</Typography>
+          {actionButton}
+        </FlexBox>
+        <CardContainer>
+          <TableContainer>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
 
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <StyledTableContainer>
-            <TableHead sx={tableHeaderStyle}>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell
-                    key={column.id}
-                    sortDirection={orderBy === column.id ? order : false}
-                  >
-                    <TableSortLabel
-                      active={orderBy === column.id}
-                      direction={orderBy === column.id ? order : "asc"}
-                      onClick={createSortHandler(column.id)}
-                    >
-                      {column.label}
-                    </TableSortLabel>
-                  </TableCell>
-                ))}
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {services.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length + 1} align="center">
-                    No services found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                stableSort(services, getComparator(order, orderBy)).map(
-                  (service) => (
-                    <TableRow
-                      key={service.id}
-                      sx={{
-                        "&:last-child td, &:last-child th": { border: 0 },
-                      }}
-                    >
-                      <TableCell component="th" scope="row">
-                        {service.id}
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="medium">
-                          {service.name}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ display: "block" }}
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <StyledTableContainer>
+                <TableHead sx={tableHeaderStyle}>
+                  <TableRow>
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        sortDirection={orderBy === column.id ? order : false}
+                      >
+                        <TableSortLabel
+                          active={orderBy === column.id}
+                          direction={orderBy === column.id ? order : "asc"}
+                          onClick={createSortHandler(column.id)}
                         >
-                          {service.description &&
-                          service.description.length > 50
-                            ? `${service.description.substring(0, 50)}...`
-                            : service.description}
-                        </Typography>
+                          {column.label}
+                        </TableSortLabel>
                       </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={
-                            service.category
-                              ? service.category.charAt(0).toUpperCase() +
-                                service.category.slice(1)
-                              : "Consultation"
-                          }
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {formatPrice(service.price)}
-                        {service.discountPercentage > 0 && (
-                          <Typography
-                            variant="caption"
-                            color="success.main"
-                            sx={{ display: "block" }}
-                          >
-                            {formatPrice(
-                              calculateFinalPrice(
-                                service.price,
-                                service.discountPercentage
-                              )
-                            )}
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {service.discountPercentage || 0}%
-                      </TableCell>
-                      <TableCell>{service.duration || 30} min</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={
-                            service.active !== false ? "Active" : "Inactive"
-                          }
-                          size="small"
-                          color={
-                            service.active !== false ? "success" : "default"
-                          }
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip title="Edit Service">
-                          <IconButton
-                            color="primary"
-                            size="small"
-                            onClick={() => handleEditService(service)}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete Service">
-                          <IconButton
-                            color="error"
-                            size="small"
-                            onClick={() => handleDeleteClick(service)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                    ))}
+                    <TableCell align="center">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {services.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={columns.length + 1} align="center">
+                        No services found
                       </TableCell>
                     </TableRow>
-                  )
-                )
-              )}
-            </TableBody>
-          </StyledTableContainer>
-        )}
-      </TableContainer>
+                  ) : (
+                    stableSort(services, getComparator(order, orderBy)).map(
+                      (service) => (
+                        <TableRow
+                          key={service.id}
+                          sx={{
+                            "&:last-child td, &:last-child th": { border: 0 },
+                          }}
+                        >
+                          <TableCell component="th" scope="row">
+                            {service.id}
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight="medium">
+                              {service.name}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ display: "block" }}
+                            >
+                              {service.description &&
+                              service.description.length > 50
+                                ? `${service.description.substring(0, 50)}...`
+                                : service.description}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={
+                                service.category
+                                  ? service.category.charAt(0).toUpperCase() +
+                                    service.category.slice(1)
+                                  : "Consultation"
+                              }
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {formatPrice(service.price)}
+                            {service.discountPercentage > 0 && (
+                              <Typography
+                                variant="caption"
+                                color="success.main"
+                                sx={{ display: "block" }}
+                              >
+                                {formatPrice(
+                                  calculateFinalPrice(
+                                    service.price,
+                                    service.discountPercentage
+                                  )
+                                )}
+                              </Typography>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {service.discountPercentage || 0}%
+                          </TableCell>
+                          <TableCell>{service.duration || 30} min</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={
+                                service.active !== false ? "Active" : "Inactive"
+                              }
+                              size="small"
+                              color={
+                                service.active !== false ? "success" : "default"
+                              }
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            <Tooltip title="Edit Service">
+                              <AppIconButton
+                                aria-label="Edit"
+                                color="primary"
+                                onClick={() => handleEditService(service)}
+                              >
+                                <EditIcon fontSize="small" />
+                              </AppIconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Service">
+                              <AppIconButton
+                                aria-label="Delete"
+                                color="error"
+                                onClick={() => handleDeleteClick(service)}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </AppIconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )
+                  )}
+                </TableBody>
+              </StyledTableContainer>
+            )}
+          </TableContainer>
+        </CardContainer>
+      </SectionContainer>
 
       {/* Add/Edit Service Dialog */}
       <Dialog
@@ -545,16 +565,15 @@ function ServicesList() {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
+          <SecondaryButton onClick={handleCloseDialog}>Cancel</SecondaryButton>
+          <PrimaryButton
             onClick={handleSaveService}
-            variant="contained"
             disabled={
               !formData.name || !formData.category || formData.price < 0
             }
           >
             {currentService ? "Save Changes" : "Add Service"}
-          </Button>
+          </PrimaryButton>
         </DialogActions>
       </Dialog>
 
@@ -566,20 +585,24 @@ function ServicesList() {
         itemName={currentService?.name}
         itemType="service"
       />
-      
+
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         message={snackbar.message}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </PageContainer>
   );
 }
 

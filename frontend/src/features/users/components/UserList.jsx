@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Button,
   TableBody,
   TableCell,
   TableHead,
@@ -17,7 +16,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  IconButton,
   Chip,
   CircularProgress,
   Alert,
@@ -26,7 +24,7 @@ import {
   Switch,
   FormControlLabel,
   Typography,
-  Tooltip
+  Tooltip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -39,7 +37,22 @@ import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
 import PasswordStrengthMeter from "../../../components/PasswordStrengthMeter";
 import { validatePassword } from "../../../utils/password-validator";
 import useUserManagement from "../hooks/useUserManagement";
-import { StyledTableContainer, tableHeaderStyle, actionButtonsStyle } from "../../../components/ui";
+import {
+  StyledTableContainer,
+  tableHeaderStyle,
+  actionButtonsStyle,
+} from "../../../components/ui";
+import {
+  PageContainer,
+  SectionContainer,
+  CardContainer,
+  PrimaryButton,
+  SecondaryButton,
+  TextButton,
+  DangerButton,
+  AppIconButton,
+  FlexBox,
+} from "../../../components/ui";
 
 // Table column definitions
 const columns = [
@@ -338,154 +351,175 @@ function UserList() {
 
   // Action buttons for the table
   const actionButtons = (
-    <Box sx={actionButtonsStyle}>
+    <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
       <Tooltip title="Refresh Users">
-        <IconButton onClick={handleRefresh} disabled={loading} sx={{ mr: 1 }}>
+        <AppIconButton
+          onClick={handleRefresh}
+          disabled={loading}
+          sx={{ mr: 1 }}
+        >
           <RefreshIcon />
-        </IconButton>
+        </AppIconButton>
       </Tooltip>
-      <Button
-        variant="contained"
+      <PrimaryButton
         startIcon={<AddIcon />}
         onClick={handleAddUser}
         sx={{ borderRadius: 1.5 }}
       >
         Add User
-      </Button>
-    </Box>
+      </PrimaryButton>
+    </FlexBox>
   );
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <TableContainer title="Users" action={actionButtons}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
+    <PageContainer>
+      <SectionContainer>
+        <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
+          <Typography variant="h5">User List</Typography>
+          <PrimaryButton
+            startIcon={<AddIcon />}
+            size="large"
+            onClick={handleAddUser}
+          >
+            Add User
+          </PrimaryButton>
+        </FlexBox>
+        <CardContainer>
+          <TableContainer title="Users" action={actionButtons}>
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
 
-        {loading && !openAddEdit && !openDelete ? (
-          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <StyledTableContainer>
-            <TableHead sx={tableHeaderStyle}>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell
-                    key={column.id}
-                    sortDirection={orderBy === column.id ? order : false}
-                  >
-                    <TableSortLabel
-                      active={orderBy === column.id}
-                      direction={orderBy === column.id ? order : "asc"}
-                      onClick={createSortHandler(column.id)}
-                    >
-                      {column.label}
-                    </TableSortLabel>
-                  </TableCell>
-                ))}
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length + 1} align="center">
-                    No users found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                stableSort(users, getComparator(order, orderBy)).map(
-                  (user) => (
-                    <TableRow
-                      key={user.username}
-                      sx={{
-                        "&:last-child td, &:last-child th": { border: 0 },
-                      }}
-                    >
-                      <TableCell>{user.username}</TableCell>
-                      <TableCell>{user.firstName || "-"}</TableCell>
-                      <TableCell>{user.lastName || "-"}</TableCell>
-                      <TableCell>{user.email || "-"}</TableCell>
-                      <TableCell>{user.phone || "-"}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={
-                            user.role.charAt(0).toUpperCase() +
-                            user.role.slice(1)
-                          }
-                          size="small"
-                          color={
-                            user.role === "admin"
-                              ? "error"
-                              : user.role === "doctor"
-                              ? "primary"
-                              : "secondary"
-                          }
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          icon={
-                            user.enabled ? <CheckCircleIcon /> : <BlockIcon />
-                          }
-                          label={user.enabled ? "Active" : "Disabled"}
-                          size="small"
-                          color={user.enabled ? "success" : "default"}
-                          variant={user.enabled ? "filled" : "outlined"}
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip title="Edit User">
-                          <IconButton
-                            color="primary"
-                            size="small"
-                            onClick={() => handleEditUser(user)}
-                            disabled={actionLoading}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete User">
-                          <IconButton
-                            color="error"
-                            size="small"
-                            onClick={() => handleDeleteClick(user)}
-                            disabled={actionLoading}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip
-                          title={
-                            user.enabled ? "Disable User" : "Enable User"
-                          }
+            {loading && !openAddEdit && !openDelete ? (
+              <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <StyledTableContainer>
+                <TableHead sx={tableHeaderStyle}>
+                  <TableRow>
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        sortDirection={orderBy === column.id ? order : false}
+                      >
+                        <TableSortLabel
+                          active={orderBy === column.id}
+                          direction={orderBy === column.id ? order : "asc"}
+                          onClick={createSortHandler(column.id)}
                         >
-                          <IconButton
-                            color={user.enabled ? "default" : "success"}
-                            size="small"
-                            onClick={() => handleToggleUserStatus(user)}
-                            disabled={actionLoading}
-                          >
-                            {user.enabled ? (
-                              <BlockIcon fontSize="small" />
-                            ) : (
-                              <CheckCircleIcon fontSize="small" />
-                            )}
-                          </IconButton>
-                        </Tooltip>
+                          {column.label}
+                        </TableSortLabel>
+                      </TableCell>
+                    ))}
+                    <TableCell align="center">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {users.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={columns.length + 1} align="center">
+                        No users found
                       </TableCell>
                     </TableRow>
-                  )
-                )
-              )}
-            </TableBody>
-          </StyledTableContainer>
-        )}
-      </TableContainer>
+                  ) : (
+                    stableSort(users, getComparator(order, orderBy)).map(
+                      (user) => (
+                        <TableRow
+                          key={user.username}
+                          sx={{
+                            "&:last-child td, &:last-child th": { border: 0 },
+                          }}
+                        >
+                          <TableCell>{user.username}</TableCell>
+                          <TableCell>{user.firstName || "-"}</TableCell>
+                          <TableCell>{user.lastName || "-"}</TableCell>
+                          <TableCell>{user.email || "-"}</TableCell>
+                          <TableCell>{user.phone || "-"}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={
+                                user.role.charAt(0).toUpperCase() +
+                                user.role.slice(1)
+                              }
+                              size="small"
+                              color={
+                                user.role === "admin"
+                                  ? "error"
+                                  : user.role === "doctor"
+                                  ? "primary"
+                                  : "secondary"
+                              }
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              icon={
+                                user.enabled ? (
+                                  <CheckCircleIcon />
+                                ) : (
+                                  <BlockIcon />
+                                )
+                              }
+                              label={user.enabled ? "Active" : "Disabled"}
+                              size="small"
+                              color={user.enabled ? "success" : "default"}
+                              variant={user.enabled ? "filled" : "outlined"}
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            <Tooltip title="Edit User">
+                              <AppIconButton
+                                color="primary"
+                                size="small"
+                                onClick={() => handleEditUser(user)}
+                                disabled={actionLoading}
+                              >
+                                <EditIcon fontSize="small" />
+                              </AppIconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete User">
+                              <AppIconButton
+                                color="error"
+                                size="small"
+                                onClick={() => handleDeleteClick(user)}
+                                disabled={actionLoading}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </AppIconButton>
+                            </Tooltip>
+                            <Tooltip
+                              title={
+                                user.enabled ? "Disable User" : "Enable User"
+                              }
+                            >
+                              <AppIconButton
+                                color={user.enabled ? "default" : "success"}
+                                size="small"
+                                onClick={() => handleToggleUserStatus(user)}
+                                disabled={actionLoading}
+                              >
+                                {user.enabled ? (
+                                  <BlockIcon fontSize="small" />
+                                ) : (
+                                  <CheckCircleIcon fontSize="small" />
+                                )}
+                              </AppIconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )
+                  )}
+                </TableBody>
+              </StyledTableContainer>
+            )}
+          </TableContainer>
+        </CardContainer>
+      </SectionContainer>
 
       {/* Add/Edit User Dialog */}
       <Dialog
@@ -638,10 +672,10 @@ function UserList() {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} disabled={actionLoading}>
+          <SecondaryButton onClick={handleCloseDialog} disabled={actionLoading}>
             Cancel
-          </Button>
-          <Button
+          </SecondaryButton>
+          <PrimaryButton
             onClick={handleSaveUser}
             variant="contained"
             disabled={actionLoading}
@@ -653,7 +687,7 @@ function UserList() {
             ) : (
               "Add User"
             )}
-          </Button>
+          </PrimaryButton>
         </DialogActions>
       </Dialog>
 
@@ -683,7 +717,7 @@ function UserList() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </PageContainer>
   );
 }
 
