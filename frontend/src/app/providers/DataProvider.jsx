@@ -1,7 +1,13 @@
 // src/app/providers/DataProvider.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthProvider";
-import { fetchPatients } from "../../services/patients";
+import { 
+  fetchPatients, 
+  fetchPatientById, 
+  createPatient, 
+  updatePatient as updatePatientApi, 
+  deletePatient as deletePatientApi 
+} from "../../services/patients";
 
 // Create context
 const DataContext = createContext(null);
@@ -12,7 +18,7 @@ export const DataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Mock data for services and patients
+  // Data for services and patients
   const [services, setServices] = useState([]);
   const [patients, setPatients] = useState([]);
 
@@ -26,6 +32,7 @@ export const DataProvider = ({ children }) => {
 
       try {
         console.log("Initializing app data...");
+        setLoading(true);
 
         // Mock services data
         const mockServices = [
@@ -52,13 +59,18 @@ export const DataProvider = ({ children }) => {
           },
         ];
 
-        // Fetch patients from backend API
-        const patientsFromApi = await fetchPatients();
-        setPatients(patientsFromApi);
+        // Fetch patients from DynamoDB via API
+        try {
+          const patientsFromApi = await fetchPatients();
+          setPatients(patientsFromApi);
+          console.log("Patients loaded from DynamoDB:", patientsFromApi);
+        } catch (patientError) {
+          console.error("Error loading patients:", patientError);
+          setError("Failed to load patients. Please try again later.");
+        }
 
         setServices(mockServices);
         console.log("Services loaded:", mockServices);
-        console.log("Patients loaded:", patientsFromApi);
 
         setInitialized(true);
         console.log("Data initialization complete");
@@ -72,6 +84,23 @@ export const DataProvider = ({ children }) => {
 
     initializeData();
   }, [isAuthenticated]);
+
+  // Refresh patients data
+  const refreshPatients = async () => {
+    try {
+      setLoading(true);
+      const patientsFromApi = await fetchPatients();
+      setPatients(patientsFromApi);
+      console.log("Patients refreshed:", patientsFromApi);
+      return patientsFromApi;
+    } catch (err) {
+      console.error("Error refreshing patients:", err);
+      setError(err.message || "Failed to refresh patients");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Mock service operations
   const addService = async (serviceData) => {
@@ -97,28 +126,40 @@ export const DataProvider = ({ children }) => {
     return true;
   };
 
-  // Mock patient operations
+  // Patient operations using DynamoDB API
   const addPatient = async (patientData) => {
-    const newPatient = {
-      id: patients.length + 1,
-      ...patientData,
-    };
-    setPatients([...patients, newPatient]);
-    return newPatient;
+    try {
+      const newPatient = await createPatient(patientData);
+      setPatients([...patients, newPatient]);
+      return newPatient;
+    } catch (err) {
+      console.error("Error adding patient:", err);
+      throw err;
+    }
   };
 
   const updatePatient = async (id, patientData) => {
-    const updatedPatients = patients.map((patient) =>
-      patient.id === id ? { ...patient, ...patientData } : patient
-    );
-    setPatients(updatedPatients);
-    return updatedPatients.find((patient) => patient.id === id);
+    try {
+      const updatedPatient = await updatePatientApi(id, patientData);
+      setPatients(patients.map(patient => 
+        patient.id === id ? updatedPatient : patient
+      ));
+      return updatedPatient;
+    } catch (err) {
+      console.error(`Error updating patient ${id}:`, err);
+      throw err;
+    }
   };
 
   const deletePatient = async (id) => {
-    const updatedPatients = patients.filter((patient) => patient.id !== id);
-    setPatients(updatedPatients);
-    return true;
+    try {
+      await deletePatientApi(id);
+      setPatients(patients.filter(patient => patient.id !== id));
+      return true;
+    } catch (err) {
+      console.error(`Error deleting patient ${id}:`, err);
+      throw err;
+    }
   };
 
   const value = {
@@ -135,6 +176,7 @@ export const DataProvider = ({ children }) => {
     addPatient,
     updatePatient,
     deletePatient,
+    refreshPatients,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
