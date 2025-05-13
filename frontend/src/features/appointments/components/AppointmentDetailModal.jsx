@@ -155,9 +155,6 @@ function AppointmentDetailModal({
                       <MenuItem value="Scheduled">Scheduled</MenuItem>
                       <MenuItem value="Checked-in">Checked-in</MenuItem>
                       <MenuItem value="In Progress">In Progress</MenuItem>
-                      <MenuItem value="Ready for Checkout">
-                        Ready for Checkout
-                      </MenuItem>
                       <MenuItem value="Completed">Completed</MenuItem>
                       <MenuItem value="Cancelled">Cancelled</MenuItem>
                     </Select>

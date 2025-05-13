@@ -17,6 +17,10 @@ import AccountSettingsPage from "../pages/AccountSettingsPage";
 import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage";
 import DoctorAppointmentsPage from "../pages/DoctorAppointmentsPage";
 import AdminAppointmentsPage from "../pages/AdminAppointmentsPage";
+import DoctorMedicalRecordsPage from "../pages/DoctorMedicalRecordsPage";
+import DoctorSchedulePage from "../pages/DoctorSchedulePage";
+import FrontdeskCheckoutPage from "../pages/FrontdeskCheckoutPage";
+import AdminReportsPage from "../pages/AdminReportsPage";
 import StyleGuidePage from "../pages/StyleGuidePage";
 import AppLayout from "../components/Layout/AppLayout";
 import ProtectedRoute from "./ProtectedRoute";
@@ -102,6 +106,14 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/reports"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminReportsPage />
+            </ProtectedRoute>
+          }
+        />
         {/* Patient Management for Doctor */}
         <Route
           path="/doctor/patients"
@@ -133,6 +145,22 @@ function AppRouter() {
           element={
             <ProtectedRoute allowedRoles={["doctor"]}>
               <DoctorAppointmentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/schedule"
+          element={
+            <ProtectedRoute allowedRoles={["doctor"]}>
+              <DoctorSchedulePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/medical-records"
+          element={
+            <ProtectedRoute allowedRoles={["doctor"]}>
+              <DoctorMedicalRecordsPage />
             </ProtectedRoute>
           }
         />
@@ -176,6 +204,14 @@ function AppRouter() {
           element={
             <ProtectedRoute allowedRoles={["frontdesk"]}>
               <PatientDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/frontdesk/checkout"
+          element={
+            <ProtectedRoute allowedRoles={["frontdesk"]}>
+              <FrontdeskCheckoutPage />
             </ProtectedRoute>
           }
         />

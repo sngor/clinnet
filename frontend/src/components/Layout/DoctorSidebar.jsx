@@ -5,6 +5,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/Person';
 import MedicalInformationIcon from '@mui/icons-material/MedicalInformation';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ActiveNavLink from '../ActiveNavLink';
 
 function DoctorSidebar({ collapsed = false }) {
@@ -26,6 +27,12 @@ function DoctorSidebar({ collapsed = false }) {
         to="/doctor/appointments"
         icon={<EventIcon />}
         primary="Appointments"
+        collapsed={collapsed}
+      />
+      <ActiveNavLink
+        to="/doctor/schedule"
+        icon={<CalendarMonthIcon />}
+        primary="My Schedule"
         collapsed={collapsed}
       />
       <ActiveNavLink

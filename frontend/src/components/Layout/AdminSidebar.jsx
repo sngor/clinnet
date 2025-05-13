@@ -6,6 +6,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/Person';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import ActiveNavLink from '../ActiveNavLink';
 
 function AdminSidebar({ collapsed = false }) {
@@ -45,6 +46,12 @@ function AdminSidebar({ collapsed = false }) {
         to="/admin/users"
         icon={<PeopleIcon />}
         primary="Users"
+        collapsed={collapsed}
+      />
+      <ActiveNavLink
+        to="/admin/reports"
+        icon={<AssessmentIcon />}
+        primary="Reports"
         collapsed={collapsed}
       />
     </List>

@@ -33,7 +33,19 @@ import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import NoteIcon from "@mui/icons-material/Note";
 import CalendarViewWeekIcon from '@mui/icons-material/CalendarViewWeek';
 import ViewListIcon from '@mui/icons-material/ViewList';
-import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
+import { 
+  format, 
+  addDays, 
+  startOfWeek, 
+  endOfWeek, 
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval, 
+  eachWeekOfInterval,
+  isToday, 
+  isSameDay,
+  isSameMonth
+} from 'date-fns';
 import AppointmentDetailModal from './AppointmentDetailModal';
 
 // Import mock data from centralized location
@@ -79,6 +91,9 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
     }
   }, [appointments, cancelledAppointments, onAppointmentUpdate]);
 
+  // Calendar view type
+  const [calendarView, setCalendarView] = useState('week'); // 'week' or 'month'
+  
   // Get current week dates
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start on Monday
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
@@ -155,6 +170,42 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
   const handleViewModeChange = (event, newViewMode) => {
     if (newViewMode !== null) {
       setViewMode(newViewMode);
+    }
+  };
+  
+  // Handle calendar view change
+  const handleCalendarViewChange = (event, newView) => {
+    if (newView !== null) {
+      setCalendarView(newView);
+    }
+  };
+  
+  // Handle date navigation
+  const handleDateNavigation = (direction) => {
+    if (direction === 'prev') {
+      setCurrentDate(prev => {
+        if (calendarView === 'week') {
+          return addDays(prev, -7);
+        } else {
+          // For month view, go back one month
+          const newDate = new Date(prev);
+          newDate.setMonth(prev.getMonth() - 1);
+          return newDate;
+        }
+      });
+    } else if (direction === 'next') {
+      setCurrentDate(prev => {
+        if (calendarView === 'week') {
+          return addDays(prev, 7);
+        } else {
+          // For month view, go forward one month
+          const newDate = new Date(prev);
+          newDate.setMonth(prev.getMonth() + 1);
+          return newDate;
+        }
+      });
+    } else if (direction === 'today') {
+      setCurrentDate(new Date());
     }
   };
 
@@ -412,6 +463,144 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
       </Box>
     );
   };
+  
+  // Render month view calendar
+  const renderMonthCalendar = () => {
+    // Get month dates
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    
+    // Get all weeks in the month
+    const monthWeeks = eachWeekOfInterval(
+      { start: monthStart, end: monthEnd },
+      { weekStartsOn: 1 } // Start on Monday
+    );
+    
+    // Get all days in the month view (including days from previous/next months)
+    const calendarDays = monthWeeks.flatMap(weekStart => {
+      return eachDayOfInterval({
+        start: weekStart,
+        end: addDays(weekStart, 6)
+      });
+    });
+    
+    return (
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          {format(monthStart, 'MMMM yyyy')}
+        </Typography>
+        
+        <Box sx={{ 
+          width: '100%',
+          border: '1px solid #e0e0e0',
+          borderRadius: 1,
+          overflow: 'hidden'
+        }}>
+          {/* Day headers */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            bgcolor: '#f5f5f5',
+            borderBottom: '1px solid #e0e0e0'
+          }}>
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+              <Box 
+                key={day} 
+                sx={{ 
+                  p: 1,
+                  textAlign: 'center',
+                  borderRight: '1px solid #e0e0e0',
+                  '&:last-child': {
+                    borderRight: 'none'
+                  }
+                }}
+              >
+                <Typography variant="subtitle2">{day}</Typography>
+              </Box>
+            ))}
+          </Box>
+          
+          {/* Calendar grid */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            gridAutoRows: 'minmax(120px, 1fr)',
+          }}>
+            {calendarDays.map(day => {
+              const dayAppointments = getAppointmentsForDay(day);
+              const isCurrentMonth = isSameMonth(day, currentDate);
+              
+              return (
+                <Box 
+                  key={format(day, 'yyyy-MM-dd')} 
+                  sx={{ 
+                    p: 1,
+                    borderRight: '1px solid #e0e0e0',
+                    borderBottom: '1px solid #e0e0e0',
+                    bgcolor: isToday(day) ? 'primary.light' : 
+                           !isCurrentMonth ? '#f9f9f9' : 'background.paper',
+                    color: isToday(day) ? 'white' : 
+                           !isCurrentMonth ? 'text.disabled' : 'text.primary',
+                    position: 'relative',
+                    height: '100%',
+                    '&:nth-of-type(7n)': {
+                      borderRight: 'none'
+                    },
+                    '&:nth-last-of-type(-n+7)': {
+                      borderBottom: 'none'
+                    }
+                  }}
+                >
+                  {/* Day number */}
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: isToday(day) ? 'bold' : 'normal',
+                      mb: 1
+                    }}
+                  >
+                    {format(day, 'd')}
+                  </Typography>
+                  
+                  {/* Appointments for this day */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    gap: 0.5,
+                    maxHeight: 'calc(100% - 24px)',
+                    overflow: 'auto'
+                  }}>
+                    {dayAppointments.map(appointment => (
+                      <Box
+                        key={appointment.id}
+                        sx={{
+                          backgroundColor: getAppointmentStatusColor(appointment.status) + '.light',
+                          color: 'white',
+                          borderRadius: 1,
+                          p: 0.5,
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          '&:hover': {
+                            backgroundColor: getAppointmentStatusColor(appointment.status) + '.main',
+                          }
+                        }}
+                        onClick={() => handleAppointmentClick(appointment)}
+                      >
+                        {format(appointment.start, 'h:mm a')} - {appointment.patient}
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+      </Box>
+    );
+  };
 
   return (
     <Paper sx={{ p: 3, borderRadius: 2 }}>
@@ -422,39 +611,89 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
         </Typography>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        {/* View toggle */}
-        <ToggleButtonGroup
-          value={viewMode}
-          exclusive
-          onChange={handleViewModeChange}
-          aria-label="view mode"
-          size="small"
-        >
-          <ToggleButton value="calendar" aria-label="calendar view">
-            <Tooltip title="Calendar View">
-              <CalendarViewWeekIcon />
-            </Tooltip>
-          </ToggleButton>
-          <ToggleButton value="list" aria-label="list view">
-            <Tooltip title="List View">
-              <ViewListIcon />
-            </Tooltip>
-          </ToggleButton>
-        </ToggleButtonGroup>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, flexWrap: 'wrap', gap: 2 }}>
+        {/* Date navigation */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Button 
+            variant="outlined" 
+            size="small"
+            onClick={() => handleDateNavigation('prev')}
+          >
+            Previous
+          </Button>
+          <Button 
+            variant="contained" 
+            size="small"
+            onClick={() => handleDateNavigation('today')}
+          >
+            Today
+          </Button>
+          <Button 
+            variant="outlined" 
+            size="small"
+            onClick={() => handleDateNavigation('next')}
+          >
+            Next
+          </Button>
+        </Box>
         
-        <Button 
-          variant="contained" 
-          startIcon={<AddIcon />}
-          onClick={handleOpenDialog}
-          size="small"
-        >
-          New
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {/* Calendar view toggle */}
+          {viewMode === 'calendar' && (
+            <ToggleButtonGroup
+              value={calendarView}
+              exclusive
+              onChange={handleCalendarViewChange}
+              aria-label="calendar view"
+              size="small"
+            >
+              <ToggleButton value="week" aria-label="week view">
+                <Tooltip title="Week View">
+                  <Typography variant="body2">Week</Typography>
+                </Tooltip>
+              </ToggleButton>
+              <ToggleButton value="month" aria-label="month view">
+                <Tooltip title="Month View">
+                  <Typography variant="body2">Month</Typography>
+                </Tooltip>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          )}
+          
+          {/* View toggle */}
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={handleViewModeChange}
+            aria-label="view mode"
+            size="small"
+          >
+            <ToggleButton value="calendar" aria-label="calendar view">
+              <Tooltip title="Calendar View">
+                <CalendarViewWeekIcon />
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="list" aria-label="list view">
+              <Tooltip title="List View">
+                <ViewListIcon />
+              </Tooltip>
+            </ToggleButton>
+          </ToggleButtonGroup>
+          
+          <Button 
+            variant="contained" 
+            startIcon={<AddIcon />}
+            onClick={handleOpenDialog}
+            size="small"
+          >
+            New
+          </Button>
+        </Box>
       </Box>
 
       {/* Calendar View */}
-      {viewMode === 'calendar' && renderWeekCalendar()}
+      {viewMode === 'calendar' && calendarView === 'week' && renderWeekCalendar()}
+      {viewMode === 'calendar' && calendarView === 'month' && renderMonthCalendar()}
 
       {/* List View */}
       {viewMode === 'list' && (
