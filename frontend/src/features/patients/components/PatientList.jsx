@@ -20,6 +20,7 @@ import {
   TablePagination,
   TableSortLabel,
   Tooltip,
+  Button,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -38,6 +39,19 @@ import {
   AppIconButton,
   FlexBox,
 } from "../../../components/ui";
+
+// Define TextButton component that was missing
+const TextButton = ({ children, ...props }) => (
+  <Button variant="text" {...props}>
+    {children}
+  </Button>
+);
+
+// Table styles
+const tableHeaderStyle = {
+  backgroundColor: "background.paper",
+  fontWeight: "bold",
+};
 
 // Table column definitions
 const columns = [
@@ -174,22 +188,23 @@ function PatientList({ onPatientSelect }) {
     if (apiPatients && apiPatients.length > 0) {
       console.log("Using patients data from API:", apiPatients);
 
-      // Transform API data to match the expected format if needed
-      const formattedPatients = apiPatients.map((patient) => ({
-        id: patient.id,
-        firstName: patient.firstName,
-        lastName: patient.lastName,
-        dob: formatDateForInput(patient.dob || ""),
-        phone: patient.phone || "",
-        email: patient.email || "",
-        address: patient.address || "",
-        insuranceProvider: patient.insuranceProvider || "",
-        insuranceNumber: patient.insuranceNumber || "",
-        lastVisit: patient.lastVisit || null,
-        upcomingAppointment: patient.upcomingAppointment || null,
-        status: patient.status || "Active",
-        // Add any other fields needed
-      }));
+      // Transform API data to match the expected format
+      const formattedPatients = apiPatients.map((patient) => {
+        // Handle potential missing fields safely
+        return {
+          id: patient.id || "",
+          firstName: patient.firstName || "",
+          lastName: patient.lastName || "",
+          dob: patient.dateOfBirth ? formatDateForInput(patient.dateOfBirth) : "",
+          phone: patient.contactNumber || "",
+          email: patient.email || "",
+          address: patient.address || "",
+          insuranceProvider: patient.insuranceInfo?.provider || "",
+          insuranceNumber: patient.insuranceInfo?.policyNumber || "",
+          lastVisit: patient.lastVisit || null,
+          status: patient.status || "Active",
+        };
+      });
 
       setPatients(formattedPatients);
       setLoading(false);
@@ -203,9 +218,9 @@ function PatientList({ onPatientSelect }) {
 
   // Filter patients based on search term
   const filteredPatients = patients.filter((patient) => {
-    if (!patient.firstName || !patient.lastName) return false;
+    if (!patient.firstName && !patient.lastName) return false;
 
-    const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
+    const fullName = `${patient.firstName || ""} ${patient.lastName || ""}`.toLowerCase();
     return (
       fullName.includes(searchTerm.toLowerCase()) ||
       (patient.phone && patient.phone.includes(searchTerm)) ||
@@ -264,20 +279,10 @@ function PatientList({ onPatientSelect }) {
   // Handle form input changes
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-
-    // Special handling for date fields
-    if (name === "dob") {
-      // Ensure the date is in a valid format
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
   // Handle form submission
