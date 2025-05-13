@@ -17,63 +17,41 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  ToggleButtonGroup,
+  ToggleButton,
+  Tooltip
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import TodayIcon from '@mui/icons-material/Today';
+import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
 import PageContainer from '../components/ui/PageContainer';
 import PageHeading from '../components/ui/PageHeading';
 import ContentCard from '../components/ui/ContentCard';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingIndicator from '../components/ui/LoadingIndicator';
 
-// Styled components for the schedule grid
-const TimeSlot = styled(Paper)(({ theme, isAvailable }) => ({
-  padding: theme.spacing(1.5),
-  textAlign: 'center',
-  backgroundColor: isAvailable ? theme.palette.success.light : theme.palette.grey[100],
-  color: isAvailable ? theme.palette.success.contrastText : theme.palette.text.secondary,
-  cursor: 'pointer',
-  transition: 'all 0.2s',
-  '&:hover': {
-    backgroundColor: isAvailable ? theme.palette.success.main : theme.palette.grey[200],
-    transform: 'translateY(-2px)',
-    boxShadow: theme.shadows[2]
-  }
-}));
-
-const TimeLabel = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(1.5),
-  textAlign: 'right',
-  fontWeight: 'bold',
-  color: theme.palette.text.secondary
-}));
-
-const DayHeader = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(1),
-  textAlign: 'center',
-  fontWeight: 'bold',
-  borderBottom: `1px solid ${theme.palette.divider}`
-}));
-
 function DoctorSchedulePage() {
   const [loading, setLoading] = useState(true);
   const [schedule, setSchedule] = useState({});
-  const [selectedWeek, setSelectedWeek] = useState('current');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [notes, setNotes] = useState('');
 
-  // Days of the week
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  // Get current week dates
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start on Monday
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
   
   // Time slots
-  const timeSlots = [
-    '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', 
-    '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'
-  ];
+  const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 7 PM
 
   // Mock data - in a real app, this would come from an API
   useEffect(() => {
@@ -82,11 +60,12 @@ function DoctorSchedulePage() {
       // Generate mock schedule data
       const mockSchedule = {};
       
-      days.forEach(day => {
-        mockSchedule[day] = {};
-        timeSlots.forEach(time => {
+      weekDays.forEach(day => {
+        const dayStr = format(day, 'EEEE');
+        mockSchedule[dayStr] = {};
+        timeSlots.forEach(hour => {
           // Randomly set availability (70% chance of being available)
-          mockSchedule[day][time] = Math.random() < 0.7;
+          mockSchedule[dayStr][hour] = Math.random() < 0.7;
         });
       });
       
@@ -95,23 +74,35 @@ function DoctorSchedulePage() {
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [currentDate]);
+
+  // Handle date navigation
+  const handleDateNavigation = (direction) => {
+    if (direction === 'prev') {
+      setCurrentDate(prev => addDays(prev, -7));
+    } else if (direction === 'next') {
+      setCurrentDate(prev => addDays(prev, 7));
+    } else if (direction === 'today') {
+      setCurrentDate(new Date());
+    }
+  };
 
   // Handle slot click
-  const handleSlotClick = (day, time) => {
-    setSelectedSlot({ day, time, isAvailable: schedule[day][time] });
+  const handleSlotClick = (day, hour) => {
+    setSelectedSlot({ day, hour, isAvailable: schedule[day]?.[hour] });
+    setNotes('');
     setEditDialogOpen(true);
   };
 
   // Handle availability toggle
   const handleAvailabilityToggle = () => {
     if (selectedSlot) {
-      const { day, time } = selectedSlot;
+      const { day, hour } = selectedSlot;
       setSchedule(prev => ({
         ...prev,
         [day]: {
           ...prev[day],
-          [time]: !prev[day][time]
+          [hour]: !prev[day]?.[hour]
         }
       }));
       setEditDialogOpen(false);
@@ -122,13 +113,18 @@ function DoctorSchedulePage() {
   const handleBulkUpdate = (isAvailable) => {
     const newSchedule = { ...schedule };
     
-    days.forEach(day => {
-      timeSlots.forEach(time => {
-        newSchedule[day][time] = isAvailable;
+    Object.keys(newSchedule).forEach(day => {
+      timeSlots.forEach(hour => {
+        newSchedule[day][hour] = isAvailable;
       });
     });
     
     setSchedule(newSchedule);
+  };
+
+  // Format time
+  const formatTimeSlot = (hour) => {
+    return `${hour % 12 === 0 ? 12 : hour % 12}:00 ${hour >= 12 ? 'PM' : 'AM'}`;
   };
 
   return (
@@ -159,24 +155,38 @@ function DoctorSchedulePage() {
       />
 
       <ContentCard>
+        {/* Date navigation */}
         <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6">Weekly Schedule</Typography>
+          <Typography variant="h6">
+            {format(weekStart, 'MMMM d')} - {format(weekEnd, 'MMMM d, yyyy')}
+          </Typography>
           
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel id="week-select-label">Select Week</InputLabel>
-            <Select
-              labelId="week-select-label"
-              id="week-select"
-              value={selectedWeek}
-              label="Select Week"
-              onChange={(e) => setSelectedWeek(e.target.value)}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button 
+              variant="outlined" 
+              size="small"
+              startIcon={<NavigateBeforeIcon />}
+              onClick={() => handleDateNavigation('prev')}
             >
-              <MenuItem value="previous">Previous Week</MenuItem>
-              <MenuItem value="current">Current Week</MenuItem>
-              <MenuItem value="next">Next Week</MenuItem>
-              <MenuItem value="twoWeeks">Two Weeks Ahead</MenuItem>
-            </Select>
-          </FormControl>
+              Previous
+            </Button>
+            <Button 
+              variant="contained" 
+              size="small"
+              startIcon={<TodayIcon />}
+              onClick={() => handleDateNavigation('today')}
+            >
+              Today
+            </Button>
+            <Button 
+              variant="outlined" 
+              size="small"
+              endIcon={<NavigateNextIcon />}
+              onClick={() => handleDateNavigation('next')}
+            >
+              Next
+            </Button>
+          </Box>
         </Box>
 
         <Divider sx={{ mb: 3 }} />
@@ -184,43 +194,135 @@ function DoctorSchedulePage() {
         {loading ? (
           <LoadingIndicator message="Loading schedule..." />
         ) : (
-          <Box sx={{ overflowX: 'auto' }}>
-            <Grid container spacing={1}>
-              {/* Empty cell for the corner */}
-              <Grid item xs={2}>
-                <Box sx={{ height: '100%' }}></Box>
-              </Grid>
+          <Box sx={{ 
+            position: 'relative',
+            width: '100%',
+            height: 'calc(100vh - 350px)',
+            border: '1px solid #e0e0e0',
+            overflowX: 'auto', // Horizontal scroll
+            overflowY: 'auto', // Vertical scroll
+          }}>
+            <Box sx={{
+              display: 'flex',
+              minWidth: '100%', // Ensure it takes at least full width
+              width: 'max-content', // Allow it to grow based on content
+              height: 'max-content', // Allow it to grow based on content
+              minHeight: '100%', // Ensure it takes at least full height
+            }}>
+              {/* Time column */}
+              <Box sx={{ 
+                width: '80px', 
+                minWidth: '80px', // Prevent shrinking
+                borderRight: '1px solid #e0e0e0', 
+                bgcolor: '#f5f5f5',
+                position: 'sticky',
+                left: 0,
+                zIndex: 1 // Ensure time column stays above other content when scrolling
+              }}>
+                <Box sx={{ 
+                  height: '40px', 
+                  borderBottom: '1px solid #e0e0e0',
+                  position: 'sticky',
+                  top: 0,
+                  bgcolor: '#f5f5f5',
+                  zIndex: 2 // Higher z-index for the corner cell
+                }} /> {/* Empty cell for header */}
+                {timeSlots.map(hour => (
+                  <Box 
+                    key={hour} 
+                    sx={{ 
+                      height: '60px', 
+                      borderBottom: '1px solid #e0e0e0',
+                      p: 1,
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Typography variant="caption">
+                      {hour % 12 === 0 ? 12 : hour % 12} {hour >= 12 ? 'PM' : 'AM'}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
               
-              {/* Day headers */}
-              {days.map((day) => (
-                <Grid item xs key={day}>
-                  <DayHeader>{day}</DayHeader>
-                </Grid>
-              ))}
-              
-              {/* Time slots */}
-              {timeSlots.map((time) => (
-                <React.Fragment key={time}>
-                  {/* Time label */}
-                  <Grid item xs={2}>
-                    <TimeLabel>{time}</TimeLabel>
-                  </Grid>
+              {/* Days columns container */}
+              <Box sx={{ 
+                display: 'flex', 
+                flexGrow: 1,
+                minWidth: 'calc(100% - 80px)', // Ensure it takes remaining width
+              }}>
+                {/* Days columns */}
+                {weekDays.map(day => {
+                  const dayStr = format(day, 'EEEE');
                   
-                  {/* Availability cells for each day */}
-                  {days.map((day) => (
-                    <Grid item xs key={`${day}-${time}`}>
-                      <TimeSlot 
-                        isAvailable={schedule[day]?.[time]} 
-                        onClick={() => handleSlotClick(day, time)}
-                        elevation={schedule[day]?.[time] ? 1 : 0}
+                  return (
+                    <Box 
+                      key={format(day, 'yyyy-MM-dd')} 
+                      sx={{ 
+                        flex: '1 0 150px', // Grow equally, don't shrink, min width 150px
+                        borderRight: '1px solid #e0e0e0',
+                        position: 'relative',
+                      }}
+                    >
+                      {/* Day header */}
+                      <Box 
+                        sx={{ 
+                          height: '40px', 
+                          borderBottom: '1px solid #e0e0e0',
+                          p: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: isToday(day) ? 'primary.light' : '#f5f5f5',
+                          color: isToday(day) ? 'white' : 'inherit',
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 1
+                        }}
                       >
-                        {schedule[day]?.[time] ? 'Available' : 'Unavailable'}
-                      </TimeSlot>
-                    </Grid>
-                  ))}
-                </React.Fragment>
-              ))}
-            </Grid>
+                        <Typography variant="subtitle2">
+                          {format(day, 'EEE d')}
+                        </Typography>
+                      </Box>
+                      
+                      {/* Time slots */}
+                      {timeSlots.map(hour => {
+                        const isAvailable = schedule[dayStr]?.[hour];
+                        
+                        return (
+                          <Box 
+                            key={hour} 
+                            sx={{ 
+                              height: '60px', 
+                              borderBottom: '1px solid #e0e0e0',
+                              position: 'relative',
+                              bgcolor: isAvailable ? 'success.light' : 'grey.100',
+                              color: isAvailable ? 'success.contrastText' : 'text.secondary',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                bgcolor: isAvailable ? 'success.main' : 'grey.200',
+                                transform: 'translateY(-2px)',
+                                boxShadow: 2
+                              }
+                            }}
+                            onClick={() => handleSlotClick(dayStr, hour)}
+                          >
+                            <Typography variant="body2">
+                              {isAvailable ? 'Available' : 'Unavailable'}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
           </Box>
         )}
       </ContentCard>
@@ -230,11 +332,14 @@ function DoctorSchedulePage() {
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Chip 
-                  label="Available" 
-                  color="success" 
-                  size="small" 
-                  sx={{ mr: 2 }} 
+                <Box 
+                  sx={{ 
+                    width: 40, 
+                    height: 24, 
+                    bgcolor: 'success.light', 
+                    borderRadius: 1, 
+                    mr: 2 
+                  }} 
                 />
                 <Typography variant="body2">
                   You are available for appointments during this time slot
@@ -243,11 +348,14 @@ function DoctorSchedulePage() {
             </Grid>
             <Grid item xs={12} sm={6}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Chip 
-                  label="Unavailable" 
-                  color="default" 
-                  size="small" 
-                  sx={{ mr: 2 }} 
+                <Box 
+                  sx={{ 
+                    width: 40, 
+                    height: 24, 
+                    bgcolor: 'grey.100', 
+                    borderRadius: 1, 
+                    mr: 2 
+                  }} 
                 />
                 <Typography variant="body2">
                   You are not available for appointments during this time slot
@@ -279,7 +387,7 @@ function DoctorSchedulePage() {
           {selectedSlot && (
             <Box sx={{ pt: 1 }}>
               <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                {selectedSlot.day} at {selectedSlot.time}
+                {selectedSlot.day} at {formatTimeSlot(selectedSlot.hour)}
               </Typography>
               
               <Typography variant="body1" sx={{ mb: 3 }}>
@@ -300,6 +408,8 @@ function DoctorSchedulePage() {
                 placeholder="Add any notes about this time slot"
                 variant="outlined"
                 sx={{ mb: 2 }}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
               />
             </Box>
           )}
