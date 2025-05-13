@@ -90,11 +90,43 @@ def put_item(table_name, item):
 
     try:
         # Convert floats to Decimals for DynamoDB
-        item_decimal = json.loads(json.dumps(item), parse_float=decimal.Decimal)
+        try:
+            item_decimal = json.loads(json.dumps(item), parse_float=decimal.Decimal)
+        except Exception as e:
+            print(f"Error converting item to Decimal format: {e}")
+            print(f"Problematic item: {json.dumps(item)}")
+            # Try a more robust approach for handling problematic values
+            item_decimal = {}
+            for key, value in item.items():
+                try:
+                    if isinstance(value, (int, float)):
+                        item_decimal[key] = decimal.Decimal(str(value))
+                    elif isinstance(value, dict):
+                        # Handle nested dictionaries
+                        nested_dict = {}
+                        for k, v in value.items():
+                            if isinstance(v, (int, float)):
+                                nested_dict[k] = decimal.Decimal(str(v))
+                            else:
+                                nested_dict[k] = v
+                        item_decimal[key] = nested_dict
+                    else:
+                        item_decimal[key] = value
+                except Exception as e:
+                    print(f"Error converting field {key}: {e}")
+                    # Use string representation as fallback
+                    item_decimal[key] = str(value)
+        
+        print(f"Putting item in table {table_name}")
         table.put_item(Item=item_decimal)
         return item # Return original item before decimal conversion for consistency
     except ClientError as e:
         print(f"Error putting item in table {table_name}: {e}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error putting item in table {table_name}: {e}")
+        import traceback
+        traceback.print_exc()
         raise
 
 def create_item(table_name, item):

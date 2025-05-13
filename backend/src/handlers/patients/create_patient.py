@@ -31,6 +31,7 @@ def lambda_handler(event, context):
     try:
         # Parse request body
         body = json.loads(event.get('body', '{}'))
+        print(f"Request body: {json.dumps(body)}")
         
         # Validate required fields
         required_fields = ['firstName', 'lastName', 'dateOfBirth', 'gender', 'contactNumber']
@@ -55,13 +56,28 @@ def lambda_handler(event, context):
             'contactNumber': body.get('contactNumber'),
             'email': body.get('email', ''),
             'address': body.get('address', ''),
-            'emergencyContact': body.get('emergencyContact', {}),
-            'insuranceInfo': body.get('insuranceInfo', {}),
-            'medicalHistory': body.get('medicalHistory', {}),
             'status': body.get('status', 'active'),
             'createdAt': timestamp,
             'updatedAt': timestamp
         }
+        
+        # Handle nested objects safely
+        if 'emergencyContact' in body and isinstance(body['emergencyContact'], dict):
+            patient_item['emergencyContact'] = body['emergencyContact']
+        else:
+            patient_item['emergencyContact'] = {}
+            
+        if 'insuranceInfo' in body and isinstance(body['insuranceInfo'], dict):
+            patient_item['insuranceInfo'] = body['insuranceInfo']
+        else:
+            patient_item['insuranceInfo'] = {}
+            
+        if 'medicalHistory' in body and isinstance(body['medicalHistory'], dict):
+            patient_item['medicalHistory'] = body['medicalHistory']
+        else:
+            patient_item['medicalHistory'] = {}
+        
+        print(f"Creating patient item: {json.dumps(patient_item)}")
         
         # Create the patient record in DynamoDB
         create_item(table_name, patient_item)
@@ -70,9 +86,12 @@ def lambda_handler(event, context):
         return generate_response(201, patient_item)
     
     except ClientError as e:
+        print(f"DynamoDB ClientError: {str(e)}")
         return handle_exception(e)
     except Exception as e:
-        print(f"Error creating patient: {e}")
+        print(f"Error creating patient: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return generate_response(500, {
             'message': 'Error creating patient',
             'error': str(e)

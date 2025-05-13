@@ -41,8 +41,32 @@ const patientApi = {
    */
   createPatient: async (patientData) => {
     try {
-      console.log('Creating patient with data:', patientData);
-      const response = await api.post('/patients', patientData);
+      // Ensure nested objects are properly initialized
+      const sanitizedData = {
+        ...patientData,
+        emergencyContact: patientData.emergencyContact || {},
+        insuranceInfo: patientData.insuranceInfo || {},
+        medicalHistory: patientData.medicalHistory || {}
+      };
+      
+      // Remove any undefined values that could cause JSON serialization issues
+      Object.keys(sanitizedData).forEach(key => {
+        if (sanitizedData[key] === undefined) {
+          sanitizedData[key] = null;
+        }
+        
+        // Also check nested objects
+        if (typeof sanitizedData[key] === 'object' && sanitizedData[key] !== null) {
+          Object.keys(sanitizedData[key]).forEach(nestedKey => {
+            if (sanitizedData[key][nestedKey] === undefined) {
+              sanitizedData[key][nestedKey] = null;
+            }
+          });
+        }
+      });
+      
+      console.log('Creating patient with data:', sanitizedData);
+      const response = await api.post('/patients', sanitizedData);
       console.log('Patient created successfully:', response.data);
       return response.data;
     } catch (error) {
@@ -60,7 +84,31 @@ const patientApi = {
    */
   updatePatient: async (id, patientData) => {
     try {
-      const response = await api.put(`/patients/${id}`, patientData);
+      // Ensure nested objects are properly initialized
+      const sanitizedData = {
+        ...patientData,
+        emergencyContact: patientData.emergencyContact || {},
+        insuranceInfo: patientData.insuranceInfo || {},
+        medicalHistory: patientData.medicalHistory || {}
+      };
+      
+      // Remove any undefined values
+      Object.keys(sanitizedData).forEach(key => {
+        if (sanitizedData[key] === undefined) {
+          sanitizedData[key] = null;
+        }
+        
+        // Also check nested objects
+        if (typeof sanitizedData[key] === 'object' && sanitizedData[key] !== null) {
+          Object.keys(sanitizedData[key]).forEach(nestedKey => {
+            if (sanitizedData[key][nestedKey] === undefined) {
+              sanitizedData[key][nestedKey] = null;
+            }
+          });
+        }
+      });
+      
+      const response = await api.put(`/patients/${id}`, sanitizedData);
       return response.data;
     } catch (error) {
       console.error(`Error updating patient ${id}:`, error);
