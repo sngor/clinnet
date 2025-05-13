@@ -16,49 +16,72 @@ import {
   Divider,
   IconButton,
   Alert,
-  Snackbar
+  Snackbar,
+  CircularProgress
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { format } from 'date-fns';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
+import usePatientData from '../features/patients/hooks/usePatientData';
 
 function NewPatientPage() {
   const navigate = useNavigate();
+  const { createPatient, loading, error } = usePatientData();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [patientData, setPatientData] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
+    contactNumber: '', // Changed from phone to match backend
     gender: '',
     dateOfBirth: null,
     address: '',
     city: '',
     state: '',
     zipCode: '',
-    insuranceProvider: '',
-    insuranceNumber: '',
-    emergencyContactName: '',
-    emergencyContactPhone: '',
-    allergies: '',
-    medicalConditions: '',
-    medications: '',
-    bloodType: '',
-    height: '',
-    weight: ''
+    insuranceInfo: {
+      provider: '',
+      policyNumber: ''
+    },
+    emergencyContact: {
+      name: '',
+      phone: ''
+    },
+    medicalHistory: {
+      allergies: '',
+      conditions: '',
+      medications: '',
+      bloodType: '',
+      height: '',
+      weight: ''
+    }
   });
   const [errors, setErrors] = useState({});
 
   // Handle input change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setPatientData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Handle nested objects
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setPatientData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setPatientData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
     
     // Clear error when field is edited
     if (errors[name]) {
@@ -93,8 +116,9 @@ function NewPatientPage() {
     // Required fields validation
     if (!patientData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!patientData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!patientData.phone.trim()) newErrors.phone = 'Phone number is required';
+    if (!patientData.contactNumber.trim()) newErrors.contactNumber = 'Phone number is required';
     if (!patientData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
+    if (!patientData.gender) newErrors.gender = 'Gender is required';
     
     // Email validation
     if (patientData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientData.email)) {
@@ -102,8 +126,8 @@ function NewPatientPage() {
     }
     
     // Phone validation
-    if (patientData.phone && !/^[0-9+\-() ]{10,15}$/.test(patientData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
+    if (patientData.contactNumber && !/^[0-9+\-() ]{10,15}$/.test(patientData.contactNumber)) {
+      newErrors.contactNumber = 'Please enter a valid phone number';
     }
     
     setErrors(newErrors);
@@ -111,17 +135,40 @@ function NewPatientPage() {
   };
 
   // Handle save
-  const handleSave = () => {
+  const handleSave = async () => {
     if (validateForm()) {
-      // In a real app, this would be an API call to save the patient
-      console.log('Saving patient:', patientData);
-      
-      // Show success message
-      setSnackbarMessage('Patient added successfully');
-      setSnackbarOpen(true);
-      
-      // Navigate back to patients list after a delay
-      setTimeout(() => navigate('/frontdesk/patients'), 1500);
+      try {
+        // Format the data for the API
+        const formattedData = {
+          firstName: patientData.firstName,
+          lastName: patientData.lastName,
+          dateOfBirth: patientData.dateOfBirth,
+          gender: patientData.gender,
+          contactNumber: patientData.contactNumber,
+          email: patientData.email || '',
+          address: patientData.address || '',
+          emergencyContact: patientData.emergencyContact,
+          insuranceInfo: patientData.insuranceInfo,
+          medicalHistory: patientData.medicalHistory,
+          status: 'active'
+        };
+        
+        // Call the API to create the patient
+        await createPatient(formattedData);
+        
+        // Show success message
+        setSnackbarMessage('Patient added successfully');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+        
+        // Navigate back to patients list after a delay
+        setTimeout(() => navigate('/frontdesk/patients'), 1500);
+      } catch (err) {
+        console.error('Error saving patient:', err);
+        setSnackbarMessage(err.message || 'Failed to create patient');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
     }
   };
 
@@ -200,7 +247,7 @@ function NewPatientPage() {
           </Grid>
           
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth required>
+            <FormControl fullWidth required error={!!errors.gender}>
               <InputLabel>Gender</InputLabel>
               <Select
                 name="gender"
@@ -219,13 +266,13 @@ function NewPatientPage() {
           <Grid item xs={12} md={6}>
             <TextField
               label="Phone"
-              name="phone"
-              value={patientData.phone}
+              name="contactNumber"
+              value={patientData.contactNumber}
               onChange={handleInputChange}
               fullWidth
               required
-              error={!!errors.phone}
-              helperText={errors.phone}
+              error={!!errors.contactNumber}
+              helperText={errors.contactNumber}
             />
           </Grid>
           
@@ -258,36 +305,6 @@ function NewPatientPage() {
               fullWidth
             />
           </Grid>
-          
-          <Grid item xs={12} md={4}>
-            <TextField
-              label="City"
-              name="city"
-              value={patientData.city}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={4}>
-            <TextField
-              label="State"
-              name="state"
-              value={patientData.state}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={4}>
-            <TextField
-              label="ZIP Code"
-              name="zipCode"
-              value={patientData.zipCode}
-              onChange={handleInputChange}
-              fullWidth
-            />
-          </Grid>
 
           {/* Insurance Information */}
           <Grid item xs={12}>
@@ -300,8 +317,8 @@ function NewPatientPage() {
           <Grid item xs={12} md={6}>
             <TextField
               label="Insurance Provider"
-              name="insuranceProvider"
-              value={patientData.insuranceProvider}
+              name="insuranceInfo.provider"
+              value={patientData.insuranceInfo.provider}
               onChange={handleInputChange}
               fullWidth
             />
@@ -309,9 +326,9 @@ function NewPatientPage() {
           
           <Grid item xs={12} md={6}>
             <TextField
-              label="Insurance Number"
-              name="insuranceNumber"
-              value={patientData.insuranceNumber}
+              label="Policy Number"
+              name="insuranceInfo.policyNumber"
+              value={patientData.insuranceInfo.policyNumber}
               onChange={handleInputChange}
               fullWidth
             />
@@ -328,8 +345,8 @@ function NewPatientPage() {
           <Grid item xs={12} md={6}>
             <TextField
               label="Emergency Contact Name"
-              name="emergencyContactName"
-              value={patientData.emergencyContactName}
+              name="emergencyContact.name"
+              value={patientData.emergencyContact.name}
               onChange={handleInputChange}
               fullWidth
             />
@@ -338,8 +355,8 @@ function NewPatientPage() {
           <Grid item xs={12} md={6}>
             <TextField
               label="Emergency Contact Phone"
-              name="emergencyContactPhone"
-              value={patientData.emergencyContactPhone}
+              name="emergencyContact.phone"
+              value={patientData.emergencyContact.phone}
               onChange={handleInputChange}
               fullWidth
             />
@@ -356,8 +373,8 @@ function NewPatientPage() {
           <Grid item xs={12} md={4}>
             <TextField
               label="Blood Type"
-              name="bloodType"
-              value={patientData.bloodType}
+              name="medicalHistory.bloodType"
+              value={patientData.medicalHistory.bloodType}
               onChange={handleInputChange}
               fullWidth
             />
@@ -366,8 +383,8 @@ function NewPatientPage() {
           <Grid item xs={12} md={4}>
             <TextField
               label="Height"
-              name="height"
-              value={patientData.height}
+              name="medicalHistory.height"
+              value={patientData.medicalHistory.height}
               onChange={handleInputChange}
               fullWidth
               placeholder="e.g., 175 cm"
@@ -377,8 +394,8 @@ function NewPatientPage() {
           <Grid item xs={12} md={4}>
             <TextField
               label="Weight"
-              name="weight"
-              value={patientData.weight}
+              name="medicalHistory.weight"
+              value={patientData.medicalHistory.weight}
               onChange={handleInputChange}
               fullWidth
               placeholder="e.g., 70 kg"
@@ -388,8 +405,8 @@ function NewPatientPage() {
           <Grid item xs={12}>
             <TextField
               label="Allergies"
-              name="allergies"
-              value={patientData.allergies}
+              name="medicalHistory.allergies"
+              value={patientData.medicalHistory.allergies}
               onChange={handleInputChange}
               fullWidth
               multiline
@@ -400,8 +417,8 @@ function NewPatientPage() {
           <Grid item xs={12}>
             <TextField
               label="Medical Conditions"
-              name="medicalConditions"
-              value={patientData.medicalConditions}
+              name="medicalHistory.conditions"
+              value={patientData.medicalHistory.conditions}
               onChange={handleInputChange}
               fullWidth
               multiline
@@ -412,8 +429,8 @@ function NewPatientPage() {
           <Grid item xs={12}>
             <TextField
               label="Medications"
-              name="medications"
-              value={patientData.medications}
+              name="medicalHistory.medications"
+              value={patientData.medicalHistory.medications}
               onChange={handleInputChange}
               fullWidth
               multiline
@@ -426,19 +443,20 @@ function NewPatientPage() {
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
               <Button
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 onClick={handleSave}
                 size="large"
                 sx={{ borderRadius: 1.5 }}
+                disabled={loading}
               >
-                Save Patient
+                {loading ? 'Saving...' : 'Save Patient'}
               </Button>
             </Box>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Success Snackbar */}
+      {/* Snackbar for messages */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
@@ -447,7 +465,7 @@ function NewPatientPage() {
       >
         <Alert 
           onClose={() => setSnackbarOpen(false)} 
-          severity="success" 
+          severity={snackbarSeverity} 
           sx={{ width: '100%' }}
         >
           {snackbarMessage}

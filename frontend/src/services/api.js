@@ -13,11 +13,22 @@ const api = axios.create({
 // Add request interceptor for authentication if needed
 api.interceptors.request.use(
   (config) => {
-    // You can add auth token here when implementing authentication
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    // Add auth token for authentication
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    // Log requests in development
+    if (import.meta.env.DEV) {
+      console.log('API Request:', {
+        url: config.url,
+        method: config.method,
+        data: config.data,
+        headers: config.headers
+      });
+    }
+    
     return config;
   },
   (error) => {
@@ -28,6 +39,14 @@ api.interceptors.request.use(
 // Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
+    // Log responses in development
+    if (import.meta.env.DEV) {
+      console.log('API Response:', {
+        url: response.config.url,
+        status: response.status,
+        data: response.data
+      });
+    }
     return response;
   },
   (error) => {
@@ -41,8 +60,11 @@ api.interceptors.response.use(
         case 401:
           // Unauthorized - redirect to login or refresh token
           console.log('Unauthorized access');
-          // localStorage.removeItem('token');
-          // window.location.href = '/login';
+          localStorage.removeItem('token');
+          // Only redirect if not already on login page
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
           break;
         case 403:
           // Forbidden
@@ -60,9 +82,13 @@ api.interceptors.response.use(
           // Other errors
           break;
       }
+      
+      // Enhance error object with response data for better error handling
+      error.message = error.response.data?.message || error.message;
     } else if (error.request) {
       // Request was made but no response was received
       console.error('Network Error:', error.request);
+      error.message = 'Network error. Please check your connection.';
     } else {
       // Something happened in setting up the request
       console.error('Request Error:', error.message);
