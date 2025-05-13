@@ -1,104 +1,91 @@
 // src/services/serviceApi.js
-import { get, post, put, del } from 'aws-amplify/api';
+import api from './api';
 
 /**
- * Service API functions using AWS Amplify
+ * Service API service for interacting with the backend
  */
 const serviceApi = {
   /**
-   * Get all services
-   * @returns {Promise<Array>} List of services
+   * Get all services with optional filters
+   * @param {Object} filters - Optional filters (category, active)
+   * @returns {Promise} Promise with services data
    */
-  getAll: async () => {
+  getAllServices: async (filters = {}) => {
     try {
-      console.log('Calling API Gateway to get services');
-      const response = await get({
-        apiName: 'clinnetApi',
-        path: '/services'
+      // Build query string from filters
+      const queryParams = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) queryParams.append(key, value);
       });
-      console.log('API response:', response.body);
-      return response.body;
+      
+      const queryString = queryParams.toString();
+      const endpoint = queryString ? `/services?${queryString}` : '/services';
+      
+      const response = await api.get(endpoint);
+      return response.data;
     } catch (error) {
       console.error('Error fetching services:', error);
       throw error;
     }
   },
-  
+
   /**
-   * Get service by ID
-   * @param {string} serviceId - Service ID
-   * @returns {Promise<Object>} Service data
+   * Get a service by ID
+   * @param {string} id - Service ID
+   * @returns {Promise} Promise with service data
    */
-  getById: async (serviceId) => {
+  getServiceById: async (id) => {
     try {
-      const response = await get({
-        apiName: 'clinnetApi',
-        path: `/services/${serviceId}`
-      });
-      return response.body;
+      const response = await api.get(`/services/${id}`);
+      return response.data;
     } catch (error) {
-      console.error(`Error fetching service ${serviceId}:`, error);
+      console.error(`Error fetching service ${id}:`, error);
       throw error;
     }
   },
-  
+
   /**
    * Create a new service
    * @param {Object} serviceData - Service data
-   * @returns {Promise<Object>} Created service
+   * @returns {Promise} Promise with created service data
    */
-  create: async (serviceData) => {
+  createService: async (serviceData) => {
     try {
-      const response = await post({
-        apiName: 'clinnetApi',
-        path: '/services',
-        options: {
-          body: serviceData
-        }
-      });
-      return response.body;
+      const response = await api.post('/services', serviceData);
+      return response.data;
     } catch (error) {
       console.error('Error creating service:', error);
       throw error;
     }
   },
-  
+
   /**
    * Update a service
-   * @param {string} serviceId - Service ID
+   * @param {string} id - Service ID
    * @param {Object} serviceData - Updated service data
-   * @returns {Promise<Object>} Updated service
+   * @returns {Promise} Promise with updated service data
    */
-  update: async (serviceId, serviceData) => {
+  updateService: async (id, serviceData) => {
     try {
-      const response = await put({
-        apiName: 'clinnetApi',
-        path: `/services/${serviceId}`,
-        options: {
-          body: serviceData
-        }
-      });
-      return response.body;
+      const response = await api.put(`/services/${id}`, serviceData);
+      return response.data;
     } catch (error) {
-      console.error(`Error updating service ${serviceId}:`, error);
+      console.error(`Error updating service ${id}:`, error);
       throw error;
     }
   },
-  
+
   /**
    * Delete a service
-   * @param {string} serviceId - Service ID
-   * @returns {Promise<void>}
+   * @param {string} id - Service ID
+   * @returns {Promise} Promise with deletion confirmation
    */
-  delete: async (serviceId) => {
+  deleteService: async (id) => {
     try {
-      const response = await del({
-        apiName: 'clinnetApi',
-        path: `/services/${serviceId}`
-      });
-      return response.body;
+      const response = await api.delete(`/services/${id}`);
+      return response.data;
     } catch (error) {
-      console.error(`Error deleting service ${serviceId}:`, error);
+      console.error(`Error deleting service ${id}:`, error);
       throw error;
     }
   }

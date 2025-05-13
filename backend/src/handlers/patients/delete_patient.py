@@ -5,13 +5,10 @@ import os
 import json
 import boto3
 from botocore.exceptions import ClientError
-import sys
-import os
 
-# Add the parent directory to sys.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-from utils.db_utils import get_item_by_id, delete_item, generate_response
+# Import utility functions
+from utils.db_utils import get_patient_by_pk_sk, generate_response
+from utils.responser_helper import handle_exception
 
 def lambda_handler(event, context):
     """
@@ -26,33 +23,44 @@ def lambda_handler(event, context):
     """
     print(f"Received event: {json.dumps(event)}")
     
-    # Extract patient ID from path parameters
-    try:
-        patient_id = event['pathParameters']['id']
-    except (KeyError, TypeError):
-        return generate_response(400, {'message': 'Patient ID is required'})
+    table_name = os.environ.get('PATIENT_RECORDS_TABLE')
+    if not table_name:
+        return generate_response(500, {'message': 'PatientRecords table name not configured'})
     
-    table_name = os.environ.get('PATIENTS_TABLE')
+    # Get patient ID from path parameters
+    patient_id = event.get('pathParameters', {}).get('id')
+    if not patient_id:
+        return generate_response(400, {'message': 'Missing patient ID'})
     
     try:
-        # Check if patient exists
-        existing_patient = get_item_by_id(table_name, patient_id)
+        # Get existing patient to confirm it exists
+        existing_patient = get_patient_by_pk_sk(table_name, f"PATIENT#{patient_id}", "METADATA")
         
         if not existing_patient:
-            return generate_response(404, {'message': 'Patient not found'})
+            return generate_response(404, {'message': f'Patient with ID {patient_id} not found'})
         
-        # Delete patient from DynamoDB
-        delete_item(table_name, patient_id)
+        # Initialize DynamoDB client
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(table_name)
         
-        return {
-            'statusCode': 204,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Credentials': True
+        # Delete the patient record
+        table.delete_item(
+            Key={
+                'PK': f"PATIENT#{patient_id}",
+                'SK': 'METADATA'
             }
-        }
+        )
+        
+        # Note: In a production environment, you might want to:
+        # 1. Soft delete by setting a 'deleted' flag instead of hard delete
+        # 2. Delete all related records (medical records, appointments, etc.)
+        
+        return generate_response(200, {'message': f'Patient with ID {patient_id} deleted successfully'})
+    
+    except ClientError as e:
+        return handle_exception(e)
     except Exception as e:
-        print(f"Error deleting patient {patient_id}: {e}")
+        print(f"Error deleting patient: {e}")
         return generate_response(500, {
             'message': 'Error deleting patient',
             'error': str(e)

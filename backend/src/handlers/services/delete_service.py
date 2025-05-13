@@ -3,15 +3,11 @@ Lambda function to delete a service
 """
 import os
 import json
-import boto3
 from botocore.exceptions import ClientError
-import sys
-import os
 
-# Add the parent directory to sys.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-from utils.db_utils import get_item_by_id, delete_item, generate_response
+# Import utility functions
+from utils.db_utils import delete_item, get_item_by_id, generate_response
+from utils.responser_helper import handle_exception
 
 def lambda_handler(event, context):
     """
@@ -26,33 +22,31 @@ def lambda_handler(event, context):
     """
     print(f"Received event: {json.dumps(event)}")
     
-    # Extract service ID from path parameters
-    try:
-        service_id = event['pathParameters']['id']
-    except (KeyError, TypeError):
-        return generate_response(400, {'message': 'Service ID is required'})
-    
     table_name = os.environ.get('SERVICES_TABLE')
+    if not table_name:
+        return generate_response(500, {'message': 'Services table name not configured'})
+    
+    # Get service ID from path parameters
+    service_id = event.get('pathParameters', {}).get('id')
+    if not service_id:
+        return generate_response(400, {'message': 'Missing service ID'})
     
     try:
         # Check if service exists
         existing_service = get_item_by_id(table_name, service_id)
         
         if not existing_service:
-            return generate_response(404, {'message': 'Service not found'})
+            return generate_response(404, {'message': f'Service with ID {service_id} not found'})
         
-        # Delete service from DynamoDB
+        # Delete service
         delete_item(table_name, service_id)
         
-        return {
-            'statusCode': 204,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Credentials': True
-            }
-        }
+        return generate_response(200, {'message': f'Service with ID {service_id} deleted successfully'})
+    
+    except ClientError as e:
+        return handle_exception(e)
     except Exception as e:
-        print(f"Error deleting service {service_id}: {e}")
+        print(f"Error deleting service: {e}")
         return generate_response(500, {
             'message': 'Error deleting service',
             'error': str(e)

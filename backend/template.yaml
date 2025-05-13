@@ -26,6 +26,7 @@ Globals:
         USERS_TABLE: !Ref UsersTable
         SERVICES_TABLE: !Ref ServicesTable
         APPOINTMENTS_TABLE: !Ref AppointmentsTable
+        BILLING_TABLE: !Ref BillingTable
         DOCUMENTS_BUCKET: !Ref DocumentsBucket
         ENVIRONMENT: !Ref Environment
         USER_POOL_ID: !Ref UserPool
@@ -92,6 +93,18 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub clinnet-appointments-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+          
+  BillingTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub clinnet-billing-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -668,6 +681,79 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /appointments/{id}
             Method: delete
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
+            
+  # Lambda Functions for Billing
+  GetBillingRecordsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/billing/
+      Handler: get_billing_records.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref BillingTable
+      Events:
+        GetBillingRecords:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /billing
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetBillingByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/billing/
+      Handler: get_billing_by_id.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref BillingTable
+      Events:
+        GetBillingById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /billing/{id}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CreateBillingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/billing/
+      Handler: create_billing.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BillingTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ServicesTable
+      Events:
+        CreateBilling:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /billing
+            Method: post
+            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
+
+  UpdateBillingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/billing/
+      Handler: update_billing.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BillingTable
+      Events:
+        UpdateBilling:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /billing/{id}
+            Method: put
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
 Outputs:

@@ -3,17 +3,13 @@ Lambda function to create a new patient
 """
 import os
 import json
-import boto3
 import uuid
 from datetime import datetime
 from botocore.exceptions import ClientError
-import sys
-import os
 
-# Add the parent directory to sys.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
+# Import utility functions
 from utils.db_utils import create_item, generate_response
+from utils.responser_helper import handle_exception
 
 def lambda_handler(event, context):
     """
@@ -28,54 +24,53 @@ def lambda_handler(event, context):
     """
     print(f"Received event: {json.dumps(event)}")
     
-    # Parse request body
-    try:
-        if not event.get('body'):
-            return generate_response(400, {'message': 'Request body is required'})
-        
-        request_body = json.loads(event['body'])
-    except json.JSONDecodeError:
-        return generate_response(400, {'message': 'Invalid JSON in request body'})
-    
-    # Validate required fields
-    required_fields = ['firstName', 'lastName', 'dateOfBirth']
-    missing_fields = [field for field in required_fields if not request_body.get(field)]
-    
-    if missing_fields:
-        return generate_response(400, {
-            'message': f"Missing required fields: {', '.join(missing_fields)}"
-        })
-    
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
         return generate_response(500, {'message': 'PatientRecords table name not configured'})
     
     try:
-        # Generate patient ID (UUID)
+        # Parse request body
+        body = json.loads(event.get('body', '{}'))
+        
+        # Validate required fields
+        required_fields = ['firstName', 'lastName', 'dateOfBirth', 'gender', 'contactNumber']
+        for field in required_fields:
+            if field not in body:
+                return generate_response(400, {'message': f'Missing required field: {field}'})
+        
+        # Create patient record with single-table design
         patient_id = str(uuid.uuid4())
-        now = datetime.utcnow().isoformat()
+        timestamp = datetime.utcnow().isoformat() + "Z"
+        
+        # Main patient metadata
         patient_item = {
-            'PK': f'PATIENT#{patient_id}',
+            'PK': f"PATIENT#{patient_id}",
             'SK': 'METADATA',
-            'type': 'patient',
             'id': patient_id,
-            'firstName': request_body['firstName'],
-            'lastName': request_body['lastName'],
-            'dateOfBirth': request_body['dateOfBirth'],
-            'phone': request_body.get('phone'),
-            'email': request_body.get('email'),
-            'address': request_body.get('address'),
-            'insuranceProvider': request_body.get('insuranceProvider'),
-            'insuranceNumber': request_body.get('insuranceNumber'),
-            'status': request_body.get('status', 'active'),
-            'createdAt': now,
-            'updatedAt': now
+            'type': 'patient',
+            'firstName': body.get('firstName'),
+            'lastName': body.get('lastName'),
+            'dateOfBirth': body.get('dateOfBirth'),
+            'gender': body.get('gender'),
+            'contactNumber': body.get('contactNumber'),
+            'email': body.get('email', ''),
+            'address': body.get('address', ''),
+            'emergencyContact': body.get('emergencyContact', {}),
+            'insuranceInfo': body.get('insuranceInfo', {}),
+            'medicalHistory': body.get('medicalHistory', {}),
+            'status': body.get('status', 'active'),
+            'createdAt': timestamp,
+            'updatedAt': timestamp
         }
         
-        # Save to DynamoDB
-        created_patient = create_item(table_name, patient_item)
+        # Create the patient record in DynamoDB
+        create_item(table_name, patient_item)
         
-        return generate_response(201, created_patient)
+        # Return the created patient
+        return generate_response(201, patient_item)
+    
+    except ClientError as e:
+        return handle_exception(e)
     except Exception as e:
         print(f"Error creating patient: {e}")
         return generate_response(500, {

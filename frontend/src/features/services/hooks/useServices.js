@@ -1,26 +1,46 @@
 // src/features/services/hooks/useServices.js
 import { useState, useEffect, useCallback } from 'react';
-import { serviceApi } from '../../../services';
+import serviceApi from '../../../services/serviceApi';
 
 /**
- * Custom hook for managing services data
- * @returns {Object} Services data and operations
+ * Custom hook for managing service data
+ * @returns {Object} Service data and operations
  */
-export const useServices = () => {
+const useServices = () => {
   const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [currentService, setCurrentService] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch all services
-  const fetchServices = useCallback(async () => {
+  // Fetch all services with optional filters
+  const fetchServices = useCallback(async (filters = {}) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const data = await serviceApi.getAll();
+      const data = await serviceApi.getAllServices(filters);
       setServices(data);
+      return data;
     } catch (err) {
+      setError(err.message || 'Failed to fetch services');
       console.error('Error fetching services:', err);
-      setError('Failed to load services. Please try again later.');
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch a service by ID
+  const fetchServiceById = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await serviceApi.getServiceById(id);
+      setCurrentService(data);
+      return data;
+    } catch (err) {
+      setError(err.message || `Failed to fetch service ${id}`);
+      console.error(`Error fetching service ${id}:`, err);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -28,15 +48,15 @@ export const useServices = () => {
 
   // Create a new service
   const createService = useCallback(async (serviceData) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const newService = await serviceApi.create(serviceData);
-      setServices(prevServices => [...prevServices, newService]);
+      const newService = await serviceApi.createService(serviceData);
+      setServices(prev => [...prev, newService]);
       return newService;
     } catch (err) {
+      setError(err.message || 'Failed to create service');
       console.error('Error creating service:', err);
-      setError('Failed to create service. Please try again.');
       throw err;
     } finally {
       setLoading(false);
@@ -45,42 +65,45 @@ export const useServices = () => {
 
   // Update a service
   const updateService = useCallback(async (id, serviceData) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      const updatedService = await serviceApi.update(id, serviceData);
-      setServices(prevServices => 
-        prevServices.map(service => 
-          service.id === id ? updatedService : service
-        )
+      const updatedService = await serviceApi.updateService(id, serviceData);
+      setServices(prev => 
+        prev.map(service => service.id === id ? updatedService : service)
       );
+      if (currentService && currentService.id === id) {
+        setCurrentService(updatedService);
+      }
       return updatedService;
     } catch (err) {
+      setError(err.message || `Failed to update service ${id}`);
       console.error(`Error updating service ${id}:`, err);
-      setError('Failed to update service. Please try again.');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentService]);
 
   // Delete a service
   const deleteService = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      await serviceApi.delete(id);
-      setServices(prevServices => 
-        prevServices.filter(service => service.id !== id)
-      );
+      await serviceApi.deleteService(id);
+      setServices(prev => prev.filter(service => service.id !== id));
+      if (currentService && currentService.id === id) {
+        setCurrentService(null);
+      }
+      return true;
     } catch (err) {
+      setError(err.message || `Failed to delete service ${id}`);
       console.error(`Error deleting service ${id}:`, err);
-      setError('Failed to delete service. Please try again.');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentService]);
 
   // Load services on initial render
   useEffect(() => {
@@ -89,12 +112,15 @@ export const useServices = () => {
 
   return {
     services,
+    currentService,
     loading,
     error,
     fetchServices,
+    fetchServiceById,
     createService,
     updateService,
-    deleteService
+    deleteService,
+    setCurrentService
   };
 };
 

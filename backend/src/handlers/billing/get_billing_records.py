@@ -1,5 +1,5 @@
 """
-Lambda function to get all appointments
+Lambda function to get all billing records
 """
 import os
 import json
@@ -11,7 +11,7 @@ from utils.responser_helper import handle_exception
 
 def lambda_handler(event, context):
     """
-    Handle Lambda event for GET /appointments
+    Handle Lambda event for GET /billing
     
     Args:
         event (dict): Lambda event
@@ -22,9 +22,9 @@ def lambda_handler(event, context):
     """
     print(f"Received event: {json.dumps(event)}")
     
-    table_name = os.environ.get('APPOINTMENTS_TABLE')
+    table_name = os.environ.get('BILLING_TABLE')
     if not table_name:
-        return generate_response(500, {'message': 'Appointments table name not configured'})
+        return generate_response(500, {'message': 'Billing table name not configured'})
     
     try:
         # Get query parameters
@@ -32,24 +32,19 @@ def lambda_handler(event, context):
         
         # Initialize filter expression
         filter_expressions = []
-        expression_values = {}
         
         # Add filters based on query parameters
         if 'patientId' in query_params:
             from boto3.dynamodb.conditions import Attr
             filter_expressions.append(Attr('patientId').eq(query_params['patientId']))
         
-        if 'doctorId' in query_params:
+        if 'appointmentId' in query_params:
             from boto3.dynamodb.conditions import Attr
-            filter_expressions.append(Attr('doctorId').eq(query_params['doctorId']))
+            filter_expressions.append(Attr('appointmentId').eq(query_params['appointmentId']))
         
-        if 'date' in query_params:
+        if 'paymentStatus' in query_params:
             from boto3.dynamodb.conditions import Attr
-            filter_expressions.append(Attr('date').eq(query_params['date']))
-        
-        if 'status' in query_params:
-            from boto3.dynamodb.conditions import Attr
-            filter_expressions.append(Attr('status').eq(query_params['status']))
+            filter_expressions.append(Attr('paymentStatus').eq(query_params['paymentStatus']))
         
         # Combine filter expressions if any
         kwargs = {}
@@ -60,16 +55,16 @@ def lambda_handler(event, context):
                 filter_expr = filter_expr & expr
             kwargs['FilterExpression'] = filter_expr
         
-        # Query appointments
-        appointments = query_table(table_name, **kwargs)
+        # Query billing records
+        billing_records = query_table(table_name, **kwargs)
         
-        return generate_response(200, appointments)
+        return generate_response(200, billing_records)
     
     except ClientError as e:
         return handle_exception(e)
     except Exception as e:
-        print(f"Error fetching appointments: {e}")
+        print(f"Error fetching billing records: {e}")
         return generate_response(500, {
-            'message': 'Error fetching appointments',
+            'message': 'Error fetching billing records',
             'error': str(e)
         })

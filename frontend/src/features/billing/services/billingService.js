@@ -1,106 +1,114 @@
 // src/features/billing/services/billingService.js
+import api from '../../../services/api';
 
-// Function to get all services
-export const getServices = async () => {
-  // In a real app, this would be an API call
-  // For now, we'll return mock data
-  return [
-    { id: 1, name: "General Consultation", price: 150.00, category: "Consultation" },
-    { id: 2, name: "Follow-up Visit", price: 100.00, category: "Consultation" },
-    { id: 3, name: "Blood Test", price: 75.00, category: "Laboratory" },
-    { id: 4, name: "X-Ray", price: 200.00, category: "Radiology" },
-    { id: 5, name: "Vaccination", price: 50.00, category: "Preventive Care" },
-    { id: 6, name: "Physical Therapy Session", price: 120.00, category: "Therapy" },
-  ];
-};
-
-// Function to process a payment
-export const processPayment = async (paymentData) => {
-  // In a real app, this would be an API call to process the payment
-  // For now, we'll just simulate a successful payment
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Return a mock response
-  return {
-    success: true,
-    transactionId: `TXN-${Date.now()}`,
-    amount: paymentData.amount,
-    date: new Date().toISOString(),
-    paymentMethod: paymentData.paymentMethod,
-  };
-};
-
-// Function to save a billing record
-export const saveBillingRecord = async (billingData) => {
-  // In a real app, this would be an API call to save the billing record
-  // For now, we'll just simulate a successful save
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // Return a mock response
-  return {
-    success: true,
-    billingId: `BILL-${Date.now()}`,
-    ...billingData,
-  };
-};
-
-// Function to get billing history for a patient
-export const getPatientBillingHistory = async (patientId) => {
-  // In a real app, this would be an API call
-  // For now, we'll return mock data
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1200));
-  
-  // Return mock billing history
-  return [
-    {
-      id: "BILL-1234567890",
-      patientId,
-      date: "2023-11-15T10:30:00Z",
-      services: [
-        { id: 1, name: "General Consultation", price: 150.00, quantity: 1 },
-        { id: 3, name: "Blood Test", price: 75.00, quantity: 1 }
-      ],
-      subtotal: 225.00,
-      tax: 18.00,
-      total: 243.00,
-      amountPaid: 243.00,
-      paymentMethod: 1,
-      paymentReference: "CC-4567",
-      status: "Paid"
-    },
-    {
-      id: "BILL-0987654321",
-      patientId,
-      date: "2023-10-05T14:15:00Z",
-      services: [
-        { id: 2, name: "Follow-up Visit", price: 100.00, quantity: 1 }
-      ],
-      subtotal: 100.00,
-      tax: 8.00,
-      total: 108.00,
-      amountPaid: 108.00,
-      paymentMethod: 4,
-      paymentReference: "INS-7890",
-      status: "Paid"
+/**
+ * Billing API service for interacting with the backend
+ */
+const billingService = {
+  /**
+   * Get all billing records with optional filters
+   * @param {Object} filters - Optional filters (patientId, appointmentId, paymentStatus)
+   * @returns {Promise} Promise with billing records data
+   */
+  getAllBillingRecords: async (filters = {}) => {
+    try {
+      // Build query string from filters
+      const queryParams = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value);
+      });
+      
+      const queryString = queryParams.toString();
+      const endpoint = queryString ? `/billing?${queryString}` : '/billing';
+      
+      const response = await api.get(endpoint);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching billing records:', error);
+      throw error;
     }
-  ];
+  },
+
+  /**
+   * Get a billing record by ID
+   * @param {string} id - Billing record ID
+   * @returns {Promise} Promise with billing record data
+   */
+  getBillingById: async (id) => {
+    try {
+      const response = await api.get(`/billing/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching billing record ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Create a new billing record
+   * @param {Object} billingData - Billing record data
+   * @returns {Promise} Promise with created billing record data
+   */
+  createBilling: async (billingData) => {
+    try {
+      const response = await api.post('/billing', billingData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating billing record:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update a billing record
+   * @param {string} id - Billing record ID
+   * @param {Object} billingData - Updated billing record data
+   * @returns {Promise} Promise with updated billing record data
+   */
+  updateBilling: async (id, billingData) => {
+    try {
+      const response = await api.put(`/billing/${id}`, billingData);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating billing record ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get billing records for a specific patient
+   * @param {string} patientId - Patient ID
+   * @returns {Promise} Promise with patient's billing records
+   */
+  getPatientBillingHistory: async (patientId) => {
+    try {
+      const response = await api.get(`/billing?patientId=${patientId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching billing history for patient ${patientId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Process payment for a billing record
+   * @param {string} id - Billing record ID
+   * @param {Object} paymentData - Payment details
+   * @returns {Promise} Promise with updated billing record
+   */
+  processPayment: async (id, paymentData) => {
+    try {
+      const response = await api.put(`/billing/${id}`, {
+        paymentStatus: 'paid',
+        paymentMethod: paymentData.paymentMethod,
+        ...paymentData
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error processing payment for billing ${id}:`, error);
+      throw error;
+    }
+  }
 };
 
-// Function to get payment methods
-export const getPaymentMethods = async () => {
-  // In a real app, this would be an API call
-  // For now, we'll return mock data
-  return [
-    { id: 1, name: "Cash" },
-    { id: 2, name: "Credit Card" },
-    { id: 3, name: "Debit Card" },
-    { id: 4, name: "Insurance" },
-    { id: 5, name: "Bank Transfer" },
-  ];
-};
+export default billingService;

@@ -3,63 +3,48 @@ Lambda function to get an appointment by ID
 """
 import os
 import json
-import boto3
-import decimal
 from botocore.exceptions import ClientError
-import sys
-import logging
 
-# Setup logging
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
-# Add the parent directory to sys.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
+# Import utility functions
 from utils.db_utils import get_item_by_id, generate_response
-from utils.response_helper import build_error_response, handle_exception
+from utils.responser_helper import handle_exception
 
 def lambda_handler(event, context):
     """
     Handle Lambda event for GET /appointments/{id}
-
+    
     Args:
         event (dict): Lambda event
         context (LambdaContext): Lambda context
-
+        
     Returns:
         dict: API Gateway response
     """
-    logger.info(f"Received event: {json.dumps(event)}")
-
-    # Extract appointment ID from path parameters
-    try:
-        appointment_id = event['pathParameters']['id']
-        logger.info(f"Fetching appointment ID: {appointment_id}")
-    except (KeyError, TypeError):
-        logger.warning("Appointment ID not found in path parameters.")
-        return build_error_response(400, 'Bad Request', 'Appointment ID is required in path')
-
+    print(f"Received event: {json.dumps(event)}")
+    
     table_name = os.environ.get('APPOINTMENTS_TABLE')
     if not table_name:
-         logger.error("Environment variable APPOINTMENTS_TABLE not set.")
-         return build_error_response(500, 'Configuration Error', 'Appointments table name not configured.')
-
+        return generate_response(500, {'message': 'Appointments table name not configured'})
+    
+    # Get appointment ID from path parameters
+    appointment_id = event.get('pathParameters', {}).get('id')
+    if not appointment_id:
+        return generate_response(400, {'message': 'Missing appointment ID'})
+    
     try:
-        # Get appointment from DynamoDB
+        # Get appointment by ID
         appointment = get_item_by_id(table_name, appointment_id)
-
+        
         if not appointment:
-            logger.warning(f"Appointment not found: {appointment_id}")
-            return build_error_response(404, 'Not Found', 'Appointment not found')
-
-        logger.info(f"Successfully fetched appointment ID: {appointment_id}")
-        # Use generate_response from db_utils for consistency
+            return generate_response(404, {'message': f'Appointment with ID {appointment_id} not found'})
+        
         return generate_response(200, appointment)
-
-    except ClientError as ce:
-        logger.error(f"AWS ClientError fetching appointment {appointment_id}: {ce}")
-        return handle_exception(ce)
-    except Exception as e:
-        logger.error(f"Unexpected error fetching appointment {appointment_id}: {e}", exc_info=True)
+    
+    except ClientError as e:
         return handle_exception(e)
+    except Exception as e:
+        print(f"Error fetching appointment: {e}")
+        return generate_response(500, {
+            'message': 'Error fetching appointment',
+            'error': str(e)
+        })
