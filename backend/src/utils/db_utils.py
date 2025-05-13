@@ -227,3 +227,21 @@ def generate_response(status_code, body):
         # Use the custom DecimalEncoder to handle DynamoDB numbers
         'body': json.dumps(body, cls=DecimalEncoder)
     }
+
+def get_patient_by_pk_sk(table_name, pk, sk):
+    """
+    Get a patient or record by PK/SK from the PatientRecordsTable
+    Args:
+        table_name (str): DynamoDB table name
+        pk (str): Partition key (e.g., 'PATIENT#<id>')
+        sk (str): Sort key (e.g., 'METADATA', 'RECORD#<record_id>')
+    Returns:
+        dict: Item data or None if not found
+    """
+    table = dynamodb.Table(table_name)
+    try:
+        response = table.get_item(Key={'PK': pk, 'SK': sk})
+        return response.get('Item')
+    except ClientError as e:
+        print(f"Error getting item PK={pk}, SK={sk} from table {table_name}: {e}")
+        raise

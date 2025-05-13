@@ -74,11 +74,14 @@ def lambda_handler(event, context):
     """
     print(f"Received event: {json.dumps(event)}")
     
-    table_name = os.environ.get('PATIENTS_TABLE')
+    table_name = os.environ.get('PATIENT_RECORDS_TABLE')
+    if not table_name:
+        return generate_response(500, {'message': 'PatientRecords table name not configured'})
     
     try:
-        # Query patients table
-        patients = query_table(table_name)
+        # Scan for all items with type='patient'
+        from boto3.dynamodb.conditions import Attr
+        patients = query_table(table_name, FilterExpression=Attr('type').eq('patient'))
         
         return generate_response(200, patients)
     except Exception as e:

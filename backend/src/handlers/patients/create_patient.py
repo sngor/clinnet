@@ -46,28 +46,34 @@ def lambda_handler(event, context):
             'message': f"Missing required fields: {', '.join(missing_fields)}"
         })
     
-    table_name = os.environ.get('PATIENTS_TABLE')
+    table_name = os.environ.get('PATIENT_RECORDS_TABLE')
+    if not table_name:
+        return generate_response(500, {'message': 'PatientRecords table name not configured'})
     
     try:
-        # Create patient object
-        patient = {
-            'id': str(uuid.uuid4()),
-            'firstName': request_body.get('firstName'),
-            'lastName': request_body.get('lastName'),
-            'dateOfBirth': request_body.get('dateOfBirth'),
-            'gender': request_body.get('gender', ''),
-            'email': request_body.get('email', ''),
-            'phone': request_body.get('phone', ''),
-            'address': request_body.get('address', ''),
-            'insuranceProvider': request_body.get('insuranceProvider', ''),
-            'insuranceNumber': request_body.get('insuranceNumber', ''),
-            'medicalHistory': request_body.get('medicalHistory', []),
-            'allergies': request_body.get('allergies', []),
-            'medications': request_body.get('medications', [])
+        # Generate patient ID (UUID)
+        patient_id = str(uuid.uuid4())
+        now = datetime.utcnow().isoformat()
+        patient_item = {
+            'PK': f'PATIENT#{patient_id}',
+            'SK': 'METADATA',
+            'type': 'patient',
+            'id': patient_id,
+            'firstName': request_body['firstName'],
+            'lastName': request_body['lastName'],
+            'dateOfBirth': request_body['dateOfBirth'],
+            'phone': request_body.get('phone'),
+            'email': request_body.get('email'),
+            'address': request_body.get('address'),
+            'insuranceProvider': request_body.get('insuranceProvider'),
+            'insuranceNumber': request_body.get('insuranceNumber'),
+            'status': request_body.get('status', 'active'),
+            'createdAt': now,
+            'updatedAt': now
         }
         
-        # Create patient in DynamoDB
-        created_patient = create_item(table_name, patient)
+        # Save to DynamoDB
+        created_patient = create_item(table_name, patient_item)
         
         return generate_response(201, created_patient)
     except Exception as e:

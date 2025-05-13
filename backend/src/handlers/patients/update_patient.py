@@ -42,29 +42,35 @@ def lambda_handler(event, context):
     except json.JSONDecodeError:
         return generate_response(400, {'message': 'Invalid JSON in request body'})
     
-    table_name = os.environ.get('PATIENTS_TABLE')
+    table_name = os.environ.get('PATIENT_RECORDS_TABLE')
+    if not table_name:
+        return generate_response(500, {'message': 'PatientRecords table name not configured'})
     
     try:
         # Check if patient exists
-        existing_patient = get_item_by_id(table_name, patient_id)
+        pk = f'PATIENT#{patient_id}'
+        sk = 'METADATA'
+        existing_patient = get_item_by_id(table_name, pk, sk)
         
         if not existing_patient:
             return generate_response(404, {'message': 'Patient not found'})
         
         # Extract fields to update
         updates = {}
-        fields = [
-            'firstName', 'lastName', 'dateOfBirth', 'gender', 'email', 
-            'phone', 'address', 'insuranceProvider', 'insuranceNumber',
-            'medicalHistory', 'allergies', 'medications'
+        allowed_fields = [
+            'firstName', 'lastName', 'dateOfBirth', 'phone', 'email', 
+            'address', 'insuranceProvider', 'insuranceNumber', 'status'
         ]
         
-        for field in fields:
+        for field in allowed_fields:
             if field in request_body:
                 updates[field] = request_body[field]
         
+        if not updates:
+            return generate_response(400, {'message': 'No valid fields to update'})
+        
         # Update patient in DynamoDB
-        updated_patient = update_item(table_name, patient_id, updates)
+        updated_patient = update_item(table_name, pk, sk, updates)
         
         return generate_response(200, updated_patient)
     except Exception as e:

@@ -22,11 +22,10 @@ Globals:
     MemorySize: 128
     Environment:
       Variables:
-        PATIENTS_TABLE: !Ref PatientsTable
+        PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
         USERS_TABLE: !Ref UsersTable
         SERVICES_TABLE: !Ref ServicesTable
         APPOINTMENTS_TABLE: !Ref AppointmentsTable
-        MEDICAL_RECORDS_TABLE: !Ref MedicalRecordsTable
         DOCUMENTS_BUCKET: !Ref DocumentsBucket
         ENVIRONMENT: !Ref Environment
         USER_POOL_ID: !Ref UserPool
@@ -39,19 +38,31 @@ Globals:
       AllowOrigin: "'*'"
 
 Resources:
-  # DynamoDB Tables
-  PatientsTable:
+  # DynamoDB Table for Patients and Medical Records (hybrid single-table design)
+  PatientRecordsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub clinnet-patients-${Environment}
+      TableName: !Sub clinnet-patient-records-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-        - AttributeName: id
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: type
           AttributeType: S
       KeySchema:
-        - AttributeName: id
+        - AttributeName: PK
           KeyType: HASH
-    # This table stores patient records, with 'id' as the partition key
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: type-index
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
 
   UsersTable:
     Type: AWS::DynamoDB::Table
@@ -81,18 +92,6 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub clinnet-appointments-${Environment}
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-
-  MedicalRecordsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub clinnet-medical-records-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -298,7 +297,7 @@ Resources:
       Handler: get_patients.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref PatientsTable
+            TableName: !Ref PatientRecordsTable
       Events:
         GetPatients:
           Type: Api
@@ -308,7 +307,7 @@ Resources:
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer # CHANGED: Protect patient list
-    DependsOn: PatientsTable
+    DependsOn: PatientRecordsTable
 
   GetPatientByIdFunction:
     Type: AWS::Serverless::Function
@@ -317,7 +316,7 @@ Resources:
       Handler: get_patient_by_id.lambda_handler
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref PatientsTable
+            TableName: !Ref PatientRecordsTable
       Events:
         GetPatientById:
           Type: Api
@@ -335,7 +334,7 @@ Resources:
       Handler: create_patient.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref PatientsTable
+            TableName: !Ref PatientRecordsTable
       Events:
         CreatePatient:
           Type: Api
@@ -352,7 +351,7 @@ Resources:
       Handler: update_patient.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref PatientsTable
+            TableName: !Ref PatientRecordsTable
       Events:
         UpdatePatient:
           Type: Api
@@ -369,7 +368,7 @@ Resources:
       Handler: delete_patient.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref PatientsTable
+            TableName: !Ref PatientRecordsTable
       Events:
         DeletePatient:
           Type: Api

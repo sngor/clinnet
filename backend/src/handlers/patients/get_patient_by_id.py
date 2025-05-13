@@ -11,7 +11,7 @@ import os
 # Add the parent directory to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from utils.db_utils import get_item_by_id, generate_response
+from utils.db_utils import get_patient_by_pk_sk, generate_response
 
 def lambda_handler(event, context):
     """
@@ -32,11 +32,15 @@ def lambda_handler(event, context):
     except (KeyError, TypeError):
         return generate_response(400, {'message': 'Patient ID is required'})
     
-    table_name = os.environ.get('PATIENTS_TABLE')
+    table_name = os.environ.get('PATIENT_RECORDS_TABLE')
+    if not table_name:
+        return generate_response(500, {'message': 'PatientRecords table name not configured'})
     
     try:
-        # Get patient by ID
-        patient = get_item_by_id(table_name, patient_id)
+        # Get patient by PK/SK (single-table design)
+        pk = f'PATIENT#{patient_id}'
+        sk = 'METADATA'
+        patient = get_patient_by_pk_sk(table_name, pk, sk)
         
         if not patient:
             return generate_response(404, {'message': 'Patient not found'})
