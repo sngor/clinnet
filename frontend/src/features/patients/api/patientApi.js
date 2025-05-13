@@ -41,10 +41,13 @@ const patientApi = {
    */
   createPatient: async (patientData) => {
     try {
+      console.log('Creating patient with data:', patientData);
       const response = await api.post('/patients', patientData);
+      console.log('Patient created successfully:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error creating patient:', error);
+      console.error('Error details:', error.response?.data || error.message);
       throw error;
     }
   },

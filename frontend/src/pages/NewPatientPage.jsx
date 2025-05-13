@@ -40,16 +40,13 @@ function NewPatientPage() {
     gender: '',
     dateOfBirth: null,
     address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    insuranceInfo: {
-      provider: '',
-      policyNumber: ''
-    },
     emergencyContact: {
       name: '',
       phone: ''
+    },
+    insuranceInfo: {
+      provider: '',
+      policyNumber: ''
     },
     medicalHistory: {
       allergies: '',
@@ -138,6 +135,8 @@ function NewPatientPage() {
   const handleSave = async () => {
     if (validateForm()) {
       try {
+        console.log('Submitting patient data:', patientData);
+        
         // Format the data for the API
         const formattedData = {
           firstName: patientData.firstName,
@@ -154,7 +153,8 @@ function NewPatientPage() {
         };
         
         // Call the API to create the patient
-        await createPatient(formattedData);
+        const result = await createPatient(formattedData);
+        console.log('Patient created successfully:', result);
         
         // Show success message
         setSnackbarMessage('Patient added successfully');

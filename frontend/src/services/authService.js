@@ -1,100 +1,104 @@
 // src/services/authService.js
-import { signIn, signOut, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
+import { Auth } from 'aws-amplify';
 
 /**
- * Service for handling authentication operations
+ * Service for handling authentication with AWS Cognito
  */
-export const authService = {
+const authService = {
   /**
-   * Sign in a user with username and password
-   * @param {string} username - The username (email)
-   * @param {string} password - The password
-   * @returns {Promise<Object>} - Result of the sign in operation
+   * Sign in a user
+   * @param {string} username - Username (email)
+   * @param {string} password - Password
+   * @returns {Promise} Promise with user data
    */
-  async signIn(username, password) {
+  signIn: async (username, password) => {
     try {
-      console.log('AuthService: Attempting to sign in with:', username);
+      const user = await Auth.signIn(username, password);
       
-      // Log the environment variables for debugging
-      console.log('Auth Config:', {
-        region: import.meta.env.VITE_COGNITO_REGION,
-        userPoolId: import.meta.env.VITE_USER_POOL_ID,
-        clientId: import.meta.env.VITE_USER_POOL_CLIENT_ID
-      });
+      // Store the token in localStorage
+      if (user.signInUserSession) {
+        const token = user.signInUserSession.idToken.jwtToken;
+        localStorage.setItem('token', token);
+        
+        // Store user info
+        const userInfo = {
+          username: user.username,
+          email: user.attributes?.email,
+          role: user.attributes?.['custom:role'] || 'user',
+          name: `${user.attributes?.given_name || ''} ${user.attributes?.family_name || ''}`.trim()
+        };
+        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      }
       
-      const signInResult = await signIn({
-        username,
-        password,
-      });
-      
-      console.log('AuthService: Sign in result:', signInResult);
-      return signInResult;
+      return user;
     } catch (error) {
-      console.error('AuthService: Error signing in:', error);
-      console.error('Error details:', {
-        message: error.message,
-        name: error.name,
-        code: error.code
-      });
+      console.error('Error signing in:', error);
       throw error;
     }
   },
 
   /**
    * Sign out the current user
-   * @returns {Promise<void>}
+   * @returns {Promise} Promise that resolves when sign out is complete
    */
-  async signOut() {
+  signOut: async () => {
     try {
-      await signOut();
-      console.log('AuthService: User signed out successfully');
+      // Clear local storage
+      localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+      
+      // Sign out from Cognito
+      await Auth.signOut();
     } catch (error) {
-      console.error('AuthService: Error signing out:', error);
+      console.error('Error signing out:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Check if a user is authenticated
+   * @returns {Promise<boolean>} Promise that resolves to true if authenticated
+   */
+  isAuthenticated: async () => {
+    try {
+      const session = await Auth.currentSession();
+      // Update token in localStorage
+      localStorage.setItem('token', session.getIdToken().getJwtToken());
+      return true;
+    } catch (error) {
+      return false;
     }
   },
 
   /**
    * Get the current authenticated user
-   * @returns {Promise<Object|null>} - Current user or null if not authenticated
+   * @returns {Promise} Promise with user data
    */
-  async getCurrentUser() {
+  getCurrentUser: async () => {
     try {
-      const user = await getCurrentUser();
-      console.log('AuthService: Current user:', user);
+      const user = await Auth.currentAuthenticatedUser();
       return user;
     } catch (error) {
-      console.log('AuthService: No authenticated user found');
-      return null;
-    }
-  },
-
-  /**
-   * Get the current user's attributes
-   * @returns {Promise<Object>} - User attributes
-   */
-  async getUserAttributes() {
-    try {
-      const attributes = await fetchUserAttributes();
-      console.log('AuthService: User attributes:', attributes);
-      return attributes;
-    } catch (error) {
-      console.error('AuthService: Error fetching user attributes:', error);
+      console.error('Error getting current user:', error);
       throw error;
     }
   },
 
   /**
-   * Check if the user is authenticated
-   * @returns {Promise<boolean>} - True if authenticated, false otherwise
+   * Get the current user's token
+   * @returns {string|null} JWT token or null if not authenticated
    */
-  async isAuthenticated() {
-    try {
-      await getCurrentUser();
-      return true;
-    } catch (error) {
-      return false;
-    }
+  getToken: () => {
+    return localStorage.getItem('token');
+  },
+
+  /**
+   * Get the current user's info from localStorage
+   * @returns {Object|null} User info or null if not authenticated
+   */
+  getUserInfo: () => {
+    const userInfo = localStorage.getItem('userInfo');
+    return userInfo ? JSON.parse(userInfo) : null;
   }
 };
 
