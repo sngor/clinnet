@@ -29,14 +29,30 @@ export const DataProvider = ({ children }) => {
 
         // Fetch real patients data from the API
         const patientsData = await patientService.fetchPatients();
-        setPatients(patientsData);
-        console.log("Patients loaded:", patientsData);
+        if (patientsData && patientsData.length > 0) {
+          console.log("Patients loaded from API:", patientsData);
+          setPatients(patientsData);
+        } else {
+          console.warn("No patients returned from API, using mock data");
+          // Import mock data if API returns empty result
+          const { mockPatients } = await import("../../mock/mockPatients");
+          setPatients(mockPatients);
+        }
 
         setInitialized(true);
         console.log("Data initialization complete");
       } catch (err) {
         console.error("Error initializing data:", err);
         setError(err.message || "Failed to initialize application data");
+
+        // Fallback to mock data on error
+        try {
+          console.warn("Falling back to mock data due to API error");
+          const { mockPatients } = await import("../../mock/mockPatients");
+          setPatients(mockPatients);
+        } catch (mockErr) {
+          console.error("Error loading mock data:", mockErr);
+        }
       } finally {
         setLoading(false);
       }
@@ -124,6 +140,23 @@ export const DataProvider = ({ children }) => {
     addPatient,
     updatePatient,
     deletePatient,
+    // Refresh function
+    refreshPatients: async () => {
+      try {
+        setLoading(true);
+        const patientsData = await patientService.fetchPatients();
+        if (patientsData && patientsData.length > 0) {
+          console.log("Patients refreshed from API:", patientsData);
+          setPatients(patientsData);
+        }
+        return patientsData;
+      } catch (err) {
+        console.error("Error refreshing patients:", err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

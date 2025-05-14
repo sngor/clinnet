@@ -146,3 +146,18 @@ If you encounter issues:
    npm run clean
    ```
 3. Check the browser console for error messages
+
+## DynamoDB Integration
+
+The frontend has been updated to work with DynamoDB's single-table design.
+
+📚 **Documentation**:
+
+- [DYNAMODB.md](./DYNAMODB.md) - Overview of the DynamoDB structure and integration
+- [Developer Guide](./docs/dynamodb-guide.md) - Practical guide with code examples
+
+🛠️ **Developer Tools**:
+
+- [dynamoDbDataCheck.js](./src/utils/dynamoDbDataCheck.js) - For testing components with DynamoDB data
+- [debugDynamoDb.js](./src/utils/debugDynamoDb.js) - Tools for inspecting and validating DynamoDB entities
+- [test-dynamodb.sh](./scripts/test-dynamodb.sh) - Script to verify DynamoDB integration

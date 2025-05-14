@@ -25,6 +25,7 @@ import {
   Cancel as CancelIcon,
   Phone as PhoneIcon,
   Email as EmailIcon,
+  Sync as SyncIcon,
 } from "@mui/icons-material";
 import { useAppData } from "../app/providers/DataProvider";
 
@@ -79,8 +80,7 @@ const mockPatients = [
 function PatientDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { patients, loading, error, updatePatient, refreshPatients } =
-    useAppData();
+  const { patients, loading, error, updatePatient } = useAppData();
 
   const [patient, setPatient] = useState(null);
   const [editedPatient, setEditedPatient] = useState(null);
@@ -90,31 +90,47 @@ function PatientDetailPage() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  // Load patient data
-  useEffect(() => {
-    refreshPatients();
-  }, []);
-
   // Find patient by ID
   useEffect(() => {
-    if (patients && patients.length > 0) {
-      const foundPatient = patients.find((p) => p.id === id);
+    if (!id) return;
+
+    // Safely find patient by ID
+    if (patients && Array.isArray(patients) && patients.length > 0) {
+      const foundPatient = patients.find((p) => p && p.id === id);
       if (foundPatient) {
+        console.log("Found patient in state:", foundPatient);
         setPatient(foundPatient);
         setEditedPatient(foundPatient);
         return;
       }
     }
 
-    // Fallback to mock data if API fails
+    // Fallback to mock data if API fails or patient isn't found
     if (!loading && (!patients || patients.length === 0 || !patient)) {
-      console.log("Using mock patient data");
-      const mockPatient =
-        mockPatients.find((p) => p.id === id) || mockPatients[0];
-      setPatient({ ...mockPatient, id: id });
-      setEditedPatient({ ...mockPatient, id: id });
+      console.log("Using mock patient data for ID:", id);
+      // Import mock data dynamically
+      import("../mock/mockPatients")
+        .then(({ mockPatients }) => {
+          const mockPatient =
+            mockPatients.find((p) => p.id === id) || mockPatients[0];
+          const patientWithCorrectId = {
+            ...mockPatient,
+            id: id,
+            PK: `PAT#${id}`,
+            SK: "PROFILE#1",
+            GSI1PK: "CLINIC#DEFAULT",
+            GSI1SK: `PAT#${id}`,
+            GSI2PK: `PAT#${id}`,
+            GSI2SK: "PROFILE#1",
+          };
+          setPatient(patientWithCorrectId);
+          setEditedPatient(patientWithCorrectId);
+        })
+        .catch((err) => {
+          console.error("Error loading mock patient data:", err);
+        });
     }
-  }, [id, patients, loading]);
+  }, [id, patients, loading, patient]);
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -207,6 +223,29 @@ function PatientDetailPage() {
     return age;
   };
 
+  // Refresh patient data if needed
+  const refreshPatientData = async () => {
+    try {
+      // Only attempt to fetch if we have an ID
+      if (!id) return;
+
+      // Use the imported patientService directly for specific patient lookup
+      const patientService = await import("../services/patients").then(
+        (module) => module.default
+      );
+      const refreshedPatient = await patientService.fetchPatientById(id);
+
+      if (refreshedPatient) {
+        console.log("Refreshed patient data:", refreshedPatient);
+        setPatient(refreshedPatient);
+        setEditedPatient(refreshedPatient);
+      }
+    } catch (err) {
+      console.error("Error refreshing patient data:", err);
+      // Don't change existing patient data on error
+    }
+  };
+
   // Handle back button click
   const handleBackClick = () => {
     navigate(-1);
@@ -217,20 +256,61 @@ function PatientDetailPage() {
     setSnackbarOpen(false);
   };
 
+  // Render loading state
   if (loading && !patient) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <CircularProgress />
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            py: 4,
+          }}
+        >
+          <CircularProgress sx={{ mb: 2 }} />
+          <Typography>Loading patient information...</Typography>
         </Box>
       </Container>
     );
   }
 
+  // Render error state
   if (error && !patient) {
     return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Alert severity="error">{error}</Alert>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error || "Failed to load patient data"}
+        </Alert>
+        <Button
+          variant="contained"
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/patients")}
+        >
+          Return to Patients
+        </Button>
+      </Container>
+    );
+  }
+
+  // Render not found state
+  if (!loading && !error && !patient) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Paper sx={{ p: 4, borderRadius: 2 }}>
+          <Box sx={{ textAlign: "center" }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Patient information not found
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate("/patients")}
+            >
+              Return to Patients
+            </Button>
+          </Box>
+        </Paper>
       </Container>
     );
   }
@@ -278,14 +358,25 @@ function PatientDetailPage() {
             </Button>
           </Box>
         ) : (
-          <Button
-            startIcon={<EditIcon />}
-            variant="contained"
-            color="primary"
-            onClick={handleEditClick}
-          >
-            Edit
-          </Button>
+          <Box>
+            <Button
+              startIcon={<EditIcon />}
+              variant="contained"
+              color="primary"
+              onClick={handleEditClick}
+              sx={{ mr: 1 }}
+            >
+              Edit
+            </Button>
+            <IconButton
+              color="primary"
+              onClick={refreshPatientData}
+              aria-label="refresh"
+              title="Refresh patient data"
+            >
+              <SyncIcon />
+            </IconButton>
+          </Box>
         )}
       </Box>
 
@@ -507,19 +598,28 @@ function PatientDetailPage() {
 
       {/* Tab content */}
       <Paper sx={{ p: 3, borderRadius: 2 }}>
-        {tabValue === 0 && (
-          <PersonalInfoTab
-            patient={patient}
-            isEditing={isEditing}
-            editedPatient={editedPatient}
-            handleInputChange={handleInputChange}
-          />
+        {!patient ? (
+          <Box sx={{ p: 2, textAlign: "center" }}>
+            <CircularProgress sx={{ mb: 2 }} />
+            <Typography>Loading patient information...</Typography>
+          </Box>
+        ) : (
+          <>
+            {tabValue === 0 && (
+              <PersonalInfoTab
+                patient={patient}
+                isEditing={isEditing}
+                editedPatient={editedPatient}
+                handleInputChange={handleInputChange}
+              />
+            )}
+            {tabValue === 1 && (
+              <MedicalInfoTab patient={patient} isEditing={isEditing} />
+            )}
+            {tabValue === 2 && <AppointmentsTab patientId={patient?.id} />}
+            {tabValue === 3 && <MedicalRecordsTab patientId={patient?.id} />}
+          </>
         )}
-        {tabValue === 1 && (
-          <MedicalInfoTab patient={patient} isEditing={isEditing} />
-        )}
-        {tabValue === 2 && <AppointmentsTab patientId={patient.id} />}
-        {tabValue === 3 && <MedicalRecordsTab patientId={patient.id} />}
       </Paper>
 
       {/* Snackbar for notifications */}

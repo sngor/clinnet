@@ -37,15 +37,7 @@ import {
   DangerButton,
   AppIconButton,
   FlexBox,
-  TextButton, // Add TextButton import
 } from "../../../components/ui";
-
-// Add missing tableHeaderStyle
-const tableHeaderStyle = {
-  backgroundColor: "background.paper",
-  borderBottom: "1px solid",
-  borderColor: "divider",
-};
 
 // Table column definitions
 const columns = [
@@ -236,7 +228,7 @@ function PatientList({ onPatientSelect }) {
   // Get stable sorted array for the table
   function stableSortArray(array, comparator) {
     if (!Array.isArray(array) || array.length === 0) return [];
-
+    
     const stabilizedThis = array.map((el, index) => [el, index]);
     stabilizedThis.sort((a, b) => {
       const order = comparator(a[0], b[0]);
@@ -245,21 +237,21 @@ function PatientList({ onPatientSelect }) {
     });
     return stabilizedThis.map((el) => el[0]);
   }
-
+  
   // Handle pagination
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
-
+  
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
-
+  
   // Create sort handler
   const createSortHandler = (property) => (event) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
 
@@ -267,18 +259,12 @@ function PatientList({ onPatientSelect }) {
   const currentPatients = React.useMemo(() => {
     // Safety check
     if (!filteredPatients || !Array.isArray(filteredPatients)) return [];
-
+    
     // Apply sorting
-    const sortedPatients = stableSortArray(
-      filteredPatients,
-      getComparator(order, orderBy)
-    );
-
+    const sortedPatients = stableSortArray(filteredPatients, getComparator(order, orderBy));
+    
     // Apply pagination
-    return sortedPatients.slice(
-      page * rowsPerPage,
-      page * rowsPerPage + rowsPerPage
-    );
+    return sortedPatients.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   }, [filteredPatients, order, orderBy, page, rowsPerPage]);
 
   // Handle search input change
@@ -470,6 +456,34 @@ function PatientList({ onPatientSelect }) {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // Handle pagination
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Handle sort request
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
+  // Create sort handler for a column
+  const createSortHandler = (property) => () => {
+    handleRequestSort(property);
+  };
+
+  // Get current page data
+  const currentPatients = stableSort(
+    filteredPatients,
+    getComparator(order, orderBy)
+  ).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
   return (
     <PageContainer>
       <SectionContainer>
@@ -532,99 +546,98 @@ function PatientList({ onPatientSelect }) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {!filteredPatients || filteredPatients.length === 0 ? (
+              {!currentPatients || currentPatients.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center">
                     No patients found
                   </TableCell>
                 </TableRow>
               ) : (
-                currentPatients.map((patient) =>
+                currentPatients.map((patient) => (
                   patient ? (
-                    <TableRow key={patient.id || "unknown"}>
+                    <TableRow key={patient.id || 'unknown'}>
                       <TableCell>
                         <Typography variant="body2" fontWeight="medium">
-                          {patient.firstName || ""} {patient.lastName || ""}
+                          {patient.firstName || ''} {patient.lastName || ''}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           DOB: {patient.dob || "N/A"}
                         </Typography>
                       </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {patient.phone || "N/A"}
-                        </Typography>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {patient.phone || "N/A"}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {patient.email || "N/A"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {patient.insuranceProvider || "None"}
+                      </Typography>
+                      {patient.insuranceNumber && (
                         <Typography variant="caption" color="text.secondary">
-                          {patient.email || "N/A"}
+                          #{patient.insuranceNumber}
                         </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {patient.insuranceProvider || "None"}
-                        </Typography>
-                        {patient.insuranceNumber && (
-                          <Typography variant="caption" color="text.secondary">
-                            #{patient.insuranceNumber}
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>{patient.lastVisit || "Never"}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={patient.status || "Active"}
-                          color={
-                            (patient.status || "Active") === "Active"
-                              ? "success"
-                              : "default"
-                          }
+                      )}
+                    </TableCell>
+                    <TableCell>{patient.lastVisit || "Never"}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={patient.status || "Active"}
+                        color={
+                          (patient.status || "Active") === "Active"
+                            ? "success"
+                            : "default"
+                        }
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Edit Patient">
+                        <AppIconButton
                           size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip title="Edit Patient">
-                          <AppIconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => handleOpenDialog(patient)}
-                          >
-                            <EditIcon fontSize="small" />
-                          </AppIconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete Patient">
-                          <AppIconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDeleteClick(patient)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </AppIconButton>
-                        </Tooltip>
-                        <Tooltip title="View Patient Details">
-                          <AppIconButton
-                            size="small"
-                            color="secondary"
-                            onClick={() => handleViewPatient(patient)}
-                          >
-                            <VisibilityIcon fontSize="small" />
-                          </AppIconButton>
-                        </Tooltip>
-                        <Tooltip title="Schedule Appointment">
-                          <AppIconButton size="small" color="info">
-                            <EventNoteIcon fontSize="small" />
-                          </AppIconButton>
-                        </Tooltip>
-                        <PrimaryButton
-                          startIcon={<PaymentIcon />}
-                          onClick={() => handleViewPatient(patient)}
-                          size="small"
-                          sx={{ ml: 1 }}
+                          color="primary"
+                          onClick={() => handleOpenDialog(patient)}
                         >
-                          Checkout
-                        </PrimaryButton>
-                      </TableCell>
-                    </TableRow>
-                  ) : null
-                )
+                          <EditIcon fontSize="small" />
+                        </AppIconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete Patient">
+                        <AppIconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeleteClick(patient)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </AppIconButton>
+                      </Tooltip>
+                      <Tooltip title="View Patient Details">
+                        <AppIconButton
+                          size="small"
+                          color="secondary"
+                          onClick={() => handleViewPatient(patient)}
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </AppIconButton>
+                      </Tooltip>
+                      <Tooltip title="Schedule Appointment">
+                        <AppIconButton size="small" color="info">
+                          <EventNoteIcon fontSize="small" />
+                        </AppIconButton>
+                      </Tooltip>
+                      <PrimaryButton
+                        startIcon={<PaymentIcon />}
+                        onClick={() => handleViewPatient(patient)}
+                        size="small"
+                        sx={{ ml: 1 }}
+                      >
+                        Checkout
+                      </PrimaryButton>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
             <TablePagination

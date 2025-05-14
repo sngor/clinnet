@@ -1,13 +1,27 @@
 // src/components/patients/PersonalInfoTab.jsx
-import React from 'react';
-import {
-  Grid,
-  Typography,
-  TextField,
-  Box
-} from '@mui/material';
+import React from "react";
+import { Grid, Typography, TextField, Box } from "@mui/material";
 
-function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange }) {
+function PersonalInfoTab({
+  patient,
+  isEditing,
+  editedPatient,
+  handleInputChange,
+}) {
+  // Safety check for null/undefined patient or editedPatient
+  if (!patient) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Typography variant="body1">
+          Patient information is not available.
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Ensure editedPatient exists to prevent null reference errors
+  const safeEditedPatient = editedPatient || patient;
+
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={6}>
@@ -17,7 +31,7 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               Contact Information
             </Typography>
           </Grid>
-          
+
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2" color="text.secondary">
               First Name
@@ -26,18 +40,18 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               <TextField
                 fullWidth
                 name="firstName"
-                value={editedPatient.firstName || ''}
+                value={safeEditedPatient.firstName || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
               />
             ) : (
               <Typography variant="body1">
-                {patient.firstName || 'N/A'}
+                {patient.firstName || "N/A"}
               </Typography>
             )}
           </Grid>
-          
+
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2" color="text.secondary">
               Last Name
@@ -46,18 +60,18 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               <TextField
                 fullWidth
                 name="lastName"
-                value={editedPatient.lastName || ''}
+                value={safeEditedPatient.lastName || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
               />
             ) : (
               <Typography variant="body1">
-                {patient.lastName || 'N/A'}
+                {patient.lastName || "N/A"}
               </Typography>
             )}
           </Grid>
-          
+
           <Grid item xs={12}>
             <Typography variant="subtitle2" color="text.secondary">
               Address
@@ -66,7 +80,7 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               <TextField
                 fullWidth
                 name="address"
-                value={editedPatient.address || ''}
+                value={safeEditedPatient.address || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
@@ -75,11 +89,11 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               />
             ) : (
               <Typography variant="body1">
-                {patient.address || 'N/A'}
+                {patient.address || "N/A"}
               </Typography>
             )}
           </Grid>
-          
+
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2" color="text.secondary">
               City
@@ -88,18 +102,16 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               <TextField
                 fullWidth
                 name="city"
-                value={editedPatient.city || ''}
+                value={safeEditedPatient.city || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
               />
             ) : (
-              <Typography variant="body1">
-                {patient.city || 'N/A'}
-              </Typography>
+              <Typography variant="body1">{patient.city || "N/A"}</Typography>
             )}
           </Grid>
-          
+
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2" color="text.secondary">
               State
@@ -108,18 +120,16 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               <TextField
                 fullWidth
                 name="state"
-                value={editedPatient.state || ''}
+                value={safeEditedPatient.state || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
               />
             ) : (
-              <Typography variant="body1">
-                {patient.state || 'N/A'}
-              </Typography>
+              <Typography variant="body1">{patient.state || "N/A"}</Typography>
             )}
           </Grid>
-          
+
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2" color="text.secondary">
               Zip Code
@@ -128,20 +138,20 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               <TextField
                 fullWidth
                 name="zipCode"
-                value={editedPatient.zipCode || ''}
+                value={safeEditedPatient.zipCode || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
               />
             ) : (
               <Typography variant="body1">
-                {patient.zipCode || 'N/A'}
+                {patient.zipCode || "N/A"}
               </Typography>
             )}
           </Grid>
         </Grid>
       </Grid>
-      
+
       <Grid item xs={12} md={6}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
@@ -149,7 +159,7 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               Emergency Contact
             </Typography>
           </Grid>
-          
+
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2" color="text.secondary">
               Emergency Contact Name
@@ -158,18 +168,18 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               <TextField
                 fullWidth
                 name="emergencyContactName"
-                value={editedPatient.emergencyContactName || ''}
+                value={safeEditedPatient.emergencyContactName || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
               />
             ) : (
               <Typography variant="body1">
-                {patient.emergencyContactName || 'N/A'}
+                {patient.emergencyContactName || "N/A"}
               </Typography>
             )}
           </Grid>
-          
+
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2" color="text.secondary">
               Emergency Contact Phone
@@ -178,18 +188,18 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               <TextField
                 fullWidth
                 name="emergencyContactPhone"
-                value={editedPatient.emergencyContactPhone || ''}
+                value={safeEditedPatient.emergencyContactPhone || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
               />
             ) : (
               <Typography variant="body1">
-                {patient.emergencyContactPhone || 'N/A'}
+                {patient.emergencyContactPhone || "N/A"}
               </Typography>
             )}
           </Grid>
-          
+
           <Grid item xs={12}>
             <Typography variant="subtitle2" color="text.secondary">
               Relationship
@@ -198,14 +208,14 @@ function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange 
               <TextField
                 fullWidth
                 name="emergencyContactRelationship"
-                value={editedPatient.emergencyContactRelationship || ''}
+                value={safeEditedPatient.emergencyContactRelationship || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
               />
             ) : (
               <Typography variant="body1">
-                {patient.emergencyContactRelationship || 'N/A'}
+                {patient.emergencyContactRelationship || "N/A"}
               </Typography>
             )}
           </Grid>

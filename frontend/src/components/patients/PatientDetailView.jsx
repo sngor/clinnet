@@ -32,6 +32,22 @@ import MedicalRecordsTab from "./MedicalRecordsTab";
 function PatientDetailView({ patient, onClose }) {
   const { updatePatient, refreshPatients } = useAppData();
 
+  // Safety check for null/undefined patient
+  if (!patient) {
+    return (
+      <Paper sx={{ p: 3, my: 2, borderRadius: 2 }}>
+        <Typography variant="h6" align="center">
+          Patient information not available
+        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <Button variant="outlined" onClick={onClose}>
+            Close
+          </Button>
+        </Box>
+      </Paper>
+    );
+  }
+
   const [editedPatient, setEditedPatient] = useState(patient);
   const [isEditing, setIsEditing] = useState(false);
   const [tabValue, setTabValue] = useState(0);
@@ -55,15 +71,23 @@ function PatientDetailView({ patient, onClose }) {
   // Save patient changes
   const handleSaveChanges = async () => {
     try {
+      // Safety check
+      if (!patient || !patient.id) {
+        console.error(
+          "Cannot save changes: patient or patient ID is undefined"
+        );
+        return;
+      }
+
       // Format data for API following DynamoDB structure
       const patientData = {
         PK: patient.PK || `PAT#${patient.id}`,
         SK: patient.SK || "PROFILE#1",
         id: patient.id,
-        GSI1PK: `CLINIC#${editedPatient.clinic || "DEFAULT"}`,
-        GSI1SK: `PAT#${editedPatient.id}`,
-        GSI2PK: `PAT#${editedPatient.id}`,
-        GSI2SK: "PROFILE#1",
+        GSI1PK: patient.GSI1PK || `CLINIC#${editedPatient.clinic || "DEFAULT"}`,
+        GSI1SK: patient.GSI1SK || `PAT#${patient.id}`,
+        GSI2PK: patient.GSI2PK || `PAT#${patient.id}`,
+        GSI2SK: patient.GSI2SK || "PROFILE#1",
         type: "PATIENT",
         firstName: editedPatient.firstName,
         lastName: editedPatient.lastName,

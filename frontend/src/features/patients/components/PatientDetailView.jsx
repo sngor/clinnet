@@ -35,37 +35,49 @@ function TabPanel(props) {
       aria-labelledby={`patient-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
 
 function PatientDetailView({ patient, onClose }) {
+  // Safety check for null/undefined patient
+  if (!patient) {
+    return (
+      <Paper sx={{ p: 3, my: 2, borderRadius: 2 }}>
+        <Typography variant="h6" align="center">
+          Patient information not available
+        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <Button variant="outlined" onClick={onClose}>
+            Close
+          </Button>
+        </Box>
+      </Paper>
+    );
+  }
+
   const [tabValue, setTabValue] = useState(0);
   const [checkoutDialogOpen, setCheckoutDialogOpen] = useState(false);
-  
+
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
-  
+
   const handleOpenCheckout = () => {
     setCheckoutDialogOpen(true);
   };
-  
+
   const handleCloseCheckout = () => {
     setCheckoutDialogOpen(false);
   };
-  
+
   const handleCheckoutComplete = (checkoutData) => {
     console.log("Checkout completed:", checkoutData);
     setCheckoutDialogOpen(false);
     // You could refresh the billing history here
   };
-  
+
   return (
     <Box>
       {/* Header with patient info and actions */}
@@ -73,13 +85,23 @@ function PatientDetailView({ patient, onClose }) {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} sm={8}>
             <Typography variant="h5">
-              {patient.firstName} {patient.lastName}
+              {patient.firstName || "N/A"} {patient.lastName || ""}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              ID: {patient.id} | DOB: {patient.dob} | Status: {patient.status}
+              ID: {patient.id || "N/A"} | DOB:{" "}
+              {patient.dob || patient.dateOfBirth || "N/A"} | Status:{" "}
+              {patient.status || "Active"}
             </Typography>
           </Grid>
-          <Grid item xs={12} sm={4} sx={{ display: "flex", justifyContent: { xs: "flex-start", sm: "flex-end" } }}>
+          <Grid
+            item
+            xs={12}
+            sm={4}
+            sx={{
+              display: "flex",
+              justifyContent: { xs: "flex-start", sm: "flex-end" },
+            }}
+          >
             <Button
               variant="contained"
               startIcon={<PaymentIcon />}
@@ -98,7 +120,7 @@ function PatientDetailView({ patient, onClose }) {
           </Grid>
         </Grid>
       </Paper>
-      
+
       {/* Tabs for different sections */}
       <Paper sx={{ borderRadius: 2 }}>
         <Tabs
@@ -111,7 +133,7 @@ function PatientDetailView({ patient, onClose }) {
           <Tab icon={<EventNoteIcon />} label="Appointments" />
           <Tab icon={<ReceiptIcon />} label="Billing" />
         </Tabs>
-        
+
         {/* Patient Information Tab */}
         <TabPanel value={tabValue} index={0}>
           <Grid container spacing={3}>
@@ -129,10 +151,10 @@ function PatientDetailView({ patient, onClose }) {
                     </Grid>
                     <Grid item xs={8}>
                       <Typography variant="body2">
-                        {patient.firstName} {patient.lastName}
+                        {patient.firstName || "N/A"} {patient.lastName || ""}
                       </Typography>
                     </Grid>
-                    
+
                     <Grid item xs={4}>
                       <Typography variant="body2" color="text.secondary">
                         Date of Birth
@@ -140,10 +162,10 @@ function PatientDetailView({ patient, onClose }) {
                     </Grid>
                     <Grid item xs={8}>
                       <Typography variant="body2">
-                        {patient.dob}
+                        {patient.dob || patient.dateOfBirth || "N/A"}
                       </Typography>
                     </Grid>
-                    
+
                     <Grid item xs={4}>
                       <Typography variant="body2" color="text.secondary">
                         Phone
@@ -151,10 +173,10 @@ function PatientDetailView({ patient, onClose }) {
                     </Grid>
                     <Grid item xs={8}>
                       <Typography variant="body2">
-                        {patient.phone}
+                        {patient.phone || "N/A"}
                       </Typography>
                     </Grid>
-                    
+
                     <Grid item xs={4}>
                       <Typography variant="body2" color="text.secondary">
                         Email
@@ -162,10 +184,10 @@ function PatientDetailView({ patient, onClose }) {
                     </Grid>
                     <Grid item xs={8}>
                       <Typography variant="body2">
-                        {patient.email}
+                        {patient.email || "N/A"}
                       </Typography>
                     </Grid>
-                    
+
                     <Grid item xs={4}>
                       <Typography variant="body2" color="text.secondary">
                         Address
@@ -173,14 +195,14 @@ function PatientDetailView({ patient, onClose }) {
                     </Grid>
                     <Grid item xs={8}>
                       <Typography variant="body2">
-                        {patient.address}
+                        {patient.address || "N/A"}
                       </Typography>
                     </Grid>
                   </Grid>
                 </CardContent>
               </Card>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <Card variant="outlined">
                 <CardContent>
@@ -198,7 +220,7 @@ function PatientDetailView({ patient, onClose }) {
                         {patient.insuranceProvider || "None"}
                       </Typography>
                     </Grid>
-                    
+
                     <Grid item xs={4}>
                       <Typography variant="body2" color="text.secondary">
                         Policy Number
@@ -212,7 +234,7 @@ function PatientDetailView({ patient, onClose }) {
                   </Grid>
                 </CardContent>
               </Card>
-              
+
               <Card variant="outlined" sx={{ mt: 3 }}>
                 <CardContent>
                   <Typography variant="h6" sx={{ mb: 2 }}>
@@ -229,7 +251,7 @@ function PatientDetailView({ patient, onClose }) {
                         {patient.lastVisit || "No previous visits"}
                       </Typography>
                     </Grid>
-                    
+
                     <Grid item xs={4}>
                       <Typography variant="body2" color="text.secondary">
                         Next Appointment
@@ -237,7 +259,8 @@ function PatientDetailView({ patient, onClose }) {
                     </Grid>
                     <Grid item xs={8}>
                       <Typography variant="body2">
-                        {patient.upcomingAppointment || "No upcoming appointments"}
+                        {patient.upcomingAppointment ||
+                          "No upcoming appointments"}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -246,7 +269,7 @@ function PatientDetailView({ patient, onClose }) {
             </Grid>
           </Grid>
         </TabPanel>
-        
+
         {/* Appointments Tab */}
         <TabPanel value={tabValue} index={1}>
           <Typography variant="body1">
@@ -254,25 +277,25 @@ function PatientDetailView({ patient, onClose }) {
           </Typography>
           {/* This would be replaced with an actual appointments component */}
         </TabPanel>
-        
+
         {/* Billing Tab */}
         <TabPanel value={tabValue} index={2}>
           <BillingHistory patient={patient} />
         </TabPanel>
       </Paper>
-      
+
       {/* Checkout Dialog */}
-      <Dialog 
-        open={checkoutDialogOpen} 
+      <Dialog
+        open={checkoutDialogOpen}
         onClose={handleCloseCheckout}
         fullWidth
         maxWidth="md"
       >
         <DialogTitle>Patient Checkout</DialogTitle>
         <DialogContent dividers>
-          <PatientCheckout 
-            patient={patient} 
-            onCheckoutComplete={handleCheckoutComplete} 
+          <PatientCheckout
+            patient={patient}
+            onCheckoutComplete={handleCheckoutComplete}
           />
         </DialogContent>
         <DialogActions>

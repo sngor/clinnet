@@ -10,25 +10,51 @@ const createDateWithTime = (daysToAdd, hours, minutes) => {
 
 export const mockAppointments = [
   {
-    id: 101,
+    // DynamoDB structure
+    PK: "APPT#101",
+    SK: "DETAIL#1",
+    id: "101",
+    GSI1PK: "CLINIC#DEFAULT",
+    GSI1SK: "APPT#101",
+    GSI2PK: "PAT#101",
+    GSI2SK: "APPT#101",
+    GSI3PK: "DOC#1",
+    GSI3SK: "APPT#2023-05-14T09:00:00",
+    type: "APPOINTMENT",
+    
+    // Appointment fields
     title: "John Doe - Checkup",
     start: createDateWithTime(0, 9, 0),
     end: createDateWithTime(0, 10, 0),
     doctor: "Dr. Smith",
     patient: "John Doe",
-    patientId: 101,
-    doctorId: 1,
+    patientId: "101",
+    doctorId: "1",
     status: "Scheduled",
-    type: "Checkup"
+    appointmentType: "Checkup",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
-    id: 102,
+    // DynamoDB structure
+    PK: "APPT#102",
+    SK: "DETAIL#1",
+    id: "102",
+    GSI1PK: "CLINIC#DEFAULT",
+    GSI1SK: "APPT#102",
+    GSI2PK: "PAT#102",
+    GSI2SK: "APPT#102",
+    GSI3PK: "DOC#2",
+    GSI3SK: "APPT#2023-05-14T11:00:00",
+    type: "APPOINTMENT",
+    
+    // Appointment fields
     title: "Jane Smith - Consultation",
     start: createDateWithTime(0, 11, 0),
     end: createDateWithTime(0, 12, 0),
     doctor: "Dr. Jones",
     patient: "Jane Smith",
-    patientId: 102,
+    patientId: "102",
     doctorId: 2,
     status: "Checked-in",
     type: "Consultation"

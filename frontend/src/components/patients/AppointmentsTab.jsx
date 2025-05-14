@@ -1,5 +1,5 @@
 // src/components/patients/AppointmentsTab.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Box,
@@ -12,40 +12,51 @@ import {
   Paper,
   Chip,
   Button,
-  CircularProgress
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import { format } from 'date-fns';
+  CircularProgress,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import { format } from "date-fns";
 
 // Mock appointments data - in a real app, this would come from an API
 const mockAppointments = [
   {
     id: 1,
-    date: '2023-12-05',
-    time: '09:00 AM',
-    doctor: 'Dr. Smith',
-    type: 'Checkup',
-    status: 'Scheduled'
+    date: "2023-12-05",
+    time: "09:00 AM",
+    doctor: "Dr. Smith",
+    type: "Checkup",
+    status: "Scheduled",
   },
   {
     id: 2,
-    date: '2023-11-20',
-    time: '02:30 PM',
-    doctor: 'Dr. Jones',
-    type: 'Follow-up',
-    status: 'Completed'
+    date: "2023-11-20",
+    time: "02:30 PM",
+    doctor: "Dr. Jones",
+    type: "Follow-up",
+    status: "Completed",
   },
   {
     id: 3,
-    date: '2023-10-15',
-    time: '11:00 AM',
-    doctor: 'Dr. Smith',
-    type: 'Consultation',
-    status: 'Completed'
-  }
+    date: "2023-10-15",
+    time: "11:00 AM",
+    doctor: "Dr. Smith",
+    type: "Consultation",
+    status: "Completed",
+  },
 ];
 
 function AppointmentsTab({ patientId }) {
+  // Safety check for missing patientId
+  if (!patientId) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Typography variant="body1">
+          Cannot load appointments: Patient ID is not available.
+        </Typography>
+      </Box>
+    );
+  }
+
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -67,24 +78,24 @@ function AppointmentsTab({ patientId }) {
 
   // Get color for status chip
   const getStatusColor = (status) => {
-    switch(status) {
-      case 'Scheduled':
-        return 'primary';
-      case 'Completed':
-        return 'success';
-      case 'Cancelled':
-        return 'error';
-      case 'No-show':
-        return 'warning';
+    switch (status) {
+      case "Scheduled":
+        return "primary";
+      case "Completed":
+        return "success";
+      case "Cancelled":
+        return "error";
+      case "No-show":
+        return "warning";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   // Format date
   const formatDate = (dateString) => {
     try {
-      return format(new Date(dateString), 'MMM dd, yyyy');
+      return format(new Date(dateString), "MMM dd, yyyy");
     } catch (error) {
       return dateString;
     }
@@ -92,31 +103,28 @@ function AppointmentsTab({ patientId }) {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
         <CircularProgress />
       </Box>
     );
   }
 
   if (error) {
-    return (
-      <Typography color="error">
-        {error}
-      </Typography>
-    );
+    return <Typography color="error">{error}</Typography>;
   }
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6">
-          Patient Appointments
-        </Typography>
-        <Button 
-          variant="contained" 
-          startIcon={<AddIcon />}
-          size="small"
-        >
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
+        <Typography variant="h6">Patient Appointments</Typography>
+        <Button variant="contained" startIcon={<AddIcon />} size="small">
           Schedule Appointment
         </Button>
       </Box>
@@ -141,8 +149,8 @@ function AppointmentsTab({ patientId }) {
                   <TableCell>{appointment.doctor}</TableCell>
                   <TableCell>{appointment.type}</TableCell>
                   <TableCell>
-                    <Chip 
-                      label={appointment.status} 
+                    <Chip
+                      label={appointment.status}
                       color={getStatusColor(appointment.status)}
                       size="small"
                     />
@@ -153,7 +161,11 @@ function AppointmentsTab({ patientId }) {
           </Table>
         </TableContainer>
       ) : (
-        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ textAlign: "center", py: 4 }}
+        >
           No appointments found for this patient
         </Typography>
       )}
