@@ -1,0 +1,67 @@
+[
+  {
+    "id": {"S": "SVC#1"},
+    "PK": {"S": "SVC#1"},
+    "SK": {"S": "DETAIL"},
+    "type": {"S": "SERVICE"},
+    "name": {"S": "General Checkup"},
+    "description": {"S": "Routine physical examination"},
+    "duration": {"N": "30"},
+    "price": {"N": "100.00"},
+    "category": {"S": "General"},
+    "GSI1PK": {"S": "CLINIC#DEFAULT"},
+    "GSI1SK": {"S": "SVC#General Checkup"}
+  },
+  {
+    "id": {"S": "SVC#2"},
+    "PK": {"S": "SVC#2"},
+    "SK": {"S": "DETAIL"},
+    "type": {"S": "SERVICE"},
+    "name": {"S": "Specialist Consultation"},
+    "description": {"S": "Consultation with a specialist doctor"},
+    "duration": {"N": "45"},
+    "price": {"N": "150.00"},
+    "category": {"S": "Specialist"},
+    "GSI1PK": {"S": "CLINIC#DEFAULT"},
+    "GSI1SK": {"S": "SVC#Specialist Consultation"}
+  },
+  {
+    "id": {"S": "SVC#3"},
+    "PK": {"S": "SVC#3"},
+    "SK": {"S": "DETAIL"},
+    "type": {"S": "SERVICE"},
+    "name": {"S": "Blood Test"},
+    "description": {"S": "Complete blood count and analysis"},
+    "duration": {"N": "15"},
+    "price": {"N": "75.00"},
+    "category": {"S": "Laboratory"},
+    "GSI1PK": {"S": "CLINIC#DEFAULT"},
+    "GSI1SK": {"S": "SVC#Blood Test"}
+  },
+  {
+    "id": {"S": "SVC#4"},
+    "PK": {"S": "SVC#4"},
+    "SK": {"S": "DETAIL"},
+    "type": {"S": "SERVICE"},
+    "name": {"S": "X-Ray"},
+    "description": {"S": "Radiographic imaging"},
+    "duration": {"N": "20"},
+    "price": {"N": "120.00"},
+    "category": {"S": "Imaging"},
+    "GSI1PK": {"S": "CLINIC#DEFAULT"},
+    "GSI1SK": {"S": "SVC#X-Ray"}
+  },
+  {
+    "id": {"S": "SVC#5"},
+    "PK": {"S": "SVC#5"},
+    "SK": {"S": "DETAIL"},
+    "type": {"S": "SERVICE"},
+    "name": {"S": "Vaccination"},
+    "description": {"S": "Standard vaccination service"},
+    "duration": {"N": "10"},
+    "price": {"N": "50.00"},
+    "category": {"S": "Preventive"},
+    "GSI1PK": {"S": "CLINIC#DEFAULT"},
+    "GSI1SK": {"S": "SVC#Vaccination"}
+  }
+]

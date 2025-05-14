@@ -33,9 +33,11 @@ Globals:
       - x86_64
   Api:
     Cors:
-      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      AllowHeaders: "'Content-Type,Authorization'"
-      AllowOrigin: "'*'"
+      AllowMethods: "GET,POST,PUT,DELETE,OPTIONS" # Removed extra single quotes
+      AllowHeaders: "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token" # Removed extra single quotes and added common AWS headers
+      AllowOrigin: "*" # For development. For production, change to your frontend domain.
+      # MaxAge: "600" # Optional: You can uncomment and set this
+      # AllowCredentials: true # Optional: Uncomment if you need to handle cookies/credentials
 
 Resources:
   # DynamoDB Table for Patients and Medical Records (hybrid single-table design)
@@ -139,15 +141,15 @@ Resources:
         DEFAULT_4XX:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,Authorization'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              Access-Control-Allow-Origin: "*" # Corrected: Removed extra single quotes
+              Access-Control-Allow-Headers: "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token" # Corrected: Removed extra single quotes
+              Access-Control-Allow-Methods: "GET,POST,PUT,DELETE,OPTIONS" # Corrected: Removed extra single quotes
         DEFAULT_5XX:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,Authorization'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              Access-Control-Allow-Origin: "*" # Corrected: Removed extra single quotes
+              Access-Control-Allow-Headers: "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token" # Corrected: Removed extra single quotes
+              Access-Control-Allow-Methods: "GET,POST,PUT,DELETE,OPTIONS" # Corrected: Removed extra single quotes
 
   # Cognito User Pool
   UserPool:
