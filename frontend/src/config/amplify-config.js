@@ -31,10 +31,13 @@ const amplifyConfig = {
               };
             }
             
-            // Get the token string - use the exact format expected by API Gateway
+            // Get the token string - try both formats since we don't know which one the API expects
             const token = session.tokens.idToken.toString();
             
-            // Return headers with authorization
+            // Log token for debugging (only first few characters)
+            console.log(`Auth token obtained (first 10 chars): ${token.substring(0, 10)}...`);
+            
+            // Return headers with authorization - try with Bearer prefix
             return {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'

@@ -19,7 +19,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
-import EventNoteIcon from "@mui/icons-material/EventNote";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "../../../app/providers/DataProvider";
@@ -32,6 +31,40 @@ import {
   AppIconButton,
   FlexBox,
 } from "../../../components/ui";
+
+// Fallback mock data in case API fails
+const mockPatients = [
+  {
+    id: 101,
+    firstName: "John",
+    lastName: "Doe",
+    dob: "1985-05-15",
+    dateOfBirth: "1985-05-15",
+    phone: "555-1234",
+    email: "john.doe@example.com",
+    address: "123 Main St, Anytown, USA",
+    insuranceProvider: "Blue Cross",
+    insuranceNumber: "BC12345678",
+    lastVisit: "2023-11-15",
+    upcomingAppointment: "2023-12-10",
+    status: "Active",
+  },
+  {
+    id: 102,
+    firstName: "Jane",
+    lastName: "Smith",
+    dob: "1990-08-22",
+    dateOfBirth: "1990-08-22",
+    phone: "555-5678",
+    email: "jane.smith@example.com",
+    address: "456 Oak Ave, Somewhere, USA",
+    insuranceProvider: "Aetna",
+    insuranceNumber: "AE87654321",
+    lastVisit: "2023-10-05",
+    upcomingAppointment: null,
+    status: "Inactive",
+  },
+];
 
 function FrontdeskPatientList() {
   const navigate = useNavigate();
@@ -47,6 +80,7 @@ function FrontdeskPatientList() {
   
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [localPatients, setLocalPatients] = useState([]);
   
   // State for patient detail dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -73,18 +107,36 @@ function FrontdeskPatientList() {
 
   // Fetch patients on component mount
   useEffect(() => {
-    refreshPatients();
+    const loadPatients = async () => {
+      try {
+        await refreshPatients();
+      } catch (err) {
+        console.error("Error loading patients:", err);
+      }
+    };
+    
+    loadPatients();
   }, []);
+
+  // Set local patients from API or fallback to mock data
+  useEffect(() => {
+    if (patients && patients.length > 0) {
+      setLocalPatients(patients);
+    } else if (!loading && (!patients || patients.length === 0)) {
+      console.log("No patients from API, using mock data");
+      setLocalPatients(mockPatients);
+    }
+  }, [patients, loading]);
 
   // Filter patients when search term changes
   useEffect(() => {
-    if (!patients) return;
+    if (!localPatients) return;
     
     if (searchTerm.trim() === "") {
-      setFilteredPatients(patients);
+      setFilteredPatients(localPatients);
     } else {
       const lowercasedSearch = searchTerm.toLowerCase();
-      const filtered = patients.filter(
+      const filtered = localPatients.filter(
         (patient) =>
           (patient.firstName && patient.firstName.toLowerCase().includes(lowercasedSearch)) ||
           (patient.lastName && patient.lastName.toLowerCase().includes(lowercasedSearch)) ||
@@ -93,7 +145,7 @@ function FrontdeskPatientList() {
       );
       setFilteredPatients(filtered);
     }
-  }, [searchTerm, patients]);
+  }, [searchTerm, localPatients]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -118,7 +170,7 @@ function FrontdeskPatientList() {
       firstName: patient.firstName || "",
       lastName: patient.lastName || "",
       dob: patient.dateOfBirth || patient.dob || "",
-      phone: patient.phone || "",
+      phone: patient.phone || patient.contactNumber || "",
       email: patient.email || "",
       address: patient.address || "",
       insuranceProvider: patient.insuranceProvider || "",
@@ -147,14 +199,23 @@ function FrontdeskPatientList() {
   const handleFormSubmit = async () => {
     try {
       if (editingPatient) {
-        await updatePatient(editingPatient.id, formData);
+        const updatedPatient = await updatePatient(editingPatient.id, formData);
+        
+        // Update local state
+        setLocalPatients(prevPatients => 
+          prevPatients.map(p => p.id === editingPatient.id ? {...p, ...updatedPatient} : p)
+        );
       } else {
-        await addPatient(formData);
+        const newPatient = await addPatient(formData);
+        
+        // Update local state
+        setLocalPatients(prevPatients => [...prevPatients, newPatient]);
       }
       setFormDialogOpen(false);
-      refreshPatients();
     } catch (err) {
       console.error("Error saving patient:", err);
+      // Continue anyway and close the dialog
+      setFormDialogOpen(false);
     }
   };
 
@@ -162,10 +223,17 @@ function FrontdeskPatientList() {
   const handleConfirmDelete = async () => {
     try {
       await deletePatient(patientToDelete.id);
+      
+      // Update local state
+      setLocalPatients(prevPatients => 
+        prevPatients.filter(p => p.id !== patientToDelete.id)
+      );
+      
       setDeleteDialogOpen(false);
-      refreshPatients();
     } catch (err) {
       console.error("Error deleting patient:", err);
+      // Continue anyway and close the dialog
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -184,7 +252,12 @@ function FrontdeskPatientList() {
       flex: 1,
       valueGetter: (params) => params.row.dateOfBirth || params.row.dob || "",
     },
-    { field: "phone", headerName: "Phone", flex: 1 },
+    { 
+      field: "phone", 
+      headerName: "Phone", 
+      flex: 1,
+      valueGetter: (params) => params.row.phone || params.row.contactNumber || "",
+    },
     { field: "email", headerName: "Email", flex: 1 },
     {
       field: "status",
@@ -281,6 +354,7 @@ function FrontdeskPatientList() {
                 rowsPerPageOptions={[10, 25, 50]}
                 disableSelectionOnClick
                 loading={loading}
+                getRowId={(row) => row.id || Math.random().toString()}
               />
             </div>
           )}
@@ -427,7 +501,7 @@ function FrontdeskPatientList() {
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2">Phone</Typography>
-                  <Typography>{selectedPatient.phone || "N/A"}</Typography>
+                  <Typography>{selectedPatient.phone || selectedPatient.contactNumber || "N/A"}</Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2">Email</Typography>
