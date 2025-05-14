@@ -1,9 +1,9 @@
 // src/pages/DoctorPatientsPage.jsx
 import React, { useState, useEffect } from "react";
-import { 
-  Box, 
-  Typography, 
-  TextField, 
+import {
+  Box,
+  Typography,
+  TextField,
   InputAdornment,
   Grid,
   Card,
@@ -11,14 +11,15 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  Button
+  Button,
+  Paper, // Added Paper import
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonIcon from "@mui/icons-material/Person";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "../app/providers/DataProvider";
-import { PageContainer, SectionContainer } from "../components/ui";
+import { PageContainer } from "../components/ui"; // Assuming SectionContainer might not be directly used here based on semantic snippets for cards
 
 function DoctorPatientsPage() {
   const navigate = useNavigate();
@@ -29,23 +30,29 @@ function DoctorPatientsPage() {
   // Fetch patients on component mount
   useEffect(() => {
     refreshPatients();
-  }, []);
+  }, [refreshPatients]); // Added refreshPatients to dependency array
 
-  // Filter patients when search term changes
+  // Filter patients when search term or patients list changes
   useEffect(() => {
-    if (!patients) return;
-    
+    if (!patients) {
+      setFilteredPatients([]);
+      return;
+    }
     if (searchTerm.trim() === "") {
       setFilteredPatients(patients);
     } else {
       const lowercasedSearch = searchTerm.toLowerCase();
       const filtered = patients.filter(
         (patient) =>
-          (patient.firstName && patient.firstName.toLowerCase().includes(lowercasedSearch)) ||
-          (patient.lastName && patient.lastName.toLowerCase().includes(lowercasedSearch)) ||
+          (patient.firstName &&
+            patient.firstName.toLowerCase().includes(lowercasedSearch)) ||
+          (patient.lastName &&
+            patient.lastName.toLowerCase().includes(lowercasedSearch)) ||
           (patient.phone && patient.phone.includes(searchTerm)) ||
-          (patient.contactNumber && patient.contactNumber.includes(searchTerm)) ||
-          (patient.email && patient.email.toLowerCase().includes(lowercasedSearch))
+          (patient.contactNumber &&
+            patient.contactNumber.includes(searchTerm)) || // Added from previous analysis
+          (patient.email &&
+            patient.email.toLowerCase().includes(lowercasedSearch))
       );
       setFilteredPatients(filtered);
     }
@@ -58,137 +65,214 @@ function DoctorPatientsPage() {
 
   // Handle patient card click
   const handlePatientClick = (patient) => {
-    navigate(`/doctor/patients/${patient.id}`);
+    if (patient && patient.id) {
+      navigate(`/patients/${patient.id}`);
+    }
   };
 
   // Calculate age from date of birth
   const calculateAge = (dateOfBirth) => {
     if (!dateOfBirth) return "N/A";
-    
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    try {
+      const birthDate = new Date(dateOfBirth);
+      // Check if birthDate is valid
+      if (isNaN(birthDate.getTime())) return "N/A";
+
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age >= 0 ? age.toString() : "N/A";
+    } catch (e) {
+      return "N/A";
     }
-    
-    return age;
   };
 
   return (
     <PageContainer>
-      <SectionContainer>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h5" component="h1" gutterBottom>
-            My Patients
-          </Typography>
-          <Button 
-            variant="outlined" 
-            startIcon={<RefreshIcon />}
-            onClick={refreshPatients}
-            disabled={loading}
-          >
-            Refresh
-          </Button>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
+        <Typography variant="h5" component="h1">
+          My Patients
+        </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={refreshPatients}
+          disabled={loading}
+        >
+          Refresh
+        </Button>
+      </Box>
+
+      {/* Search bar */}
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Search patients by name, email, or phone"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
+      {/* Error message */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {typeof error === "string"
+            ? error
+            : "An error occurred while fetching patients."}
+        </Alert>
+      )}
+
+      {/* Patient list */}
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+          <CircularProgress />
         </Box>
-
-        {/* Search bar */}
-        <Box sx={{ mb: 3 }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search patients by name, email, or phone"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-
-        {/* Error message */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Patient list */}
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Grid container spacing={2}>
-            {filteredPatients && filteredPatients.length > 0 ? (
-              filteredPatients.map((patient) => (
-                <Grid item xs={12} sm={6} md={4} key={patient.id || Math.random().toString()}>
-                  <Card 
-                    sx={{ 
-                      cursor: "pointer",
-                      transition: "transform 0.2s",
-                      "&:hover": {
-                        transform: "translateY(-4px)",
-                        boxShadow: 3
-                      }
-                    }}
-                    onClick={() => handlePatientClick(patient)}
-                  >
-                    <CardContent>
-                      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                        <PersonIcon sx={{ mr: 1, color: "primary.main" }} />
-                        <Typography variant="h6">
-                          {patient.firstName} {patient.lastName}
-                        </Typography>
-                      </Box>
-                      
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Age: {calculateAge(patient.dateOfBirth || patient.dob)}
+      ) : (
+        <Grid container spacing={3}>
+          {" "}
+          {/* Increased spacing slightly */}
+          {filteredPatients && filteredPatients.length > 0 ? (
+            filteredPatients.map((patient) => (
+              <Grid item xs={12} sm={6} md={4} key={patient.id || patient.PK}>
+                {" "}
+                {/* Use patient.id or PK as key */}
+                <Card
+                  sx={{
+                    cursor: "pointer",
+                    transition: "transform 0.2s, box-shadow 0.2s",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: (theme) => theme.shadows[6], // Use theme shadows
+                    },
+                    height: "100%", // Ensure cards try to maintain same height
+                    display: "flex", // Added for flex layout
+                    flexDirection: "column", // Added for flex layout
+                  }}
+                  onClick={() => handlePatientClick(patient)}
+                >
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    {" "}
+                    {/* Allow content to grow */}
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", mb: 1.5 }}
+                    >
+                      {" "}
+                      {/* Adjusted margin */}
+                      <PersonIcon
+                        sx={{ mr: 1.5, color: "primary.main" }}
+                      />{" "}
+                      {/* Adjusted margin */}
+                      <Typography variant="h6" component="div" noWrap>
+                        {patient.firstName || ""} {patient.lastName || ""}
                       </Typography>
-                      
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Phone: {patient.phone || patient.contactNumber || "N/A"}
+                    </Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      Age: {calculateAge(patient.dateOfBirth || patient.dob)}
+                    </Typography>
+                    {patient.gender && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        Gender: {patient.gender}
                       </Typography>
-                      
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Email: {patient.email || "N/A"}
+                    )}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      Phone: {patient.phone || patient.contactNumber || "N/A"}
+                    </Typography>
+                    {patient.email && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        gutterBottom
+                        sx={{ wordBreak: "break-all" }}
+                      >
+                        Email: {patient.email}
                       </Typography>
-                      
-                      <Box sx={{ mt: 2, display: "flex", justifyContent: "space-between" }}>
-                        <Chip 
-                          label={patient.status || "Active"} 
-                          color={patient.status === "Active" ? "success" : "default"}
+                    )}
+                    {patient.insuranceProvider && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        Insurance: {patient.insuranceProvider}
+                      </Typography>
+                    )}
+                    {patient.lastVisit && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        Last Visit:{" "}
+                        {new Date(patient.lastVisit).toLocaleDateString()}
+                      </Typography>
+                    )}
+                    {patient.status && (
+                      <Box sx={{ mt: 1.5 }}>
+                        {" "}
+                        {/* Adjusted margin */}
+                        <Chip
+                          label={patient.status}
+                          color={
+                            patient.status.toLowerCase() === "active"
+                              ? "success"
+                              : "default"
+                          }
                           size="small"
                         />
-                        
-                        {patient.lastVisit && (
-                          <Typography variant="caption" color="text.secondary">
-                            Last visit: {patient.lastVisit}
-                          </Typography>
-                        )}
                       </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))
-            ) : (
-              <Grid item xs={12}>
-                <Box sx={{ textAlign: "center", py: 4 }}>
-                  <Typography variant="body1" color="text.secondary">
-                    No patients found
-                  </Typography>
-                </Box>
+                    )}
+                  </CardContent>
+                </Card>
               </Grid>
-            )}
-          </Grid>
-        )}
-      </SectionContainer>
+            ))
+          ) : (
+            <Grid item xs={12}>
+              <Paper sx={{ p: 3, textAlign: "center", mt: 2 }}>
+                <Typography variant="h6">No patients found</Typography>
+                <Typography
+                  variant="body1"
+                  color="text.secondary"
+                  sx={{ mt: 1 }}
+                >
+                  {searchTerm
+                    ? "No patients match your search criteria."
+                    : "There are no patients to display."}
+                </Typography>
+              </Paper>
+            </Grid>
+          )}
+        </Grid>
+      )}
     </PageContainer>
   );
 }
