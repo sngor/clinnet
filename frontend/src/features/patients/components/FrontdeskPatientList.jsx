@@ -14,12 +14,14 @@ import {
   Grid,
   Chip,
   Button,
+  Box
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "../../../app/providers/DataProvider";
 import {
@@ -32,40 +34,6 @@ import {
   FlexBox,
 } from "../../../components/ui";
 
-// Fallback mock data in case API fails
-const mockPatients = [
-  {
-    id: 101,
-    firstName: "John",
-    lastName: "Doe",
-    dob: "1985-05-15",
-    dateOfBirth: "1985-05-15",
-    phone: "555-1234",
-    email: "john.doe@example.com",
-    address: "123 Main St, Anytown, USA",
-    insuranceProvider: "Blue Cross",
-    insuranceNumber: "BC12345678",
-    lastVisit: "2023-11-15",
-    upcomingAppointment: "2023-12-10",
-    status: "Active",
-  },
-  {
-    id: 102,
-    firstName: "Jane",
-    lastName: "Smith",
-    dob: "1990-08-22",
-    dateOfBirth: "1990-08-22",
-    phone: "555-5678",
-    email: "jane.smith@example.com",
-    address: "456 Oak Ave, Somewhere, USA",
-    insuranceProvider: "Aetna",
-    insuranceNumber: "AE87654321",
-    lastVisit: "2023-10-05",
-    upcomingAppointment: null,
-    status: "Inactive",
-  },
-];
-
 function FrontdeskPatientList() {
   const navigate = useNavigate();
   const { 
@@ -75,12 +43,13 @@ function FrontdeskPatientList() {
     addPatient, 
     updatePatient, 
     deletePatient,
-    refreshPatients 
+    refreshPatients,
+    useMockData
   } = useAppData();
   
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [localPatients, setLocalPatients] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
   
   // State for patient detail dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -108,48 +77,41 @@ function FrontdeskPatientList() {
   // Fetch patients on component mount
   useEffect(() => {
     const loadPatients = async () => {
-      try {
-        await refreshPatients();
-      } catch (err) {
-        console.error("Error loading patients:", err);
-      }
+      await refreshPatients();
     };
-    
     loadPatients();
   }, []);
 
-  // Set local patients from API or fallback to mock data
-  useEffect(() => {
-    if (patients && patients.length > 0) {
-      setLocalPatients(patients);
-    } else if (!loading && (!patients || patients.length === 0)) {
-      console.log("No patients from API, using mock data");
-      setLocalPatients(mockPatients);
-    }
-  }, [patients, loading]);
-
   // Filter patients when search term changes
   useEffect(() => {
-    if (!localPatients) return;
+    if (!patients) return;
     
     if (searchTerm.trim() === "") {
-      setFilteredPatients(localPatients);
+      setFilteredPatients(patients);
     } else {
       const lowercasedSearch = searchTerm.toLowerCase();
-      const filtered = localPatients.filter(
+      const filtered = patients.filter(
         (patient) =>
           (patient.firstName && patient.firstName.toLowerCase().includes(lowercasedSearch)) ||
           (patient.lastName && patient.lastName.toLowerCase().includes(lowercasedSearch)) ||
           (patient.phone && patient.phone.includes(searchTerm)) ||
+          (patient.contactNumber && patient.contactNumber.includes(searchTerm)) ||
           (patient.email && patient.email.toLowerCase().includes(lowercasedSearch))
       );
       setFilteredPatients(filtered);
     }
-  }, [searchTerm, localPatients]);
+  }, [searchTerm, patients]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
+  };
+
+  // Handle refresh button click
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshPatients();
+    setRefreshing(false);
   };
 
   // Handle view patient details
@@ -199,23 +161,14 @@ function FrontdeskPatientList() {
   const handleFormSubmit = async () => {
     try {
       if (editingPatient) {
-        const updatedPatient = await updatePatient(editingPatient.id, formData);
-        
-        // Update local state
-        setLocalPatients(prevPatients => 
-          prevPatients.map(p => p.id === editingPatient.id ? {...p, ...updatedPatient} : p)
-        );
+        await updatePatient(editingPatient.id, formData);
       } else {
-        const newPatient = await addPatient(formData);
-        
-        // Update local state
-        setLocalPatients(prevPatients => [...prevPatients, newPatient]);
+        await addPatient(formData);
       }
       setFormDialogOpen(false);
+      refreshPatients();
     } catch (err) {
       console.error("Error saving patient:", err);
-      // Continue anyway and close the dialog
-      setFormDialogOpen(false);
     }
   };
 
@@ -223,17 +176,10 @@ function FrontdeskPatientList() {
   const handleConfirmDelete = async () => {
     try {
       await deletePatient(patientToDelete.id);
-      
-      // Update local state
-      setLocalPatients(prevPatients => 
-        prevPatients.filter(p => p.id !== patientToDelete.id)
-      );
-      
       setDeleteDialogOpen(false);
+      refreshPatients();
     } catch (err) {
       console.error("Error deleting patient:", err);
-      // Continue anyway and close the dialog
-      setDeleteDialogOpen(false);
     }
   };
 
@@ -306,12 +252,22 @@ function FrontdeskPatientList() {
           <Typography variant="h5" component="h1">
             Patient Management
           </Typography>
-          <PrimaryButton
-            startIcon={<AddIcon />}
-            onClick={handleAddPatient}
-          >
-            Add New Patient
-          </PrimaryButton>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleRefresh}
+              disabled={loading || refreshing}
+            >
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+            <PrimaryButton
+              startIcon={<AddIcon />}
+              onClick={handleAddPatient}
+            >
+              Add New Patient
+            </PrimaryButton>
+          </Box>
         </FlexBox>
 
         <CardContainer>
@@ -337,6 +293,13 @@ function FrontdeskPatientList() {
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
+            </Alert>
+          )}
+          
+          {/* Mock data warning */}
+          {useMockData && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Using mock data. Changes will not be saved to DynamoDB.
             </Alert>
           )}
 

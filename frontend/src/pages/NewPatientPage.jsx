@@ -33,6 +33,7 @@ function NewPatientPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [submitting, setSubmitting] = useState(false);
   
   const [patientData, setPatientData] = useState({
     firstName: '',
@@ -76,6 +77,8 @@ function NewPatientPage() {
       return;
     }
     
+    setSubmitting(true);
+    
     try {
       await addPatient(patientData);
       
@@ -88,14 +91,10 @@ function NewPatientPage() {
       setTimeout(() => navigate('/frontdesk/patients'), 1500);
     } catch (err) {
       console.error('Error saving patient:', err);
-      
-      // Show success message anyway (since we're using mock data as fallback)
-      setSnackbarMessage('Patient added successfully');
-      setSnackbarSeverity('success');
+      setSnackbarMessage(err.message || 'Failed to create patient');
+      setSnackbarSeverity('error');
       setSnackbarOpen(true);
-      
-      // Navigate back to patients list after a delay
-      setTimeout(() => navigate('/frontdesk/patients'), 1500);
+      setSubmitting(false);
     }
   };
 
@@ -264,16 +263,17 @@ function NewPatientPage() {
                   variant="outlined"
                   onClick={handleBackClick}
                   sx={{ mr: 2 }}
+                  disabled={submitting}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   variant="contained"
-                  startIcon={<SaveIcon />}
-                  disabled={loading}
+                  startIcon={submitting ? <CircularProgress size={20} /> : <SaveIcon />}
+                  disabled={submitting || loading}
                 >
-                  {loading ? <CircularProgress size={24} /> : 'Save Patient'}
+                  {submitting ? 'Saving...' : 'Save Patient'}
                 </Button>
               </Box>
             </Grid>

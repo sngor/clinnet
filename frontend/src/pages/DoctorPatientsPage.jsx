@@ -10,10 +10,12 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  Alert
+  Alert,
+  Button
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonIcon from "@mui/icons-material/Person";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "../app/providers/DataProvider";
 import { PageContainer, SectionContainer } from "../components/ui";
@@ -42,6 +44,7 @@ function DoctorPatientsPage() {
           (patient.firstName && patient.firstName.toLowerCase().includes(lowercasedSearch)) ||
           (patient.lastName && patient.lastName.toLowerCase().includes(lowercasedSearch)) ||
           (patient.phone && patient.phone.includes(searchTerm)) ||
+          (patient.contactNumber && patient.contactNumber.includes(searchTerm)) ||
           (patient.email && patient.email.toLowerCase().includes(lowercasedSearch))
       );
       setFilteredPatients(filtered);
@@ -77,9 +80,19 @@ function DoctorPatientsPage() {
   return (
     <PageContainer>
       <SectionContainer>
-        <Typography variant="h5" component="h1" gutterBottom>
-          My Patients
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h5" component="h1" gutterBottom>
+            My Patients
+          </Typography>
+          <Button 
+            variant="outlined" 
+            startIcon={<RefreshIcon />}
+            onClick={refreshPatients}
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+        </Box>
 
         {/* Search bar */}
         <Box sx={{ mb: 3 }}>
@@ -115,7 +128,7 @@ function DoctorPatientsPage() {
           <Grid container spacing={2}>
             {filteredPatients && filteredPatients.length > 0 ? (
               filteredPatients.map((patient) => (
-                <Grid item xs={12} sm={6} md={4} key={patient.id}>
+                <Grid item xs={12} sm={6} md={4} key={patient.id || Math.random().toString()}>
                   <Card 
                     sx={{ 
                       cursor: "pointer",
@@ -140,7 +153,7 @@ function DoctorPatientsPage() {
                       </Typography>
                       
                       <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Phone: {patient.phone || "N/A"}
+                        Phone: {patient.phone || patient.contactNumber || "N/A"}
                       </Typography>
                       
                       <Typography variant="body2" color="text.secondary" gutterBottom>

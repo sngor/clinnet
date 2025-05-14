@@ -9,70 +9,7 @@ import {
   deletePatient as deletePatientApi 
 } from "../../services/patientService";
 import serviceApi from "../../services/serviceApi";
-
-// Mock data for fallback
-const mockPatients = [
-  {
-    id: "101",
-    firstName: "John",
-    lastName: "Doe",
-    dob: "1985-05-15",
-    dateOfBirth: "1985-05-15",
-    phone: "555-1234",
-    email: "john.doe@example.com",
-    address: "123 Main St, Anytown, USA",
-    insuranceProvider: "Blue Cross",
-    insuranceNumber: "BC12345678",
-    lastVisit: "2023-11-15",
-    upcomingAppointment: "2023-12-10",
-    status: "Active",
-  },
-  {
-    id: "102",
-    firstName: "Jane",
-    lastName: "Smith",
-    dob: "1990-08-22",
-    dateOfBirth: "1990-08-22",
-    phone: "555-5678",
-    email: "jane.smith@example.com",
-    address: "456 Oak Ave, Somewhere, USA",
-    insuranceProvider: "Aetna",
-    insuranceNumber: "AE87654321",
-    lastVisit: "2023-10-05",
-    upcomingAppointment: null,
-    status: "Inactive",
-  },
-];
-
-const mockServices = [
-  {
-    id: "1",
-    name: "General Consultation",
-    description: "Standard medical consultation",
-    duration: 30,
-    price: 100,
-    category: "Consultation",
-    active: true
-  },
-  {
-    id: "2",
-    name: "Specialized Consultation",
-    description: "Consultation with a specialist",
-    duration: 45,
-    price: 150,
-    category: "Consultation",
-    active: true
-  },
-  {
-    id: "3",
-    name: "Blood Test",
-    description: "Standard blood panel",
-    duration: 15,
-    price: 75,
-    category: "Laboratory",
-    active: true
-  }
-];
+import { mockPatients, mockServices } from "../../services/mockData";
 
 // Create context
 const DataContext = createContext(null);
@@ -86,6 +23,7 @@ export const DataProvider = ({ children }) => {
   // Data for services and patients
   const [services, setServices] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [useMockData, setUseMockData] = useState(false);
 
   // Initialize data when authenticated
   useEffect(() => {
@@ -98,24 +36,21 @@ export const DataProvider = ({ children }) => {
       try {
         console.log("Initializing app data...");
         setLoading(true);
+        setError(null);
 
         // Fetch services from DynamoDB via API
         try {
           console.log("Fetching services from DynamoDB...");
           const servicesFromApi = await serviceApi.getAllServices();
           console.log("Services loaded from DynamoDB:", servicesFromApi);
-          
-          if (servicesFromApi && servicesFromApi.length > 0) {
-            setServices(servicesFromApi);
-          } else {
-            console.log("No services from API, using mock data");
-            setServices(mockServices);
-          }
+          setServices(servicesFromApi || []);
+          setUseMockData(false);
         } catch (serviceError) {
           console.error("Error loading services:", serviceError);
           console.error("Error details:", serviceError.message);
           setError("Failed to load services. Using mock data.");
           setServices(mockServices);
+          setUseMockData(true);
         }
 
         // Fetch patients from DynamoDB via API
@@ -123,18 +58,14 @@ export const DataProvider = ({ children }) => {
           console.log("Fetching patients from DynamoDB...");
           const patientsFromApi = await fetchPatients();
           console.log("Patients loaded from DynamoDB:", patientsFromApi);
-          
-          if (patientsFromApi && patientsFromApi.length > 0) {
-            setPatients(patientsFromApi);
-          } else {
-            console.log("No patients from API, using mock data");
-            setPatients(mockPatients);
-          }
+          setPatients(patientsFromApi || []);
+          setUseMockData(false);
         } catch (patientError) {
           console.error("Error loading patients:", patientError);
           console.error("Error details:", patientError.message);
           setError("Failed to load patients. Using mock data.");
           setPatients(mockPatients);
+          setUseMockData(true);
         }
 
         setInitialized(true);
@@ -142,6 +73,7 @@ export const DataProvider = ({ children }) => {
       } catch (err) {
         console.error("Error initializing data:", err);
         setError(err.message || "Failed to initialize application data");
+        setUseMockData(true);
       } finally {
         setLoading(false);
       }
@@ -154,25 +86,21 @@ export const DataProvider = ({ children }) => {
   const refreshServices = async () => {
     try {
       setLoading(true);
+      setError(null);
       console.log("Refreshing services data...");
       
       try {
         const servicesFromApi = await serviceApi.getAllServices();
         console.log("Services refreshed successfully:", servicesFromApi);
-        
-        if (servicesFromApi && servicesFromApi.length > 0) {
-          setServices(servicesFromApi);
-          return servicesFromApi;
-        } else {
-          console.log("No services from API refresh, using mock data");
-          setServices(mockServices);
-          return mockServices;
-        }
+        setServices(servicesFromApi || []);
+        setUseMockData(false);
+        return servicesFromApi;
       } catch (err) {
         console.error("Error refreshing services:", err);
         console.error("Error details:", err.message);
         setError("Failed to refresh services. Using mock data.");
         setServices(mockServices);
+        setUseMockData(true);
         return mockServices;
       }
     } finally {
@@ -184,25 +112,21 @@ export const DataProvider = ({ children }) => {
   const refreshPatients = async () => {
     try {
       setLoading(true);
+      setError(null);
       console.log("Refreshing patients data...");
       
       try {
         const patientsFromApi = await fetchPatients();
         console.log("Patients refreshed successfully:", patientsFromApi);
-        
-        if (patientsFromApi && patientsFromApi.length > 0) {
-          setPatients(patientsFromApi);
-          return patientsFromApi;
-        } else {
-          console.log("No patients from API refresh, using mock data");
-          setPatients(mockPatients);
-          return mockPatients;
-        }
+        setPatients(patientsFromApi || []);
+        setUseMockData(false);
+        return patientsFromApi;
       } catch (err) {
         console.error("Error refreshing patients:", err);
         console.error("Error details:", err.message);
         setError("Failed to refresh patients. Using mock data.");
         setPatients(mockPatients);
+        setUseMockData(true);
         return mockPatients;
       }
     } finally {
@@ -210,32 +134,31 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  // Service operations using DynamoDB API
+  // Service operations
   const addService = async (serviceData) => {
     try {
       console.log("Adding new service:", serviceData);
       
-      try {
-        const newService = await serviceApi.createService(serviceData);
-        console.log("Service added successfully:", newService);
-        setServices([...services, newService]);
-        return newService;
-      } catch (err) {
-        console.error("Error adding service:", err);
-        console.error("Error details:", err.message);
-        
+      if (useMockData) {
         // Create a mock service with ID
-        const mockService = {
+        const newService = {
           id: Date.now().toString(),
           ...serviceData,
           createdAt: new Date().toISOString()
         };
         
-        setServices([...services, mockService]);
-        return mockService;
+        // Add to mock data
+        mockServices.push(newService);
+        setServices([...mockServices]);
+        return newService;
+      } else {
+        const newService = await serviceApi.createService(serviceData);
+        console.log("Service added successfully:", newService);
+        setServices(prevServices => [...prevServices, newService]);
+        return newService;
       }
     } catch (err) {
-      console.error("Error in addService:", err);
+      console.error("Error adding service:", err);
       throw err;
     }
   };
@@ -244,26 +167,35 @@ export const DataProvider = ({ children }) => {
     try {
       console.log(`Updating service ${id} with data:`, serviceData);
       
-      try {
+      if (useMockData) {
+        // Find service in mock data
+        const index = mockServices.findIndex(s => s.id === id);
+        
+        if (index === -1) {
+          throw new Error(`Service with ID ${id} not found`);
+        }
+        
+        // Update service
+        const updatedService = {
+          ...mockServices[index],
+          ...serviceData,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Update in mock data
+        mockServices[index] = updatedService;
+        setServices([...mockServices]);
+        return updatedService;
+      } else {
         const updatedService = await serviceApi.updateService(id, serviceData);
         console.log("Service updated successfully:", updatedService);
         setServices(services.map(service => 
           service.id === id ? updatedService : service
         ));
         return updatedService;
-      } catch (err) {
-        console.error(`Error updating service ${id}:`, err);
-        console.error("Error details:", err.message);
-        
-        // Update the service locally
-        const updatedService = { ...serviceData, id };
-        setServices(services.map(service => 
-          service.id === id ? updatedService : service
-        ));
-        return updatedService;
       }
     } catch (err) {
-      console.error(`Error in updateService ${id}:`, err);
+      console.error(`Error updating service ${id}:`, err);
       throw err;
     }
   };
@@ -272,59 +204,65 @@ export const DataProvider = ({ children }) => {
     try {
       console.log(`Deleting service with ID: ${id}`);
       
-      try {
+      if (useMockData) {
+        // Find service index
+        const index = mockServices.findIndex(s => s.id === id);
+        
+        if (index === -1) {
+          throw new Error(`Service with ID ${id} not found`);
+        }
+        
+        // Remove from mock data
+        mockServices.splice(index, 1);
+        setServices([...mockServices]);
+        return { success: true };
+      } else {
         await serviceApi.deleteService(id);
         console.log(`Service ${id} deleted successfully`);
         setServices(services.filter(service => service.id !== id));
         return true;
-      } catch (err) {
-        console.error(`Error deleting service ${id}:`, err);
-        console.error("Error details:", err.message);
-        
-        // Delete the service locally anyway
-        setServices(services.filter(service => service.id !== id));
-        return true;
       }
     } catch (err) {
-      console.error(`Error in deleteService ${id}:`, err);
+      console.error(`Error deleting service ${id}:`, err);
       throw err;
     }
   };
 
-  // Patient operations using DynamoDB API
+  // Patient operations
   const addPatient = async (patientData) => {
     try {
       console.log("Adding new patient:", patientData);
       
-      try {
-        const newPatient = await createPatient(patientData);
-        console.log("Patient added successfully:", newPatient);
-        setPatients([...patients, newPatient]);
-        return newPatient;
-      } catch (err) {
-        console.error("Error adding patient:", err);
-        console.error("Error details:", err.message);
-        
+      if (useMockData) {
         // Create a mock patient with ID
-        const mockPatient = {
+        const newPatient = {
           id: Date.now().toString(),
           firstName: patientData.firstName,
           lastName: patientData.lastName,
           dateOfBirth: patientData.dob,
+          gender: patientData.gender || 'Not Specified',
           phone: patientData.phone,
+          contactNumber: patientData.phone,
           email: patientData.email,
           address: patientData.address,
           insuranceProvider: patientData.insuranceProvider,
           insuranceNumber: patientData.insuranceNumber,
-          status: patientData.status || "Active",
+          status: patientData.status || 'Active',
           createdAt: new Date().toISOString()
         };
         
-        setPatients([...patients, mockPatient]);
-        return mockPatient;
+        // Add to mock data
+        mockPatients.push(newPatient);
+        setPatients([...mockPatients]);
+        return newPatient;
+      } else {
+        const newPatient = await createPatient(patientData);
+        console.log("Patient added successfully:", newPatient);
+        setPatients(prevPatients => [...prevPatients, newPatient]);
+        return newPatient;
       }
     } catch (err) {
-      console.error("Error in addPatient:", err);
+      console.error("Error adding patient:", err);
       throw err;
     }
   };
@@ -333,39 +271,45 @@ export const DataProvider = ({ children }) => {
     try {
       console.log(`Updating patient ${id} with data:`, patientData);
       
-      try {
+      if (useMockData) {
+        // Find patient in mock data
+        const index = mockPatients.findIndex(p => p.id === id);
+        
+        if (index === -1) {
+          throw new Error(`Patient with ID ${id} not found`);
+        }
+        
+        // Update patient
+        const updatedPatient = {
+          ...mockPatients[index],
+          firstName: patientData.firstName,
+          lastName: patientData.lastName,
+          dateOfBirth: patientData.dob,
+          gender: patientData.gender || mockPatients[index].gender,
+          phone: patientData.phone,
+          contactNumber: patientData.phone,
+          email: patientData.email,
+          address: patientData.address,
+          insuranceProvider: patientData.insuranceProvider,
+          insuranceNumber: patientData.insuranceNumber,
+          status: patientData.status,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Update in mock data
+        mockPatients[index] = updatedPatient;
+        setPatients([...mockPatients]);
+        return updatedPatient;
+      } else {
         const updatedPatient = await updatePatientApi(id, patientData);
         console.log("Patient updated successfully:", updatedPatient);
         setPatients(patients.map(patient => 
           patient.id === id ? updatedPatient : patient
         ));
         return updatedPatient;
-      } catch (err) {
-        console.error(`Error updating patient ${id}:`, err);
-        console.error("Error details:", err.message);
-        
-        // Update the patient locally
-        const updatedPatient = {
-          id,
-          firstName: patientData.firstName,
-          lastName: patientData.lastName,
-          dateOfBirth: patientData.dob,
-          phone: patientData.phone,
-          email: patientData.email,
-          address: patientData.address,
-          insuranceProvider: patientData.insuranceProvider,
-          insuranceNumber: patientData.insuranceNumber,
-          status: patientData.status || "Active",
-          updatedAt: new Date().toISOString()
-        };
-        
-        setPatients(patients.map(patient => 
-          patient.id === id ? updatedPatient : patient
-        ));
-        return updatedPatient;
       }
     } catch (err) {
-      console.error(`Error in updatePatient ${id}:`, err);
+      console.error(`Error updating patient ${id}:`, err);
       throw err;
     }
   };
@@ -374,21 +318,26 @@ export const DataProvider = ({ children }) => {
     try {
       console.log(`Deleting patient with ID: ${id}`);
       
-      try {
+      if (useMockData) {
+        // Find patient index
+        const index = mockPatients.findIndex(p => p.id === id);
+        
+        if (index === -1) {
+          throw new Error(`Patient with ID ${id} not found`);
+        }
+        
+        // Remove from mock data
+        mockPatients.splice(index, 1);
+        setPatients([...mockPatients]);
+        return { success: true };
+      } else {
         await deletePatientApi(id);
         console.log(`Patient ${id} deleted successfully`);
         setPatients(patients.filter(patient => patient.id !== id));
         return true;
-      } catch (err) {
-        console.error(`Error deleting patient ${id}:`, err);
-        console.error("Error details:", err.message);
-        
-        // Delete the patient locally anyway
-        setPatients(patients.filter(patient => patient.id !== id));
-        return true;
       }
     } catch (err) {
-      console.error(`Error in deletePatient ${id}:`, err);
+      console.error(`Error deleting patient ${id}:`, err);
       throw err;
     }
   };
@@ -397,6 +346,7 @@ export const DataProvider = ({ children }) => {
     initialized,
     loading,
     error,
+    useMockData,
     // Services
     services,
     addService,

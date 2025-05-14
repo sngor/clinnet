@@ -1,5 +1,5 @@
 // src/services/serviceApi.js
-import { get, post, put, del } from 'aws-amplify/api';
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api-helper';
 
 /**
  * Service API service for interacting with the backend
@@ -13,31 +13,14 @@ const serviceApi = {
   getAllServices: async (filters = {}) => {
     try {
       // Build query string from filters
-      const queryParams = new URLSearchParams();
+      const params = {};
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) queryParams.append(key, value);
+        if (value !== undefined && value !== null) {
+          params[key] = value;
+        }
       });
       
-      const queryString = queryParams.toString();
-      const path = queryString ? `/services?${queryString}` : '/services';
-      
-      const response = await get({
-        apiName: 'clinnetApi',
-        path: path
-      });
-      
-      if (!response) {
-        throw new Error('No response received from API');
-      }
-      
-      // Handle response based on its structure
-      if (response.body) {
-        return await response.body.json();
-      } else if (response.data) {
-        return response.data;
-      } else {
-        return [];
-      }
+      return await apiGet('/services', params);
     } catch (error) {
       console.error('Error fetching services:', error);
       throw error;
@@ -51,23 +34,7 @@ const serviceApi = {
    */
   getServiceById: async (id) => {
     try {
-      const response = await get({
-        apiName: 'clinnetApi',
-        path: `/services/${id}`
-      });
-      
-      if (!response) {
-        throw new Error('No response received from API');
-      }
-      
-      // Handle response based on its structure
-      if (response.body) {
-        return await response.body.json();
-      } else if (response.data) {
-        return response.data;
-      } else {
-        return null;
-      }
+      return await apiGet(`/services/${id}`);
     } catch (error) {
       console.error(`Error fetching service ${id}:`, error);
       throw error;
@@ -90,31 +57,9 @@ const serviceApi = {
       });
       
       console.log('Creating service with data:', sanitizedData);
-      
-      const response = await post({
-        apiName: 'clinnetApi',
-        path: '/services',
-        options: {
-          body: sanitizedData
-        }
-      });
-      
-      if (!response) {
-        throw new Error('No response received from API');
-      }
-      
-      // Handle response based on its structure
-      let result;
-      if (response.body) {
-        result = await response.body.json();
-      } else if (response.data) {
-        result = response.data;
-      } else {
-        throw new Error('Invalid response format from API');
-      }
-      
-      console.log('Service created successfully:', result);
-      return result;
+      const data = await apiPost('/services', sanitizedData);
+      console.log('Service created successfully:', data);
+      return data;
     } catch (error) {
       console.error('Error creating service:', error);
       throw error;
@@ -137,26 +82,7 @@ const serviceApi = {
         }
       });
       
-      const response = await put({
-        apiName: 'clinnetApi',
-        path: `/services/${id}`,
-        options: {
-          body: sanitizedData
-        }
-      });
-      
-      if (!response) {
-        throw new Error('No response received from API');
-      }
-      
-      // Handle response based on its structure
-      if (response.body) {
-        return await response.body.json();
-      } else if (response.data) {
-        return response.data;
-      } else {
-        throw new Error('Invalid response format from API');
-      }
+      return await apiPut(`/services/${id}`, sanitizedData);
     } catch (error) {
       console.error(`Error updating service ${id}:`, error);
       throw error;
@@ -170,23 +96,7 @@ const serviceApi = {
    */
   deleteService: async (id) => {
     try {
-      const response = await del({
-        apiName: 'clinnetApi',
-        path: `/services/${id}`
-      });
-      
-      if (!response) {
-        throw new Error('No response received from API');
-      }
-      
-      // Handle response based on its structure
-      if (response.body) {
-        return await response.body.json();
-      } else if (response.data) {
-        return response.data;
-      } else {
-        return { success: true };
-      }
+      return await apiDelete(`/services/${id}`);
     } catch (error) {
       console.error(`Error deleting service ${id}:`, error);
       throw error;

@@ -1,63 +1,26 @@
 // src/services/patientService.js
-import { get, post, put, del } from 'aws-amplify/api';
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api-helper';
 
 // Get all patients
 export const getPatients = async () => {
   try {
-    const response = await get({
-      apiName: 'clinnetApi',
-      path: '/patients'
-    });
-    
-    if (!response) {
-      console.log('No response received from API');
-      return [];
-    }
-    
-    try {
-      if (response.body) {
-        const data = await response.body.json();
-        console.log('Patient data received:', data);
-        return data;
-      } else {
-        console.log('Response has no body:', response);
-        return [];
-      }
-    } catch (parseError) {
-      console.error('Error parsing response:', parseError);
-      return [];
-    }
+    console.log('Fetching patients from DynamoDB');
+    const data = await apiGet('/patients');
+    console.log('Patients fetched successfully:', data);
+    return data;
   } catch (error) {
     console.error('Error fetching patients:', error);
-    return [];
+    throw error;
   }
 };
 
 // Get patient by ID
 export const getPatientById = async (patientId) => {
   try {
-    const response = await get({
-      apiName: 'clinnetApi',
-      path: `/patients/${patientId}`
-    });
-    
-    if (!response) {
-      return null;
-    }
-    
-    try {
-      if (response.body) {
-        return await response.body.json();
-      } else {
-        return null;
-      }
-    } catch (parseError) {
-      console.error('Error parsing patient response:', parseError);
-      return null;
-    }
+    return await apiGet(`/patients/${patientId}`);
   } catch (error) {
     console.error(`Error fetching patient ${patientId}:`, error);
-    return null;
+    throw error;
   }
 };
 
@@ -79,43 +42,9 @@ export const createPatient = async (patientData) => {
     };
     
     console.log('Creating patient with data:', transformedData);
-    
-    const response = await post({
-      apiName: 'clinnetApi',
-      path: '/patients',
-      options: {
-        body: transformedData
-      }
-    });
-    
-    if (!response) {
-      throw new Error('No response received from API');
-    }
-    
-    try {
-      if (response.body) {
-        const data = await response.body.json();
-        return data;
-      } else if (response.data) {
-        return response.data;
-      } else {
-        // If we get here, the API call was successful but returned no data
-        // Return a mock response to prevent errors
-        return {
-          id: Date.now().toString(),
-          ...transformedData,
-          createdAt: new Date().toISOString()
-        };
-      }
-    } catch (parseError) {
-      console.error('Error parsing create response:', parseError);
-      // Return a mock response to prevent errors
-      return {
-        id: Date.now().toString(),
-        ...transformedData,
-        createdAt: new Date().toISOString()
-      };
-    }
+    const data = await apiPost('/patients', transformedData);
+    console.log('Patient created successfully:', data);
+    return data;
   } catch (error) {
     console.error('Error creating patient:', error);
     throw error;
@@ -139,42 +68,7 @@ export const updatePatient = async (patientId, patientData) => {
       status: patientData.status
     };
     
-    const response = await put({
-      apiName: 'clinnetApi',
-      path: `/patients/${patientId}`,
-      options: {
-        body: transformedData
-      }
-    });
-    
-    if (!response) {
-      throw new Error('No response received from API');
-    }
-    
-    try {
-      if (response.body) {
-        const data = await response.body.json();
-        return data;
-      } else if (response.data) {
-        return response.data;
-      } else {
-        // If we get here, the API call was successful but returned no data
-        // Return the input data with the ID to prevent errors
-        return {
-          id: patientId,
-          ...transformedData,
-          updatedAt: new Date().toISOString()
-        };
-      }
-    } catch (parseError) {
-      console.error('Error parsing update response:', parseError);
-      // Return the input data with the ID to prevent errors
-      return {
-        id: patientId,
-        ...transformedData,
-        updatedAt: new Date().toISOString()
-      };
-    }
+    return await apiPut(`/patients/${patientId}`, transformedData);
   } catch (error) {
     console.error(`Error updating patient ${patientId}:`, error);
     throw error;
@@ -184,25 +78,7 @@ export const updatePatient = async (patientId, patientData) => {
 // Delete a patient
 export const deletePatient = async (patientId) => {
   try {
-    const response = await del({
-      apiName: 'clinnetApi',
-      path: `/patients/${patientId}`
-    });
-    
-    if (!response) {
-      throw new Error('No response received from API');
-    }
-    
-    try {
-      if (response.body) {
-        return await response.body.json();
-      } else {
-        return { success: true };
-      }
-    } catch (parseError) {
-      console.error('Error parsing delete response:', parseError);
-      return { success: true };
-    }
+    return await apiDelete(`/patients/${patientId}`);
   } catch (error) {
     console.error(`Error deleting patient ${patientId}:`, error);
     throw error;
