@@ -1,5 +1,6 @@
 // src/features/patients/components/FrontdeskPatientList.jsx
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { DataGrid } from "@mui/x-data-grid";
 import {
   Typography,
@@ -13,16 +14,16 @@ import {
   DialogActions,
   Grid,
   Chip,
+  Box,
   Button,
-  Box
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import AddIcon from "@mui/icons-material/Add";
+import AddIcon from "@mui/icons-material.Add";
 import SearchIcon from "@mui/icons-material/Search";
+import EventNoteIcon from "@mui/icons-material/EventNote";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { useNavigate } from "react-router-dom";
 import { useAppData } from "../../../app/providers/DataProvider";
 import {
   PageContainer,
@@ -32,29 +33,29 @@ import {
   DangerButton,
   AppIconButton,
   FlexBox,
+  TextButton,
 } from "../../../components/ui";
 
-function FrontdeskPatientList() {
+function FrontdeskPatientList({ onPatientSelect }) {
   const navigate = useNavigate();
-  const { 
-    patients, 
-    loading, 
-    error, 
-    addPatient, 
-    updatePatient, 
+  const {
+    patients,
+    loading,
+    error,
+    addPatient,
+    updatePatient,
     deletePatient,
     refreshPatients,
-    useMockData
   } = useAppData();
-  
+
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // State for patient detail dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
-  
+
   // State for patient form dialog
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState(null);
@@ -69,34 +70,28 @@ function FrontdeskPatientList() {
     insuranceNumber: "",
     status: "Active",
   });
-  
+
   // State for delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
 
-  // Fetch patients on component mount
-  useEffect(() => {
-    const loadPatients = async () => {
-      await refreshPatients();
-    };
-    loadPatients();
-  }, []);
-
   // Filter patients when search term changes
   useEffect(() => {
     if (!patients) return;
-    
+
     if (searchTerm.trim() === "") {
       setFilteredPatients(patients);
     } else {
       const lowercasedSearch = searchTerm.toLowerCase();
       const filtered = patients.filter(
         (patient) =>
-          (patient.firstName && patient.firstName.toLowerCase().includes(lowercasedSearch)) ||
-          (patient.lastName && patient.lastName.toLowerCase().includes(lowercasedSearch)) ||
+          (patient.firstName &&
+            patient.firstName.toLowerCase().includes(lowercasedSearch)) ||
+          (patient.lastName &&
+            patient.lastName.toLowerCase().includes(lowercasedSearch)) ||
           (patient.phone && patient.phone.includes(searchTerm)) ||
-          (patient.contactNumber && patient.contactNumber.includes(searchTerm)) ||
-          (patient.email && patient.email.toLowerCase().includes(lowercasedSearch))
+          (patient.email &&
+            patient.email.toLowerCase().includes(lowercasedSearch))
       );
       setFilteredPatients(filtered);
     }
@@ -161,10 +156,55 @@ function FrontdeskPatientList() {
   const handleFormSubmit = async () => {
     try {
       if (editingPatient) {
-        await updatePatient(editingPatient.id, formData);
+        // Update existing patient with DynamoDB structure
+        const patientData = {
+          PK: editingPatient.PK || `PAT#${editingPatient.id}`,
+          SK: editingPatient.SK || "PROFILE#1",
+          id: editingPatient.id,
+          GSI1PK: editingPatient.GSI1PK || "CLINIC#DEFAULT",
+          GSI1SK: editingPatient.GSI1SK || `PAT#${editingPatient.id}`,
+          GSI2PK: editingPatient.GSI2PK || `PAT#${editingPatient.id}`,
+          GSI2SK: editingPatient.GSI2SK || "PROFILE#1",
+          type: "PATIENT",
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          dob: formData.dob,
+          phone: formData.phone,
+          email: formData.email,
+          address: formData.address,
+          insuranceProvider: formData.insuranceProvider,
+          insuranceNumber: formData.insuranceNumber,
+          status: formData.status || "Active",
+          updatedAt: new Date().toISOString(),
+        };
+        await updatePatient(editingPatient.id, patientData);
       } else {
-        await addPatient(formData);
+        // Add new patient with DynamoDB structure
+        const newPatientId = Date.now().toString();
+        const patientData = {
+          PK: `PAT#${newPatientId}`,
+          SK: "PROFILE#1",
+          id: newPatientId,
+          GSI1PK: "CLINIC#DEFAULT",
+          GSI1SK: `PAT#${newPatientId}`,
+          GSI2PK: `PAT#${newPatientId}`,
+          GSI2SK: "PROFILE#1",
+          type: "PATIENT",
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          dob: formData.dob,
+          phone: formData.phone,
+          email: formData.email,
+          address: formData.address,
+          insuranceProvider: formData.insuranceProvider,
+          insuranceNumber: formData.insuranceNumber,
+          status: formData.status || "Active",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        await addPatient(patientData);
       }
+
       setFormDialogOpen(false);
       refreshPatients();
     } catch (err) {
@@ -198,11 +238,12 @@ function FrontdeskPatientList() {
       flex: 1,
       valueGetter: (params) => params.row.dateOfBirth || params.row.dob || "",
     },
-    { 
-      field: "phone", 
-      headerName: "Phone", 
+    {
+      field: "phone",
+      headerName: "Phone",
       flex: 1,
-      valueGetter: (params) => params.row.phone || params.row.contactNumber || "",
+      valueGetter: (params) =>
+        params.row.phone || params.row.contactNumber || "",
     },
     { field: "email", headerName: "Email", flex: 1 },
     {
@@ -252,62 +293,48 @@ function FrontdeskPatientList() {
           <Typography variant="h5" component="h1">
             Patient Management
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: "flex", gap: 2 }}>
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={handleRefresh}
               disabled={loading || refreshing}
             >
-              {refreshing ? 'Refreshing...' : 'Refresh'}
+              {refreshing ? "Refreshing..." : "Refresh"}
             </Button>
-            <PrimaryButton
-              startIcon={<AddIcon />}
-              onClick={handleAddPatient}
-            >
+            <PrimaryButton startIcon={<AddIcon />} onClick={handleAddPatient}>
               Add New Patient
             </PrimaryButton>
           </Box>
         </FlexBox>
 
         <CardContainer>
-          {/* Search bar */}
-          <Box sx={{ mb: 3 }}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search patients by name, email, or phone"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Box>
-
-          {/* Error message */}
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
-          
-          {/* Mock data warning */}
-          {useMockData && (
-            <Alert severity="warning" sx={{ mb: 2 }}>
-              Using mock data. Changes will not be saved to DynamoDB.
-            </Alert>
-          )}
 
-          {/* Patient list */}
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Search patients by name, phone, or email..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 3 }}
+          />
+
           {loading ? (
-            <FlexBox justifyContent="center" my={4}>
+            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
               <CircularProgress />
-            </FlexBox>
+            </Box>
           ) : (
             <div style={{ height: 500, width: "100%" }}>
               <DataGrid
@@ -325,7 +352,12 @@ function FrontdeskPatientList() {
       </SectionContainer>
 
       {/* Patient Edit Dialog */}
-      <Dialog open={formDialogOpen} onClose={() => setFormDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={formDialogOpen}
+        onClose={() => setFormDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogTitle>
           {editingPatient ? "Edit Patient" : "Add New Patient"}
         </DialogTitle>
@@ -412,32 +444,12 @@ function FrontdeskPatientList() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setFormDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleFormSubmit} variant="contained" color="primary">
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete{" "}
-            {patientToDelete
-              ? `${patientToDelete.firstName} ${patientToDelete.lastName}`
-              : "this patient"}
-            ? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
           <Button
-            onClick={handleConfirmDelete}
+            onClick={handleFormSubmit}
+            color="primary"
             variant="contained"
-            color="error"
           >
-            Delete
+            {editingPatient ? "Save Changes" : "Add Patient"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -459,12 +471,18 @@ function FrontdeskPatientList() {
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2">Date of Birth</Typography>
                   <Typography>
-                    {selectedPatient.dateOfBirth || selectedPatient.dob || "N/A"}
+                    {selectedPatient.dateOfBirth ||
+                      selectedPatient.dob ||
+                      "N/A"}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2">Phone</Typography>
-                  <Typography>{selectedPatient.phone || selectedPatient.contactNumber || "N/A"}</Typography>
+                  <Typography>
+                    {selectedPatient.phone ||
+                      selectedPatient.contactNumber ||
+                      "N/A"}
+                  </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Typography variant="subtitle2">Email</Typography>
@@ -475,7 +493,9 @@ function FrontdeskPatientList() {
                   <Typography>{selectedPatient.address || "N/A"}</Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2">Insurance Provider</Typography>
+                  <Typography variant="subtitle2">
+                    Insurance Provider
+                  </Typography>
                   <Typography>
                     {selectedPatient.insuranceProvider || "N/A"}
                   </Typography>
@@ -491,7 +511,9 @@ function FrontdeskPatientList() {
                   <Chip
                     label={selectedPatient.status || "Active"}
                     color={
-                      selectedPatient.status === "Active" ? "success" : "default"
+                      selectedPatient.status === "Active"
+                        ? "success"
+                        : "default"
                     }
                     size="small"
                   />
@@ -512,6 +534,33 @@ function FrontdeskPatientList() {
             </DialogActions>
           </>
         )}
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          {patientToDelete && (
+            <Typography>
+              Are you sure you want to delete the patient{" "}
+              {patientToDelete.firstName} {patientToDelete.lastName}? This
+              action cannot be undone.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+          >
+            Delete
+          </Button>
+        </DialogActions>
       </Dialog>
     </PageContainer>
   );

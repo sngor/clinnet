@@ -1,6 +1,6 @@
 // src/pages/NewPatientPage.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Box,
@@ -17,35 +17,35 @@ import {
   IconButton,
   Alert,
   Snackbar,
-  CircularProgress
-} from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { format } from 'date-fns';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SaveIcon from '@mui/icons-material/Save';
+  CircularProgress,
+} from "@mui/material";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { format } from "date-fns";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import SaveIcon from "@mui/icons-material/Save";
 import { useAppData } from "../app/providers/DataProvider";
 
 function NewPatientPage() {
   const navigate = useNavigate();
   const { addPatient, loading } = useAppData();
-  
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [submitting, setSubmitting] = useState(false);
-  
+
   const [patientData, setPatientData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    gender: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    gender: "",
     dob: null,
-    address: '',
-    insuranceProvider: '',
-    insuranceNumber: '',
-    status: 'Active'
+    address: "",
+    insuranceProvider: "",
+    insuranceNumber: "",
+    status: "Active",
   });
 
   // Handle input change
@@ -53,7 +53,7 @@ function NewPatientPage() {
     const { name, value } = e.target;
     setPatientData({
       ...patientData,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -61,38 +61,54 @@ function NewPatientPage() {
   const handleDateChange = (date) => {
     setPatientData({
       ...patientData,
-      dob: date ? format(date, 'yyyy-MM-dd') : null
+      dob: date ? format(date, "yyyy-MM-dd") : null,
     });
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate required fields
     if (!patientData.firstName || !patientData.lastName) {
-      setSnackbarMessage('First name and last name are required');
-      setSnackbarSeverity('error');
+      setSnackbarMessage("First name and last name are required");
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
       return;
     }
-    
+
     setSubmitting(true);
-    
+
     try {
-      await addPatient(patientData);
-      
+      // Format data for DynamoDB
+      const id = `${Date.now()}`; // Simple ID generation
+      const newPatientData = {
+        PK: `PAT#${id}`,
+        SK: "PROFILE#1",
+        id: id,
+        GSI1PK: `CLINIC#DEFAULT`, // Can be updated later with actual clinic ID
+        GSI1SK: `PAT#${id}`,
+        GSI2PK: `PAT#${id}`,
+        GSI2SK: "PROFILE#1",
+        type: "PATIENT",
+        ...patientData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await addPatient(newPatientData);
+
       // Show success message
-      setSnackbarMessage('Patient added successfully');
-      setSnackbarSeverity('success');
+      setSnackbarMessage("Patient added successfully");
+      setSnackbarSeverity("success");
       setSnackbarOpen(true);
-      
+
       // Navigate back to patients list after a delay
-      setTimeout(() => navigate('/frontdesk/patients'), 1500);
+      setTimeout(() => navigate("/frontdesk/patients"), 1500);
     } catch (err) {
-      console.error('Error saving patient:', err);
-      setSnackbarMessage(err.message || 'Failed to create patient');
-      setSnackbarSeverity('error');
+      console.error("Error saving patient:", err);
+      setSnackbarMessage(err.message || "Failed to create patient");
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
       setSubmitting(false);
     }
@@ -106,29 +122,28 @@ function NewPatientPage() {
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header with back button */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton 
-          onClick={handleBackClick} 
-          sx={{ mr: 2 }}
-          aria-label="back"
-        >
+      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+        <IconButton onClick={handleBackClick} sx={{ mr: 2 }} aria-label="back">
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 500 }}>
           Add New Patient
         </Typography>
       </Box>
-      
+
       <Paper sx={{ p: 3, borderRadius: 2 }}>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             {/* Personal Information */}
             <Grid item xs={12}>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 500, color: 'primary.main' }}>
+              <Typography
+                variant="h6"
+                sx={{ mb: 3, fontWeight: 500, color: "primary.main" }}
+              >
                 Personal Information
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <TextField
                 label="First Name"
@@ -139,7 +154,7 @@ function NewPatientPage() {
                 required
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <TextField
                 label="Last Name"
@@ -150,7 +165,7 @@ function NewPatientPage() {
                 required
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel>Gender</InputLabel>
@@ -166,7 +181,7 @@ function NewPatientPage() {
                 </Select>
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
@@ -177,7 +192,7 @@ function NewPatientPage() {
                 />
               </LocalizationProvider>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <TextField
                 label="Email"
@@ -188,7 +203,7 @@ function NewPatientPage() {
                 fullWidth
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <TextField
                 label="Phone"
@@ -198,7 +213,7 @@ function NewPatientPage() {
                 fullWidth
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               <TextField
                 label="Address"
@@ -210,18 +225,21 @@ function NewPatientPage() {
                 rows={2}
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               <Divider sx={{ my: 2 }} />
             </Grid>
-            
+
             {/* Insurance Information */}
             <Grid item xs={12}>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 500, color: 'primary.main' }}>
+              <Typography
+                variant="h6"
+                sx={{ mb: 3, fontWeight: 500, color: "primary.main" }}
+              >
                 Insurance Information
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <TextField
                 label="Insurance Provider"
@@ -231,7 +249,7 @@ function NewPatientPage() {
                 fullWidth
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <TextField
                 label="Insurance Number"
@@ -241,7 +259,7 @@ function NewPatientPage() {
                 fullWidth
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel>Status</InputLabel>
@@ -256,9 +274,9 @@ function NewPatientPage() {
                 </Select>
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12}>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+              <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
                 <Button
                   variant="outlined"
                   onClick={handleBackClick}
@@ -270,27 +288,29 @@ function NewPatientPage() {
                 <Button
                   type="submit"
                   variant="contained"
-                  startIcon={submitting ? <CircularProgress size={20} /> : <SaveIcon />}
+                  startIcon={
+                    submitting ? <CircularProgress size={20} /> : <SaveIcon />
+                  }
                   disabled={submitting || loading}
                 >
-                  {submitting ? 'Saving...' : 'Save Patient'}
+                  {submitting ? "Saving..." : "Save Patient"}
                 </Button>
               </Box>
             </Grid>
           </Grid>
         </form>
       </Paper>
-      
+
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
       >
-        <Alert 
-          onClose={() => setSnackbarOpen(false)} 
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
           severity={snackbarSeverity}
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         >
           {snackbarMessage}
         </Alert>

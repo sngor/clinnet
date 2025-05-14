@@ -1,5 +1,5 @@
 // src/components/patients/PatientDetailView.jsx
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -11,27 +11,27 @@ import {
   Tab,
   Tabs,
   IconButton,
-  TextField
-} from '@mui/material';
+  TextField,
+} from "@mui/material";
 import {
   Close as CloseIcon,
   Edit as EditIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
   Phone as PhoneIcon,
-  Email as EmailIcon
-} from '@mui/icons-material';
+  Email as EmailIcon,
+} from "@mui/icons-material";
 import { useAppData } from "../../app/providers/DataProvider";
 
 // Import tab components
-import PersonalInfoTab from './PersonalInfoTab';
-import MedicalInfoTab from './MedicalInfoTab';
-import AppointmentsTab from './AppointmentsTab';
-import MedicalRecordsTab from './MedicalRecordsTab';
+import PersonalInfoTab from "./PersonalInfoTab";
+import MedicalInfoTab from "./MedicalInfoTab";
+import AppointmentsTab from "./AppointmentsTab";
+import MedicalRecordsTab from "./MedicalRecordsTab";
 
 function PatientDetailView({ patient, onClose }) {
   const { updatePatient, refreshPatients } = useAppData();
-  
+
   const [editedPatient, setEditedPatient] = useState(patient);
   const [isEditing, setIsEditing] = useState(false);
   const [tabValue, setTabValue] = useState(0);
@@ -55,8 +55,16 @@ function PatientDetailView({ patient, onClose }) {
   // Save patient changes
   const handleSaveChanges = async () => {
     try {
-      // Format data for API
+      // Format data for API following DynamoDB structure
       const patientData = {
+        PK: patient.PK || `PAT#${patient.id}`,
+        SK: patient.SK || "PROFILE#1",
+        id: patient.id,
+        GSI1PK: `CLINIC#${editedPatient.clinic || "DEFAULT"}`,
+        GSI1SK: `PAT#${editedPatient.id}`,
+        GSI2PK: `PAT#${editedPatient.id}`,
+        GSI2SK: "PROFILE#1",
+        type: "PATIENT",
         firstName: editedPatient.firstName,
         lastName: editedPatient.lastName,
         dob: editedPatient.dateOfBirth || editedPatient.dob,
@@ -65,80 +73,86 @@ function PatientDetailView({ patient, onClose }) {
         address: editedPatient.address,
         insuranceProvider: editedPatient.insuranceProvider,
         insuranceNumber: editedPatient.insuranceNumber,
-        status: editedPatient.status || 'Active'
+        status: editedPatient.status || "Active",
+        updatedAt: new Date().toISOString(),
       };
-      
+
       await updatePatient(patient.id, patientData);
-      
+
       // Update local state
       setIsEditing(false);
-      
+
       // Refresh patients list
       refreshPatients();
-      
+
       // Close the dialog
       if (onClose) {
         onClose();
       }
     } catch (error) {
-      console.error('Error updating patient:', error);
+      console.error("Error updating patient:", error);
     }
   };
 
   // Handle form field changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditedPatient(prev => ({
+    setEditedPatient((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   // Calculate age from date of birth
   const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return 'N/A';
-    
+    if (!dateOfBirth) return "N/A";
+
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
-    
+
     return age;
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Header */}
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        p: 2, 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        bgcolor: 'primary.main',
-        color: 'primary.contrastText'
-      }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          p: 2,
+          borderBottom: 1,
+          borderColor: "divider",
+          bgcolor: "primary.main",
+          color: "primary.contrastText",
+        }}
+      >
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           {patient.firstName} {patient.lastName}
         </Typography>
-        
+
         {isEditing ? (
           <Box>
-            <Button 
-              startIcon={<SaveIcon />} 
-              variant="contained" 
+            <Button
+              startIcon={<SaveIcon />}
+              variant="contained"
               color="secondary"
               onClick={handleSaveChanges}
               sx={{ mr: 1 }}
             >
               Save
             </Button>
-            <Button 
-              startIcon={<CancelIcon />} 
+            <Button
+              startIcon={<CancelIcon />}
               variant="outlined"
               color="inherit"
               onClick={handleCancelEdit}
@@ -148,9 +162,9 @@ function PatientDetailView({ patient, onClose }) {
             </Button>
           </Box>
         ) : (
-          <Button 
-            startIcon={<EditIcon />} 
-            variant="contained" 
+          <Button
+            startIcon={<EditIcon />}
+            variant="contained"
             color="secondary"
             onClick={handleEditClick}
             sx={{ mr: 1 }}
@@ -158,14 +172,14 @@ function PatientDetailView({ patient, onClose }) {
             Edit
           </Button>
         )}
-        
+
         <IconButton color="inherit" onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Box>
-      
+
       {/* Patient summary */}
-      <Box sx={{ p: 2, bgcolor: 'background.default' }}>
+      <Box sx={{ p: 2, bgcolor: "background.default" }}>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="subtitle2" color="text.secondary">
@@ -176,7 +190,7 @@ function PatientDetailView({ patient, onClose }) {
                 fullWidth
                 name="dateOfBirth"
                 type="date"
-                value={editedPatient.dateOfBirth || editedPatient.dob || ''}
+                value={editedPatient.dateOfBirth || editedPatient.dob || ""}
                 onChange={handleInputChange}
                 InputLabelProps={{ shrink: true }}
                 size="small"
@@ -184,12 +198,16 @@ function PatientDetailView({ patient, onClose }) {
               />
             ) : (
               <Typography variant="body1">
-                {patient.dateOfBirth || patient.dob || 'N/A'} 
-                {patient.dateOfBirth || patient.dob ? ` (${calculateAge(patient.dateOfBirth || patient.dob)} years)` : ''}
+                {patient.dateOfBirth || patient.dob || "N/A"}
+                {patient.dateOfBirth || patient.dob
+                  ? ` (${calculateAge(
+                      patient.dateOfBirth || patient.dob
+                    )} years)`
+                  : ""}
               </Typography>
             )}
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="subtitle2" color="text.secondary">
               Phone
@@ -198,21 +216,24 @@ function PatientDetailView({ patient, onClose }) {
               <TextField
                 fullWidth
                 name="phone"
-                value={editedPatient.phone || ''}
+                value={editedPatient.phone || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
               />
             ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <PhoneIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <PhoneIcon
+                  fontSize="small"
+                  sx={{ mr: 1, color: "primary.main" }}
+                />
                 <Typography variant="body1">
-                  {patient.phone || 'N/A'}
+                  {patient.phone || "N/A"}
                 </Typography>
               </Box>
             )}
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="subtitle2" color="text.secondary">
               Email
@@ -221,21 +242,24 @@ function PatientDetailView({ patient, onClose }) {
               <TextField
                 fullWidth
                 name="email"
-                value={editedPatient.email || ''}
+                value={editedPatient.email || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
               />
             ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <EmailIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <EmailIcon
+                  fontSize="small"
+                  sx={{ mr: 1, color: "primary.main" }}
+                />
                 <Typography variant="body1">
-                  {patient.email || 'N/A'}
+                  {patient.email || "N/A"}
                 </Typography>
               </Box>
             )}
           </Grid>
-          
+
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="subtitle2" color="text.secondary">
               Status
@@ -245,32 +269,32 @@ function PatientDetailView({ patient, onClose }) {
                 select
                 fullWidth
                 name="status"
-                value={editedPatient.status || 'Active'}
+                value={editedPatient.status || "Active"}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
                 SelectProps={{
-                  native: true
+                  native: true,
                 }}
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </TextField>
             ) : (
-              <Chip 
-                label={patient.status || 'Active'} 
-                color={patient.status === 'Active' ? 'success' : 'default'}
+              <Chip
+                label={patient.status || "Active"}
+                color={patient.status === "Active" ? "success" : "default"}
                 size="small"
               />
             )}
           </Grid>
         </Grid>
       </Box>
-      
+
       {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={tabValue} 
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs
+          value={tabValue}
           onChange={handleTabChange}
           variant="scrollable"
           scrollButtons="auto"
@@ -281,33 +305,22 @@ function PatientDetailView({ patient, onClose }) {
           <Tab label="Medical Records" />
         </Tabs>
       </Box>
-      
+
       {/* Tab content */}
-      <Box sx={{ p: 2, flexGrow: 1, overflow: 'auto' }}>
+      <Box sx={{ p: 2, flexGrow: 1, overflow: "auto" }}>
         {tabValue === 0 && (
-          <PersonalInfoTab 
-            patient={patient} 
+          <PersonalInfoTab
+            patient={patient}
             isEditing={isEditing}
             editedPatient={editedPatient}
             handleInputChange={handleInputChange}
           />
         )}
         {tabValue === 1 && (
-          <MedicalInfoTab 
-            patient={patient}
-            isEditing={isEditing}
-          />
+          <MedicalInfoTab patient={patient} isEditing={isEditing} />
         )}
-        {tabValue === 2 && (
-          <AppointmentsTab 
-            patientId={patient.id}
-          />
-        )}
-        {tabValue === 3 && (
-          <MedicalRecordsTab 
-            patientId={patient.id}
-          />
-        )}
+        {tabValue === 2 && <AppointmentsTab patientId={patient.id} />}
+        {tabValue === 3 && <MedicalRecordsTab patientId={patient.id} />}
       </Box>
     </Box>
   );

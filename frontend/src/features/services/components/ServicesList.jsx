@@ -22,8 +22,6 @@ import {
   Alert,
   Snackbar,
   Tooltip,
-  Box,
-  Button,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -50,13 +48,6 @@ import {
   AppIconButton,
   FlexBox,
 } from "../../../components/ui";
-
-// Define missing components
-const SecondaryButton = ({ children, ...props }) => (
-  <Button variant="outlined" color="primary" {...props}>
-    {children}
-  </Button>
-);
 
 // Table column definitions
 const columns = [
@@ -136,12 +127,12 @@ function ServicesList() {
     if (apiServices && apiServices.length > 0) {
       console.log("Using services data from API:", apiServices);
 
-      // Transform API data to match the expected format
+      // Transform API data to match the expected format if needed
       const formattedServices = apiServices.map((service) => ({
-        id: service.id || "",
+        id: service.id,
         name: service.name || "",
         description: service.description || "",
-        category: service.category || "General",
+        category: service.category || "consultation",
         price: service.price || 0,
         discountPercentage: service.discountPercentage || 0,
         duration: service.duration || 30,
@@ -390,7 +381,7 @@ function ServicesList() {
                                 service.category
                                   ? service.category.charAt(0).toUpperCase() +
                                     service.category.slice(1)
-                                  : "General"
+                                  : "Consultation"
                               }
                               size="small"
                               color="primary"

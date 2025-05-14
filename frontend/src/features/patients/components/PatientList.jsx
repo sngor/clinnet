@@ -20,7 +20,6 @@ import {
   TablePagination,
   TableSortLabel,
   Tooltip,
-  Button,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -39,19 +38,6 @@ import {
   AppIconButton,
   FlexBox,
 } from "../../../components/ui";
-
-// Define TextButton component that was missing
-const TextButton = ({ children, ...props }) => (
-  <Button variant="text" {...props}>
-    {children}
-  </Button>
-);
-
-// Table styles
-const tableHeaderStyle = {
-  backgroundColor: "background.paper",
-  fontWeight: "bold",
-};
 
 // Table column definitions
 const columns = [
@@ -188,23 +174,32 @@ function PatientList({ onPatientSelect }) {
     if (apiPatients && apiPatients.length > 0) {
       console.log("Using patients data from API:", apiPatients);
 
-      // Transform API data to match the expected format
-      const formattedPatients = apiPatients.map((patient) => {
-        // Handle potential missing fields safely
-        return {
-          id: patient.id || "",
-          firstName: patient.firstName || "",
-          lastName: patient.lastName || "",
-          dob: patient.dateOfBirth ? formatDateForInput(patient.dateOfBirth) : "",
-          phone: patient.contactNumber || "",
-          email: patient.email || "",
-          address: patient.address || "",
-          insuranceProvider: patient.insuranceInfo?.provider || "",
-          insuranceNumber: patient.insuranceInfo?.policyNumber || "",
-          lastVisit: patient.lastVisit || null,
-          status: patient.status || "Active",
-        };
-      });
+      // Transform API data to match the expected format for display
+      const formattedPatients = apiPatients.map((patient) => ({
+        // Preserve DynamoDB structure
+        id: patient.id,
+        PK: patient.PK,
+        SK: patient.SK,
+        GSI1PK: patient.GSI1PK,
+        GSI1SK: patient.GSI1SK,
+        GSI2PK: patient.GSI2PK,
+        GSI2SK: patient.GSI2SK,
+        type: patient.type,
+        // Patient display fields
+        firstName: patient.firstName,
+        lastName: patient.lastName,
+        dob: formatDateForInput(patient.dob || ""),
+        phone: patient.phone || "",
+        email: patient.email || "",
+        address: patient.address || "",
+        insuranceProvider: patient.insuranceProvider || "",
+        insuranceNumber: patient.insuranceNumber || "",
+        lastVisit: patient.lastVisit || null,
+        upcomingAppointment: patient.upcomingAppointment || null,
+        status: patient.status || "Active",
+        createdAt: patient.createdAt,
+        updatedAt: patient.updatedAt,
+      }));
 
       setPatients(formattedPatients);
       setLoading(false);
@@ -218,9 +213,9 @@ function PatientList({ onPatientSelect }) {
 
   // Filter patients based on search term
   const filteredPatients = patients.filter((patient) => {
-    if (!patient.firstName && !patient.lastName) return false;
+    if (!patient.firstName || !patient.lastName) return false;
 
-    const fullName = `${patient.firstName || ""} ${patient.lastName || ""}`.toLowerCase();
+    const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
     return (
       fullName.includes(searchTerm.toLowerCase()) ||
       (patient.phone && patient.phone.includes(searchTerm)) ||
@@ -279,10 +274,20 @@ function PatientList({ onPatientSelect }) {
   // Handle form input changes
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+
+    // Special handling for date fields
+    if (name === "dob") {
+      // Ensure the date is in a valid format
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   // Handle form submission
@@ -298,7 +303,20 @@ function PatientList({ onPatientSelect }) {
 
       if (currentPatient) {
         // Update existing patient in DynamoDB
-        await updatePatient(currentPatient.id, formData);
+        const patientData = {
+          PK: currentPatient.PK || `PAT#${currentPatient.id}`,
+          SK: currentPatient.SK || "PROFILE#1",
+          id: currentPatient.id,
+          GSI1PK: currentPatient.GSI1PK || `CLINIC#DEFAULT`,
+          GSI1SK: currentPatient.GSI1SK || `PAT#${currentPatient.id}`,
+          GSI2PK: currentPatient.GSI2PK || `PAT#${currentPatient.id}`,
+          GSI2SK: currentPatient.GSI2SK || "PROFILE#1",
+          type: "PATIENT",
+          ...formData,
+          updatedAt: new Date().toISOString(),
+        };
+
+        await updatePatient(currentPatient.id, patientData);
 
         setSnackbar({
           open: true,
@@ -307,7 +325,22 @@ function PatientList({ onPatientSelect }) {
         });
       } else {
         // Add new patient to DynamoDB
-        await addPatient(formData);
+        const id = `${Date.now()}`; // Simple ID generation
+        const patientData = {
+          PK: `PAT#${id}`,
+          SK: "PROFILE#1",
+          id: id,
+          GSI1PK: `CLINIC#DEFAULT`, // Can be updated later with actual clinic ID
+          GSI1SK: `PAT#${id}`,
+          GSI2PK: `PAT#${id}`,
+          GSI2SK: "PROFILE#1",
+          type: "PATIENT",
+          ...formData,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        await addPatient(patientData);
 
         setSnackbar({
           open: true,
@@ -344,7 +377,8 @@ function PatientList({ onPatientSelect }) {
       try {
         setLoading(true);
 
-        // Delete from DynamoDB
+        // Delete from DynamoDB using the patient ID
+        // Note: The DataProvider deletePatient method should handle the DynamoDB key structure
         await deletePatient(patientToDelete.id);
 
         setSnackbar({

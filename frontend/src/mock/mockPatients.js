@@ -4,6 +4,13 @@
 export const mockPatients = [
   {
     id: 101,
+    PK: "PAT#101",
+    SK: "PROFILE#1",
+    GSI1PK: "CLINIC#DEFAULT",
+    GSI1SK: "PAT#101",
+    GSI2PK: "PAT#101",
+    GSI2SK: "PROFILE#1",
+    type: "PATIENT",
     firstName: "Alice",
     lastName: "Brown",
     dob: "1985-03-15",
@@ -11,10 +18,19 @@ export const mockPatients = [
     email: "alice.b@example.com",
     address: "123 Oak St, Somewhere, USA",
     insuranceProvider: "Blue Cross",
-    insuranceNumber: "BC12345678"
+    insuranceNumber: "BC12345678",
+    createdAt: "2024-01-15T12:00:00Z",
+    updatedAt: "2024-01-15T12:00:00Z"
   },
   {
     id: 102,
+    PK: "PAT#102",
+    SK: "PROFILE#1",
+    GSI1PK: "CLINIC#DEFAULT",
+    GSI1SK: "PAT#102",
+    GSI2PK: "PAT#102",
+    GSI2SK: "PROFILE#1",
+    type: "PATIENT",
     firstName: "Bob",
     lastName: "White",
     dob: "1978-09-22",
@@ -22,10 +38,19 @@ export const mockPatients = [
     email: "bob.w@example.com",
     address: "456 Maple Ave, Nowhere, USA",
     insuranceProvider: "Aetna",
-    insuranceNumber: "AE87654321"
+    insuranceNumber: "AE87654321",
+    createdAt: "2024-01-15T12:00:00Z",
+    updatedAt: "2024-01-15T12:00:00Z"
   },
   {
     id: 103,
+    PK: "PAT#103",
+    SK: "PROFILE#1",
+    GSI1PK: "CLINIC#DEFAULT",
+    GSI1SK: "PAT#103",
+    GSI2PK: "PAT#103",
+    GSI2SK: "PROFILE#1",
+    type: "PATIENT",
     firstName: "Charlie",
     lastName: "Green",
     dob: "1992-05-10",
@@ -33,10 +58,19 @@ export const mockPatients = [
     email: "charlie.g@example.com",
     address: "789 Pine Rd, Elsewhere, USA",
     insuranceProvider: "United Healthcare",
-    insuranceNumber: "UH56781234"
+    insuranceNumber: "UH56781234",
+    createdAt: "2024-01-15T12:00:00Z",
+    updatedAt: "2024-01-15T12:00:00Z"
   },
   {
     id: 104,
+    PK: "PAT#104",
+    SK: "PROFILE#1",
+    GSI1PK: "CLINIC#DEFAULT",
+    GSI1SK: "PAT#104",
+    GSI2PK: "PAT#104",
+    GSI2SK: "PROFILE#1",
+    type: "PATIENT",
     firstName: "David",
     lastName: "Black",
     dob: "1990-11-28",
@@ -44,10 +78,19 @@ export const mockPatients = [
     email: "david.b@example.com",
     address: "321 Elm St, Nowhere, USA",
     insuranceProvider: "Cigna",
-    insuranceNumber: "CI43218765"
+    insuranceNumber: "CI43218765",
+    createdAt: "2024-01-15T12:00:00Z",
+    updatedAt: "2024-01-15T12:00:00Z"
   },
   {
     id: 105,
+    PK: "PAT#105",
+    SK: "PROFILE#1",
+    GSI1PK: "CLINIC#DEFAULT",
+    GSI1SK: "PAT#105",
+    GSI2PK: "PAT#105",
+    GSI2SK: "PROFILE#1",
+    type: "PATIENT",
     firstName: "Eva",
     lastName: "Gray",
     dob: "1982-07-14",
@@ -55,7 +98,9 @@ export const mockPatients = [
     email: "eva.g@example.com",
     address: "654 Maple Ave, Anywhere, USA",
     insuranceProvider: "Humana",
-    insuranceNumber: "HU98761234"
+    insuranceNumber: "HU98761234",
+    createdAt: "2024-01-15T12:00:00Z",
+    updatedAt: "2024-01-15T12:00:00Z"
   }
 ];
 

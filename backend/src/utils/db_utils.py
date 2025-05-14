@@ -90,43 +90,11 @@ def put_item(table_name, item):
 
     try:
         # Convert floats to Decimals for DynamoDB
-        try:
-            item_decimal = json.loads(json.dumps(item), parse_float=decimal.Decimal)
-        except Exception as e:
-            print(f"Error converting item to Decimal format: {e}")
-            print(f"Problematic item: {json.dumps(item)}")
-            # Try a more robust approach for handling problematic values
-            item_decimal = {}
-            for key, value in item.items():
-                try:
-                    if isinstance(value, (int, float)):
-                        item_decimal[key] = decimal.Decimal(str(value))
-                    elif isinstance(value, dict):
-                        # Handle nested dictionaries
-                        nested_dict = {}
-                        for k, v in value.items():
-                            if isinstance(v, (int, float)):
-                                nested_dict[k] = decimal.Decimal(str(v))
-                            else:
-                                nested_dict[k] = v
-                        item_decimal[key] = nested_dict
-                    else:
-                        item_decimal[key] = value
-                except Exception as e:
-                    print(f"Error converting field {key}: {e}")
-                    # Use string representation as fallback
-                    item_decimal[key] = str(value)
-        
-        print(f"Putting item in table {table_name}")
+        item_decimal = json.loads(json.dumps(item), parse_float=decimal.Decimal)
         table.put_item(Item=item_decimal)
         return item # Return original item before decimal conversion for consistency
     except ClientError as e:
         print(f"Error putting item in table {table_name}: {e}")
-        raise
-    except Exception as e:
-        print(f"Unexpected error putting item in table {table_name}: {e}")
-        import traceback
-        traceback.print_exc()
         raise
 
 def create_item(table_name, item):
@@ -276,4 +244,98 @@ def get_patient_by_pk_sk(table_name, pk, sk):
         return response.get('Item')
     except ClientError as e:
         print(f"Error getting item PK={pk}, SK={sk} from table {table_name}: {e}")
+        raise
+
+def update_item_by_pk_sk(table_name, pk, sk, updates):
+    """
+    Update item in DynamoDB table using PK/SK
+    
+    Args:
+        table_name (str): DynamoDB table name
+        pk (str): Partition key value
+        sk (str): Sort key value
+        updates (dict): Fields to update
+    
+    Returns:
+        dict: Updated item attributes
+    """
+    table = dynamodb.Table(table_name)
+
+    if not updates:
+        return get_patient_by_pk_sk(table_name, pk, sk)
+
+    # Add updatedAt timestamp automatically
+    updates['updatedAt'] = datetime.utcnow().isoformat() + "Z"
+
+    # Build update expression
+    update_expression_parts = []
+    expression_attribute_values = {}
+    expression_attribute_names = {}
+
+    for i, (key, value) in enumerate(updates.items()):
+        if key not in ['PK', 'SK']: # Don't update the primary keys
+            attr_val_placeholder = f":val{i}"
+            attr_name_placeholder = f"#key{i}"
+            update_expression_parts.append(f"{attr_name_placeholder} = {attr_val_placeholder}")
+            expression_attribute_names[attr_name_placeholder] = key
+            expression_attribute_values[attr_val_placeholder] = value
+
+    if not update_expression_parts:
+        return get_patient_by_pk_sk(table_name, pk, sk)
+
+    update_expression = "SET " + ", ".join(update_expression_parts)
+
+    try:
+        decimal_values = json.loads(json.dumps(expression_attribute_values), parse_float=decimal.Decimal)
+
+        response = table.update_item(
+            Key={
+                'PK': pk,
+                'SK': sk
+            },
+            UpdateExpression=update_expression,
+            ExpressionAttributeNames=expression_attribute_names,
+            ExpressionAttributeValues=decimal_values,
+            ReturnValues='ALL_NEW'
+        )
+        return response.get('Attributes')
+    except ClientError as e:
+        print(f"Error updating item PK={pk}, SK={sk} in table {table_name}: {e}")
+        raise
+
+def query_by_type(table_name, type_value, last_evaluated_key=None):
+    """
+    Query items by type using the type-index GSI
+    
+    Args:
+        table_name (str): DynamoDB table name
+        type_value (str): The type value to query for
+        last_evaluated_key (dict): Key to start from for pagination
+    
+    Returns:
+        dict: Query results with Items and LastEvaluatedKey
+    """
+    table = dynamodb.Table(table_name)
+    query_params = {
+        'IndexName': 'type-index',
+        'KeyConditionExpression': '#type = :type_val',
+        'ExpressionAttributeNames': {
+            '#type': 'type'
+        },
+        'ExpressionAttributeValues': {
+            ':type_val': type_value
+        }
+    }
+    
+    if last_evaluated_key:
+        query_params['ExclusiveStartKey'] = last_evaluated_key
+    
+    try:
+        response = table.query(**query_params)
+        return {
+            'Items': response.get('Items', []),
+            'LastEvaluatedKey': response.get('LastEvaluatedKey')
+        }
+    except ClientError as e:
+        print(f"Error querying items by type {type_value} from table {table_name}: {e}")
         raise

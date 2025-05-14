@@ -28,15 +28,17 @@ function BillingHistory({ patient }) {
   const [error, setError] = useState(null);
   const [selectedBill, setSelectedBill] = useState(null);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
-  
+
   // Fetch billing history for the patient
   useEffect(() => {
     const fetchBillingHistory = async () => {
       if (!patient?.id) return;
-      
+
       try {
         setLoading(true);
-        const data = await getPatientBillingHistory(patient.id);
+        // Use patient.id for compatibility with DynamoDB structure
+        const patientId = patient.id;
+        const data = await getPatientBillingHistory(patientId);
         setBillingRecords(data);
       } catch (err) {
         setError("Failed to load billing history: " + err.message);
@@ -44,40 +46,48 @@ function BillingHistory({ patient }) {
         setLoading(false);
       }
     };
-    
+
     fetchBillingHistory();
   }, [patient]);
-  
+
   // Handle viewing a receipt
   const handleViewReceipt = (bill) => {
     setSelectedBill(bill);
     setReceiptDialogOpen(true);
   };
-  
+
   // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return (
+      date.toLocaleDateString() +
+      " " +
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
   };
-  
+
   return (
     <Box sx={{ mt: 3 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
         Billing History
       </Typography>
-      
+
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
-      
+
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
       ) : billingRecords.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", py: 3 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ textAlign: "center", py: 3 }}
+        >
           No billing records found for this patient.
         </Typography>
       ) : (
@@ -97,14 +107,14 @@ function BillingHistory({ patient }) {
                 <TableRow key={bill.id}>
                   <TableCell>{formatDate(bill.date)}</TableCell>
                   <TableCell>
-                    {bill.services.map(service => service.name).join(", ")}
+                    {bill.services.map((service) => service.name).join(", ")}
                   </TableCell>
                   <TableCell align="right">${bill.total.toFixed(2)}</TableCell>
                   <TableCell>
-                    <Chip 
-                      label={bill.status} 
-                      color={bill.status === "Paid" ? "success" : "warning"} 
-                      size="small" 
+                    <Chip
+                      label={bill.status}
+                      color={bill.status === "Paid" ? "success" : "warning"}
+                      size="small"
                     />
                   </TableCell>
                   <TableCell>
@@ -122,10 +132,10 @@ function BillingHistory({ patient }) {
           </Table>
         </TableContainer>
       )}
-      
+
       {/* Receipt Dialog */}
-      <Dialog 
-        open={receiptDialogOpen} 
+      <Dialog
+        open={receiptDialogOpen}
         onClose={() => setReceiptDialogOpen(false)}
         maxWidth="sm"
         fullWidth
@@ -137,8 +147,10 @@ function BillingHistory({ patient }) {
               <Typography variant="h6" sx={{ mb: 2, textAlign: "center" }}>
                 Clinnet Medical Center
               </Typography>
-              
-              <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+              >
                 <Typography variant="body2">
                   Receipt #: {selectedBill.id}
                 </Typography>
@@ -146,12 +158,16 @@ function BillingHistory({ patient }) {
                   Date: {formatDate(selectedBill.date)}
                 </Typography>
               </Box>
-              
+
               <Typography variant="body2" sx={{ mb: 2 }}>
                 Patient: {patient?.firstName} {patient?.lastName}
               </Typography>
-              
-              <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
+
+              <TableContainer
+                component={Paper}
+                variant="outlined"
+                sx={{ mb: 2 }}
+              >
                 <Table size="small">
                   <TableHead>
                     <TableRow>
@@ -165,7 +181,9 @@ function BillingHistory({ patient }) {
                     {selectedBill.services.map((service) => (
                       <TableRow key={service.id}>
                         <TableCell>{service.name}</TableCell>
-                        <TableCell align="right">${service.price.toFixed(2)}</TableCell>
+                        <TableCell align="right">
+                          ${service.price.toFixed(2)}
+                        </TableCell>
                         <TableCell align="right">{service.quantity}</TableCell>
                         <TableCell align="right">
                           ${(service.price * service.quantity).toFixed(2)}
@@ -175,8 +193,15 @@ function BillingHistory({ patient }) {
                   </TableBody>
                 </Table>
               </TableContainer>
-              
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", mb: 2 }}>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  mb: 2,
+                }}
+              >
                 <Typography variant="body2">
                   Subtotal: ${selectedBill.subtotal.toFixed(2)}
                 </Typography>
@@ -190,13 +215,18 @@ function BillingHistory({ patient }) {
                   Amount Paid: ${selectedBill.amountPaid.toFixed(2)}
                 </Typography>
                 <Typography variant="body2">
-                  Payment Method: {
-                    selectedBill.paymentMethod === 1 ? "Cash" :
-                    selectedBill.paymentMethod === 2 ? "Credit Card" :
-                    selectedBill.paymentMethod === 3 ? "Debit Card" :
-                    selectedBill.paymentMethod === 4 ? "Insurance" :
-                    selectedBill.paymentMethod === 5 ? "Bank Transfer" : "Other"
-                  }
+                  Payment Method:{" "}
+                  {selectedBill.paymentMethod === 1
+                    ? "Cash"
+                    : selectedBill.paymentMethod === 2
+                    ? "Credit Card"
+                    : selectedBill.paymentMethod === 3
+                    ? "Debit Card"
+                    : selectedBill.paymentMethod === 4
+                    ? "Insurance"
+                    : selectedBill.paymentMethod === 5
+                    ? "Bank Transfer"
+                    : "Other"}
                 </Typography>
                 {selectedBill.paymentReference && (
                   <Typography variant="body2">
@@ -204,7 +234,7 @@ function BillingHistory({ patient }) {
                   </Typography>
                 )}
               </Box>
-              
+
               <Typography variant="body2" sx={{ textAlign: "center", mt: 3 }}>
                 Thank you for choosing Clinnet Medical Center!
               </Typography>
@@ -213,8 +243,8 @@ function BillingHistory({ patient }) {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setReceiptDialogOpen(false)}>Close</Button>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             startIcon={<ReceiptIcon />}
             onClick={() => {
               // In a real app, this would print or download the receipt
