@@ -35,6 +35,9 @@ import MedicalInfoTab from "../components/patients/MedicalInfoTab";
 import AppointmentsTab from "../components/patients/AppointmentsTab";
 import MedicalRecordsTab from "../components/patients/MedicalRecordsTab";
 
+// Import patient service
+import patientService from "../services/patients"; // Assuming this is the correct path and default export
+
 // Mock patient data for fallback
 const mockPatients = [
   {
@@ -96,41 +99,38 @@ function PatientDetailPage() {
 
     // Safely find patient by ID
     if (patients && Array.isArray(patients) && patients.length > 0) {
-      const foundPatient = patients.find((p) => p && p.id === id);
-      if (foundPatient) {
-        console.log("Found patient in state:", foundPatient);
-        setPatient(foundPatient);
-        setEditedPatient(foundPatient);
+      const found = patients.find((p) => p.id === id); // Corrected variable name
+      if (found) {
+        // Corrected variable name
+        console.log("Found patient in state:", found); // Corrected variable name
+        setPatient(found); // Corrected variable name
+        setEditedPatient(found); // Corrected variable name
         return;
       }
     }
 
-    // Fallback to mock data if API fails or patient isn't found
-    if (!loading && (!patients || patients.length === 0 || !patient)) {
-      console.log("Using mock patient data for ID:", id);
-      // Import mock data dynamically
-      import("../mock/mockPatients")
-        .then(({ mockPatients }) => {
-          const mockPatient =
-            mockPatients.find((p) => p.id === id) || mockPatients[0];
-          const patientWithCorrectId = {
-            ...mockPatient,
-            id: id,
-            PK: `PAT#${id}`,
-            SK: "PROFILE#1",
-            GSI1PK: "CLINIC#DEFAULT",
-            GSI1SK: `PAT#${id}`,
-            GSI2PK: `PAT#${id}`,
-            GSI2SK: "PROFILE#1",
-          };
-          setPatient(patientWithCorrectId);
-          setEditedPatient(patientWithCorrectId);
+    // If patient not in existing list, fetch by ID
+    if (!patient && id && !loading) {
+      // Ensure we have an id and not already loading
+      patientService
+        .fetchPatientById(id) // Use patientService
+        .then((fetchedPatient) => {
+          if (fetchedPatient) {
+            setPatient(fetchedPatient);
+            setEditedPatient(fetchedPatient);
+          } else {
+            // Handle case where patient is not found by API
+            console.log(`Patient with id ${id} not found via API.`);
+            // Optionally, set an error state here to inform the user
+          }
         })
         .catch((err) => {
-          console.error("Error loading mock patient data:", err);
+          console.error("Error fetching patient by ID:", err);
+          // Optionally, set an error state here
         });
     }
-  }, [id, patients, loading, patient]);
+    // Removed problematic fallback to empty mockPatients.js
+  }, [id, patients, loading, patient]); // Removed fetchPatientById from dependencies
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {

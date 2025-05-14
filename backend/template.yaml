@@ -295,8 +295,8 @@ Resources:
   GetPatientsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/patients/
-      Handler: get_patients.lambda_handler
+      CodeUri: src/ # Changed from src/handlers/patients/
+      Handler: handlers.patients.get_patients.lambda_handler # Adjusted handler path
       Environment:
         Variables:
           PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
@@ -317,8 +317,8 @@ Resources:
   GetPatientByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/patients/
-      Handler: get_patient_by_id.lambda_handler
+      CodeUri: src/ # Changed from src/handlers/patients/
+      Handler: handlers.patients.get_patient_by_id.lambda_handler # Adjusted handler path
       Environment:
         Variables:
           PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
@@ -338,8 +338,8 @@ Resources:
   CreatePatientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/patients/
-      Handler: create_patient.lambda_handler
+      CodeUri: src/ # Changed from src/handlers/patients/
+      Handler: handlers.patients.create_patient.lambda_handler # Adjusted handler path
       Environment:
         Variables:
           PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
@@ -358,8 +358,8 @@ Resources:
   UpdatePatientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/patients/
-      Handler: update_patient.lambda_handler
+      CodeUri: src/ # Changed from src/handlers/patients/
+      Handler: handlers.patients.update_patient.lambda_handler # Adjusted handler path
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PatientRecordsTable
@@ -375,8 +375,8 @@ Resources:
   DeletePatientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/patients/
-      Handler: delete_patient.lambda_handler
+      CodeUri: src/ # Changed from src/handlers/patients/
+      Handler: handlers.patients.delete_patient.lambda_handler # Adjusted handler path
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PatientRecordsTable

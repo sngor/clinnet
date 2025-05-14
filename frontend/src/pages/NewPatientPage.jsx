@@ -81,20 +81,19 @@ function NewPatientPage() {
 
     try {
       // Format data for DynamoDB
-      const id = `${Date.now()}`; // Simple ID generation
       const newPatientData = {
-        PK: `PAT#${id}`,
-        SK: "PROFILE#1",
-        id: id,
-        GSI1PK: `CLINIC#DEFAULT`, // Can be updated later with actual clinic ID
-        GSI1SK: `PAT#${id}`,
-        GSI2PK: `PAT#${id}`,
-        GSI2SK: "PROFILE#1",
+        // PK, SK, id, and GSI keys will be set by the backend
         type: "PATIENT",
-        ...patientData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        ...patientData, // Spread the rest of the form data
+        // dob is already formatted correctly by handleDateChange
+        createdAt: new Date().toISOString(), // Keep createdAt for local use if needed, backend will also set it
+        updatedAt: new Date().toISOString(), // Keep updatedAt for local use if needed, backend will also set it
       };
+
+      // Remove dob if it's null, as the backend expects a string or undefined
+      if (newPatientData.dob === null) {
+        delete newPatientData.dob;
+      }
 
       await addPatient(newPatientData);
 
