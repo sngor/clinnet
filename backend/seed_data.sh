@@ -19,7 +19,6 @@ PATIENT_RECORDS_TABLE="clinnet-patient-records-${ENVIRONMENT}"
 USERS_TABLE="clinnet-users-${ENVIRONMENT}"
 SERVICES_TABLE="clinnet-services-${ENVIRONMENT}"
 APPOINTMENTS_TABLE="clinnet-appointments-${ENVIRONMENT}"
-DOCTORS_TABLE="clinnet-doctors-${ENVIRONMENT}" # Assuming a doctors table
 
 # Get the absolute path of the script's directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,7 +30,6 @@ echo "Patient Records Table: ${PATIENT_RECORDS_TABLE}"
 echo "Users Table: ${USERS_TABLE}"
 echo "Services Table: ${SERVICES_TABLE}"
 echo "Appointments Table: ${APPOINTMENTS_TABLE}"
-echo "Doctors Table: ${DOCTORS_TABLE}"
 echo "Data Directory: ${DATA_DIR}"
 
 # Function to create a batch write request JSON from a simple JSON array
@@ -96,33 +94,11 @@ if [ -f "$APPOINTMENTS_BATCH_FILE" ]; then
   rm "$APPOINTMENTS_BATCH_FILE"
 fi
 
-# Prepare and seed doctors (assuming a clinnet-doctors-${ENVIRONMENT} table)
-# If you don't have a separate doctors table, you might store doctor info in UsersTable or PatientRecordsTable with a specific type.
-DOCTORS_BATCH_FILE="${DATA_DIR}/doctors_batch_request.json"
-prepare_batch_write_request "${DATA_DIR}/seed_doctors.json" "$DOCTORS_TABLE" "$DOCTORS_BATCH_FILE"
-if [ -f "$DOCTORS_BATCH_FILE" ]; then
-  echo "Seeding doctors data from ${DATA_DIR}/seed_doctors.json into ${DOCTORS_TABLE}..."
-  aws dynamodb batch-write-item --request-items "file://${DOCTORS_BATCH_FILE}" --region "$AWS_REGION"
-  rm "$DOCTORS_BATCH_FILE"
-fi
-
-# Seeding users data (original command, assuming users.json is already in batch format)
-# If users.json is a simple array like the new seed files, it also needs to be processed by prepare_batch_write_request.
-# For now, keeping the original command for users.json.
-# Ensure ${DATA_DIR}/users.json is correctly formatted for batch-write-item
-# or update this section to use prepare_batch_write_request.
+# Seeding users data
+# Ensure ${DATA_DIR}/users.json is correctly formatted for batch-write-item.
 if [ -f "${DATA_DIR}/users.json" ]; then # Corrected path to use DATA_DIR
   echo "Seeding users data from ${DATA_DIR}/users.json into ${USERS_TABLE}..."
   # Assuming users.json is already in the correct batch write format.
-  # If not, it should be processed by prepare_batch_write_request similar to other JSON files.
-  # Example if it needs processing:
-  # USERS_BATCH_FILE="${DATA_DIR}/users_batch_request.json"
-  # prepare_batch_write_request "${DATA_DIR}/users.json" "$USERS_TABLE" "$USERS_BATCH_FILE"
-  # if [ -f "$USERS_BATCH_FILE" ]; then
-  #   aws dynamodb batch-write-item --request-items "file://${USERS_BATCH_FILE}" --region "$AWS_REGION"
-  #   rm "$USERS_BATCH_FILE"
-  # fi
-  # Current command (assumes users.json is pre-formatted for batch-write-item):
   aws dynamodb batch-write-item --request-items "file://${DATA_DIR}/users.json" --region "$AWS_REGION"
 else
   echo "Warning: ${DATA_DIR}/users.json not found. Skipping user seeding."
