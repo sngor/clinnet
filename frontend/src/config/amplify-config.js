@@ -20,17 +20,23 @@ const amplifyConfig = {
         region: import.meta.env.VITE_COGNITO_REGION,
         custom_header: async () => {
           try {
-            const { tokens } = await fetchAuthSession();
-            if (!tokens || !tokens.idToken) {
-              console.warn('No auth tokens available for API request');
-              return {};
+            // Get the current auth session
+            const session = await fetchAuthSession();
+            
+            // Check if tokens exist and are valid
+            if (!session || !session.tokens || !session.tokens.idToken) {
+              console.warn('No valid auth tokens available for API request');
+              return {
+                'Content-Type': 'application/json'
+              };
             }
             
-            const token = tokens.idToken.toString();
-            console.log('Auth token obtained for API request');
+            // Get the token string
+            const token = session.tokens.idToken.toString();
             
+            // Return headers with authorization
             return {
-              Authorization: `Bearer ${token}`,
+              Authorization: token,
               'Content-Type': 'application/json'
             };
           } catch (error) {
@@ -44,10 +50,5 @@ const amplifyConfig = {
     }
   }
 };
-
-console.log('Amplify v6 config loaded with API configuration:', {
-  endpoint: amplifyConfig.API.REST.clinnetApi.endpoint,
-  region: amplifyConfig.API.REST.clinnetApi.region
-});
 
 export default amplifyConfig;

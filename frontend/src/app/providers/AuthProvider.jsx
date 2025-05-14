@@ -1,7 +1,7 @@
 // src/app/providers/AuthProvider.jsx
 import React, { createContext, useState, useContext, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { signIn, signOut, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
+import { signIn, signOut, getCurrentUser, fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
 import userService from "../../services/userService";
 
 const AuthContext = createContext(null);
@@ -9,6 +9,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authToken, setAuthToken] = useState(null);
   const navigate = useNavigate();
 
   // Check for existing session on mount
@@ -21,6 +22,16 @@ export const AuthProvider = ({ children }) => {
         
         const attributes = await fetchUserAttributes();
         console.log("User attributes:", attributes);
+        
+        // Get auth session for token
+        const session = await fetchAuthSession();
+        if (session && session.tokens && session.tokens.idToken) {
+          const token = session.tokens.idToken.toString();
+          setAuthToken(token);
+          console.log("Auth token obtained successfully");
+        } else {
+          console.warn("No valid auth token found in session");
+        }
         
         // Extract role from Cognito attributes or use a default
         const role = attributes['custom:role'] || 'user';
@@ -57,6 +68,7 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.log('No authenticated user found', error);
         setUser(null);
+        setAuthToken(null);
         // Only redirect to login if not already there
         if (window.location.pathname !== '/login') {
           navigate("/login");
@@ -68,6 +80,29 @@ export const AuthProvider = ({ children }) => {
 
     checkAuthState();
   }, [navigate]);
+
+  // Refresh auth token periodically
+  useEffect(() => {
+    if (!user) return;
+    
+    const refreshToken = async () => {
+      try {
+        const session = await fetchAuthSession();
+        if (session && session.tokens && session.tokens.idToken) {
+          const token = session.tokens.idToken.toString();
+          setAuthToken(token);
+          console.log("Auth token refreshed successfully");
+        }
+      } catch (error) {
+        console.error("Error refreshing auth token:", error);
+      }
+    };
+    
+    // Refresh token every 45 minutes (token typically expires after 1 hour)
+    const tokenRefreshInterval = setInterval(refreshToken, 45 * 60 * 1000);
+    
+    return () => clearInterval(tokenRefreshInterval);
+  }, [user]);
 
   // Login with Cognito
   const login = async (userData) => {
@@ -88,6 +123,14 @@ export const AuthProvider = ({ children }) => {
         const currentUser = await getCurrentUser();
         const attributes = await fetchUserAttributes();
         const role = attributes['custom:role'] || 'user';
+        
+        // Get auth session for token
+        const session = await fetchAuthSession();
+        if (session && session.tokens && session.tokens.idToken) {
+          const token = session.tokens.idToken.toString();
+          setAuthToken(token);
+          console.log("Auth token obtained after login");
+        }
         
         console.log('User authenticated successfully:', { 
           username: currentUser.username,
@@ -150,72 +193,33 @@ export const AuthProvider = ({ children }) => {
   // Logout with Cognito
   const logout = async () => {
     try {
+      setLoading(true);
       await signOut();
       setUser(null);
-      navigate("/login", { replace: true });
+      setAuthToken(null);
+      navigate("/login");
     } catch (error) {
       console.error('Error signing out:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Update user information in context
-  const updateUserInfo = async () => {
-    try {
-      const attributes = await fetchUserAttributes();
-      
-      // Update user with attributes
-      setUser(prev => ({
-        ...prev,
-        firstName: attributes.given_name || '',
-        lastName: attributes.family_name || '',
-        email: attributes.email || '',
-        phone: attributes.phone_number || ''
-      }));
-      
-      // Fetch updated profile image
-      try {
-        const profileImageResult = await userService.getProfileImage();
-        if (profileImageResult.success && profileImageResult.hasImage) {
-          setUser(prev => ({
-            ...prev,
-            profileImage: profileImageResult.imageUrl
-          }));
-        }
-      } catch (imageError) {
-        console.error('Error fetching updated profile image:', imageError);
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Error updating user info:', error);
-      return { success: false, error };
-    }
-  };
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
+    user,
+    authToken,
+    loading,
+    isAuthenticated: !!user,
+    login,
+    logout
+  }), [user, authToken, loading]);
 
-  // Update profile image in context
-  const updateProfileImage = (imageUrl) => {
-    setUser(prev => ({
-      ...prev,
-      profileImage: imageUrl
-    }));
-  };
-
-  // Use useMemo to prevent unnecessary re-renders of context consumers
-  const value = useMemo(
-    () => ({
-      user,
-      setUser,
-      isAuthenticated: !!user,
-      login,
-      logout,
-      loading,
-      updateUserInfo,
-      updateProfileImage
-    }),
-    [user, loading]
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // Custom hook to use the auth context

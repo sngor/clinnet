@@ -8,8 +8,19 @@ export const getPatients = async () => {
       apiName: 'clinnetApi',
       path: '/patients'
     });
-    const data = await response.body.json();
-    return data;
+    
+    if (!response) {
+      throw new Error('No response received from API');
+    }
+    
+    // Handle response based on its structure
+    if (response.body) {
+      return await response.body.json();
+    } else if (response.data) {
+      return response.data;
+    } else {
+      return [];
+    }
   } catch (error) {
     console.error('Error fetching patients:', error);
     throw error;
@@ -23,8 +34,19 @@ export const getPatientById = async (patientId) => {
       apiName: 'clinnetApi',
       path: `/patients/${patientId}`
     });
-    const data = await response.body.json();
-    return data;
+    
+    if (!response) {
+      throw new Error('No response received from API');
+    }
+    
+    // Handle response based on its structure
+    if (response.body) {
+      return await response.body.json();
+    } else if (response.data) {
+      return response.data;
+    } else {
+      return null;
+    }
   } catch (error) {
     console.error(`Error fetching patient ${patientId}:`, error);
     throw error;
@@ -47,6 +69,8 @@ export const createPatient = async (patientData) => {
       status: patientData.status
     };
     
+    console.log('Creating patient with data:', transformedData);
+    
     const response = await post({
       apiName: 'clinnetApi',
       path: '/patients',
@@ -54,8 +78,19 @@ export const createPatient = async (patientData) => {
         body: transformedData
       }
     });
-    const data = await response.body.json();
-    return data;
+    
+    if (!response) {
+      throw new Error('No response received from API');
+    }
+    
+    // Handle response based on its structure
+    if (response.body) {
+      return await response.body.json();
+    } else if (response.data) {
+      return response.data;
+    } else {
+      throw new Error('Invalid response format from API');
+    }
   } catch (error) {
     console.error('Error creating patient:', error);
     throw error;
@@ -85,8 +120,19 @@ export const updatePatient = async (patientId, patientData) => {
         body: transformedData
       }
     });
-    const data = await response.body.json();
-    return data;
+    
+    if (!response) {
+      throw new Error('No response received from API');
+    }
+    
+    // Handle response based on its structure
+    if (response.body) {
+      return await response.body.json();
+    } else if (response.data) {
+      return response.data;
+    } else {
+      throw new Error('Invalid response format from API');
+    }
   } catch (error) {
     console.error(`Error updating patient ${patientId}:`, error);
     throw error;
@@ -100,8 +146,19 @@ export const deletePatient = async (patientId) => {
       apiName: 'clinnetApi',
       path: `/patients/${patientId}`
     });
-    const data = await response.body.json();
-    return data;
+    
+    if (!response) {
+      throw new Error('No response received from API');
+    }
+    
+    // Handle response based on its structure
+    if (response.body) {
+      return await response.body.json();
+    } else if (response.data) {
+      return response.data;
+    } else {
+      return { success: true };
+    }
   } catch (error) {
     console.error(`Error deleting patient ${patientId}:`, error);
     throw error;

@@ -144,10 +144,22 @@ export const DataProvider = ({ children }) => {
   const addPatient = async (patientData) => {
     try {
       console.log("Adding new patient:", patientData);
+      
+      // Add error handling for missing data
+      if (!patientData.firstName || !patientData.lastName) {
+        throw new Error("Patient first name and last name are required");
+      }
+      
       const newPatient = await createPatient(patientData);
       console.log("Patient added successfully:", newPatient);
-      setPatients([...patients, newPatient]);
-      return newPatient;
+      
+      // Only update state if we got a valid response
+      if (newPatient) {
+        setPatients(prevPatients => [...prevPatients, newPatient]);
+        return newPatient;
+      } else {
+        throw new Error("Failed to create patient - no data returned");
+      }
     } catch (err) {
       console.error("Error adding patient:", err);
       console.error("Error details:", err.message);
