@@ -51,10 +51,21 @@ const serviceApi = {
    */
   createService: async (serviceData) => {
     try {
-      const response = await api.post('/services', serviceData);
+      // Sanitize data
+      const sanitizedData = { ...serviceData };
+      Object.keys(sanitizedData).forEach(key => {
+        if (sanitizedData[key] === undefined) {
+          sanitizedData[key] = null;
+        }
+      });
+      
+      console.log('Creating service with data:', sanitizedData);
+      const response = await api.post('/services', sanitizedData);
+      console.log('Service created successfully:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error creating service:', error);
+      console.error('Error details:', error.response?.data || error.message);
       throw error;
     }
   },
@@ -67,7 +78,15 @@ const serviceApi = {
    */
   updateService: async (id, serviceData) => {
     try {
-      const response = await api.put(`/services/${id}`, serviceData);
+      // Sanitize data
+      const sanitizedData = { ...serviceData };
+      Object.keys(sanitizedData).forEach(key => {
+        if (sanitizedData[key] === undefined) {
+          sanitizedData[key] = null;
+        }
+      });
+      
+      const response = await api.put(`/services/${id}`, sanitizedData);
       return response.data;
     } catch (error) {
       console.error(`Error updating service ${id}:`, error);

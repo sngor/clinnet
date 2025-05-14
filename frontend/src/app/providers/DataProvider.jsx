@@ -8,6 +8,7 @@ import {
   updatePatient as updatePatientApi, 
   deletePatient as deletePatientApi 
 } from "../../services/patients";
+import serviceApi from "../../services/serviceApi";
 
 // Create context
 const DataContext = createContext(null);
@@ -34,30 +35,15 @@ export const DataProvider = ({ children }) => {
         console.log("Initializing app data...");
         setLoading(true);
 
-        // Mock services data
-        const mockServices = [
-          {
-            id: 1,
-            name: "General Consultation",
-            description:
-              "Standard medical consultation with a general practitioner",
-            category: "consultation",
-            price: 100,
-            discountPercentage: 0,
-            duration: 30,
-            active: true,
-          },
-          {
-            id: 2,
-            name: "Blood Test",
-            description: "Complete blood count and analysis",
-            category: "laboratory",
-            price: 75,
-            discountPercentage: 0,
-            duration: 15,
-            active: true,
-          },
-        ];
+        // Fetch services from DynamoDB via API
+        try {
+          const servicesFromApi = await serviceApi.getAllServices();
+          setServices(servicesFromApi);
+          console.log("Services loaded from DynamoDB:", servicesFromApi);
+        } catch (serviceError) {
+          console.error("Error loading services:", serviceError);
+          setError("Failed to load services. Please try again later.");
+        }
 
         // Fetch patients from DynamoDB via API
         try {
@@ -68,9 +54,6 @@ export const DataProvider = ({ children }) => {
           console.error("Error loading patients:", patientError);
           setError("Failed to load patients. Please try again later.");
         }
-
-        setServices(mockServices);
-        console.log("Services loaded:", mockServices);
 
         setInitialized(true);
         console.log("Data initialization complete");
@@ -102,28 +85,57 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  // Mock service operations
+  // Refresh services data
+  const refreshServices = async () => {
+    try {
+      setLoading(true);
+      const servicesFromApi = await serviceApi.getAllServices();
+      setServices(servicesFromApi);
+      console.log("Services refreshed:", servicesFromApi);
+      return servicesFromApi;
+    } catch (err) {
+      console.error("Error refreshing services:", err);
+      setError(err.message || "Failed to refresh services");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Service operations using DynamoDB API
   const addService = async (serviceData) => {
-    const newService = {
-      id: services.length + 1,
-      ...serviceData,
-    };
-    setServices([...services, newService]);
-    return newService;
+    try {
+      const newService = await serviceApi.createService(serviceData);
+      setServices([...services, newService]);
+      return newService;
+    } catch (err) {
+      console.error("Error adding service:", err);
+      throw err;
+    }
   };
 
   const updateService = async (id, serviceData) => {
-    const updatedServices = services.map((service) =>
-      service.id === id ? { ...service, ...serviceData } : service
-    );
-    setServices(updatedServices);
-    return updatedServices.find((service) => service.id === id);
+    try {
+      const updatedService = await serviceApi.updateService(id, serviceData);
+      setServices(services.map(service => 
+        service.id === id ? updatedService : service
+      ));
+      return updatedService;
+    } catch (err) {
+      console.error(`Error updating service ${id}:`, err);
+      throw err;
+    }
   };
 
   const deleteService = async (id) => {
-    const updatedServices = services.filter((service) => service.id !== id);
-    setServices(updatedServices);
-    return true;
+    try {
+      await serviceApi.deleteService(id);
+      setServices(services.filter(service => service.id !== id));
+      return true;
+    } catch (err) {
+      console.error(`Error deleting service ${id}:`, err);
+      throw err;
+    }
   };
 
   // Patient operations using DynamoDB API
@@ -171,6 +183,7 @@ export const DataProvider = ({ children }) => {
     addService,
     updateService,
     deleteService,
+    refreshServices,
     // Patients
     patients,
     addPatient,
