@@ -1,7 +1,7 @@
 // src/pages/FrontdeskPatientsPage.jsx
 import React, { useState } from "react";
 import { Box, Dialog, DialogContent } from "@mui/material";
-import PatientList from "../features/patients/components/PatientList";
+import FrontdeskPatientList from "../features/patients/components/FrontdeskPatientList";
 import PatientDetailView from "../features/patients/components/PatientDetailView";
 
 function FrontdeskPatientsPage() {
@@ -19,8 +19,8 @@ function FrontdeskPatientsPage() {
   
   return (
     <Box>
-      {/* Render the PatientList component with a callback for patient selection */}
-      <PatientList onPatientSelect={handlePatientSelect} />
+      {/* Render the FrontdeskPatientList component with a callback for patient selection */}
+      <FrontdeskPatientList onPatientSelect={handlePatientSelect} />
       
       {/* Patient Detail Dialog */}
       <Dialog 

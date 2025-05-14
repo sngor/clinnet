@@ -1,128 +1,163 @@
 // src/components/patients/AppointmentsTab.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Box,
   Typography,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
   Button,
-  Grid,
-  Card,
-  CardContent,
-  Chip
+  CircularProgress
 } from '@mui/material';
-import EventIcon from '@mui/icons-material/Event';
+import AddIcon from '@mui/icons-material/Add';
+import { format } from 'date-fns';
 
-// Mock appointments data
+// Mock appointments data - in a real app, this would come from an API
 const mockAppointments = [
   {
-    id: 101,
-    patientId: 1,
-    date: "2023-11-20",
-    time: "09:00 AM",
-    doctorName: "Dr. Smith",
-    reason: "Annual checkup",
-    notes: "Patient reported feeling well. Blood pressure normal.",
-    status: "Completed"
+    id: 1,
+    date: '2023-12-05',
+    time: '09:00 AM',
+    doctor: 'Dr. Smith',
+    type: 'Checkup',
+    status: 'Scheduled'
   },
   {
-    id: 102,
-    patientId: 1,
-    date: "2023-12-05",
-    time: "10:30 AM",
-    doctorName: "Dr. Jones",
-    reason: "Follow-up",
-    notes: "",
-    status: "Scheduled"
+    id: 2,
+    date: '2023-11-20',
+    time: '02:30 PM',
+    doctor: 'Dr. Jones',
+    type: 'Follow-up',
+    status: 'Completed'
   },
   {
-    id: 103,
-    patientId: 2,
-    date: "2023-10-05",
-    time: "11:00 AM",
-    doctorName: "Dr. Wilson",
-    reason: "Diabetes management",
-    notes: "Adjusted medication dosage.",
-    status: "Completed"
+    id: 3,
+    date: '2023-10-15',
+    time: '11:00 AM',
+    doctor: 'Dr. Smith',
+    type: 'Consultation',
+    status: 'Completed'
   }
 ];
 
 function AppointmentsTab({ patientId }) {
-  // Get patient appointments
-  const patientAppointments = mockAppointments.filter(a => a.patientId === parseInt(patientId));
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Format date for display
+  // Fetch appointments for this patient
+  useEffect(() => {
+    // Simulate API call
+    setTimeout(() => {
+      try {
+        // Filter appointments for this patient
+        setAppointments(mockAppointments);
+        setLoading(false);
+      } catch (err) {
+        setError(`Failed to load appointments: ${err.message}`);
+        setLoading(false);
+      }
+    }, 500);
+  }, [patientId]);
+
+  // Get color for status chip
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'Scheduled':
+        return 'primary';
+      case 'Completed':
+        return 'success';
+      case 'Cancelled':
+        return 'error';
+      case 'No-show':
+        return 'warning';
+      default:
+        return 'default';
+    }
+  };
+
+  // Format date
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch (error) {
+      return dateString;
+    }
   };
 
-  // Handle schedule appointment
-  const handleScheduleAppointment = () => {
-    alert('Schedule appointment functionality will be implemented here');
-  };
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Typography color="error">
+        {error}
+      </Typography>
+    );
+  }
 
   return (
-    <>
+    <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 500, color: 'primary.main' }}>
-          Appointments
+        <Typography variant="h6">
+          Patient Appointments
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<EventIcon />}
-          onClick={handleScheduleAppointment}
-          sx={{ borderRadius: 1.5 }}
+        <Button 
+          variant="contained" 
+          startIcon={<AddIcon />}
+          size="small"
         >
           Schedule Appointment
         </Button>
       </Box>
-      
-      {patientAppointments.length > 0 ? (
-        <Grid container spacing={3}>
-          {patientAppointments.map((appointment) => (
-            <Grid item xs={12} md={6} key={appointment.id}>
-              <Card sx={{ 
-                height: '100%',
-                borderLeft: 6,
-                borderColor: appointment.status === 'Completed' ? 'success.main' : 'primary.main',
-              }}>
-                <CardContent>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1 }}>
-                    {formatDate(appointment.date)} at {appointment.time}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    Doctor: {appointment.doctorName}
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    Reason: {appointment.reason}
-                  </Typography>
-                  {appointment.notes && (
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                      Notes: {appointment.notes}
-                    </Typography>
-                  )}
-                  <Chip 
-                    label={appointment.status} 
-                    size="small" 
-                    color={appointment.status === 'Completed' ? 'success' : 'primary'}
-                    sx={{ mt: 1 }}
-                  />
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+
+      {appointments.length > 0 ? (
+        <TableContainer component={Paper} variant="outlined">
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Date</TableCell>
+                <TableCell>Time</TableCell>
+                <TableCell>Doctor</TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {appointments.map((appointment) => (
+                <TableRow key={appointment.id}>
+                  <TableCell>{formatDate(appointment.date)}</TableCell>
+                  <TableCell>{appointment.time}</TableCell>
+                  <TableCell>{appointment.doctor}</TableCell>
+                  <TableCell>{appointment.type}</TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={appointment.status} 
+                      color={getStatusColor(appointment.status)}
+                      size="small"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       ) : (
-        <Typography variant="body1" sx={{ textAlign: 'center', py: 4 }}>
-          No appointments found for this patient.
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+          No appointments found for this patient
         </Typography>
       )}
-    </>
+    </Box>
   );
 }
 

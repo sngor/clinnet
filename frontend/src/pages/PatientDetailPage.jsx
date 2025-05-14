@@ -14,7 +14,9 @@ import {
   Tabs,
   IconButton,
   Alert,
-  Snackbar
+  Snackbar,
+  TextField,
+  CircularProgress
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -24,6 +26,7 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon
 } from '@mui/icons-material';
+import { useAppData } from "../app/providers/DataProvider";
 
 // Import tab components
 import PersonalInfoTab from '../components/patients/PersonalInfoTab';
@@ -31,137 +34,41 @@ import MedicalInfoTab from '../components/patients/MedicalInfoTab';
 import AppointmentsTab from '../components/patients/AppointmentsTab';
 import MedicalRecordsTab from '../components/patients/MedicalRecordsTab';
 
-// Mock patient data - in a real app, this would come from an API
-const mockPatients = [
-  {
-    id: 1,
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    gender: "Male",
-    dateOfBirth: "1985-05-15",
-    address: "123 Main St",
-    city: "Anytown",
-    state: "CA",
-    zipCode: "12345",
-    insuranceProvider: "Blue Cross",
-    insuranceNumber: "BC12345678",
-    emergencyContactName: "Jane Doe",
-    emergencyContactPhone: "+1 (555) 987-6543",
-    allergies: "Penicillin",
-    medicalConditions: "Hypertension, Asthma",
-    medications: "Lisinopril, Albuterol",
-    lastVisit: "2023-11-20",
-    upcomingAppointment: "2023-12-05",
-    bloodType: "O+",
-    height: "180 cm",
-    weight: "75 kg"
-  },
-  {
-    id: 2,
-    firstName: "Jane",
-    lastName: "Smith",
-    email: "jane.smith@example.com",
-    phone: "+1 (555) 234-5678",
-    gender: "Female",
-    dateOfBirth: "1990-08-22",
-    address: "456 Oak Ave",
-    city: "Somewhere",
-    state: "CA",
-    zipCode: "67890",
-    insuranceProvider: "Aetna",
-    insuranceNumber: "AE87654321",
-    emergencyContactName: "John Smith",
-    emergencyContactPhone: "+1 (555) 876-5432",
-    allergies: "None",
-    medicalConditions: "Diabetes Type 2",
-    medications: "Metformin",
-    lastVisit: "2023-10-05",
-    upcomingAppointment: null,
-    bloodType: "A+",
-    height: "165 cm",
-    weight: "62 kg"
-  },
-  {
-    id: 3,
-    firstName: "Michael",
-    lastName: "Johnson",
-    email: "michael.j@example.com",
-    phone: "+1 (555) 345-6789",
-    gender: "Male",
-    dateOfBirth: "1978-11-30",
-    address: "789 Pine Rd",
-    city: "Nowhere",
-    state: "CA",
-    zipCode: "54321",
-    insuranceProvider: "Kaiser",
-    insuranceNumber: "KP98765432",
-    emergencyContactName: "Sarah Johnson",
-    emergencyContactPhone: "+1 (555) 765-4321",
-    allergies: "Shellfish",
-    medicalConditions: "None",
-    medications: "None",
-    lastVisit: "2023-09-20",
-    upcomingAppointment: "2023-12-15",
-    bloodType: "B-",
-    height: "175 cm",
-    weight: "80 kg"
-  },
-  {
-    id: 4,
-    firstName: "Emily",
-    lastName: "Williams",
-    email: "emily.w@example.com",
-    phone: "+1 (555) 456-7890",
-    gender: "Female",
-    dateOfBirth: "1990-11-28",
-    address: "101 Elm St",
-    city: "Anytown",
-    state: "CA",
-    zipCode: "12345",
-    insuranceProvider: "Cigna",
-    insuranceNumber: "CI12345678",
-    emergencyContactName: "David Williams",
-    emergencyContactPhone: "+1 (555) 654-3210",
-    allergies: "Peanuts",
-    medicalConditions: "Migraine",
-    medications: "Sumatriptan",
-    lastVisit: "2023-11-25",
-    upcomingAppointment: "2023-12-05",
-    bloodType: "AB+",
-    height: "170 cm",
-    weight: "65 kg"
-  }
-];
-
 function PatientDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { patients, loading, error, updatePatient, refreshPatients } = useAppData();
+  
   const [patient, setPatient] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [editedPatient, setEditedPatient] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
-  // Fetch patient data
+  // Load patient data
   useEffect(() => {
-    // In a real app, this would be an API call
-    const patientId = parseInt(id);
-    const foundPatient = mockPatients.find(p => p.id === patientId);
+    refreshPatients();
+  }, []);
+
+  // Find patient by ID
+  useEffect(() => {
+    if (!patients || patients.length === 0) return;
     
+    const foundPatient = patients.find(p => p.id === id);
     if (foundPatient) {
       setPatient(foundPatient);
       setEditedPatient(foundPatient);
     } else {
       // Handle patient not found
       setSnackbarMessage('Patient not found');
+      setSnackbarSeverity('error');
       setSnackbarOpen(true);
       // Redirect back to patients list after a delay
-      setTimeout(() => navigate('/frontdesk/patients'), 2000);
+      setTimeout(() => navigate(-1), 2000);
     }
-  }, [id, navigate]);
+  }, [id, patients, navigate]);
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -180,12 +87,40 @@ function PatientDetailPage() {
   };
 
   // Save patient changes
-  const handleSaveChanges = () => {
-    // In a real app, this would be an API call
-    setPatient(editedPatient);
-    setIsEditing(false);
-    setSnackbarMessage('Patient information updated successfully');
-    setSnackbarOpen(true);
+  const handleSaveChanges = async () => {
+    try {
+      // Format data for API
+      const patientData = {
+        firstName: editedPatient.firstName,
+        lastName: editedPatient.lastName,
+        dob: editedPatient.dateOfBirth || editedPatient.dob,
+        phone: editedPatient.phone,
+        email: editedPatient.email,
+        address: editedPatient.address,
+        insuranceProvider: editedPatient.insuranceProvider,
+        insuranceNumber: editedPatient.insuranceNumber,
+        status: editedPatient.status || 'Active'
+      };
+      
+      await updatePatient(id, patientData);
+      
+      // Update local state
+      setPatient(editedPatient);
+      setIsEditing(false);
+      
+      // Show success message
+      setSnackbarMessage('Patient information updated successfully');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      
+      // Refresh patients list
+      refreshPatients();
+    } catch (error) {
+      console.error('Error updating patient:', error);
+      setSnackbarMessage('Error updating patient information');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
   };
 
   // Handle form field changes
@@ -218,11 +153,33 @@ function PatientDetailPage() {
     navigate(-1);
   };
 
-  // If patient is not loaded yet
+  // Handle snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  if (loading) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
+
   if (!patient) {
     return (
       <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Typography variant="h5">Loading patient information...</Typography>
+        <Alert severity="info">Loading patient information...</Alert>
       </Container>
     );
   }
@@ -238,149 +195,284 @@ function PatientDetailPage() {
         >
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 500 }}>
-          Patient Details
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 500, flexGrow: 1 }}>
+          {patient.firstName} {patient.lastName}
         </Typography>
-        <Box sx={{ flexGrow: 1 }} />
-        {!isEditing ? (
-          <Button
-            variant="contained"
-            startIcon={<EditIcon />}
-            onClick={handleEditClick}
-            sx={{ borderRadius: 1.5 }}
-          >
-            Edit Patient
-          </Button>
-        ) : (
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
+        
+        {isEditing ? (
+          <Box>
+            <Button 
+              startIcon={<SaveIcon />} 
+              variant="contained" 
+              color="primary"
+              onClick={handleSaveChanges}
+              sx={{ mr: 1 }}
+            >
+              Save
+            </Button>
+            <Button 
+              startIcon={<CancelIcon />} 
               variant="outlined"
-              startIcon={<CancelIcon />}
               onClick={handleCancelEdit}
-              sx={{ borderRadius: 1.5 }}
             >
               Cancel
             </Button>
-            <Button
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleSaveChanges}
-              sx={{ borderRadius: 1.5 }}
-            >
-              Save Changes
-            </Button>
           </Box>
+        ) : (
+          <Button 
+            startIcon={<EditIcon />} 
+            variant="contained" 
+            color="primary"
+            onClick={handleEditClick}
+          >
+            Edit
+          </Button>
         )}
       </Box>
-
+      
       {/* Patient summary card */}
-      <Paper 
-        elevation={2} 
-        sx={{ 
-          p: 3, 
-          mb: 3, 
-          borderRadius: 2,
-          bgcolor: 'primary.main',
-          color: 'white'
-        }}
-      >
-        <Grid container spacing={2} alignItems="center">
+      <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+        <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <Typography variant="h5" sx={{ fontWeight: 500 }}>
-              {patient.firstName} {patient.lastName}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-              <Chip 
-                label={`${calculateAge(patient.dateOfBirth)} years`} 
-                size="small" 
-                sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
-              />
-              <Chip 
-                label={patient.gender} 
-                size="small"
-                sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
-              />
-              {patient.bloodType && (
-                <Chip 
-                  label={`Blood: ${patient.bloodType}`} 
-                  size="small"
-                  sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
-                />
-              )}
-            </Box>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Date of Birth
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="dateOfBirth"
+                    type="date"
+                    value={editedPatient.dateOfBirth || editedPatient.dob || ''}
+                    onChange={handleInputChange}
+                    InputLabelProps={{ shrink: true }}
+                    size="small"
+                    margin="dense"
+                  />
+                ) : (
+                  <Typography variant="body1">
+                    {patient.dateOfBirth || patient.dob || 'N/A'} 
+                    {patient.dateOfBirth || patient.dob ? ` (${calculateAge(patient.dateOfBirth || patient.dob)} years)` : ''}
+                  </Typography>
+                )}
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Gender
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="gender"
+                    value={editedPatient.gender || ''}
+                    onChange={handleInputChange}
+                    size="small"
+                    margin="dense"
+                  />
+                ) : (
+                  <Typography variant="body1">
+                    {patient.gender || 'N/A'}
+                  </Typography>
+                )}
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Phone
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="phone"
+                    value={editedPatient.phone || ''}
+                    onChange={handleInputChange}
+                    size="small"
+                    margin="dense"
+                  />
+                ) : (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <PhoneIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
+                    <Typography variant="body1">
+                      {patient.phone || 'N/A'}
+                    </Typography>
+                  </Box>
+                )}
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Email
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="email"
+                    value={editedPatient.email || ''}
+                    onChange={handleInputChange}
+                    size="small"
+                    margin="dense"
+                  />
+                ) : (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <EmailIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
+                    <Typography variant="body1">
+                      {patient.email || 'N/A'}
+                    </Typography>
+                  </Box>
+                )}
+              </Grid>
+            </Grid>
           </Grid>
+          
           <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { xs: 'flex-start', md: 'flex-end' } }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <PhoneIcon fontSize="small" sx={{ mr: 1 }} />
-                <Typography variant="body2">{patient.phone}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <EmailIcon fontSize="small" sx={{ mr: 1 }} />
-                <Typography variant="body2">{patient.email}</Typography>
-              </Box>
-            </Box>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Address
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="address"
+                    value={editedPatient.address || ''}
+                    onChange={handleInputChange}
+                    size="small"
+                    margin="dense"
+                  />
+                ) : (
+                  <Typography variant="body1">
+                    {patient.address || 'N/A'}
+                  </Typography>
+                )}
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Insurance Provider
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="insuranceProvider"
+                    value={editedPatient.insuranceProvider || ''}
+                    onChange={handleInputChange}
+                    size="small"
+                    margin="dense"
+                  />
+                ) : (
+                  <Typography variant="body1">
+                    {patient.insuranceProvider || 'N/A'}
+                  </Typography>
+                )}
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Insurance Number
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    fullWidth
+                    name="insuranceNumber"
+                    value={editedPatient.insuranceNumber || ''}
+                    onChange={handleInputChange}
+                    size="small"
+                    margin="dense"
+                  />
+                ) : (
+                  <Typography variant="body1">
+                    {patient.insuranceNumber || 'N/A'}
+                  </Typography>
+                )}
+              </Grid>
+              
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Status
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    select
+                    fullWidth
+                    name="status"
+                    value={editedPatient.status || 'Active'}
+                    onChange={handleInputChange}
+                    size="small"
+                    margin="dense"
+                    SelectProps={{
+                      native: true
+                    }}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </TextField>
+                ) : (
+                  <Chip 
+                    label={patient.status || 'Active'} 
+                    color={patient.status === 'Active' ? 'success' : 'default'}
+                    size="small"
+                  />
+                )}
+              </Grid>
+            </Grid>
           </Grid>
         </Grid>
       </Paper>
-
+      
       {/* Tabs for different sections */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+      <Box sx={{ mb: 2 }}>
         <Tabs 
           value={tabValue} 
-          onChange={handleTabChange} 
-          aria-label="patient information tabs"
-          sx={{
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontWeight: 500,
-              fontSize: '1rem',
-            }
-          }}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
         >
-          <Tab label="Personal Information" />
-          <Tab label="Medical Information" />
+          <Tab label="Personal Info" />
+          <Tab label="Medical Info" />
           <Tab label="Appointments" />
           <Tab label="Medical Records" />
         </Tabs>
       </Box>
-
+      
       {/* Tab content */}
       <Paper sx={{ p: 3, borderRadius: 2 }}>
         {tabValue === 0 && (
           <PersonalInfoTab 
             patient={patient} 
-            editedPatient={editedPatient} 
-            isEditing={isEditing} 
-            handleInputChange={handleInputChange} 
+            isEditing={isEditing}
+            editedPatient={editedPatient}
+            handleInputChange={handleInputChange}
           />
         )}
         {tabValue === 1 && (
           <MedicalInfoTab 
-            patient={patient} 
-            editedPatient={editedPatient} 
-            isEditing={isEditing} 
-            handleInputChange={handleInputChange} 
+            patient={patient}
+            isEditing={isEditing}
           />
         )}
         {tabValue === 2 && (
-          <AppointmentsTab patientId={id} />
+          <AppointmentsTab 
+            patientId={patient.id}
+          />
         )}
         {tabValue === 3 && (
-          <MedicalRecordsTab patientId={id} />
+          <MedicalRecordsTab 
+            patientId={patient.id}
+          />
         )}
       </Paper>
-
-      {/* Success Snackbar */}
+      
+      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        onClose={handleSnackbarClose}
       >
         <Alert 
-          onClose={() => setSnackbarOpen(false)} 
-          severity="success" 
+          onClose={handleSnackbarClose} 
+          severity={snackbarSeverity}
           sx={{ width: '100%' }}
         >
           {snackbarMessage}

@@ -31,12 +31,12 @@ const amplifyConfig = {
               };
             }
             
-            // Get the token string
+            // Get the token string - use the exact format expected by API Gateway
             const token = session.tokens.idToken.toString();
             
             // Return headers with authorization
             return {
-              Authorization: token,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             };
           } catch (error) {
@@ -50,5 +50,7 @@ const amplifyConfig = {
     }
   }
 };
+
+console.log('Amplify v6 config loaded with API endpoint:', amplifyConfig.API.REST.clinnetApi.endpoint);
 
 export default amplifyConfig;

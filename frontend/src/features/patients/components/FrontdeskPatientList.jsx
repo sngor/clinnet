@@ -13,6 +13,7 @@ import {
   DialogActions,
   Grid,
   Chip,
+  Button,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -20,6 +21,8 @@ import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import { useNavigate } from "react-router-dom";
+import { useAppData } from "../../../app/providers/DataProvider";
 import {
   PageContainer,
   SectionContainer,
@@ -30,134 +33,71 @@ import {
   FlexBox,
 } from "../../../components/ui";
 
-// Placeholder data - replace with API data
-const mockPatients = [
-  {
-    id: 101,
-    firstName: "John",
-    lastName: "Doe",
-    dob: "1985-05-15",
-    phone: "555-1234",
-    email: "john.doe@example.com",
-    address: "123 Main St, Anytown, USA",
-    insuranceProvider: "Blue Cross",
-    insuranceNumber: "BC12345678",
-    lastVisit: "2023-11-15",
-    upcomingAppointment: "2023-12-10",
-    status: "Active",
-  },
-  {
-    id: 102,
-    firstName: "Jane",
-    lastName: "Smith",
-    dob: "1992-08-22",
-    phone: "555-5678",
-    email: "jane.smith@example.com",
-    address: "456 Oak Ave, Somewhere, USA",
-    insuranceProvider: "Aetna",
-    insuranceNumber: "AE87654321",
-    lastVisit: "2023-10-05",
-    upcomingAppointment: null,
-    status: "Active",
-  },
-  {
-    id: 103,
-    firstName: "Robert",
-    lastName: "Johnson",
-    dob: "1978-03-10",
-    phone: "555-9012",
-    email: "robert.j@example.com",
-    address: "789 Pine Rd, Elsewhere, USA",
-    insuranceProvider: "United Healthcare",
-    insuranceNumber: "UH56781234",
-    lastVisit: "2023-09-20",
-    upcomingAppointment: "2023-12-15",
-    status: "Active",
-  },
-  {
-    id: 104,
-    firstName: "Emily",
-    lastName: "Williams",
-    dob: "1990-11-28",
-    phone: "555-3456",
-    email: "emily.w@example.com",
-    address: "321 Elm St, Nowhere, USA",
-    insuranceProvider: "Cigna",
-    insuranceNumber: "CI43218765",
-    lastVisit: "2023-11-25",
-    upcomingAppointment: "2023-12-05",
-    status: "Active",
-  },
-  {
-    id: 105,
-    firstName: "Michael",
-    lastName: "Brown",
-    dob: "1982-07-14",
-    phone: "555-7890",
-    email: "michael.b@example.com",
-    address: "654 Maple Ave, Anywhere, USA",
-    insuranceProvider: "Humana",
-    insuranceNumber: "HU98761234",
-    lastVisit: "2023-08-30",
-    upcomingAppointment: null,
-    status: "Inactive",
-  },
-];
-
 function FrontdeskPatientList() {
-  const [patients, setPatients] = useState([]);
+  const navigate = useNavigate();
+  const { 
+    patients, 
+    loading, 
+    error, 
+    addPatient, 
+    updatePatient, 
+    deletePatient,
+    refreshPatients 
+  } = useAppData();
+  
   const [filteredPatients, setFilteredPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-
+  
   // State for patient detail dialog
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
-
+  
   // State for patient form dialog
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState(null);
-
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    dob: "",
+    phone: "",
+    email: "",
+    address: "",
+    insuranceProvider: "",
+    insuranceNumber: "",
+    status: "Active",
+  });
+  
   // State for delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
 
-  // Fetch initial patients
+  // Fetch patients on component mount
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      try {
-        setPatients(mockPatients);
-        setFilteredPatients(mockPatients);
-        setLoading(false);
-      } catch (err) {
-        setError(`Failed to load patients: ${err.message}`);
-        setLoading(false);
-      }
-    }, 500);
+    refreshPatients();
   }, []);
 
   // Filter patients when search term changes
   useEffect(() => {
+    if (!patients) return;
+    
     if (searchTerm.trim() === "") {
       setFilteredPatients(patients);
     } else {
       const lowercasedSearch = searchTerm.toLowerCase();
       const filtered = patients.filter(
         (patient) =>
-          patient.firstName.toLowerCase().includes(lowercasedSearch) ||
-          patient.lastName.toLowerCase().includes(lowercasedSearch) ||
-          patient.phone.includes(searchTerm) ||
-          patient.email.toLowerCase().includes(lowercasedSearch)
+          (patient.firstName && patient.firstName.toLowerCase().includes(lowercasedSearch)) ||
+          (patient.lastName && patient.lastName.toLowerCase().includes(lowercasedSearch)) ||
+          (patient.phone && patient.phone.includes(searchTerm)) ||
+          (patient.email && patient.email.toLowerCase().includes(lowercasedSearch))
       );
       setFilteredPatients(filtered);
     }
   }, [searchTerm, patients]);
 
   // Handle search input change
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
 
   // Handle view patient details
@@ -168,13 +108,23 @@ function FrontdeskPatientList() {
 
   // Handle add new patient
   const handleAddPatient = () => {
-    setEditingPatient(null);
-    setFormDialogOpen(true);
+    navigate("/frontdesk/patients/new");
   };
 
   // Handle edit patient
   const handleEditPatient = (patient) => {
     setEditingPatient(patient);
+    setFormData({
+      firstName: patient.firstName || "",
+      lastName: patient.lastName || "",
+      dob: patient.dateOfBirth || patient.dob || "",
+      phone: patient.phone || "",
+      email: patient.email || "",
+      address: patient.address || "",
+      insuranceProvider: patient.insuranceProvider || "",
+      insuranceNumber: patient.insuranceNumber || "",
+      status: patient.status || "Active",
+    });
     setFormDialogOpen(true);
   };
 
@@ -184,188 +134,276 @@ function FrontdeskPatientList() {
     setDeleteDialogOpen(true);
   };
 
-  // Handle schedule appointment
-  const handleScheduleAppointment = (patient) => {
-    console.log("Schedule appointment for:", patient);
-    // Navigate to appointments page or open scheduling dialog
+  // Handle form input change
+  const handleFormInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
   // Handle form submission
-  const handleSubmitPatientForm = (formData) => {
-    if (editingPatient) {
-      // Update existing patient
-      setPatients(
-        patients.map((p) => (p.id === formData.id ? { ...formData } : p))
-      );
-    } else {
-      // Add new patient
-      const newPatient = {
-        ...formData,
-        id: Date.now(),
-        lastVisit: null,
-        upcomingAppointment: null,
-        status: "Active",
-      };
-      setPatients([...patients, newPatient]);
+  const handleFormSubmit = async () => {
+    try {
+      if (editingPatient) {
+        await updatePatient(editingPatient.id, formData);
+      } else {
+        await addPatient(formData);
+      }
+      setFormDialogOpen(false);
+      refreshPatients();
+    } catch (err) {
+      console.error("Error saving patient:", err);
     }
-    setFormDialogOpen(false);
   };
 
   // Handle delete confirmation
-  const handleConfirmDelete = () => {
-    setPatients(patients.filter((p) => p.id !== patientToDelete.id));
-    setDeleteDialogOpen(false);
+  const handleConfirmDelete = async () => {
+    try {
+      await deletePatient(patientToDelete.id);
+      setDeleteDialogOpen(false);
+      refreshPatients();
+    } catch (err) {
+      console.error("Error deleting patient:", err);
+    }
   };
 
-  // Define columns for DataGrid
+  // DataGrid columns
   const columns = [
     {
       field: "name",
       headerName: "Name",
-      width: 200,
-      valueGetter: (params) => `${params.row.firstName} ${params.row.lastName}`,
-      renderCell: (params) => (
-        <Box>
-          <Typography variant="body2" sx={{ fontWeight: "medium" }}>
-            {params.value}
-          </Typography>
-          {params.row.upcomingAppointment && (
-            <Chip
-              label="Upcoming Appt"
-              size="small"
-              color="primary"
-              variant="outlined"
-              sx={{ mt: 0.5, fontSize: "0.7rem" }}
-            />
-          )}
-        </Box>
-      ),
-    },
-    { field: "phone", headerName: "Phone", width: 130 },
-    { field: "dob", headerName: "Date of Birth", width: 120 },
-    {
-      field: "insuranceProvider",
-      headerName: "Insurance",
-      width: 150,
-      renderCell: (params) => (
-        <Typography variant="body2">
-          {params.value}
-          <Typography variant="caption" display="block" color="text.secondary">
-            #{params.row.insuranceNumber}
-          </Typography>
-        </Typography>
-      ),
+      flex: 1,
+      valueGetter: (params) =>
+        `${params.row.firstName || ""} ${params.row.lastName || ""}`,
     },
     {
-      field: "lastVisit",
-      headerName: "Last Visit",
-      width: 120,
+      field: "dob",
+      headerName: "Date of Birth",
+      flex: 1,
+      valueGetter: (params) => params.row.dateOfBirth || params.row.dob || "",
+    },
+    { field: "phone", headerName: "Phone", flex: 1 },
+    { field: "email", headerName: "Email", flex: 1 },
+    {
+      field: "status",
+      headerName: "Status",
+      flex: 0.5,
       renderCell: (params) => (
-        <Typography variant="body2">{params.value || "No visits"}</Typography>
+        <Chip
+          label={params.value || "Active"}
+          color={params.value === "Active" ? "success" : "default"}
+          size="small"
+        />
       ),
     },
     {
       field: "actions",
       headerName: "Actions",
-      width: 180,
+      flex: 1,
       sortable: false,
-      disableColumnMenu: true,
       renderCell: (params) => (
-        <Box>
+        <Box sx={{ display: "flex", gap: 1 }}>
           <AppIconButton
+            icon={<VisibilityIcon />}
+            tooltip="View Details"
             onClick={() => handleViewPatient(params.row)}
-            size="small"
-            title="View Details"
-          >
-            <VisibilityIcon fontSize="small" />
-          </AppIconButton>
+          />
           <AppIconButton
+            icon={<EditIcon />}
+            tooltip="Edit"
             onClick={() => handleEditPatient(params.row)}
-            size="small"
-            title="Edit Patient"
-          >
-            <EditIcon fontSize="small" />
-          </AppIconButton>
+          />
           <AppIconButton
-            onClick={() => handleScheduleAppointment(params.row)}
-            size="small"
-            title="Schedule Appointment"
-          >
-            <EventNoteIcon fontSize="small" />
-          </AppIconButton>
-          <AppIconButton
-            onClick={() => handleDeletePatient(params.row)}
-            size="small"
-            title="Delete Patient"
+            icon={<DeleteIcon />}
+            tooltip="Delete"
             color="error"
-          >
-            <DeleteIcon fontSize="small" />
-          </AppIconButton>
+            onClick={() => handleDeletePatient(params.row)}
+          />
         </Box>
       ),
     },
   ];
 
-  if (loading)
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-        <CircularProgress />
-      </Box>
-    );
-
   return (
     <PageContainer>
       <SectionContainer>
-        <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
-          <Typography variant="h5">Patient Management</Typography>
+        <FlexBox justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h5" component="h1">
+            Patient Management
+          </Typography>
           <PrimaryButton
             startIcon={<AddIcon />}
             onClick={handleAddPatient}
-            size="large"
           >
-            Add Patient
+            Add New Patient
           </PrimaryButton>
         </FlexBox>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        <FlexBox spacing={{ xs: 1, sm: 2 }} sx={{ mb: 2 }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search patients by name, phone, or email..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </FlexBox>
-
         <CardContainer>
-          <DataGrid
-            rows={filteredPatients}
-            columns={columns}
-            pageSize={10}
-            rowsPerPageOptions={[10, 25, 50]}
-            disableSelectionOnClick
-            autoHeight
-            sx={{
-              "& .MuiDataGrid-row:hover": {
-                backgroundColor: "rgba(0, 0, 0, 0.04)",
-              },
-            }}
-          />
+          {/* Search bar */}
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search patients by name, email, or phone"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+
+          {/* Error message */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {/* Patient list */}
+          {loading ? (
+            <FlexBox justifyContent="center" my={4}>
+              <CircularProgress />
+            </FlexBox>
+          ) : (
+            <div style={{ height: 500, width: "100%" }}>
+              <DataGrid
+                rows={filteredPatients || []}
+                columns={columns}
+                pageSize={10}
+                rowsPerPageOptions={[10, 25, 50]}
+                disableSelectionOnClick
+                loading={loading}
+              />
+            </div>
+          )}
         </CardContainer>
       </SectionContainer>
+
+      {/* Patient Edit Dialog */}
+      <Dialog open={formDialogOpen} onClose={() => setFormDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {editingPatient ? "Edit Patient" : "Add New Patient"}
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="First Name"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleFormInputChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Last Name"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleFormInputChange}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Date of Birth"
+                name="dob"
+                type="date"
+                value={formData.dob}
+                onChange={handleFormInputChange}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleFormInputChange}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleFormInputChange}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Address"
+                name="address"
+                value={formData.address}
+                onChange={handleFormInputChange}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Insurance Provider"
+                name="insuranceProvider"
+                value={formData.insuranceProvider}
+                onChange={handleFormInputChange}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Insurance Number"
+                name="insuranceNumber"
+                value={formData.insuranceNumber}
+                onChange={handleFormInputChange}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setFormDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleFormSubmit} variant="contained" color="primary">
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete{" "}
+            {patientToDelete
+              ? `${patientToDelete.firstName} ${patientToDelete.lastName}`
+              : "this patient"}
+            ? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Patient Detail Dialog */}
       <Dialog
@@ -377,179 +415,66 @@ function FrontdeskPatientList() {
         {selectedPatient && (
           <>
             <DialogTitle>
-              Patient Details
-              <Chip
-                label={selectedPatient.status}
-                color={
-                  selectedPatient.status === "Active" ? "success" : "default"
-                }
-                size="small"
-                sx={{ ml: 1 }}
-              />
+              {`${selectedPatient.firstName} ${selectedPatient.lastName}`}
             </DialogTitle>
-            <DialogContent dividers>
+            <DialogContent>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Name
-                  </Typography>
-                  <Typography variant="body1">{`${selectedPatient.firstName} ${selectedPatient.lastName}`}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Date of Birth
-                  </Typography>
-                  <Typography variant="body1">{selectedPatient.dob}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Phone
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedPatient.phone}
+                  <Typography variant="subtitle2">Date of Birth</Typography>
+                  <Typography>
+                    {selectedPatient.dateOfBirth || selectedPatient.dob || "N/A"}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Email
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedPatient.email}
-                  </Typography>
+                  <Typography variant="subtitle2">Phone</Typography>
+                  <Typography>{selectedPatient.phone || "N/A"}</Typography>
                 </Grid>
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Address
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedPatient.address}
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Email</Typography>
+                  <Typography>{selectedPatient.email || "N/A"}</Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Address</Typography>
+                  <Typography>{selectedPatient.address || "N/A"}</Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Insurance Provider</Typography>
+                  <Typography>
+                    {selectedPatient.insuranceProvider || "N/A"}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Insurance Provider
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedPatient.insuranceProvider}
+                  <Typography variant="subtitle2">Insurance Number</Typography>
+                  <Typography>
+                    {selectedPatient.insuranceNumber || "N/A"}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Insurance Number
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedPatient.insuranceNumber}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Last Visit
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedPatient.lastVisit || "No visits recorded"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Upcoming Appointment
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedPatient.upcomingAppointment ||
-                      "No upcoming appointments"}
-                  </Typography>
+                  <Typography variant="subtitle2">Status</Typography>
+                  <Chip
+                    label={selectedPatient.status || "Active"}
+                    color={
+                      selectedPatient.status === "Active" ? "success" : "default"
+                    }
+                    size="small"
+                  />
                 </Grid>
               </Grid>
             </DialogContent>
             <DialogActions>
-              <PrimaryButton
-                onClick={() => handleScheduleAppointment(selectedPatient)}
-                startIcon={<EventNoteIcon />}
-              >
-                Schedule Appointment
-              </PrimaryButton>
-              <PrimaryButton
-                onClick={() => handleEditPatient(selectedPatient)}
-                startIcon={<EditIcon />}
+              <Button onClick={() => setDetailDialogOpen(false)}>Close</Button>
+              <Button
+                onClick={() => {
+                  setDetailDialogOpen(false);
+                  handleEditPatient(selectedPatient);
+                }}
+                color="primary"
               >
                 Edit
-              </PrimaryButton>
-              <TextButton onClick={() => setDetailDialogOpen(false)}>
-                Close
-              </TextButton>
+              </Button>
             </DialogActions>
           </>
         )}
-      </Dialog>
-
-      {/* Patient Form Dialog - Placeholder, would be implemented with actual form fields */}
-      <Dialog
-        open={formDialogOpen}
-        onClose={() => setFormDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          {editingPatient ? "Edit Patient" : "Add New Patient"}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body1" sx={{ py: 3 }}>
-            Patient form would be implemented here with fields for name, contact
-            info, insurance details, etc.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <TextButton onClick={() => setFormDialogOpen(false)}>
-            Cancel
-          </TextButton>
-          <PrimaryButton
-            variant="contained"
-            onClick={() =>
-              handleSubmitPatientForm(
-                editingPatient || {
-                  firstName: "New",
-                  lastName: "Patient",
-                  dob: "2000-01-01",
-                  phone: "555-0000",
-                  email: "new.patient@example.com",
-                  address: "New Address",
-                  insuranceProvider: "New Insurance",
-                  insuranceNumber: "NI12345678",
-                }
-              )
-            }
-          >
-            {editingPatient ? "Save Changes" : "Add Patient"}
-          </PrimaryButton>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          {patientToDelete && (
-            <Typography>
-              Are you sure you want to delete the patient record for{" "}
-              {patientToDelete.firstName} {patientToDelete.lastName}? This
-              action cannot be undone.
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <TextButton onClick={() => setDeleteDialogOpen(false)}>
-            Cancel
-          </TextButton>
-          <DangerButton
-            onClick={handleConfirmDelete}
-            color="error"
-            variant="contained"
-          >
-            Delete
-          </DangerButton>
-        </DialogActions>
       </Dialog>
     </PageContainer>
   );

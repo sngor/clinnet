@@ -37,12 +37,15 @@ export const DataProvider = ({ children }) => {
 
         // Fetch services from DynamoDB via API
         try {
+          console.log("Fetching services from DynamoDB...");
           const servicesFromApi = await serviceApi.getAllServices();
-          setServices(servicesFromApi);
           console.log("Services loaded from DynamoDB:", servicesFromApi);
+          setServices(Array.isArray(servicesFromApi) ? servicesFromApi : []);
         } catch (serviceError) {
           console.error("Error loading services:", serviceError);
+          console.error("Error details:", serviceError.message);
           setError("Failed to load services. Please try again later.");
+          // Continue execution even if services fail to load
         }
 
         // Fetch patients from DynamoDB via API
@@ -50,10 +53,13 @@ export const DataProvider = ({ children }) => {
           console.log("Fetching patients from DynamoDB...");
           const patientsFromApi = await fetchPatients();
           console.log("Patients loaded from DynamoDB:", patientsFromApi);
-          setPatients(patientsFromApi);
+          setPatients(Array.isArray(patientsFromApi) ? patientsFromApi : []);
         } catch (patientError) {
           console.error("Error loading patients:", patientError);
+          console.error("Error details:", patientError.message);
           setError("Failed to load patients. Please try again later.");
+          // Continue execution even if patients fail to load
+          setPatients([]);
         }
 
         setInitialized(true);
@@ -76,12 +82,14 @@ export const DataProvider = ({ children }) => {
       console.log("Refreshing patients data...");
       const patientsFromApi = await fetchPatients();
       console.log("Patients refreshed successfully:", patientsFromApi);
-      setPatients(patientsFromApi);
+      setPatients(Array.isArray(patientsFromApi) ? patientsFromApi : []);
       return patientsFromApi;
     } catch (err) {
       console.error("Error refreshing patients:", err);
+      console.error("Error details:", err.message);
       setError(err.message || "Failed to refresh patients");
-      throw err;
+      // Return empty array instead of throwing to prevent UI crashes
+      return [];
     } finally {
       setLoading(false);
     }
@@ -91,14 +99,17 @@ export const DataProvider = ({ children }) => {
   const refreshServices = async () => {
     try {
       setLoading(true);
+      console.log("Refreshing services data...");
       const servicesFromApi = await serviceApi.getAllServices();
-      setServices(servicesFromApi);
-      console.log("Services refreshed:", servicesFromApi);
+      console.log("Services refreshed successfully:", servicesFromApi);
+      setServices(Array.isArray(servicesFromApi) ? servicesFromApi : []);
       return servicesFromApi;
     } catch (err) {
       console.error("Error refreshing services:", err);
+      console.error("Error details:", err.message);
       setError(err.message || "Failed to refresh services");
-      throw err;
+      // Return empty array instead of throwing to prevent UI crashes
+      return [];
     } finally {
       setLoading(false);
     }

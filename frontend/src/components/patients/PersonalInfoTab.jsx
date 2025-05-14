@@ -2,194 +2,216 @@
 import React from 'react';
 import {
   Grid,
-  TextField,
   Typography,
-  Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
+  TextField,
+  Box
 } from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { format } from 'date-fns';
 
-function PersonalInfoTab({ patient, editedPatient, isEditing, handleInputChange }) {
-  // Handle date change
-  const handleDateChange = (date, fieldName) => {
-    const formattedDate = date ? format(date, 'yyyy-MM-dd') : null;
-    handleInputChange({ target: { name: fieldName, value: formattedDate } });
-  };
-
+function PersonalInfoTab({ patient, isEditing, editedPatient, handleInputChange }) {
   return (
-    <>
-      <Typography variant="h6" sx={{ mb: 3, fontWeight: 500, color: 'primary.main' }}>
-        Personal Information
-      </Typography>
-      
-      <Grid container spacing={3}>
-        {/* Basic Information */}
-        <Grid item xs={12} md={6}>
-          <TextField
-            label="First Name"
-            name="firstName"
-            value={isEditing ? editedPatient.firstName : patient.firstName}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            disabled={!isEditing}
-          />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <TextField
-            label="Last Name"
-            name="lastName"
-            value={isEditing ? editedPatient.lastName : patient.lastName}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            disabled={!isEditing}
-          />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Date of Birth"
-              value={isEditing ? (editedPatient.dateOfBirth ? new Date(editedPatient.dateOfBirth) : null) : (patient.dateOfBirth ? new Date(patient.dateOfBirth) : null)}
-              onChange={(date) => handleDateChange(date, 'dateOfBirth')}
-              disabled={!isEditing}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  margin: 'normal'
-                }
-              }}
-            />
-          </LocalizationProvider>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Gender</InputLabel>
-            <Select
-              name="gender"
-              value={isEditing ? editedPatient.gender : patient.gender}
-              onChange={handleInputChange}
-              label="Gender"
-              disabled={!isEditing}
-            >
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
-              <MenuItem value="Prefer not to say">Prefer not to say</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <TextField
-            label="Phone"
-            name="phone"
-            value={isEditing ? editedPatient.phone : patient.phone}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            disabled={!isEditing}
-          />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <TextField
-            label="Email"
-            name="email"
-            value={isEditing ? editedPatient.email : patient.email}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            disabled={!isEditing}
-          />
-        </Grid>
-
-        {/* Address Information */}
-        <Grid item xs={12}>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
-            Address Information
-          </Typography>
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            label="Street Address"
-            name="address"
-            value={isEditing ? editedPatient.address : patient.address}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            disabled={!isEditing}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            label="City"
-            name="city"
-            value={isEditing ? editedPatient.city : patient.city}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            disabled={!isEditing}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            label="State"
-            name="state"
-            value={isEditing ? editedPatient.state : patient.state}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            disabled={!isEditing}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            label="ZIP Code"
-            name="zipCode"
-            value={isEditing ? editedPatient.zipCode : patient.zipCode}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            disabled={!isEditing}
-          />
-        </Grid>
-
-        {/* Emergency Contact */}
-        <Grid item xs={12}>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
-            Emergency Contact
-          </Typography>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <TextField
-            label="Emergency Contact Name"
-            name="emergencyContactName"
-            value={isEditing ? editedPatient.emergencyContactName : patient.emergencyContactName}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            disabled={!isEditing}
-          />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <TextField
-            label="Emergency Contact Phone"
-            name="emergencyContactPhone"
-            value={isEditing ? editedPatient.emergencyContactPhone : patient.emergencyContactPhone}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            disabled={!isEditing}
-          />
+    <Grid container spacing={3}>
+      <Grid item xs={12} md={6}>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" fontWeight={500} gutterBottom>
+              Contact Information
+            </Typography>
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary">
+              First Name
+            </Typography>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                name="firstName"
+                value={editedPatient.firstName || ''}
+                onChange={handleInputChange}
+                size="small"
+                margin="dense"
+              />
+            ) : (
+              <Typography variant="body1">
+                {patient.firstName || 'N/A'}
+              </Typography>
+            )}
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Last Name
+            </Typography>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                name="lastName"
+                value={editedPatient.lastName || ''}
+                onChange={handleInputChange}
+                size="small"
+                margin="dense"
+              />
+            ) : (
+              <Typography variant="body1">
+                {patient.lastName || 'N/A'}
+              </Typography>
+            )}
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Address
+            </Typography>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                name="address"
+                value={editedPatient.address || ''}
+                onChange={handleInputChange}
+                size="small"
+                margin="dense"
+                multiline
+                rows={2}
+              />
+            ) : (
+              <Typography variant="body1">
+                {patient.address || 'N/A'}
+              </Typography>
+            )}
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary">
+              City
+            </Typography>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                name="city"
+                value={editedPatient.city || ''}
+                onChange={handleInputChange}
+                size="small"
+                margin="dense"
+              />
+            ) : (
+              <Typography variant="body1">
+                {patient.city || 'N/A'}
+              </Typography>
+            )}
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary">
+              State
+            </Typography>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                name="state"
+                value={editedPatient.state || ''}
+                onChange={handleInputChange}
+                size="small"
+                margin="dense"
+              />
+            ) : (
+              <Typography variant="body1">
+                {patient.state || 'N/A'}
+              </Typography>
+            )}
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Zip Code
+            </Typography>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                name="zipCode"
+                value={editedPatient.zipCode || ''}
+                onChange={handleInputChange}
+                size="small"
+                margin="dense"
+              />
+            ) : (
+              <Typography variant="body1">
+                {patient.zipCode || 'N/A'}
+              </Typography>
+            )}
+          </Grid>
         </Grid>
       </Grid>
-    </>
+      
+      <Grid item xs={12} md={6}>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" fontWeight={500} gutterBottom>
+              Emergency Contact
+            </Typography>
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Emergency Contact Name
+            </Typography>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                name="emergencyContactName"
+                value={editedPatient.emergencyContactName || ''}
+                onChange={handleInputChange}
+                size="small"
+                margin="dense"
+              />
+            ) : (
+              <Typography variant="body1">
+                {patient.emergencyContactName || 'N/A'}
+              </Typography>
+            )}
+          </Grid>
+          
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Emergency Contact Phone
+            </Typography>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                name="emergencyContactPhone"
+                value={editedPatient.emergencyContactPhone || ''}
+                onChange={handleInputChange}
+                size="small"
+                margin="dense"
+              />
+            ) : (
+              <Typography variant="body1">
+                {patient.emergencyContactPhone || 'N/A'}
+              </Typography>
+            )}
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Relationship
+            </Typography>
+            {isEditing ? (
+              <TextField
+                fullWidth
+                name="emergencyContactRelationship"
+                value={editedPatient.emergencyContactRelationship || ''}
+                onChange={handleInputChange}
+                size="small"
+                margin="dense"
+              />
+            ) : (
+              <Typography variant="body1">
+                {patient.emergencyContactRelationship || 'N/A'}
+              </Typography>
+            )}
+          </Grid>
+        </Grid>
+      </Grid>
+    </Grid>
   );
 }
 
