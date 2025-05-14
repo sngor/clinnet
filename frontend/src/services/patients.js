@@ -1,6 +1,7 @@
 // src/services/patients.js
 // API functions for PatientRecordsTable (DynamoDB single-table design)
 import axios from 'axios';
+import { fetchAuthSession } from 'aws-amplify/auth'; // Added import
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -20,7 +21,16 @@ export async function fetchPatients() {
     return Promise.reject(new Error("VITE_API_URL is not configured. Cannot fetch patients."));
   }
   try {
-    const res = await axios.get(`${API_BASE_URL}/patients`);
+    const { tokens } = await fetchAuthSession();
+    const idToken = tokens?.idToken?.toString();
+    if (!idToken) {
+      throw new Error('No ID token found. User might not be authenticated.');
+    }
+    const res = await axios.get(`${API_BASE_URL}/patients`, {
+      headers: {
+        Authorization: idToken,
+      },
+    });
     // Transform the response to match the frontend's expected structure
     return res.data.map(patient => transformPatientFromDynamo(patient));
   } catch (error) {
@@ -34,7 +44,16 @@ export async function fetchPatientById(id) {
     return Promise.reject(new Error("VITE_API_URL is not configured. Cannot fetch patient by ID."));
   }
   try {
-    const res = await axios.get(`${API_BASE_URL}/patients/${id}`);
+    const { tokens } = await fetchAuthSession();
+    const idToken = tokens?.idToken?.toString();
+    if (!idToken) {
+      throw new Error('No ID token found. User might not be authenticated.');
+    }
+    const res = await axios.get(`${API_BASE_URL}/patients/${id}`, {
+      headers: {
+        Authorization: idToken,
+      },
+    });
     return transformPatientFromDynamo(res.data);
   } catch (error) {
     console.error(`Error fetching patient ${id}:`, error.response ? error.response.data : error.message);
@@ -47,8 +66,17 @@ export async function createPatient(patientData) {
     return Promise.reject(new Error("VITE_API_URL is not configured. Cannot create patient."));
   }
   try {
+    const { tokens } = await fetchAuthSession();
+    const idToken = tokens?.idToken?.toString();
+    if (!idToken) {
+      throw new Error('No ID token found. User might not be authenticated.');
+    }
     const transformedData = transformPatientToDynamo(patientData);
-    const res = await axios.post(`${API_BASE_URL}/patients`, transformedData);
+    const res = await axios.post(`${API_BASE_URL}/patients`, transformedData, {
+      headers: {
+        Authorization: idToken,
+      },
+    });
     return transformPatientFromDynamo(res.data);
   } catch (error) {
     console.error('Error creating patient:', error.response ? error.response.data : error.message);
@@ -61,8 +89,17 @@ export async function updatePatient(id, patientData) {
     return Promise.reject(new Error("VITE_API_URL is not configured. Cannot update patient."));
   }
   try {
+    const { tokens } = await fetchAuthSession();
+    const idToken = tokens?.idToken?.toString();
+    if (!idToken) {
+      throw new Error('No ID token found. User might not be authenticated.');
+    }
     const transformedData = transformPatientToDynamo(patientData);
-    const res = await axios.put(`${API_BASE_URL}/patients/${id}`, transformedData);
+    const res = await axios.put(`${API_BASE_URL}/patients/${id}`, transformedData, {
+      headers: {
+        Authorization: idToken,
+      },
+    });
     return transformPatientFromDynamo(res.data);
   } catch (error) {
     console.error(`Error updating patient ${id}:`, error.response ? error.response.data : error.message);
@@ -75,7 +112,16 @@ export async function deletePatient(id) {
     return Promise.reject(new Error("VITE_API_URL is not configured. Cannot delete patient."));
   }
   try {
-    await axios.delete(`${API_BASE_URL}/patients/${id}`);
+    const { tokens } = await fetchAuthSession();
+    const idToken = tokens?.idToken?.toString();
+    if (!idToken) {
+      throw new Error('No ID token found. User might not be authenticated.');
+    }
+    await axios.delete(`${API_BASE_URL}/patients/${id}`, {
+      headers: {
+        Authorization: idToken,
+      },
+    });
     return true;
   } catch (error) {
     console.error(`Error deleting patient ${id}:`, error.response ? error.response.data : error.message);
