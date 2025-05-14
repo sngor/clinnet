@@ -2,12 +2,12 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthProvider";
 import { 
-  fetchPatients, 
-  fetchPatientById, 
+  getPatients as fetchPatients, 
+  getPatientById as fetchPatientById, 
   createPatient, 
   updatePatient as updatePatientApi, 
   deletePatient as deletePatientApi 
-} from "../../services/patients";
+} from "../../services/patientService";
 import serviceApi from "../../services/serviceApi";
 
 // Create context
@@ -47,9 +47,10 @@ export const DataProvider = ({ children }) => {
 
         // Fetch patients from DynamoDB via API
         try {
+          console.log("Fetching patients from DynamoDB...");
           const patientsFromApi = await fetchPatients();
-          setPatients(patientsFromApi);
           console.log("Patients loaded from DynamoDB:", patientsFromApi);
+          setPatients(patientsFromApi);
         } catch (patientError) {
           console.error("Error loading patients:", patientError);
           setError("Failed to load patients. Please try again later.");
@@ -72,9 +73,10 @@ export const DataProvider = ({ children }) => {
   const refreshPatients = async () => {
     try {
       setLoading(true);
+      console.log("Refreshing patients data...");
       const patientsFromApi = await fetchPatients();
+      console.log("Patients refreshed successfully:", patientsFromApi);
       setPatients(patientsFromApi);
-      console.log("Patients refreshed:", patientsFromApi);
       return patientsFromApi;
     } catch (err) {
       console.error("Error refreshing patients:", err);
@@ -141,35 +143,44 @@ export const DataProvider = ({ children }) => {
   // Patient operations using DynamoDB API
   const addPatient = async (patientData) => {
     try {
+      console.log("Adding new patient:", patientData);
       const newPatient = await createPatient(patientData);
+      console.log("Patient added successfully:", newPatient);
       setPatients([...patients, newPatient]);
       return newPatient;
     } catch (err) {
       console.error("Error adding patient:", err);
+      console.error("Error details:", err.message);
       throw err;
     }
   };
 
   const updatePatient = async (id, patientData) => {
     try {
+      console.log(`Updating patient ${id} with data:`, patientData);
       const updatedPatient = await updatePatientApi(id, patientData);
+      console.log("Patient updated successfully:", updatedPatient);
       setPatients(patients.map(patient => 
         patient.id === id ? updatedPatient : patient
       ));
       return updatedPatient;
     } catch (err) {
       console.error(`Error updating patient ${id}:`, err);
+      console.error("Error details:", err.message);
       throw err;
     }
   };
 
   const deletePatient = async (id) => {
     try {
+      console.log(`Deleting patient with ID: ${id}`);
       await deletePatientApi(id);
+      console.log(`Patient ${id} deleted successfully`);
       setPatients(patients.filter(patient => patient.id !== id));
       return true;
     } catch (err) {
       console.error(`Error deleting patient ${id}:`, err);
+      console.error("Error details:", err.message);
       throw err;
     }
   };

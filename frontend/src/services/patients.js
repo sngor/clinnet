@@ -1,11 +1,16 @@
 // src/services/patients.js
 // API functions for PatientRecordsTable (DynamoDB single-table design)
-import api from './api';
+import { get, post, put, del } from 'aws-amplify/api';
 
 export async function fetchPatients() {
   try {
-    const response = await api.get('/patients');
-    return response.data;
+    const response = await get({
+      apiName: 'clinnetApi',
+      path: '/patients'
+    });
+    // Updated to properly handle the response
+    const data = await response.body.json();
+    return data;
   } catch (error) {
     console.error('Error fetching patients:', error);
     throw error;
@@ -14,8 +19,13 @@ export async function fetchPatients() {
 
 export async function fetchPatientById(id) {
   try {
-    const response = await api.get(`/patients/${id}`);
-    return response.data;
+    const response = await get({
+      apiName: 'clinnetApi',
+      path: `/patients/${id}`
+    });
+    // Updated to properly handle the response
+    const data = await response.body.json();
+    return data;
   } catch (error) {
     console.error(`Error fetching patient ${id}:`, error);
     throw error;
@@ -48,8 +58,16 @@ export async function createPatient(patientData) {
       }
     });
     
-    const response = await api.post('/patients', sanitizedData);
-    return response.data;
+    const response = await post({
+      apiName: 'clinnetApi',
+      path: '/patients',
+      options: {
+        body: sanitizedData
+      }
+    });
+    // Updated to properly handle the response
+    const data = await response.body.json();
+    return data;
   } catch (error) {
     console.error('Error creating patient:', error);
     throw error;
@@ -82,8 +100,16 @@ export async function updatePatient(id, patientData) {
       }
     });
     
-    const response = await api.put(`/patients/${id}`, sanitizedData);
-    return response.data;
+    const response = await put({
+      apiName: 'clinnetApi',
+      path: `/patients/${id}`,
+      options: {
+        body: sanitizedData
+      }
+    });
+    // Updated to properly handle the response
+    const data = await response.body.json();
+    return data;
   } catch (error) {
     console.error(`Error updating patient ${id}:`, error);
     throw error;
@@ -92,8 +118,13 @@ export async function updatePatient(id, patientData) {
 
 export async function deletePatient(id) {
   try {
-    const response = await api.delete(`/patients/${id}`);
-    return response.data;
+    const response = await del({
+      apiName: 'clinnetApi',
+      path: `/patients/${id}`
+    });
+    // Updated to properly handle the response
+    const data = await response.body.json();
+    return data;
   } catch (error) {
     console.error(`Error deleting patient ${id}:`, error);
     throw error;

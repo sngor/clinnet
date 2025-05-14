@@ -8,7 +8,8 @@ export const getPatients = async () => {
       apiName: 'clinnetApi',
       path: '/patients'
     });
-    return response.body;
+    const data = await response.body.json();
+    return data;
   } catch (error) {
     console.error('Error fetching patients:', error);
     throw error;
@@ -22,7 +23,8 @@ export const getPatientById = async (patientId) => {
       apiName: 'clinnetApi',
       path: `/patients/${patientId}`
     });
-    return response.body;
+    const data = await response.body.json();
+    return data;
   } catch (error) {
     console.error(`Error fetching patient ${patientId}:`, error);
     throw error;
@@ -52,7 +54,8 @@ export const createPatient = async (patientData) => {
         body: transformedData
       }
     });
-    return response.body;
+    const data = await response.body.json();
+    return data;
   } catch (error) {
     console.error('Error creating patient:', error);
     throw error;
@@ -82,7 +85,8 @@ export const updatePatient = async (patientId, patientData) => {
         body: transformedData
       }
     });
-    return response.body;
+    const data = await response.body.json();
+    return data;
   } catch (error) {
     console.error(`Error updating patient ${patientId}:`, error);
     throw error;
@@ -96,7 +100,8 @@ export const deletePatient = async (patientId) => {
       apiName: 'clinnetApi',
       path: `/patients/${patientId}`
     });
-    return response.body;
+    const data = await response.body.json();
+    return data;
   } catch (error) {
     console.error(`Error deleting patient ${patientId}:`, error);
     throw error;

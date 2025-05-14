@@ -1,5 +1,5 @@
 // src/features/patients/api/patientApi.js
-import api from '../../../services/api';
+import { get, post, put, del } from 'aws-amplify/api';
 
 /**
  * Patient API service for interacting with the backend
@@ -11,14 +11,18 @@ const patientApi = {
    */
   getAllPatients: async () => {
     try {
-      const response = await api.get('/patients');
-      return response.data;
+      const response = await get({
+        apiName: 'clinnetApi',
+        path: '/patients'
+      });
+      const data = await response.body.json();
+      return data;
     } catch (error) {
       console.error('Error fetching patients:', error);
       throw error;
     }
   },
-
+  
   /**
    * Get a patient by ID
    * @param {string} id - Patient ID
@@ -26,14 +30,18 @@ const patientApi = {
    */
   getPatientById: async (id) => {
     try {
-      const response = await api.get(`/patients/${id}`);
-      return response.data;
+      const response = await get({
+        apiName: 'clinnetApi',
+        path: `/patients/${id}`
+      });
+      const data = await response.body.json();
+      return data;
     } catch (error) {
       console.error(`Error fetching patient ${id}:`, error);
       throw error;
     }
   },
-
+  
   /**
    * Create a new patient
    * @param {Object} patientData - Patient data
@@ -41,41 +49,24 @@ const patientApi = {
    */
   createPatient: async (patientData) => {
     try {
-      // Ensure nested objects are properly initialized
-      const sanitizedData = {
-        ...patientData,
-        emergencyContact: patientData.emergencyContact || {},
-        insuranceInfo: patientData.insuranceInfo || {},
-        medicalHistory: patientData.medicalHistory || {}
-      };
-      
-      // Remove any undefined values that could cause JSON serialization issues
-      Object.keys(sanitizedData).forEach(key => {
-        if (sanitizedData[key] === undefined) {
-          sanitizedData[key] = null;
-        }
-        
-        // Also check nested objects
-        if (typeof sanitizedData[key] === 'object' && sanitizedData[key] !== null) {
-          Object.keys(sanitizedData[key]).forEach(nestedKey => {
-            if (sanitizedData[key][nestedKey] === undefined) {
-              sanitizedData[key][nestedKey] = null;
-            }
-          });
+      console.log('Creating patient with data:', patientData);
+      const response = await post({
+        apiName: 'clinnetApi',
+        path: '/patients',
+        options: {
+          body: patientData
         }
       });
-      
-      console.log('Creating patient with data:', sanitizedData);
-      const response = await api.post('/patients', sanitizedData);
-      console.log('Patient created successfully:', response.data);
-      return response.data;
+      const data = await response.body.json();
+      console.log('Patient created successfully:', data);
+      return data;
     } catch (error) {
       console.error('Error creating patient:', error);
       console.error('Error details:', error.response?.data || error.message);
       throw error;
     }
   },
-
+  
   /**
    * Update a patient
    * @param {string} id - Patient ID
@@ -84,38 +75,21 @@ const patientApi = {
    */
   updatePatient: async (id, patientData) => {
     try {
-      // Ensure nested objects are properly initialized
-      const sanitizedData = {
-        ...patientData,
-        emergencyContact: patientData.emergencyContact || {},
-        insuranceInfo: patientData.insuranceInfo || {},
-        medicalHistory: patientData.medicalHistory || {}
-      };
-      
-      // Remove any undefined values
-      Object.keys(sanitizedData).forEach(key => {
-        if (sanitizedData[key] === undefined) {
-          sanitizedData[key] = null;
-        }
-        
-        // Also check nested objects
-        if (typeof sanitizedData[key] === 'object' && sanitizedData[key] !== null) {
-          Object.keys(sanitizedData[key]).forEach(nestedKey => {
-            if (sanitizedData[key][nestedKey] === undefined) {
-              sanitizedData[key][nestedKey] = null;
-            }
-          });
+      const response = await put({
+        apiName: 'clinnetApi',
+        path: `/patients/${id}`,
+        options: {
+          body: patientData
         }
       });
-      
-      const response = await api.put(`/patients/${id}`, sanitizedData);
-      return response.data;
+      const data = await response.body.json();
+      return data;
     } catch (error) {
       console.error(`Error updating patient ${id}:`, error);
       throw error;
     }
   },
-
+  
   /**
    * Delete a patient
    * @param {string} id - Patient ID
@@ -123,8 +97,12 @@ const patientApi = {
    */
   deletePatient: async (id) => {
     try {
-      const response = await api.delete(`/patients/${id}`);
-      return response.data;
+      const response = await del({
+        apiName: 'clinnetApi',
+        path: `/patients/${id}`
+      });
+      const data = await response.body.json();
+      return data;
     } catch (error) {
       console.error(`Error deleting patient ${id}:`, error);
       throw error;

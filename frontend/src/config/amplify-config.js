@@ -21,12 +21,23 @@ const amplifyConfig = {
         custom_header: async () => {
           try {
             const { tokens } = await fetchAuthSession();
+            if (!tokens || !tokens.idToken) {
+              console.warn('No auth tokens available for API request');
+              return {};
+            }
+            
+            const token = tokens.idToken.toString();
+            console.log('Auth token obtained for API request');
+            
             return {
-              Authorization: `Bearer ${tokens.idToken.toString()}`
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
             };
           } catch (error) {
-            console.error('Error getting auth token:', error);
-            return {};
+            console.error('Error getting auth token for API request:', error);
+            return {
+              'Content-Type': 'application/json'
+            };
           }
         }
       }
@@ -34,6 +45,9 @@ const amplifyConfig = {
   }
 };
 
-console.log('Amplify v6 config loaded with API configuration');
+console.log('Amplify v6 config loaded with API configuration:', {
+  endpoint: amplifyConfig.API.REST.clinnetApi.endpoint,
+  region: amplifyConfig.API.REST.clinnetApi.region
+});
 
 export default amplifyConfig;
