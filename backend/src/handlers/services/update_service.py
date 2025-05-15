@@ -3,6 +3,7 @@ Lambda function to update a service
 """
 import os
 import json
+import logging
 from botocore.exceptions import ClientError
 
 # Import utility functions
@@ -20,47 +21,42 @@ def lambda_handler(event, context):
     Returns:
         dict: API Gateway response
     """
-    print(f"Received event: {json.dumps(event)}")
-    
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.info(f"Received event: {json.dumps(event)}")
+    logger.info(f"Context: {context}")
+
     table_name = os.environ.get('SERVICES_TABLE')
     if not table_name:
+        logger.error('Services table name not configured')
         return generate_response(500, {'message': 'Services table name not configured'})
-    
-    # Get service ID from path parameters
+
     service_id = event.get('pathParameters', {}).get('id')
     if not service_id:
+        logger.error('Missing service ID')
         return generate_response(400, {'message': 'Missing service ID'})
-    
+
     try:
-        # Parse request body
         body = json.loads(event.get('body', '{}'))
-        
-        # Get existing service
         existing_service = get_item_by_id(table_name, service_id)
-        
         if not existing_service:
+            logger.error(f'Service with ID {service_id} not found')
             return generate_response(404, {'message': f'Service with ID {service_id} not found'})
-        
-        # Fields that can be updated
         updatable_fields = [
             'name', 'description', 'price', 'duration', 'category', 'active'
         ]
-        
-        # Create updates dictionary with only provided fields
         updates = {}
         for field in updatable_fields:
             if field in body:
                 updates[field] = body[field]
-        
-        # Update service
         updated_service = update_item(table_name, service_id, updates)
-        
+        logger.info(f"Service {service_id} updated successfully.")
         return generate_response(200, updated_service)
-    
     except ClientError as e:
+        logger.error(f"ClientError: {e}", exc_info=True)
         return handle_exception(e)
     except Exception as e:
-        print(f"Error updating service: {e}")
+        logger.error(f"Error updating service: {e}", exc_info=True)
         return generate_response(500, {
             'message': 'Error updating service',
             'error': str(e)
