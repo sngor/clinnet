@@ -212,6 +212,8 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref ServicesTable
+      Layers:
+        - !Ref UtilsLayer
       Events:
         GetServices:
           Type: Api
@@ -303,6 +305,8 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref PatientRecordsTable
+      Layers:
+        - !Ref UtilsLayer
       Events:
         GetPatients:
           Type: Api
@@ -346,6 +350,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PatientRecordsTable
+      Layers:
+        - !Ref UtilsLayer
       Events:
         CreatePatient:
           Type: Api
@@ -680,6 +686,19 @@ Resources:
             Path: /appointments/{id}
             Method: delete
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
+
+  UtilsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: utils-layer
+      Description: Shared utils for Clinnet-EMR Lambdas
+      ContentUri: lambda_layer/
+      CompatibleRuntimes:
+        - python3.13
+        - python3.12
+        - python3.11
+        - python3.10
+        - python3.9
 
 Outputs:
   ClinicAPI:

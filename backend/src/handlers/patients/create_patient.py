@@ -8,6 +8,7 @@ from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
 from utils.db_utils import generate_response
+from utils.responser_helper import handle_exception
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
