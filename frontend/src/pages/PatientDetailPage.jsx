@@ -8,7 +8,6 @@ import {
   Paper,
   Grid,
   Button,
-  Divider,
   Chip,
   Tab,
   Tabs,
@@ -29,62 +28,24 @@ import {
 } from "@mui/icons-material";
 import { useAppData } from "../app/providers/DataProvider";
 
-// Import tab components
+// Tab components
 import PersonalInfoTab from "../components/patients/PersonalInfoTab";
 import MedicalInfoTab from "../components/patients/MedicalInfoTab";
 import AppointmentsTab from "../components/patients/AppointmentsTab";
 import MedicalRecordsTab from "../components/patients/MedicalRecordsTab";
 
-// Import patient service
-import patientService from "../services/patients"; // Assuming this is the correct path and default export
+import patientService from "../services/patients";
 
-// Mock patient data for fallback
-const mockPatients = [
-  {
-    id: "1",
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    gender: "Male",
-    dateOfBirth: "1985-05-15",
-    address: "123 Main St",
-    city: "Anytown",
-    state: "CA",
-    zipCode: "12345",
-    insuranceProvider: "Blue Cross",
-    insuranceNumber: "BC12345678",
-    emergencyContactName: "Jane Doe",
-    emergencyContactPhone: "+1 (555) 987-6543",
-    allergies: "Penicillin",
-    status: "Active",
-  },
-  {
-    id: "2",
-    firstName: "Jane",
-    lastName: "Smith",
-    email: "jane.smith@example.com",
-    phone: "+1 (555) 234-5678",
-    gender: "Female",
-    dateOfBirth: "1990-08-22",
-    address: "456 Oak Ave",
-    city: "Somewhere",
-    state: "CA",
-    zipCode: "67890",
-    insuranceProvider: "Aetna",
-    insuranceNumber: "AE87654321",
-    emergencyContactName: "John Smith",
-    emergencyContactPhone: "+1 (555) 876-5432",
-    allergies: "None",
-    status: "Active",
-  },
-];
-
+/**
+ * PatientDetailPage displays and allows editing of a single patient's details.
+ * Handles loading, error, and not-found states, and provides tabbed navigation.
+ */
 function PatientDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { patients, loading, error, updatePatient } = useAppData();
 
+  // State for patient data and UI
   const [patient, setPatient] = useState(null);
   const [editedPatient, setEditedPatient] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -93,103 +54,79 @@ function PatientDetailPage() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  // Find patient by ID
+  // Fetch patient by ID from context or API
   useEffect(() => {
     if (!id) return;
-
-    // Safely find patient by ID
+    if (loading) return;
+    if (error) {
+      setPatient(null);
+      setEditedPatient(null);
+      return;
+    }
+    // Try to find patient in context
     if (patients && Array.isArray(patients) && patients.length > 0) {
-      const found = patients.find((p) => p.id === id); // Corrected variable name
+      const found = patients.find((p) => p.id === id);
       if (found) {
-        // Corrected variable name
-        console.log("Found patient in state:", found); // Corrected variable name
-        setPatient(found); // Corrected variable name
-        setEditedPatient(found); // Corrected variable name
+        if (
+          !patient ||
+          patient.id !== found.id ||
+          JSON.stringify(patient) !== JSON.stringify(found)
+        ) {
+          setPatient(found);
+          setEditedPatient({ ...found });
+        }
         return;
       }
     }
+    // If not found, fetch directly
+    patientService
+      .fetchPatientById(id)
+      .then((fetchedPatient) => {
+        if (fetchedPatient) {
+          setPatient(fetchedPatient);
+          setEditedPatient({ ...fetchedPatient });
+        } else {
+          setPatient(null);
+          setEditedPatient(null);
+        }
+      })
+      .catch((err) => {
+        setPatient(null);
+        setEditedPatient(null);
+      });
+  }, [id, patients, loading, error]);
 
-    // If patient not in existing list, fetch by ID
-    if (!patient && id && !loading) {
-      // Ensure we have an id and not already loading
-      patientService
-        .fetchPatientById(id) // Use patientService
-        .then((fetchedPatient) => {
-          if (fetchedPatient) {
-            setPatient(fetchedPatient);
-            setEditedPatient(fetchedPatient);
-          } else {
-            // Handle case where patient is not found by API
-            console.log(`Patient with id ${id} not found via API.`);
-            // Optionally, set an error state here to inform the user
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching patient by ID:", err);
-          // Optionally, set an error state here
-        });
-    }
-    // Removed problematic fallback to empty mockPatients.js
-  }, [id, patients, loading, patient]); // Removed fetchPatientById from dependencies
+  // Tab change handler
+  const handleTabChange = (_, newValue) => setTabValue(newValue);
 
-  // Handle tab change
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
-
-  // Start editing patient
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
-
-  // Cancel editing
+  // Edit mode handlers
+  const handleEditClick = () => setIsEditing(true);
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedPatient(patient);
   };
 
-  // Save patient changes
+  // Save changes to patient
   const handleSaveChanges = async () => {
+    if (!editedPatient || !editedPatient.id) {
+      setSnackbarMessage("Error: Patient data is missing.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
     try {
-      // Format data for API using DynamoDB structure
-      const patientData = {
-        PK: patient.PK || `PAT#${id}`,
-        SK: patient.SK || "PROFILE#1",
-        id: patient.id || id,
-        GSI1PK: patient.GSI1PK || "CLINIC#DEFAULT",
-        GSI1SK: patient.GSI1SK || `PAT#${id}`,
-        GSI2PK: patient.GSI2PK || `PAT#${id}`,
-        GSI2SK: patient.GSI2SK || "PROFILE#1",
-        type: "PATIENT",
-        firstName: editedPatient.firstName,
-        lastName: editedPatient.lastName,
-        dob: editedPatient.dateOfBirth || editedPatient.dob,
-        phone: editedPatient.phone,
-        email: editedPatient.email,
-        address: editedPatient.address,
-        insuranceProvider: editedPatient.insuranceProvider,
-        insuranceNumber: editedPatient.insuranceNumber,
-        status: editedPatient.status || "Active",
-        updatedAt: new Date().toISOString(),
-      };
-
-      try {
-        await updatePatient(id, patientData);
-      } catch (error) {
-        console.error("Error updating patient via API:", error);
-      }
-
-      // Update local state regardless of API success
-      setPatient(editedPatient);
+      // Prepare data for update (DynamoDB structure if needed)
+      const updated = await updatePatient(editedPatient.id, editedPatient);
+      setPatient(updated);
+      setEditedPatient({ ...updated });
       setIsEditing(false);
-
-      // Show success message
-      setSnackbarMessage("Patient information updated successfully");
+      setSnackbarMessage("Patient details updated successfully!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
-    } catch (error) {
-      console.error("Error updating patient:", error);
-      setSnackbarMessage("Error updating patient information");
+    } catch (err) {
+      setSnackbarMessage(
+        `Error updating patient: ${err.message || "Unknown error"}`
+      );
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
@@ -198,65 +135,52 @@ function PatientDetailPage() {
   // Handle form field changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditedPatient((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setEditedPatient((prev) => ({ ...prev, [name]: value }));
   };
 
   // Calculate age from date of birth
-  const calculateAge = (dateOfBirth) => {
-    if (!dateOfBirth) return "N/A";
-
+  const calculateAge = (dobString) => {
+    if (!dobString) return "";
+    const birthDate = new Date(dobString);
     const today = new Date();
-    const birthDate = new Date(dateOfBirth);
+    if (isNaN(birthDate.getTime())) return "N/A";
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-
     if (
       monthDiff < 0 ||
       (monthDiff === 0 && today.getDate() < birthDate.getDate())
     ) {
       age--;
     }
-
-    return age;
+    return age >= 0 ? age : "N/A";
   };
 
-  // Refresh patient data if needed
+  // Refresh patient data from API
   const refreshPatientData = async () => {
+    if (!id) return;
     try {
-      // Only attempt to fetch if we have an ID
-      if (!id) return;
-
-      // Use the imported patientService directly for specific patient lookup
-      const patientService = await import("../services/patients").then(
-        (module) => module.default
-      );
       const refreshedPatient = await patientService.fetchPatientById(id);
-
       if (refreshedPatient) {
-        console.log("Refreshed patient data:", refreshedPatient);
         setPatient(refreshedPatient);
-        setEditedPatient(refreshedPatient);
+        setEditedPatient({ ...refreshedPatient });
+        setSnackbarMessage("Patient data refreshed.");
+        setSnackbarSeverity("info");
+      } else {
+        setSnackbarMessage("Patient not found after refresh.");
+        setSnackbarSeverity("warning");
       }
     } catch (err) {
-      console.error("Error refreshing patient data:", err);
-      // Don't change existing patient data on error
+      setSnackbarMessage("Failed to refresh patient data.");
+      setSnackbarSeverity("error");
     }
+    setSnackbarOpen(true);
   };
 
-  // Handle back button click
-  const handleBackClick = () => {
-    navigate(-1);
-  };
+  // Navigation and snackbar handlers
+  const handleBackClick = () => navigate(-1);
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  // Handle snackbar close
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
-
-  // Render loading state
+  // Loading, error, and not-found states
   if (loading && !patient) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -274,8 +198,6 @@ function PatientDetailPage() {
       </Container>
     );
   }
-
-  // Render error state
   if (error && !patient) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -292,8 +214,6 @@ function PatientDetailPage() {
       </Container>
     );
   }
-
-  // Render not found state
   if (!loading && !error && !patient) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -314,7 +234,6 @@ function PatientDetailPage() {
       </Container>
     );
   }
-
   if (!patient) {
     return (
       <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -323,9 +242,10 @@ function PatientDetailPage() {
     );
   }
 
+  // Main render
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Header with back button */}
+      {/* Header with back button and actions */}
       <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
         <IconButton onClick={handleBackClick} sx={{ mr: 2 }} aria-label="back">
           <ArrowBackIcon />
@@ -337,7 +257,6 @@ function PatientDetailPage() {
         >
           {patient.firstName} {patient.lastName}
         </Typography>
-
         {isEditing ? (
           <Box>
             <Button
@@ -385,6 +304,7 @@ function PatientDetailPage() {
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Grid container spacing={2}>
+              {/* Date of Birth */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Date of Birth
@@ -411,7 +331,7 @@ function PatientDetailPage() {
                   </Typography>
                 )}
               </Grid>
-
+              {/* Gender */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Gender
@@ -431,7 +351,7 @@ function PatientDetailPage() {
                   </Typography>
                 )}
               </Grid>
-
+              {/* Phone */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Phone
@@ -457,7 +377,7 @@ function PatientDetailPage() {
                   </Box>
                 )}
               </Grid>
-
+              {/* Email */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Email
@@ -485,9 +405,9 @@ function PatientDetailPage() {
               </Grid>
             </Grid>
           </Grid>
-
           <Grid item xs={12} md={6}>
             <Grid container spacing={2}>
+              {/* Address */}
               <Grid item xs={12}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Address
@@ -507,7 +427,7 @@ function PatientDetailPage() {
                   </Typography>
                 )}
               </Grid>
-
+              {/* Insurance Provider */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Insurance Provider
@@ -527,7 +447,7 @@ function PatientDetailPage() {
                   </Typography>
                 )}
               </Grid>
-
+              {/* Insurance Number */}
               <Grid item xs={12} sm={6}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Insurance Number
@@ -547,7 +467,7 @@ function PatientDetailPage() {
                   </Typography>
                 )}
               </Grid>
-
+              {/* Status */}
               <Grid item xs={12}>
                 <Typography variant="subtitle2" color="text.secondary">
                   Status
@@ -561,9 +481,7 @@ function PatientDetailPage() {
                     onChange={handleInputChange}
                     size="small"
                     margin="dense"
-                    SelectProps={{
-                      native: true,
-                    }}
+                    SelectProps={{ native: true }}
                   >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
@@ -581,7 +499,7 @@ function PatientDetailPage() {
         </Grid>
       </Paper>
 
-      {/* Tabs for different sections */}
+      {/* Tabs for patient sections */}
       <Box sx={{ mb: 2 }}>
         <Tabs
           value={tabValue}
@@ -598,28 +516,19 @@ function PatientDetailPage() {
 
       {/* Tab content */}
       <Paper sx={{ p: 3, borderRadius: 2 }}>
-        {!patient ? (
-          <Box sx={{ p: 2, textAlign: "center" }}>
-            <CircularProgress sx={{ mb: 2 }} />
-            <Typography>Loading patient information...</Typography>
-          </Box>
-        ) : (
-          <>
-            {tabValue === 0 && (
-              <PersonalInfoTab
-                patient={patient}
-                isEditing={isEditing}
-                editedPatient={editedPatient}
-                handleInputChange={handleInputChange}
-              />
-            )}
-            {tabValue === 1 && (
-              <MedicalInfoTab patient={patient} isEditing={isEditing} />
-            )}
-            {tabValue === 2 && <AppointmentsTab patientId={patient?.id} />}
-            {tabValue === 3 && <MedicalRecordsTab patientId={patient?.id} />}
-          </>
+        {tabValue === 0 && (
+          <PersonalInfoTab
+            patient={patient}
+            isEditing={isEditing}
+            editedPatient={editedPatient}
+            handleInputChange={handleInputChange}
+          />
         )}
+        {tabValue === 1 && (
+          <MedicalInfoTab patient={patient} isEditing={isEditing} />
+        )}
+        {tabValue === 2 && <AppointmentsTab patientId={patient?.id} />}
+        {tabValue === 3 && <MedicalRecordsTab patientId={patient?.id} />}
       </Paper>
 
       {/* Snackbar for notifications */}

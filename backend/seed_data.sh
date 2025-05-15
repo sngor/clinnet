@@ -65,7 +65,7 @@ prepare_batch_write_request() {
 # Prepare and seed services
 SERVICES_BATCH_FILE="${DATA_DIR}/services_batch_request.json"
 prepare_batch_write_request "${DATA_DIR}/seed_services.json" "$SERVICES_TABLE" "$SERVICES_BATCH_FILE"
-if [ -f "$SERVICES_BATCH_FILE" ]; then
+if [ -f "$SERVICES_BATCH_FILE"]; then
   echo "Seeding services data from ${DATA_DIR}/seed_services.json into ${SERVICES_TABLE}..."
   aws dynamodb batch-write-item --request-items "file://${SERVICES_BATCH_FILE}" --region "$AWS_REGION"
   rm "$SERVICES_BATCH_FILE"

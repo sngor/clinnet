@@ -12,14 +12,14 @@ import {
   CircularProgress,
   Alert,
   Button,
-  Paper, // Added Paper import
+  Paper,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonIcon from "@mui/icons-material/Person";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "../app/providers/DataProvider";
-import { PageContainer } from "../components/ui"; // Assuming SectionContainer might not be directly used here based on semantic snippets for cards
+import { PageContainer } from "../components/ui";
 
 function DoctorPatientsPage() {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ function DoctorPatientsPage() {
   // Fetch patients on component mount
   useEffect(() => {
     refreshPatients();
-  }, [refreshPatients]); // Added refreshPatients to dependency array
+  }, [refreshPatients]);
 
   // Filter patients when search term or patients list changes
   useEffect(() => {
@@ -50,7 +50,7 @@ function DoctorPatientsPage() {
             patient.lastName.toLowerCase().includes(lowercasedSearch)) ||
           (patient.phone && patient.phone.includes(searchTerm)) ||
           (patient.contactNumber &&
-            patient.contactNumber.includes(searchTerm)) || // Added from previous analysis
+            patient.contactNumber.includes(searchTerm)) ||
           (patient.email &&
             patient.email.toLowerCase().includes(lowercasedSearch))
       );
@@ -75,7 +75,6 @@ function DoctorPatientsPage() {
     if (!dateOfBirth) return "N/A";
     try {
       const birthDate = new Date(dateOfBirth);
-      // Check if birthDate is valid
       if (isNaN(birthDate.getTime())) return "N/A";
 
       const today = new Date();
@@ -89,6 +88,39 @@ function DoctorPatientsPage() {
       return "N/A";
     }
   };
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="200px"
+        >
+          <CircularProgress />
+        </Box>
+      </PageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageContainer>
+        <Alert severity="error">
+          Error fetching patients:{" "}
+          {typeof error === "string"
+            ? error
+            : error?.message || "An unknown error occurred."}
+        </Alert>
+        {refreshPatients && (
+          <Button onClick={() => refreshPatients()} sx={{ mt: 2 }}>
+            Try Again
+          </Button>
+        )}
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -113,7 +145,6 @@ function DoctorPatientsPage() {
         </Button>
       </Box>
 
-      {/* Search bar */}
       <Box sx={{ mb: 3 }}>
         <TextField
           fullWidth
@@ -131,7 +162,6 @@ function DoctorPatientsPage() {
         />
       </Box>
 
-      {/* Error message */}
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {typeof error === "string"
@@ -140,46 +170,43 @@ function DoctorPatientsPage() {
         </Alert>
       )}
 
-      {/* Patient list */}
+      {filteredPatients.length === 0 && !loading && (
+        <Typography
+          variant="subtitle1"
+          sx={{ textAlign: "center", mt: 4, color: "text.secondary" }}
+        >
+          No patients found.
+        </Typography>
+      )}
+
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {" "}
-          {/* Increased spacing slightly */}
           {filteredPatients && filteredPatients.length > 0 ? (
             filteredPatients.map((patient) => (
               <Grid item xs={12} sm={6} md={4} key={patient.id || patient.PK}>
-                {" "}
-                {/* Use patient.id or PK as key */}
                 <Card
                   sx={{
                     cursor: "pointer",
                     transition: "transform 0.2s, box-shadow 0.2s",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      boxShadow: (theme) => theme.shadows[6], // Use theme shadows
+                      boxShadow: (theme) => theme.shadows[6],
                     },
-                    height: "100%", // Ensure cards try to maintain same height
-                    display: "flex", // Added for flex layout
-                    flexDirection: "column", // Added for flex layout
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
                   }}
                   onClick={() => handlePatientClick(patient)}
                 >
                   <CardContent sx={{ flexGrow: 1 }}>
-                    {" "}
-                    {/* Allow content to grow */}
                     <Box
                       sx={{ display: "flex", alignItems: "center", mb: 1.5 }}
                     >
-                      {" "}
-                      {/* Adjusted margin */}
-                      <PersonIcon
-                        sx={{ mr: 1.5, color: "primary.main" }}
-                      />{" "}
-                      {/* Adjusted margin */}
+                      <PersonIcon sx={{ mr: 1.5, color: "primary.main" }} />
                       <Typography variant="h6" component="div" noWrap>
                         {patient.firstName || ""} {patient.lastName || ""}
                       </Typography>
@@ -238,8 +265,6 @@ function DoctorPatientsPage() {
                     )}
                     {patient.status && (
                       <Box sx={{ mt: 1.5 }}>
-                        {" "}
-                        {/* Adjusted margin */}
                         <Chip
                           label={patient.status}
                           color={

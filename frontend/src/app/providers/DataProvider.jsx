@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthProvider";
 import patientService from "../../services/patients";
+import serviceApi from "../../services/serviceApi";
+import appointmentApi from "../../features/appointments/api/appointmentApi";
 
 // Create context
 const DataContext = createContext(null);
@@ -12,9 +14,10 @@ export const DataProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // State for services and patients
+  // State for services, patients, and appointments
   const [services, setServices] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [appointments, setAppointments] = useState([]);
 
   // Initialize data when authenticated
   useEffect(() => {
@@ -27,6 +30,14 @@ export const DataProvider = ({ children }) => {
       try {
         console.log("Initializing app data...");
 
+        // Fetch real services data from the API
+        const servicesData = await serviceApi.getAllServices();
+        if (servicesData && servicesData.length > 0) {
+          setServices(servicesData);
+        } else {
+          setServices([]);
+        }
+
         // Fetch real patients data from the API
         const patientsData = await patientService.fetchPatients();
         if (patientsData && patientsData.length > 0) {
@@ -38,6 +49,10 @@ export const DataProvider = ({ children }) => {
           const { mockPatients } = await import("../../mock/mockPatients");
           setPatients(mockPatients);
         }
+
+        // Fetch appointments from API
+        const appointmentsData = await appointmentApi.getAllAppointments();
+        setAppointments(appointmentsData || []);
 
         setInitialized(true);
         console.log("Data initialization complete");
@@ -61,27 +76,24 @@ export const DataProvider = ({ children }) => {
     initializeData();
   }, [isAuthenticated]);
 
-  // Mock service operations
+  // Service CRUD operations using real API
   const addService = async (serviceData) => {
-    const newService = {
-      id: services.length + 1,
-      ...serviceData,
-    };
-    setServices([...services, newService]);
+    const newService = await serviceApi.createService(serviceData);
+    setServices((prev) => [...prev, newService]);
     return newService;
   };
 
   const updateService = async (id, serviceData) => {
-    const updatedServices = services.map((service) =>
-      service.id === id ? { ...service, ...serviceData } : service
+    const updatedService = await serviceApi.updateService(id, serviceData);
+    setServices((prev) =>
+      prev.map((service) => (service.id === id ? updatedService : service))
     );
-    setServices(updatedServices);
-    return updatedServices.find((service) => service.id === id);
+    return updatedService;
   };
 
   const deleteService = async (id) => {
-    const updatedServices = services.filter((service) => service.id !== id);
-    setServices(updatedServices);
+    await serviceApi.deleteService(id);
+    setServices((prev) => prev.filter((service) => service.id !== id));
     return true;
   };
 
@@ -126,6 +138,32 @@ export const DataProvider = ({ children }) => {
     }
   };
 
+  // Appointment CRUD operations
+  const addAppointment = async (appointmentData) => {
+    const newAppointment = await appointmentApi.createAppointment(
+      appointmentData
+    );
+    setAppointments((prev) => [...prev, newAppointment]);
+    return newAppointment;
+  };
+
+  const updateAppointment = async (id, appointmentData) => {
+    const updatedAppointment = await appointmentApi.updateAppointment(
+      id,
+      appointmentData
+    );
+    setAppointments((prev) =>
+      prev.map((appt) => (appt.id === id ? updatedAppointment : appt))
+    );
+    return updatedAppointment;
+  };
+
+  const deleteAppointment = async (id) => {
+    await appointmentApi.deleteAppointment(id);
+    setAppointments((prev) => prev.filter((appt) => appt.id !== id));
+    return true;
+  };
+
   const value = {
     initialized,
     loading,
@@ -140,6 +178,11 @@ export const DataProvider = ({ children }) => {
     addPatient,
     updatePatient,
     deletePatient,
+    // Appointments
+    appointments,
+    addAppointment,
+    updateAppointment,
+    deleteAppointment,
     // Refresh function
     refreshPatients: async () => {
       try {

@@ -1,11 +1,11 @@
 // src/pages/FrontdeskCheckoutPage.jsx
-import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Grid, 
-  TextField, 
-  InputAdornment, 
-  Button, 
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Box,
+  Grid,
+  TextField,
+  InputAdornment,
+  Button,
   Typography,
   Divider,
   List,
@@ -23,93 +23,85 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PaymentIcon from '@mui/icons-material/Payment';
-import ReceiptIcon from '@mui/icons-material/Receipt';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
-import LocalAtmIcon from '@mui/icons-material/LocalAtm';
-import PercentIcon from '@mui/icons-material/Percent';
-import NoteAddIcon from '@mui/icons-material/NoteAdd';
-import PrintIcon from '@mui/icons-material/Print';
-import PageContainer from '../components/ui/PageContainer';
-import PageHeading from '../components/ui/PageHeading';
-import ContentCard from '../components/ui/ContentCard';
-import EmptyState from '../components/ui/EmptyState';
-import LoadingIndicator from '../components/ui/LoadingIndicator';
+  DialogActions,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import DeleteIcon from "@mui/icons-material/Delete";
+import PaymentIcon from "@mui/icons-material/Payment";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import LocalAtmIcon from "@mui/icons-material/LocalAtm";
+import PercentIcon from "@mui/icons-material/Percent";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
+import PrintIcon from "@mui/icons-material/Print";
+import PageContainer from "../components/ui/PageContainer";
+import PageHeading from "../components/ui/PageHeading";
+import ContentCard from "../components/ui/ContentCard";
+import EmptyState from "../components/ui/EmptyState";
+import LoadingIndicator from "../components/ui/LoadingIndicator";
 
 function FrontdeskCheckoutPage() {
+  // State hooks for UI and data
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [patients, setPatients] = useState([]);
   const [services, setServices] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
   const [total, setTotal] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [discount, setDiscount] = useState(0);
-  const [discountType, setDiscountType] = useState('percentage');
-  const [notes, setNotes] = useState('');
+  const [discountType, setDiscountType] = useState("percentage");
+  const [notes, setNotes] = useState("");
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [finalAmount, setFinalAmount] = useState(0);
 
-  // Mock data - in a real app, this would come from an API
+  // Simulate API call for patients and services
   useEffect(() => {
-    // Simulate API call
     const timer = setTimeout(() => {
-      const mockPatients = [
-        { id: 'P001', name: 'John Doe', status: 'waiting' },
-        { id: 'P002', name: 'Jane Smith', status: 'in-progress' },
-        { id: 'P003', name: 'Robert Johnson', status: 'completed' },
-        { id: 'P004', name: 'Emily Davis', status: 'waiting' },
-      ];
-      
-      const mockServices = [
-        { id: 'S001', name: 'General Consultation', price: 50 },
-        { id: 'S002', name: 'Blood Test', price: 75 },
-        { id: 'S003', name: 'X-Ray', price: 120 },
-        { id: 'S004', name: 'Vaccination', price: 45 },
-        { id: 'S005', name: 'Physical Therapy', price: 90 },
-      ];
-      
-      setPatients(mockPatients);
-      setServices(mockServices);
+      setPatients([
+        { id: "P001", name: "John Doe", status: "waiting" },
+        { id: "P002", name: "Jane Smith", status: "in-progress" },
+        { id: "P003", name: "Robert Johnson", status: "completed" },
+        { id: "P004", name: "Emily Davis", status: "waiting" },
+      ]);
+      setServices([
+        { id: "S001", name: "General Consultation", price: 50 },
+        { id: "S002", name: "Blood Test", price: 75 },
+        { id: "S003", name: "X-Ray", price: 120 },
+        { id: "S004", name: "Vaccination", price: 45 },
+        { id: "S005", name: "Physical Therapy", price: 90 },
+      ]);
       setLoading(false);
     }, 1000);
-    
     return () => clearTimeout(timer);
   }, []);
 
-  // Calculate total whenever selected services change
+  // Calculate total when selected services change
   useEffect(() => {
-    const newTotal = selectedServices.reduce((sum, service) => sum + service.price, 0);
-    setTotal(newTotal);
+    setTotal(selectedServices.reduce((sum, s) => sum + s.price, 0));
   }, [selectedServices]);
-  
+
   // Calculate final amount after discount
   useEffect(() => {
     let discountAmount = 0;
-    
-    if (discountType === 'percentage') {
+    if (discountType === "percentage") {
       discountAmount = total * (discount / 100);
     } else {
       discountAmount = discount;
     }
-    
-    // Ensure discount doesn't exceed total
-    discountAmount = Math.min(discountAmount, total);
-    
-    setFinalAmount(total - discountAmount);
+    setFinalAmount(Math.max(0, total - Math.min(discountAmount, total)));
   }, [total, discount, discountType]);
 
-  // Filter patients based on search term
-  const filteredPatients = patients.filter(patient => 
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filtered patients (memoized for efficiency)
+  const filteredPatients = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return patients.filter(
+      (p) =>
+        p.name.toLowerCase().includes(term) || p.id.toLowerCase().includes(term)
+    );
+  }, [patients, searchTerm]);
 
   // Handle patient selection
   const handlePatientSelect = (patient) => {
@@ -124,37 +116,39 @@ function FrontdeskCheckoutPage() {
 
   // Handle service removal
   const handleServiceRemove = (serviceId) => {
-    setSelectedServices(selectedServices.filter(service => service.id !== serviceId));
+    setSelectedServices(
+      selectedServices.filter((service) => service.id !== serviceId)
+    );
   };
 
   // Handle checkout
   const handleCheckout = () => {
     if (!paymentMethod) {
-      alert('Please select a payment method');
+      alert("Please select a payment method");
       return;
     }
-    
+
     // In a real app, this would call an API to process the payment
     setReceiptDialogOpen(true);
   };
-  
+
   // Handle payment completion
   const handlePaymentComplete = () => {
     // In a real app, this would finalize the transaction in the database
     setReceiptDialogOpen(false);
-    
+
     // Reset the form
     setSelectedPatient(null);
     setSelectedServices([]);
-    setPaymentMethod('');
+    setPaymentMethod("");
     setDiscount(0);
-    setNotes('');
+    setNotes("");
   };
 
   return (
     <PageContainer>
-      <PageHeading 
-        title="Patient Checkout" 
+      <PageHeading
+        title="Patient Checkout"
         subtitle="Process payments for patient services"
       />
 
@@ -184,34 +178,38 @@ function FrontdeskCheckoutPage() {
                 />
 
                 {filteredPatients.length > 0 ? (
-                  <List sx={{ maxHeight: 300, overflow: 'auto' }}>
+                  <List sx={{ maxHeight: 300, overflow: "auto" }}>
                     {filteredPatients.map((patient) => (
-                      <Paper 
+                      <Paper
                         key={patient.id}
                         elevation={selectedPatient?.id === patient.id ? 3 : 1}
-                        sx={{ 
-                          mb: 1, 
-                          borderLeft: selectedPatient?.id === patient.id ? 4 : 0,
-                          borderColor: 'primary.main',
-                          transition: 'all 0.2s ease-in-out'
+                        sx={{
+                          mb: 1,
+                          borderLeft:
+                            selectedPatient?.id === patient.id ? 4 : 0,
+                          borderColor: "primary.main",
+                          transition: "all 0.2s ease-in-out",
                         }}
                       >
-                        <ListItem 
-                          button 
+                        <ListItem
+                          button
                           onClick={() => handlePatientSelect(patient)}
                           selected={selectedPatient?.id === patient.id}
                         >
-                          <ListItemText 
-                            primary={patient.name} 
-                            secondary={`Patient ID: ${patient.id}`} 
+                          <ListItemText
+                            primary={patient.name}
+                            secondary={`Patient ID: ${patient.id}`}
                           />
                           <ListItemSecondaryAction>
-                            <Chip 
-                              label={patient.status} 
+                            <Chip
+                              label={patient.status}
                               size="small"
                               color={
-                                patient.status === 'waiting' ? 'info' :
-                                patient.status === 'in-progress' ? 'warning' : 'success'
+                                patient.status === "waiting"
+                                  ? "info"
+                                  : patient.status === "in-progress"
+                                  ? "warning"
+                                  : "success"
                               }
                             />
                           </ListItemSecondaryAction>
@@ -233,16 +231,22 @@ function FrontdeskCheckoutPage() {
 
         {/* Service Selection and Checkout */}
         <Grid item xs={12} md={6}>
-          <ContentCard 
-            title={selectedPatient ? `Checkout: ${selectedPatient.name}` : "Checkout"}
-            subtitle={selectedPatient ? `Patient ID: ${selectedPatient.id}` : "Select a patient to continue"}
+          <ContentCard
+            title={
+              selectedPatient ? `Checkout: ${selectedPatient.name}` : "Checkout"
+            }
+            subtitle={
+              selectedPatient
+                ? `Patient ID: ${selectedPatient.id}`
+                : "Select a patient to continue"
+            }
           >
             {selectedPatient ? (
               <>
                 <Typography variant="subtitle1" sx={{ mb: 2 }}>
                   Select Services
                 </Typography>
-                
+
                 <Grid container spacing={1} sx={{ mb: 3 }}>
                   {services.map((service) => (
                     <Grid item xs={12} sm={6} key={service.id}>
@@ -250,10 +254,15 @@ function FrontdeskCheckoutPage() {
                         variant="outlined"
                         fullWidth
                         onClick={() => handleServiceSelect(service)}
-                        sx={{ justifyContent: 'flex-start', textTransform: 'none' }}
+                        sx={{
+                          justifyContent: "flex-start",
+                          textTransform: "none",
+                        }}
                       >
-                        <Box sx={{ textAlign: 'left' }}>
-                          <Typography variant="body2">{service.name}</Typography>
+                        <Box sx={{ textAlign: "left" }}>
+                          <Typography variant="body2">
+                            {service.name}
+                          </Typography>
                           <Typography variant="caption" color="text.secondary">
                             ${service.price.toFixed(2)}
                           </Typography>
@@ -273,13 +282,13 @@ function FrontdeskCheckoutPage() {
                   <List sx={{ mb: 2 }}>
                     {selectedServices.map((service) => (
                       <ListItem key={`selected-${service.id}`} disablePadding>
-                        <ListItemText 
-                          primary={service.name} 
-                          secondary={`$${service.price.toFixed(2)}`} 
+                        <ListItemText
+                          primary={service.name}
+                          secondary={`$${service.price.toFixed(2)}`}
                         />
                         <ListItemSecondaryAction>
-                          <IconButton 
-                            edge="end" 
+                          <IconButton
+                            edge="end"
                             aria-label="delete"
                             onClick={() => handleServiceRemove(service.id)}
                           >
@@ -290,18 +299,22 @@ function FrontdeskCheckoutPage() {
                     ))}
                   </List>
                 ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                  >
                     No services selected
                   </Typography>
                 )}
 
                 <Divider sx={{ my: 2 }} />
-                
+
                 {/* Discount Section */}
                 <Typography variant="subtitle1" sx={{ mb: 2 }}>
                   Apply Discount
                 </Typography>
-                
+
                 <Grid container spacing={2} sx={{ mb: 3 }}>
                   <Grid item xs={6}>
                     <FormControl fullWidth size="small">
@@ -319,12 +332,20 @@ function FrontdeskCheckoutPage() {
                   </Grid>
                   <Grid item xs={6}>
                     <TextField
-                      label={discountType === 'percentage' ? 'Discount %' : 'Discount $'}
+                      label={
+                        discountType === "percentage"
+                          ? "Discount %"
+                          : "Discount $"
+                      }
                       type="number"
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">
-                            {discountType === 'percentage' ? <PercentIcon /> : '$'}
+                            {discountType === "percentage" ? (
+                              <PercentIcon />
+                            ) : (
+                              "$"
+                            )}
                           </InputAdornment>
                         ),
                       }}
@@ -335,7 +356,10 @@ function FrontdeskCheckoutPage() {
                         const value = parseFloat(e.target.value);
                         if (isNaN(value)) {
                           setDiscount(0);
-                        } else if (discountType === 'percentage' && value > 100) {
+                        } else if (
+                          discountType === "percentage" &&
+                          value > 100
+                        ) {
                           setDiscount(100);
                         } else if (value < 0) {
                           setDiscount(0);
@@ -346,7 +370,7 @@ function FrontdeskCheckoutPage() {
                     />
                   </Grid>
                 </Grid>
-                
+
                 {/* Notes Button */}
                 <Button
                   variant="outlined"
@@ -355,31 +379,35 @@ function FrontdeskCheckoutPage() {
                   sx={{ mb: 3 }}
                   onClick={() => setNoteDialogOpen(true)}
                 >
-                  {notes ? 'Edit Notes' : 'Add Notes'}
+                  {notes ? "Edit Notes" : "Add Notes"}
                 </Button>
-                
+
                 {/* Payment Method Selection */}
                 <Typography variant="subtitle1" sx={{ mb: 2 }}>
                   Payment Method
                 </Typography>
-                
+
                 <Grid container spacing={2} sx={{ mb: 3 }}>
                   <Grid item xs={6}>
                     <Button
-                      variant={paymentMethod === 'cash' ? 'contained' : 'outlined'}
+                      variant={
+                        paymentMethod === "cash" ? "contained" : "outlined"
+                      }
                       fullWidth
                       startIcon={<LocalAtmIcon />}
-                      onClick={() => setPaymentMethod('cash')}
+                      onClick={() => setPaymentMethod("cash")}
                     >
                       Cash
                     </Button>
                   </Grid>
                   <Grid item xs={6}>
                     <Button
-                      variant={paymentMethod === 'card' ? 'contained' : 'outlined'}
+                      variant={
+                        paymentMethod === "card" ? "contained" : "outlined"
+                      }
                       fullWidth
                       startIcon={<CreditCardIcon />}
-                      onClick={() => setPaymentMethod('card')}
+                      onClick={() => setPaymentMethod("card")}
                     >
                       Card
                     </Button>
@@ -390,25 +418,46 @@ function FrontdeskCheckoutPage() {
 
                 {/* Totals */}
                 <Box sx={{ mb: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 1,
+                    }}
+                  >
                     <Typography variant="body1">Subtotal</Typography>
                     <Typography variant="body1">${total.toFixed(2)}</Typography>
                   </Box>
-                  
+
                   {discount > 0 && (
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 1,
+                      }}
+                    >
                       <Typography variant="body1">
-                        Discount {discountType === 'percentage' ? `(${discount}%)` : ''}
+                        Discount{" "}
+                        {discountType === "percentage" ? `(${discount}%)` : ""}
                       </Typography>
                       <Typography variant="body1" color="error">
                         -${(total - finalAmount).toFixed(2)}
                       </Typography>
                     </Box>
                   )}
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mt: 2,
+                    }}
+                  >
                     <Typography variant="h6">Total</Typography>
-                    <Typography variant="h6" color="primary">${finalAmount.toFixed(2)}</Typography>
+                    <Typography variant="h6" color="primary">
+                      ${finalAmount.toFixed(2)}
+                    </Typography>
                   </Box>
                 </Box>
 
@@ -434,9 +483,14 @@ function FrontdeskCheckoutPage() {
           </ContentCard>
         </Grid>
       </Grid>
-      
+
       {/* Notes Dialog */}
-      <Dialog open={noteDialogOpen} onClose={() => setNoteDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={noteDialogOpen}
+        onClose={() => setNoteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Add Notes</DialogTitle>
         <DialogContent>
           <TextField
@@ -458,9 +512,14 @@ function FrontdeskCheckoutPage() {
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* Receipt Dialog */}
-      <Dialog open={receiptDialogOpen} onClose={() => setReceiptDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={receiptDialogOpen}
+        onClose={() => setReceiptDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Payment Receipt</DialogTitle>
         <DialogContent>
           {selectedPatient && (
@@ -468,9 +527,9 @@ function FrontdeskCheckoutPage() {
               <Typography variant="h6" gutterBottom align="center">
                 Clinnet EMR
               </Typography>
-              
+
               <Divider sx={{ my: 2 }} />
-              
+
               <Grid container spacing={2} sx={{ mb: 2 }}>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">
@@ -484,9 +543,7 @@ function FrontdeskCheckoutPage() {
                   <Typography variant="body2" color="text.secondary">
                     Patient ID:
                   </Typography>
-                  <Typography variant="body1">
-                    {selectedPatient.id}
-                  </Typography>
+                  <Typography variant="body1">{selectedPatient.id}</Typography>
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">
@@ -501,61 +558,80 @@ function FrontdeskCheckoutPage() {
                     Receipt #:
                   </Typography>
                   <Typography variant="body1">
-                    {Math.floor(Math.random() * 10000).toString().padStart(4, '0')}
+                    {Math.floor(Math.random() * 10000)
+                      .toString()
+                      .padStart(4, "0")}
                   </Typography>
                 </Grid>
               </Grid>
-              
+
               <Divider sx={{ my: 2 }} />
-              
+
               <Typography variant="subtitle2" gutterBottom>
                 Services
               </Typography>
-              
+
               {selectedServices.map((service) => (
-                <Box 
-                  key={service.id} 
-                  sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between',
-                    mb: 1
+                <Box
+                  key={service.id}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
                   }}
                 >
                   <Typography variant="body2">{service.name}</Typography>
-                  <Typography variant="body2">${service.price.toFixed(2)}</Typography>
+                  <Typography variant="body2">
+                    ${service.price.toFixed(2)}
+                  </Typography>
                 </Box>
               ))}
-              
+
               <Divider sx={{ my: 2 }} />
-              
-              <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
+
+              <Box
+                sx={{ mb: 1, display: "flex", justifyContent: "space-between" }}
+              >
                 <Typography variant="body2">Subtotal</Typography>
                 <Typography variant="body2">${total.toFixed(2)}</Typography>
               </Box>
-              
+
               {discount > 0 && (
-                <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
+                <Box
+                  sx={{
+                    mb: 1,
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
                   <Typography variant="body2">
-                    Discount {discountType === 'percentage' ? `(${discount}%)` : ''}
+                    Discount{" "}
+                    {discountType === "percentage" ? `(${discount}%)` : ""}
                   </Typography>
                   <Typography variant="body2" color="error">
                     -${(total - finalAmount).toFixed(2)}
                   </Typography>
                 </Box>
               )}
-              
-              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between' }}>
+
+              <Box
+                sx={{ mb: 2, display: "flex", justifyContent: "space-between" }}
+              >
                 <Typography variant="subtitle2">Total</Typography>
-                <Typography variant="subtitle2">${finalAmount.toFixed(2)}</Typography>
-              </Box>
-              
-              <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2">Payment Method</Typography>
-                <Typography variant="body2">
-                  {paymentMethod === 'cash' ? 'Cash' : 'Credit/Debit Card'}
+                <Typography variant="subtitle2">
+                  ${finalAmount.toFixed(2)}
                 </Typography>
               </Box>
-              
+
+              <Box
+                sx={{ mb: 1, display: "flex", justifyContent: "space-between" }}
+              >
+                <Typography variant="body2">Payment Method</Typography>
+                <Typography variant="body2">
+                  {paymentMethod === "cash" ? "Cash" : "Credit/Debit Card"}
+                </Typography>
+              </Box>
+
               {notes && (
                 <>
                   <Divider sx={{ my: 2 }} />
@@ -565,9 +641,9 @@ function FrontdeskCheckoutPage() {
                   <Typography variant="body2">{notes}</Typography>
                 </>
               )}
-              
+
               <Divider sx={{ my: 2 }} />
-              
+
               <Typography variant="body2" align="center" gutterBottom>
                 Thank you for your visit!
               </Typography>
@@ -575,16 +651,15 @@ function FrontdeskCheckoutPage() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button 
+          <Button
             startIcon={<PrintIcon />}
-            onClick={() => alert('Printing functionality would be implemented here')}
+            onClick={() =>
+              alert("Printing functionality would be implemented here")
+            }
           >
             Print
           </Button>
-          <Button 
-            variant="contained" 
-            onClick={handlePaymentComplete}
-          >
+          <Button variant="contained" onClick={handlePaymentComplete}>
             Complete
           </Button>
         </DialogActions>

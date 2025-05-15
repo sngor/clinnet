@@ -1,8 +1,5 @@
 // src/utils/dynamoDbDataCheck.js
-/**
- * Utility to help verify that all components can handle the DynamoDB data structure
- * This can be imported and used in the console to test various components
- */
+// Utility to verify component compatibility with DynamoDB patient data
 
 // Sample DynamoDB patient record for testing
 export const sampleDynamoDbPatient = {
@@ -27,7 +24,7 @@ export const sampleDynamoDbPatient = {
   updatedAt: "2023-05-10T14:22:00Z"
 };
 
-// Minimal DynamoDB patient record with only required fields
+// Minimal DynamoDB patient record
 export const minimalDynamoDbPatient = {
   PK: "PAT#67890",
   SK: "PROFILE#1",
@@ -37,10 +34,9 @@ export const minimalDynamoDbPatient = {
   lastName: "Doe"
 };
 
-// Function to test if a component can render with DynamoDB patient data
+// Test if a component can render with DynamoDB patient data
 export function testComponentWithDynamoDbPatient(Component, patientData) {
   try {
-    // Render the component with the sample data
     const element = Component({ patient: patientData });
     console.log('Component rendered successfully with DynamoDB data');
     return true;
@@ -50,17 +46,14 @@ export function testComponentWithDynamoDbPatient(Component, patientData) {
   }
 }
 
-// Test data access with deeply nested DynamoDB structure
+// Test deep property access in patient data
 export function testDeepAccess(obj, path) {
   try {
-    // Path like "patient.address" or "patient.insuranceProvider"
     const parts = path.split('.');
     let value = obj;
-    
     for (const part of parts) {
       value = value?.[part];
     }
-    
     console.log(`Access to ${path}:`, value);
     return value;
   } catch (error) {
@@ -69,41 +62,22 @@ export function testDeepAccess(obj, path) {
   }
 }
 
-// Export a test function that can be used in the console
+// Run all tests for a component
 export function runAllTests(Component) {
   console.group('Testing Component with DynamoDB Data');
-  
   console.log('Testing with complete patient data...');
   const testFull = testComponentWithDynamoDbPatient(Component, sampleDynamoDbPatient);
-  
   console.log('Testing with minimal patient data...');
   const testMinimal = testComponentWithDynamoDbPatient(Component, minimalDynamoDbPatient);
-  
   console.log('Testing with null patient data...');
   const testNull = testComponentWithDynamoDbPatient(Component, null);
-  
   console.log('Testing deep property access...');
   testDeepAccess(sampleDynamoDbPatient, 'address');
   testDeepAccess(sampleDynamoDbPatient, 'insuranceProvider');
   testDeepAccess(minimalDynamoDbPatient, 'address');
-  
   console.groupEnd();
-  
-  return {
-    testFull,
-    testMinimal,
-    testNull
-  };
+  return { testFull, testMinimal, testNull };
 }
 
-// Usage instructions to show in the console
-console.log(`
-DynamoDB Data Structure Test Utility
-
-Usage:
-  import { runAllTests } from './utils/dynamoDbDataCheck';
-  import YourComponent from './path/to/YourComponent';
-  
-  // Run the tests
-  runAllTests(YourComponent);
-`);
+// Usage instructions
+console.log(`\nDynamoDB Data Structure Test Utility\n\nUsage:\n  import { runAllTests } from './utils/dynamoDbDataCheck';\n  import YourComponent from './path/to/YourComponent';\n  runAllTests(YourComponent);\n`);

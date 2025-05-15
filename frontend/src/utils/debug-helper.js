@@ -1,21 +1,9 @@
 // src/utils/debug-helper.js
 import { getAuthToken, parseJwt } from './cognito-helpers';
 
-/**
- * Helper function to log Cognito configuration for debugging
- */
-export const logCognitoConfig = () => {
-  console.log('Cognito Configuration:', {
-    region: import.meta.env.VITE_COGNITO_REGION,
-    userPoolId: import.meta.env.VITE_USER_POOL_ID,
-    userPoolWebClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
-    apiEndpoint: import.meta.env.VITE_API_ENDPOINT
-  });
-};
+// Debugging helpers for environment and AWS Amplify configuration
 
-/**
- * Helper function to test if environment variables are loaded correctly
- */
+// Test if all required environment variables are loaded
 export const testEnvVars = () => {
   const envVars = {
     VITE_COGNITO_REGION: import.meta.env.VITE_COGNITO_REGION,
@@ -25,34 +13,25 @@ export const testEnvVars = () => {
     VITE_S3_BUCKET: import.meta.env.VITE_S3_BUCKET,
     VITE_S3_REGION: import.meta.env.VITE_S3_REGION
   };
-  
   console.log('Environment Variables Test:');
-  
   let allLoaded = true;
   for (const [key, value] of Object.entries(envVars)) {
     const isLoaded = !!value;
     console.log(`${key}: ${isLoaded ? 'LOADED' : 'MISSING'} ${isLoaded ? '✅' : '❌'}`);
     if (!isLoaded) allLoaded = false;
   }
-  
   console.log(`Overall Status: ${allLoaded ? 'All variables loaded ✅' : 'Some variables missing ❌'}`);
-  
   return allLoaded;
 };
 
-/**
- * Helper function to test AWS Amplify configuration
- */
+// Test AWS Amplify configuration object
 export const testAmplifyConfig = (config) => {
   console.log('Testing Amplify Configuration:');
-  
-  // Check Auth configuration
   const authConfig = config?.Auth;
   if (!authConfig) {
     console.log('Auth configuration missing ❌');
     return false;
   }
-  
   console.log('Auth configuration present ✅');
   return true;
 };
