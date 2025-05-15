@@ -59,10 +59,26 @@ function NewPatientPage() {
 
   // Handle date change
   const handleDateChange = (date) => {
-    setPatientData({
-      ...patientData,
-      dob: date ? format(date, "yyyy-MM-dd") : null,
-    });
+    if (date instanceof Date && !isNaN(date.getTime())) {
+      setPatientData({
+        ...patientData,
+        dob: format(date, "yyyy-MM-dd"),
+      });
+    } else {
+      setPatientData({
+        ...patientData,
+        dob: null,
+      });
+    }
+  };
+
+  // Helper to check if a string is a valid date in YYYY-MM-DD format
+  const isValidDateString = (dateString) => {
+    if (!dateString) return false;
+    // Check format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return false;
+    const date = new Date(dateString);
+    return !isNaN(date.getTime());
   };
 
   // Handle form submission
@@ -185,7 +201,11 @@ function NewPatientPage() {
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
                   label="Date of Birth"
-                  value={patientData.dob ? new Date(patientData.dob) : null}
+                  value={
+                    isValidDateString(patientData.dob)
+                      ? new Date(patientData.dob)
+                      : null
+                  }
                   onChange={handleDateChange}
                   renderInput={(params) => <TextField {...params} fullWidth />}
                 />

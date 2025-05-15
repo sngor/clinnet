@@ -3,6 +3,7 @@ Lambda function to get all services
 """
 import os
 import json
+import logging
 from botocore.exceptions import ClientError
 
 # Import utility functions
@@ -20,10 +21,14 @@ def lambda_handler(event, context):
     Returns:
         dict: API Gateway response
     """
-    print(f"Received event: {json.dumps(event)}")
-    
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.info(f"Received event: {json.dumps(event)}")
+    logger.info(f"Context: {context}")
+
     table_name = os.environ.get('SERVICES_TABLE')
     if not table_name:
+        logger.error('Services table name not configured')
         return generate_response(500, {'message': 'Services table name not configured'})
     
     try:
@@ -54,12 +59,15 @@ def lambda_handler(event, context):
         
         # Query services
         services = query_table(table_name, **kwargs)
+        logger.info(f"Fetched {len(services)} services from DynamoDB")
         
         return generate_response(200, services)
     
     except ClientError as e:
+        logger.error(f"ClientError: {e}", exc_info=True)
         return handle_exception(e)
     except Exception as e:
+        logger.error(f"Error fetching services: {e}", exc_info=True)
         print(f"Error fetching services: {e}")
         return generate_response(500, {
             'message': 'Error fetching services',

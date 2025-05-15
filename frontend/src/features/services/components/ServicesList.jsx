@@ -22,6 +22,7 @@ import {
   Alert,
   Snackbar,
   Tooltip,
+  Box,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -47,6 +48,7 @@ import {
   PrimaryButton,
   AppIconButton,
   FlexBox,
+  SecondaryButton,
 } from "../../../components/ui";
 
 // Table column definitions
@@ -148,6 +150,21 @@ function ServicesList() {
       setLoading(false);
     }
   }, [apiServices, apiLoading, apiError]);
+
+  // Defensive: ensure all fields are valid before rendering
+  const safeServices = Array.isArray(services)
+    ? services.filter(
+        (s) =>
+          s &&
+          typeof s.id !== "undefined" &&
+          typeof s.name === "string" &&
+          typeof s.category === "string" &&
+          typeof s.price === "number" &&
+          typeof s.discountPercentage === "number" &&
+          typeof s.duration === "number" &&
+          (typeof s.active === "boolean" || typeof s.active === "undefined")
+      )
+    : [];
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -342,14 +359,14 @@ function ServicesList() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {services.length === 0 ? (
+                  {safeServices.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={columns.length + 1} align="center">
                         No services found
                       </TableCell>
                     </TableRow>
                   ) : (
-                    stableSort(services, getComparator(order, orderBy)).map(
+                    stableSort(safeServices, getComparator(order, orderBy)).map(
                       (service) => (
                         <TableRow
                           key={service.id}

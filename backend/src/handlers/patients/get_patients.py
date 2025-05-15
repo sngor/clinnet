@@ -5,6 +5,7 @@ import os
 import json
 import boto3
 import decimal
+import logging
 from botocore.exceptions import ClientError
 
 # Initialize DynamoDB client
@@ -61,31 +62,26 @@ def generate_response(status_code, body):
         'body': json.dumps(body, cls=DecimalEncoder)
     }
 
-def lambda_handler(event, context):
+def lambda_handler(event, context=None):
     """
     Handle Lambda event for GET /patients
-    
-    Args:
-        event (dict): Lambda event
-        context (LambdaContext): Lambda context
-        
-    Returns:
-        dict: API Gateway response
     """
-    print(f"Received event: {json.dumps(event)}")
-    
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.info(f"Received event: {json.dumps(event)}")
+
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
+        logger.error('PatientRecords table name not configured')
         return generate_response(500, {'message': 'PatientRecords table name not configured'})
-    
+
     try:
-        # Scan for all items with type='patient'
         from boto3.dynamodb.conditions import Attr
         patients = query_table(table_name, FilterExpression=Attr('type').eq('patient'))
-        
+        logger.info(f"Fetched {len(patients)} patients from DynamoDB")
         return generate_response(200, patients)
     except Exception as e:
-        print(f"Error fetching patients: {e}")
+        logger.error(f"Error fetching patients: {e}", exc_info=True)
         return generate_response(500, {
             'message': 'Error fetching patients',
             'error': str(e)
