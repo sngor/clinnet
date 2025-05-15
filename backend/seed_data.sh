@@ -3,6 +3,17 @@
 # Stop on error
 set -e
 
+# Get the absolute path of the script's directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DATA_DIR="${SCRIPT_DIR}/data" # Path to the data directory relative to the script
+
+# Load environment variables from .env if present
+if [ -f "$SCRIPT_DIR/.env" ]; then
+  echo "Loading environment variables from $SCRIPT_DIR/.env"
+  # Export variables, ignore comments and blank lines
+  export $(grep -v '^#' "$SCRIPT_DIR/.env" | grep -v '^$' | xargs)
+fi
+
 # Check for required environment variables
 if [ -z "$AWS_REGION" ]; then
   echo "Error: AWS_REGION environment variable is not set."
@@ -19,10 +30,6 @@ PATIENT_RECORDS_TABLE="clinnet-patient-records-${ENVIRONMENT}"
 USERS_TABLE="clinnet-users-${ENVIRONMENT}"
 SERVICES_TABLE="clinnet-services-${ENVIRONMENT}"
 APPOINTMENTS_TABLE="clinnet-appointments-${ENVIRONMENT}"
-
-# Get the absolute path of the script's directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DATA_DIR="${SCRIPT_DIR}/data" # Path to the data directory relative to the script
 
 echo "AWS Region: ${AWS_REGION}"
 echo "Environment: ${ENVIRONMENT}"
@@ -65,10 +72,12 @@ prepare_batch_write_request() {
 # Prepare and seed services
 SERVICES_BATCH_FILE="${DATA_DIR}/services_batch_request.json"
 prepare_batch_write_request "${DATA_DIR}/seed_services.json" "$SERVICES_TABLE" "$SERVICES_BATCH_FILE"
-if [ -f "$SERVICES_BATCH_FILE"]; then
+if [ -f "$SERVICES_BATCH_FILE" ]; then
   echo "Seeding services data from ${DATA_DIR}/seed_services.json into ${SERVICES_TABLE}..."
   aws dynamodb batch-write-item --request-items "file://${SERVICES_BATCH_FILE}" --region "$AWS_REGION"
   rm "$SERVICES_BATCH_FILE"
+else
+  echo "Warning: $SERVICES_BATCH_FILE not found. Skipping services seeding."
 fi
 
 # Prepare and seed patients
@@ -103,6 +112,8 @@ if [ -f "${DATA_DIR}/users.json" ]; then # Corrected path to use DATA_DIR
 else
   echo "Warning: ${DATA_DIR}/users.json not found. Skipping user seeding."
 fi
+
+
 
 echo "All data seeding attempts complete!"
 echo "Please check AWS console for DynamoDB table contents and any batch write errors."
