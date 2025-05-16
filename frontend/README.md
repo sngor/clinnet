@@ -15,15 +15,11 @@ This is the frontend application for the Clinnet-EMR healthcare management syste
    npm install
    ```
 
-2. **Configure Amplify:**
+2. **Environment Configuration:**
 
-   - If you have not already, run:
-
-     ```bash
-     amplify pull # or amplify init
-     ```
-
-   - Ensure `src/aws-exports.js` is configured with your backend API endpoints and Cognito settings.
+   - By default, the app is configured for S3 + CloudFront static hosting and API Gateway backend.
+   - To use Amplify (optional), set `VITE_USE_AMPLIFY=true` in your `.env.local` file.
+   - All Amplify-related files are now in `amplify-optional/`.
 
 3. **Start the development server:**
 
@@ -39,18 +35,22 @@ This is the frontend application for the Clinnet-EMR healthcare management syste
 
 5. **Deploy:**
 
-   - Use Amplify Console, or upload the `dist/` folder to S3/CloudFront.
+   - Upload the `dist/` folder to S3/CloudFront using the provided deployment script:
+     ```bash
+     ./scripts/deploy-frontend.sh dev
+     ```
+   - Or use Amplify Console (optional, see `amplify-optional/`).
 
 ## Backend/API Integration
 
 - The frontend communicates with the backend via API Gateway endpoints (see backend deployment docs).
-- Authentication is handled via AWS Cognito (see Amplify config).
+- Authentication is handled via AWS Cognito (see your environment variables or Amplify config).
 
 ## More Information
 
 - [Project README](../README.md)
 - [Backend Setup](../backend/README.md)
-- [Amplify Documentation](https://docs.amplify.aws)
+- [Amplify Documentation (optional)](https://docs.amplify.aws)
 
 ---
 

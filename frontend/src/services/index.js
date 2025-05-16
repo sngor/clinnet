@@ -6,8 +6,8 @@ import apiAmplify from './api-amplify';
 import api from './api';
 import serviceApi from './serviceApi';
 
-// Use Amplify API in production, otherwise use local API
-const apiService = process.env.NODE_ENV === 'production' ? apiAmplify : api;
+// Use S3/CloudFront API by default, Amplify only if explicitly set
+const apiService = process.env.VITE_USE_AMPLIFY === 'true' ? apiAmplify : api;
 
 // Export all services for easy import elsewhere
 export { default as authService } from './authService';

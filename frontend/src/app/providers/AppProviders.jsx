@@ -1,60 +1,60 @@
 // src/app/providers/AppProviders.jsx
-import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { AuthProvider } from './AuthProvider';
-import AmplifyProvider from './AmplifyProvider';
-import { DataProvider } from './DataProvider';
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import { AuthProvider } from "./AuthProvider";
+import AmplifyProvider from "./AmplifyProvider";
+import { DataProvider } from "./DataProvider";
 
 // Create a theme instance directly in this file
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
-      light: '#42a5f5',
-      dark: '#1565c0',
-      contrastText: '#fff',
+      main: "#1976d2",
+      light: "#42a5f5",
+      dark: "#1565c0",
+      contrastText: "#fff",
     },
     secondary: {
-      main: '#9c27b0',
-      light: '#ba68c8',
-      dark: '#7b1fa2',
-      contrastText: '#fff',
+      main: "#9c27b0",
+      light: "#ba68c8",
+      dark: "#7b1fa2",
+      contrastText: "#fff",
     },
     error: {
-      main: '#d32f2f',
+      main: "#d32f2f",
     },
     warning: {
-      main: '#ed6c02',
+      main: "#ed6c02",
     },
     info: {
-      main: '#0288d1',
+      main: "#0288d1",
     },
     success: {
-      main: '#2e7d32',
+      main: "#2e7d32",
     },
     background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
+      default: "#f5f5f5",
+      paper: "#ffffff",
     },
   },
   typography: {
     fontFamily: [
-      '-apple-system',
-      'BlinkMacSystemFont',
+      "-apple-system",
+      "BlinkMacSystemFont",
       '"Segoe UI"',
-      'Roboto',
+      "Roboto",
       '"Helvetica Neue"',
-      'Arial',
-      'sans-serif',
-    ].join(','),
+      "Arial",
+      "sans-serif",
+    ].join(","),
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          textTransform: 'none',
+          textTransform: "none",
         },
       },
     },
@@ -65,20 +65,27 @@ const theme = createTheme({
  * Combines all app providers into a single component
  */
 function AppProviders({ children }) {
-  return (
+  // Only include AmplifyProvider if VITE_USE_AMPLIFY is true
+  const useAmplify = import.meta.env.VITE_USE_AMPLIFY === "true";
+  const Providers = (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <AmplifyProvider>
+        {useAmplify ? (
+          <AmplifyProvider>
+            <AuthProvider>
+              <DataProvider>{children}</DataProvider>
+            </AuthProvider>
+          </AmplifyProvider>
+        ) : (
           <AuthProvider>
-            <DataProvider>
-              {children}
-            </DataProvider>
+            <DataProvider>{children}</DataProvider>
           </AuthProvider>
-        </AmplifyProvider>
+        )}
       </ThemeProvider>
     </BrowserRouter>
   );
+  return Providers;
 }
 
 export default AppProviders;

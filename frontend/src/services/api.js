@@ -1,6 +1,8 @@
 // src/services/api.js
 import axios from 'axios';
-import { fetchAuthSession } from 'aws-amplify/auth';
+
+// Remove all aws-amplify/api and aws-amplify/auth usage from this file
+// If you need authentication, use a custom solution or fetch from localStorage/sessionStorage
 
 // Create an axios instance with base configuration
 const api = axios.create({
@@ -15,20 +17,14 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      // Get the token from Amplify Auth
-      const { tokens } = await fetchAuthSession();
-      const token = tokens?.idToken?.toString();
+      // If you need authentication, use a custom solution or fetch from localStorage/sessionStorage
+      const token = localStorage.getItem('token');
       
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
       console.error('Error getting auth token:', error);
-      // If we can't get a token, try to use the one from localStorage as fallback
-      const localToken = localStorage.getItem('token');
-      if (localToken) {
-        config.headers.Authorization = `Bearer ${localToken}`;
-      }
     }
     
     // Log requests in development
