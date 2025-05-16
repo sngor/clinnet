@@ -1,43 +1,47 @@
-# Clinnet-EMR Serverless Architecture
+<!-- filepath: /Users/sengngor/Desktop/App/Clinnet-EMR/docs/architecture.md -->
 
-## Architecture Overview
+# 🏗️ Clinnet-EMR Serverless Architecture
 
-![Architecture Diagram](https://d1.awsstatic.com/architecture-diagrams/ArchitectureDiagrams/serverless-web-app-architecture-diagram.2f43b04b7e9b40b4ebd88f3f74b5b802c1d3e2df.png)
+A high-level overview of the architecture powering Clinnet-EMR.
 
-## Components
+---
 
-### Frontend
-- **AWS Amplify Hosting**: Hosts the React application with CI/CD pipeline
-- **Amazon Cognito**: User authentication and authorization
-- **AWS AppSync**: GraphQL API for real-time data synchronization (optional)
+## 🖼️ Architecture Diagram
 
-### Backend
-- **Amazon API Gateway**: RESTful API endpoints
-- **AWS Lambda**: Serverless functions for business logic
-- **Amazon DynamoDB**: NoSQL database for patient records, appointments, etc.
-- **Amazon S3**: Storage for medical documents, images, etc.
-- **AWS Parameter Store**: Secure storage for application configuration
+> **[!TIP]**
+> For a visual reference, see `arch.drawio` in the project root. You can open it with [draw.io](https://app.diagrams.net/).
 
-### Security & Compliance
-- **AWS WAF**: Web Application Firewall for security
-- **AWS KMS**: Key Management Service for encryption
-- **Amazon CloudWatch**: Monitoring and logging
-- **AWS X-Ray**: Distributed tracing for performance analysis
+---
 
-## Data Flow
+## 🧩 Components
 
-1. Users authenticate through Cognito
-2. Frontend makes API calls to API Gateway
-3. API Gateway routes requests to appropriate Lambda functions
-4. Lambda functions process business logic and interact with DynamoDB
-5. S3 stores and retrieves medical documents and images
-6. CloudWatch monitors the entire system
+- **Frontend**: React (Vite, Material UI), hosted via Amplify or S3/CloudFront
+- **Backend**: AWS Lambda (Python), orchestrated by API Gateway
+- **Database**: DynamoDB (NoSQL, single-table design)
+- **Authentication**: AWS Cognito (user pools, roles)
+- **Infrastructure as Code**: AWS SAM (`template.yaml`)
 
-## Benefits
+---
 
-- **Scalability**: Automatically scales with user demand
-- **Cost-Effective**: Pay only for what you use
-- **Security**: Built-in security features for healthcare data
-- **Compliance**: HIPAA-eligible services
-- **Maintainability**: Separation of concerns with microservices
-- **Development Speed**: Rapid development and deployment
+## 🔄 Data Flow
+
+1. User interacts with the React frontend
+2. Frontend calls API Gateway endpoints
+3. API Gateway triggers Lambda functions
+4. Lambdas interact with DynamoDB and Cognito
+5. Responses are returned to the frontend
+
+---
+
+## ☁️ Key AWS Resources
+
+| Resource         | Purpose                                                   |
+| ---------------- | --------------------------------------------------------- |
+| Lambda Functions | CRUD for patients, appointments, billing, services, users |
+| API Gateway      | REST endpoints for all backend resources                  |
+| DynamoDB         | Tables for patients, appointments, billing, services      |
+| Cognito          | User authentication and management                        |
+
+---
+
+> **See:** [Deployment Guide](./deployment.md) for how to deploy this architecture.

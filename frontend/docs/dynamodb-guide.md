@@ -1,14 +1,34 @@
-# Developer Guide: Working with DynamoDB in Clinnet-EMR
+# 🗄️ DynamoDB Guide for Clinnet-EMR
 
-This guide provides practical examples for working with DynamoDB data structures in the Clinnet-EMR frontend.
+A comprehensive guide for developers working with DynamoDB in Clinnet-EMR, including structure, best practices, and practical examples.
 
-## DynamoDB Structure Overview
+---
 
-Clinnet-EMR uses a single-table design pattern with DynamoDB. This means all entity types (patients, appointments, medical records, etc.) are stored in a single table using a combination of primary keys and global secondary indexes (GSIs).
+## 🏗️ Overview & Best Practices
 
-### Key Structure
+- **Single-table design:** All entities (patients, appointments, records, billing, services) share one table.
+- **Consistent key prefixes:** Use `PAT#`, `APPT#`, `RECORD#`, etc.
+- **ISO timestamps:** Always use `new Date().toISOString()` for `createdAt` and `updatedAt`.
+- **Related items:** Store all related items (e.g., records, appointments) under the same partition key for efficient queries.
+- **GSIs:** Use Global Secondary Indexes for alternate access patterns (e.g., by clinic, by patient).
+- **Access control:** Use IAM roles and Cognito for secure access.
+- **Error handling:** Handle DynamoDB errors gracefully in both backend and frontend.
 
-Most entities follow this structure:
+---
+
+## 📋 Entity Reference Table
+
+| Entity      | PK Example | SK Example  | Type        | Notes               |
+| ----------- | ---------- | ----------- | ----------- | ------------------- |
+| Patient     | PAT#123    | PROFILE#1   | PATIENT     | Main patient record |
+| Appointment | PAT#123    | APPT#456    | APPOINTMENT | Linked to patient   |
+| Record      | PAT#123    | RECORD#789  | RECORD      | Medical record      |
+| Billing     | PAT#123    | BILL#321    | BILLING     | Billing info        |
+| Service     | PAT#123    | SERVICE#654 | SERVICE     | Service provided    |
+
+---
+
+## 🔑 Key & Index Structure
 
 | Attribute | Description              | Example                                 |
 | --------- | ------------------------ | --------------------------------------- |
@@ -21,17 +41,20 @@ Most entities follow this structure:
 | id        | Entity ID without prefix | `123`                                   |
 | type      | Entity type              | `PATIENT`                               |
 
-## Working with Patient Data
+### Indexing Strategy
+
+- **GSI1:** Query by clinic (e.g., all patients in a clinic)
+- **GSI2:** Query all items for a patient (e.g., all records, appointments)
+
+---
+
+## 👤 Example Operations
 
 ### Creating a New Patient
 
-```javascript
-// Create a new patient with DynamoDB structure
+```js
 function createNewPatient(formData) {
-  // Generate ID
   const id = `${Date.now()}`;
-
-  // Create DynamoDB structure
   const patient = {
     PK: `PAT#${id}`,
     SK: "PROFILE#1",
@@ -41,30 +64,23 @@ function createNewPatient(formData) {
     GSI2PK: `PAT#${id}`,
     GSI2SK: "PROFILE#1",
     type: "PATIENT",
-
     // Patient attributes from form
     firstName: formData.firstName,
     lastName: formData.lastName,
     dob: formData.dob,
     // ... other fields
-
-    // Timestamps
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-
   return patient;
 }
 ```
 
 ### Updating a Patient
 
-```javascript
-// Update a patient with DynamoDB structure
+```js
 function updatePatient(id, formData) {
-  // Preserve DynamoDB structure
   const updatedPatient = {
-    // Keep existing keys
     PK: `PAT#${id}`,
     SK: "PROFILE#1",
     id: id,
@@ -73,120 +89,54 @@ function updatePatient(id, formData) {
     GSI2PK: `PAT#${id}`,
     GSI2SK: "PROFILE#1",
     type: "PATIENT",
-
-    // Updated fields
     ...formData,
-
-    // Update timestamp
     updatedAt: new Date().toISOString(),
   };
-
   return updatedPatient;
 }
 ```
 
-### Working with Patient Records
+### Creating a Patient Record
 
-```javascript
-// Create a medical record for a patient
+```js
 function createPatientRecord(patientId, recordData) {
   const recordId = `${Date.now()}`;
-
   const record = {
     PK: `PAT#${patientId}`,
     SK: `RECORD#${recordId}`,
     id: recordId,
     patientId: patientId,
     GSI1PK: "CLINIC#DEFAULT",
-    GSI1SK: `RECORD#${recordId}`,
-    GSI2PK: `PAT#${patientId}`,
-    GSI2SK: `RECORD#${recordId}`,
-    type: "MEDICAL_RECORD",
-
-    // Record fields
+    // ... other fields
     ...recordData,
-
-    // Timestamps
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-
   return record;
 }
 ```
 
-## Rendering Components with DynamoDB Data
+---
 
-### Safe Rendering Patterns
+## 🧪 Local Testing & Development
 
-Always use these patterns when rendering DynamoDB data:
+- Use [AWS SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) or [DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html) for local development.
+- Example: `sam local start-api` to run Lambdas locally.
+- See `backend/scripts/seed_data.sh` for seeding test data.
 
-1. **Null Checking**
+---
 
-```jsx
-{
-  patient && (
-    <Typography>
-      {patient.firstName} {patient.lastName}
-    </Typography>
-  );
-}
-```
+## 🔒 Security & Error Handling
 
-2. **Default Values**
+- Use IAM roles and Cognito for access control.
+- Validate all data before writing to DynamoDB.
+- Catch and handle DynamoDB errors in both backend and frontend.
 
-```jsx
-<Typography>
-  {patient?.firstName || "N/A"} {patient?.lastName || ""}
-</Typography>
-```
+---
 
-3. **Optional Chaining**
+## 📚 More Examples & References
 
-```jsx
-<Typography>
-  {patient?.address?.street}, {patient?.address?.city}
-</Typography>
-```
+- See [backend/src/handlers/](../../../backend/src/handlers/) for Lambda code using DynamoDB.
+- For advanced patterns (batch operations, migrations), consider a separate advanced guide as the project grows.
 
-### Access Patterns for Common Tasks
-
-```javascript
-// Get all patients for a clinic
-const clinicPatients = items.filter(
-  (item) => item.GSI1PK === "CLINIC#DEFAULT" && item.GSI1SK.startsWith("PAT#")
-);
-
-// Get all records for a patient
-const patientRecords = items.filter(
-  (item) =>
-    item.GSI2PK === `PAT#${patientId}` && item.GSI2SK.startsWith("RECORD#")
-);
-
-// Get a specific patient profile
-const patientProfile = items.find(
-  (item) => item.PK === `PAT#${patientId}` && item.SK === "PROFILE#1"
-);
-```
-
-## Debugging Utilities
-
-Use the debug utilities in `src/utils/debugDynamoDb.js` to inspect and validate DynamoDB entities:
-
-```javascript
-import dynamoDebug from "../utils/debugDynamoDb";
-
-// Log entity details
-dynamoDebug.logDynamoEntity(patient, "PATIENT");
-
-// Validate entity structure
-const isValid = dynamoDebug.verifyDynamoStructure(patient, "PATIENT");
-```
-
-Or use the global utilities in development:
-
-```javascript
-// In browser console
-window.dynamoDb.logEntity(patient);
-window.dynamoDb.verify(patient, "PATIENT");
-```
+---

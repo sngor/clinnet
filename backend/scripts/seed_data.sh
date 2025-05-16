@@ -7,11 +7,11 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DATA_DIR="${SCRIPT_DIR}/data" # Path to the data directory relative to the script
 
-# Load environment variables from .env in the backend root if present
-ENV_PATH="$(dirname "$SCRIPT_DIR")/.env"
-if [ -f "$ENV_PATH" ]; then
-  echo "Loading environment variables from $ENV_PATH"
-  export $(grep -v '^#' "$ENV_PATH" | grep -v '^$' | xargs)
+# Load environment variables from .env if present
+if [ -f "$SCRIPT_DIR/.env" ]; then
+  echo "Loading environment variables from $SCRIPT_DIR/.env"
+  # Export variables, ignore comments and blank lines
+  export $(grep -v '^#' "$SCRIPT_DIR/.env" | grep -v '^$' | xargs)
 fi
 
 # Check for required environment variables
