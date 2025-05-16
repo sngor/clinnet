@@ -19,8 +19,8 @@ jobs:
 
       - name: Install AWS CLI
         run: |
-          sudo apt-get update
-          sudo apt-get install -y awscli
+          pip install --upgrade --user awscli
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies and build frontend
         working-directory: frontend

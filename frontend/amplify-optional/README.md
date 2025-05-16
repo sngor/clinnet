@@ -1,10 +1,19 @@
 # Amplify Optional Integration
 
-This folder contains all files and configuration needed to use AWS Amplify for the Clinnet-EMR frontend. If you wish to use S3 + CloudFront instead, you can ignore this folder.
+**Default Deployment: S3 + CloudFront**
 
-- Move all Amplify-related files and configuration here.
-- The default frontend will use S3 + CloudFront for deployment and API access.
+This folder contains all files and configuration needed to use AWS Amplify for the Clinnet-EMR frontend. By default, the frontend uses S3 + CloudFront for deployment and API access. Amplify is fully optional and not active unless you explicitly enable it.
 
-# This folder contains all Amplify-related files as an optional alternative to S3/CloudFront deployment.
+## How to Enable Amplify (Optional)
 
-# If you want to use Amplify, move these files back to the main project as needed.
+1. Move the contents of this folder back to the main project as needed (see `USAGE.md` for details).
+2. Set the environment variable `VITE_USE_AMPLIFY=true` when building and running the frontend.
+3. Follow the steps in `USAGE.md` to configure and deploy with Amplify.
+
+- No Amplify code or configuration is active unless you move these files and set the environment variable.
+- The default deployment and API access method is S3 + CloudFront.
+
+## Notes
+
+- All Amplify-related files and configuration are isolated here for clarity and maintainability.
+- If you do not wish to use Amplify, you can ignore this folder entirely.
