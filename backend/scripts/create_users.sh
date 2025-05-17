@@ -6,7 +6,7 @@ if [ -f .env ]; then
 fi
 
 # --- Configuration ---
-USER_TEMPLATE_FILE="../data/user-template.json"
+USER_TEMPLATE_FILE="data/user-template.json"
 AWS_REGION=${AWS_REGION:-"us-east-2"} # Default region if not set
 
 # --- Check Prerequisites ---

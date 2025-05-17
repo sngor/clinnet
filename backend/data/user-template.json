@@ -1,0 +1,23 @@
+[
+  {
+    "email": "admin@clinnet.com",
+    "username": "admin_user",
+    "role": "admin",
+    "firstName": "Admin",
+    "lastName": "User"
+  },
+  {
+    "email": "doctor@clinnet.com",
+    "username": "doctor_user",
+    "role": "doctor",
+    "firstName": "Doctor",
+    "lastName": "User"
+  },
+  {
+    "email": "frontdesk@clinnet.com",
+    "username": "frontdesk_user",
+    "role": "frontdesk",
+    "firstName": "Frontdesk",
+    "lastName": "User"
+  }
+]
