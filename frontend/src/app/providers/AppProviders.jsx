@@ -65,23 +65,16 @@ const theme = createTheme({
  * Combines all app providers into a single component
  */
 function AppProviders({ children }) {
-  // Only include AmplifyProvider if VITE_USE_AMPLIFY is true
-  const useAmplify = import.meta.env.VITE_USE_AMPLIFY === "true";
+  // Always include AmplifyProvider to ensure Amplify is configured
   const Providers = (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        {useAmplify ? (
-          <AmplifyProvider>
-            <AuthProvider>
-              <DataProvider>{children}</DataProvider>
-            </AuthProvider>
-          </AmplifyProvider>
-        ) : (
+        <AmplifyProvider>
           <AuthProvider>
             <DataProvider>{children}</DataProvider>
           </AuthProvider>
-        )}
+        </AmplifyProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
