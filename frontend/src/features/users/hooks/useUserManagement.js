@@ -1,6 +1,7 @@
 // src/features/users/hooks/useUserManagement.js
 import { useState, useCallback } from 'react';
 import adminService from '../../../services/adminService';
+import { transformUsersForFrontend } from '../../../utils/user-transformers';
 
 /**
  * Custom hook for user management operations
@@ -29,10 +30,13 @@ export const useUserManagement = () => {
         nextToken: options.nextToken || pagination.nextToken
       });
       
+      // Transform users to ensure profile images are properly handled
+      const transformedUsers = transformUsersForFrontend(result.users);
+      
       if (options.append) {
-        setUsers(prev => [...prev, ...result.users]);
+        setUsers(prev => [...prev, ...transformedUsers]);
       } else {
-        setUsers(result.users);
+        setUsers(transformedUsers);
       }
       
       setPagination({

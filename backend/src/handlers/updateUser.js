@@ -48,7 +48,7 @@ exports.handler = async (event) => {
     if (body.lastName) userAttributes.push({ Name: 'family_name', Value: body.lastName });
     if (body.phone) userAttributes.push({ Name: 'phone_number', Value: body.phone });
     if (body.role) userAttributes.push({ Name: 'custom:role', Value: body.role });
-    if (body.profileImage) userAttributes.push({ Name: 'custom:profileImage', Value: body.profileImage });
+    if (body.profileImage) userAttributes.push({ Name: 'custom:profile_image', Value: body.profileImage });
     
     // Update preferred_username if email is changing
     if (displayUsername) {

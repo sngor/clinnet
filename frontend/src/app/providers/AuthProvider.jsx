@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }) => {
         return {
           ...prevUser,
           profileImage: imageUrl,
+          avatar: imageUrl, // Add avatar property for consistency
         };
       });
     },
@@ -93,10 +94,28 @@ export const AuthProvider = ({ children }) => {
           // Always get full user info from Cognito attributes
           const userInfo = await userService.getUserInfo();
 
-          // Add profile image from local storage if available
-          const storedProfileImage = localStorage.getItem("userProfileImage");
-          if (storedProfileImage) {
-            userInfo.profileImage = storedProfileImage;
+          // Get profile image
+          try {
+            const imageResult = await userService.getProfileImage();
+            if (imageResult.success && imageResult.hasImage) {
+              userInfo.profileImage = imageResult.imageUrl;
+              userInfo.avatar = imageResult.imageUrl; // Add avatar property for consistency
+              // Store in local storage
+              localStorage.setItem("userProfileImage", imageResult.imageUrl);
+            } else if (localStorage.getItem("userProfileImage")) {
+              // Use cached image if available
+              const cachedImage = localStorage.getItem("userProfileImage");
+              userInfo.profileImage = cachedImage;
+              userInfo.avatar = cachedImage; // Add avatar property for consistency
+            }
+          } catch (imageError) {
+            console.warn("Could not fetch profile image:", imageError);
+            // Use cached image if available
+            const storedProfileImage = localStorage.getItem("userProfileImage");
+            if (storedProfileImage) {
+              userInfo.profileImage = storedProfileImage;
+              userInfo.avatar = storedProfileImage; // Add avatar property for consistency
+            }
           }
 
           setAuthToken(session.getIdToken().getJwtToken());
@@ -178,6 +197,19 @@ export const AuthProvider = ({ children }) => {
       setAuthToken(result.idToken);
       // Fetch full user info (with role, etc) after login
       const userInfo = await userService.getUserInfo();
+
+      // Get profile image immediately after login
+      try {
+        const imageResult = await userService.getProfileImage();
+        if (imageResult.success && imageResult.hasImage) {
+          userInfo.profileImage = imageResult.imageUrl;
+          userInfo.avatar = imageResult.imageUrl; // Add avatar property for consistency
+          localStorage.setItem("userProfileImage", imageResult.imageUrl);
+        }
+      } catch (imageError) {
+        console.warn("Could not fetch profile image during login:", imageError);
+      }
+
       setUser(userInfo);
       // Redirect as before, but now with correct role
       const role = (userInfo.role || "user").toLowerCase();

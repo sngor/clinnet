@@ -111,8 +111,11 @@ export const userService = {
       const result = await response.json();
       console.log('Profile image uploaded successfully:', result);
       
-      // Try to store in Cognito, but this is optional now since we also use local storage
+      // Store in local storage for immediate access
       if (result && result.imageUrl) {
+        localStorage.setItem('userProfileImage', result.imageUrl);
+        
+        // Try to store in Cognito as well
         try {
           const { updateUserAttributes } = await import('../utils/cognito-helpers');
           const user = userPool.getCurrentUser();
@@ -141,6 +144,10 @@ export const userService = {
   async getProfileImage() {
     try {
       console.log('Getting profile image');
+      
+      // Check if we have a cached image URL in localStorage
+      const cachedImageUrl = localStorage.getItem('userProfileImage');
+      
       // Get the current auth token
       const idToken = await getAuthToken();
       // Call the API Gateway endpoint with proper authorization
@@ -156,9 +163,27 @@ export const userService = {
       }
       const result = await response.json();
       console.log('Profile image retrieved successfully:', result);
+      
+      // Update the localStorage cache if we got a valid image
+      if (result.success && result.hasImage && result.imageUrl) {
+        localStorage.setItem('userProfileImage', result.imageUrl);
+      }
+      
       return result;
     } catch (error) {
       console.error('Error getting profile image:', error);
+      
+      // If there's a cached image, return that as a fallback
+      const cachedImageUrl = localStorage.getItem('userProfileImage');
+      if (cachedImageUrl) {
+        return {
+          success: true,
+          hasImage: true,
+          imageUrl: cachedImageUrl,
+          message: 'Using cached image due to fetch error'
+        };
+      }
+      
       throw error;
     }
   },
