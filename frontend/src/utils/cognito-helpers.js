@@ -5,12 +5,26 @@ import {
   AuthenticationDetails,
   CognitoUserAttribute
 } from 'amazon-cognito-identity-js';
+import cognitoConfig from '../../../src/config.js';
 
-// Configure the user pool with your AWS Cognito details
+// Use the centralized configuration from config.js
 const poolData = {
-  UserPoolId: import.meta.env.VITE_USER_POOL_ID,
-  ClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
+  UserPoolId: cognitoConfig.UserPoolId,
+  ClientId: cognitoConfig.ClientId,
 };
+
+// Log configuration for debugging
+console.log('Cognito configuration:', {
+  UserPoolId: poolData.UserPoolId ? "✓ Set" : "✗ Missing", 
+  ClientId: poolData.ClientId ? "✓ Set" : "✗ Missing",
+  Region: cognitoConfig.Region
+});
+
+// Validate the pool data
+if (!poolData.UserPoolId || !poolData.ClientId) {
+  console.error('Missing Cognito credentials in configuration (utils/cognito-helpers.js)');
+  console.error('Environment variables available:', import.meta.env);
+}
 
 // Create a new user pool instance
 const userPool = new CognitoUserPool(poolData);

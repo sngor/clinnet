@@ -1,5 +1,6 @@
 // src/services/adminService.js
 import { getAuthToken } from '../utils/cognito-helpers';
+import cognitoConfig from '../../../src/config.js';
 
 /**
  * Extract username from email (part before @)
