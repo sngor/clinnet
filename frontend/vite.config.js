@@ -16,4 +16,9 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      external: ['amazon-cognito-identity-js'],
+    },
+  },
 });
