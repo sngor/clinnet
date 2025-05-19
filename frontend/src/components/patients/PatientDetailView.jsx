@@ -205,7 +205,7 @@ function PatientDetailView({ patient, onClose }) {
       {/* Patient summary */}
       <Box sx={{ p: 2, bgcolor: "background.default" }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Date of Birth
             </Typography>
@@ -232,7 +232,7 @@ function PatientDetailView({ patient, onClose }) {
             )}
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Phone
             </Typography>
@@ -258,7 +258,7 @@ function PatientDetailView({ patient, onClose }) {
             )}
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Email
             </Typography>
@@ -284,7 +284,7 @@ function PatientDetailView({ patient, onClose }) {
             )}
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Status
             </Typography>

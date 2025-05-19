@@ -139,13 +139,13 @@ function NewPatientDialog({ open, onClose, onSave }) {
       
       <DialogContent sx={{ pt: 3 }}>
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid sx={{ width: '100%', p: 1.5 }}>
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
               Personal Information
             </Typography>
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
             <TextField
               name="firstName"
               label="First Name"
@@ -158,7 +158,7 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
             <TextField
               name="lastName"
               label="Last Name"
@@ -171,7 +171,7 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
                 label="Date of Birth"
@@ -189,7 +189,7 @@ function NewPatientDialog({ open, onClose, onSave }) {
             </LocalizationProvider>
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
             <FormControl fullWidth required>
               <InputLabel id="gender-label">Gender</InputLabel>
               <Select
@@ -207,7 +207,7 @@ function NewPatientDialog({ open, onClose, onSave }) {
             </FormControl>
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
             <TextField
               name="phone"
               label="Phone Number"
@@ -220,7 +220,7 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
             <TextField
               name="email"
               label="Email Address"
@@ -233,14 +233,14 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12}>
+          <Grid sx={{ width: '100%', p: 1.5 }}>
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
               Address Information
             </Typography>
           </Grid>
           
-          <Grid item xs={12}>
+          <Grid sx={{ width: '100%', p: 1.5 }}>
             <TextField
               name="address"
               label="Street Address"
@@ -250,7 +250,7 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12} sm={4}>
+          <Grid sx={{ width: { xs: '100%', sm: '33.33%' }, p: 1.5 }}>
             <TextField
               name="city"
               label="City"
@@ -260,7 +260,7 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12} sm={4}>
+          <Grid sx={{ width: { xs: '100%', sm: '33.33%' }, p: 1.5 }}>
             <TextField
               name="state"
               label="State/Province"
@@ -270,7 +270,7 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12} sm={4}>
+          <Grid sx={{ width: { xs: '100%', sm: '33.33%' }, p: 1.5 }}>
             <TextField
               name="zipCode"
               label="ZIP / Postal Code"
@@ -280,14 +280,14 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12}>
+          <Grid sx={{ width: '100%', p: 1.5 }}>
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
               Insurance Information
             </Typography>
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
             <TextField
               name="insuranceProvider"
               label="Insurance Provider"
@@ -297,7 +297,7 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
             <TextField
               name="insuranceNumber"
               label="Insurance Number/ID"
@@ -307,14 +307,14 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12}>
+          <Grid sx={{ width: '100%', p: 1.5 }}>
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
               Emergency Contact
             </Typography>
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
             <TextField
               name="emergencyContactName"
               label="Emergency Contact Name"
@@ -324,7 +324,7 @@ function NewPatientDialog({ open, onClose, onSave }) {
             />
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
             <TextField
               name="emergencyContactPhone"
               label="Emergency Contact Phone"

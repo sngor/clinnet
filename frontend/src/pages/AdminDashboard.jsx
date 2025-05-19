@@ -1,11 +1,8 @@
 // src/pages/AdminDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
-import { 
-  Grid, 
-  useMediaQuery, 
-  useTheme
-} from "@mui/material";
+import { useMediaQuery, useTheme } from "@mui/material";
+import Grid from "@mui/material/Grid"; // Updated Grid import
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
@@ -13,11 +10,11 @@ import PersonIcon from "@mui/icons-material/Person";
 import { useNavigate } from "react-router-dom";
 
 // Import UI components
-import { 
-  PageHeading, 
-  ContentCard, 
+import {
+  PageHeading,
+  ContentCard,
   AppointmentList,
-  PageContainer
+  PageContainer,
 } from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
@@ -28,7 +25,7 @@ import { getTimeBasedGreeting } from "../utils/dateUtils";
 function AdminDashboard() {
   const { user } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,15 +48,21 @@ function AdminDashboard() {
   return (
     <PageContainer>
       {/* Page header */}
-      <PageHeading 
-        title={`${getTimeBasedGreeting()}, ${user?.firstName || user?.username || "Admin"}!`}
+      <PageHeading
+        title={`${getTimeBasedGreeting()}, ${
+          user?.firstName || user?.username || "Admin"
+        }!`}
         subtitle="Here's what's happening in your clinic today"
       />
 
       {/* Dashboard Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <DashboardCard 
+      <Grid
+        container
+        spacing={0} // Set to 0 as we're handling spacing with the child Grid sx props
+        sx={{ mb: 4 }}
+      >
+        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
+          <DashboardCard
             icon={<PeopleIcon fontSize="large" />}
             title="Users"
             value={4}
@@ -68,8 +71,8 @@ function AdminDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <DashboardCard 
+        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
+          <DashboardCard
             icon={<EventIcon fontSize="large" />}
             title="Appointments"
             value={appointments.length}
@@ -78,8 +81,8 @@ function AdminDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <DashboardCard 
+        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
+          <DashboardCard
             icon={<PersonIcon fontSize="large" />}
             title="Patients"
             value={6} // Mock value
@@ -88,8 +91,8 @@ function AdminDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <DashboardCard 
+        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
+          <DashboardCard
             icon={<LocalHospitalIcon fontSize="large" />}
             title="Doctors"
             value={4}
@@ -103,12 +106,12 @@ function AdminDashboard() {
       <ContentCard
         title="Recent Appointments"
         elevation={0}
-        sx={{ 
-          border: '1px solid',
-          borderColor: 'divider'
+        sx={{
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
-        <AppointmentList 
+        <AppointmentList
           appointments={appointments}
           loading={loading}
           showAction={false}

@@ -24,15 +24,15 @@ function PersonalInfoTab({
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} md={6}>
+      <Grid sx={{ width: { xs: "100%", md: "50%" }, p: 1.5 }}>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid sx={{ width: "100%" }}>
             <Typography variant="subtitle1" fontWeight={500} gutterBottom>
               Contact Information
             </Typography>
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               First Name
             </Typography>
@@ -52,7 +52,7 @@ function PersonalInfoTab({
             )}
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Last Name
             </Typography>
@@ -72,7 +72,7 @@ function PersonalInfoTab({
             )}
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid sx={{ width: "100%", p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Address
             </Typography>
@@ -94,7 +94,7 @@ function PersonalInfoTab({
             )}
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               City
             </Typography>
@@ -112,7 +112,7 @@ function PersonalInfoTab({
             )}
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               State
             </Typography>
@@ -130,7 +130,7 @@ function PersonalInfoTab({
             )}
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Zip Code
             </Typography>
@@ -152,15 +152,15 @@ function PersonalInfoTab({
         </Grid>
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid sx={{ width: { xs: "100%", md: "50%" }, p: 1.5 }}>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid sx={{ width: "100%" }}>
             <Typography variant="subtitle1" fontWeight={500} gutterBottom>
               Emergency Contact
             </Typography>
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Emergency Contact Name
             </Typography>
@@ -180,7 +180,7 @@ function PersonalInfoTab({
             )}
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Emergency Contact Phone
             </Typography>
@@ -200,7 +200,7 @@ function PersonalInfoTab({
             )}
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid sx={{ width: "100%", p: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Relationship
             </Typography>

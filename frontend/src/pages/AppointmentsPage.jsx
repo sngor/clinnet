@@ -1,9 +1,8 @@
 // src/pages/AppointmentsPage.jsx
 import React from "react";
-import { Box, Typography, Container, Paper, Grid, Button } from "@mui/material";
+import { Box, Typography, Container, Paper } from "@mui/material";
 import { useAuth } from "../app/providers/AuthProvider";
 import AppointmentCalendar from "../features/appointments/components/AppointmentCalendar";
-import AddIcon from "@mui/icons-material/Add";
 
 function AppointmentsPage() {
   const { user } = useAuth();
