@@ -1,11 +1,21 @@
 // src/services/userService.js
-import { 
-  updateUserAttributes, 
-  fetchUserAttributes,
-  getCurrentUser
-} from 'aws-amplify/auth';
-import { updatePassword } from 'aws-amplify/auth';
-import { fetchAuthSession } from 'aws-amplify/auth';
+
+import { getCognitoUserAttributes, getCognitoUserInfo, getAuthToken } from '../utils/cognito-helpers';
+import { CognitoUserPool, CognitoUser } from 'amazon-cognito-identity-js';
+
+const poolData = {
+  UserPoolId: import.meta.env.VITE_USER_POOL_ID,
+  ClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
+};
+const userPool = new CognitoUserPool(poolData);
+
+/**
+ * Helper to get username from email (before @)
+ */
+export function extractUsername(emailOrUsername) {
+  if (!emailOrUsername) return '';
+  return emailOrUsername.includes('@') ? emailOrUsername.split('@')[0] : emailOrUsername;
+}
 
 /**
  * Service for handling user-related operations
@@ -17,34 +27,24 @@ export const userService = {
    * @returns {Promise<Object>} - Updated user attributes
    */
   async updateUserProfile(userData) {
-    try {
-      console.log('Updating user profile:', userData);
-      
-      // Prepare attributes object for Cognito
-      const attributes = {};
-      
-      if (userData.firstName) attributes['given_name'] = userData.firstName;
-      if (userData.lastName) attributes['family_name'] = userData.lastName;
-      if (userData.email) attributes['email'] = userData.email;
-      if (userData.phone) attributes['phone_number'] = userData.phone;
-      
-      // Update user attributes in Cognito
-      await updateUserAttributes({
-        userAttributes: attributes
+    return new Promise((resolve, reject) => {
+      const user = userPool.getCurrentUser();
+      if (!user) return reject(new Error('No current user'));
+      user.getSession((err, session) => {
+        if (err || !session || !session.isValid()) return reject(err || new Error('Invalid session'));
+        // Prepare attributes
+        const attributes = [];
+        if (userData.firstName) attributes.push({ Name: 'given_name', Value: userData.firstName });
+        if (userData.lastName) attributes.push({ Name: 'family_name', Value: userData.lastName });
+        if (userData.phone) attributes.push({ Name: 'phone_number', Value: userData.phone });
+        // If username is provided, set preferred_username
+        if (userData.username) attributes.push({ Name: 'preferred_username', Value: extractUsername(userData.username) });
+        user.updateAttributes(attributes, (err, result) => {
+          if (err) return reject(err);
+          resolve({ success: true, result });
+        });
       });
-      
-      // Fetch updated attributes
-      const updatedAttributes = await fetchUserAttributes();
-      console.log('User profile updated successfully:', updatedAttributes);
-      
-      return {
-        success: true,
-        attributes: updatedAttributes
-      };
-    } catch (error) {
-      console.error('Error updating user profile:', error);
-      throw error;
-    }
+    });
   },
   
   /**
@@ -54,25 +54,17 @@ export const userService = {
    * @returns {Promise<Object>} - Result of the operation
    */
   async changePassword(oldPassword, newPassword) {
-    try {
-      console.log('Changing user password');
-      
-      // Use updatePassword from aws-amplify/auth
-      await updatePassword({
-        oldPassword,
-        newPassword
+    return new Promise((resolve, reject) => {
+      const user = userPool.getCurrentUser();
+      if (!user) return reject(new Error('No current user'));
+      user.getSession((err, session) => {
+        if (err || !session || !session.isValid()) return reject(err || new Error('Invalid session'));
+        user.changePassword(oldPassword, newPassword, (err, result) => {
+          if (err) return reject(err);
+          resolve({ success: true, result });
+        });
       });
-      
-      console.log('Password changed successfully');
-      
-      return {
-        success: true,
-        message: 'Password changed successfully'
-      };
-    } catch (error) {
-      console.error('Error changing password:', error);
-      throw error;
-    }
+    });
   },
   
   /**
@@ -80,13 +72,15 @@ export const userService = {
    * @returns {Promise<Object>} - User attributes
    */
   async getUserAttributes() {
-    try {
-      const attributes = await fetchUserAttributes();
-      return attributes;
-    } catch (error) {
-      console.error('Error fetching user attributes:', error);
-      throw error;
-    }
+    return getCognitoUserAttributes();
+  },
+
+  /**
+   * Get current user info (parsed from token and attributes)
+   * @returns {Promise<Object>} - User info
+   */
+  async getUserInfo() {
+    return getCognitoUserInfo();
   },
 
   /**
@@ -97,31 +91,25 @@ export const userService = {
   async uploadProfileImage(imageData) {
     try {
       console.log('Uploading profile image');
-      
-      // Get the current auth session to include the token
-      const { tokens } = await fetchAuthSession();
-      const idToken = tokens.idToken.toString();
-      
+      // Get the current auth token
+      const idToken = await getAuthToken();
       // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
         method: 'POST',
         headers: {
-          'Authorization': idToken,
+          'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           image: imageData
         })
       });
-      
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to upload profile image: ${errorText}`);
       }
-      
       const result = await response.json();
       console.log('Profile image uploaded successfully:', result);
-      
       return result;
     } catch (error) {
       console.error('Error uploading profile image:', error);
@@ -136,28 +124,22 @@ export const userService = {
   async getProfileImage() {
     try {
       console.log('Getting profile image');
-      
-      // Get the current auth session to include the token
-      const { tokens } = await fetchAuthSession();
-      const idToken = tokens.idToken.toString();
-      
+      // Get the current auth token
+      const idToken = await getAuthToken();
       // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
         method: 'GET',
         headers: {
-          'Authorization': idToken,
+          'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json'
         }
       });
-      
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to get profile image: ${errorText}`);
       }
-      
       const result = await response.json();
       console.log('Profile image retrieved:', result);
-      
       return result;
     } catch (error) {
       console.error('Error getting profile image:', error);
@@ -167,6 +149,32 @@ export const userService = {
         hasImage: false,
         message: 'Failed to retrieve profile image'
       };
+    }
+  },
+
+  /**
+   * Remove the user's profile image
+   * @returns {Promise<Object>} - Result of the operation
+   */
+  async removeProfileImage() {
+    try {
+      const idToken = await getAuthToken();
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to remove profile image: ${errorText}`);
+      }
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error removing profile image:', error);
+      throw error;
     }
   }
 };

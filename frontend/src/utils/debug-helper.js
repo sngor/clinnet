@@ -1,8 +1,6 @@
 // src/utils/debug-helper.js
 import { getAuthToken, parseJwt } from './cognito-helpers';
 
-// Debugging helpers for environment and AWS Amplify configuration
-
 // Test if all required environment variables are loaded
 export const testEnvVars = () => {
   const envVars = {
@@ -17,23 +15,11 @@ export const testEnvVars = () => {
   let allLoaded = true;
   for (const [key, value] of Object.entries(envVars)) {
     const isLoaded = !!value;
-    console.log(`${key}: ${isLoaded ? 'LOADED' : 'MISSING'} ${isLoaded ? '✅' : '❌'}`);
+    console.log(`${key}: ${isLoaded ? 'LOADED' : 'MISSING'} ${isLoaded ? '\u2705' : '\u274c'}`);
     if (!isLoaded) allLoaded = false;
   }
-  console.log(`Overall Status: ${allLoaded ? 'All variables loaded ✅' : 'Some variables missing ❌'}`);
+  console.log(`Overall Status: ${allLoaded ? 'All variables loaded \u2705' : 'Some variables missing \u274c'}`);
   return allLoaded;
-};
-
-// Test AWS Amplify configuration object
-export const testAmplifyConfig = (config) => {
-  console.log('Testing Amplify Configuration:');
-  const authConfig = config?.Auth;
-  if (!authConfig) {
-    console.log('Auth configuration missing ❌');
-    return false;
-  }
-  console.log('Auth configuration present ✅');
-  return true;
 };
 
 /**

@@ -18,7 +18,7 @@ import {
   Snackbar,
   FormHelperText,
   Badge,
-  Tooltip
+  Tooltip,
 } from "@mui/material";
 import { useAuth } from "../app/providers/AuthProvider";
 import userService from "../services/userService";
@@ -30,12 +30,12 @@ import PasswordIcon from "@mui/icons-material/Password";
 import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
 import { validatePassword } from "../utils/password-validator";
 
-function AccountSettingsPage() {
+function AccountSettingsPage({ onProfileImageUpdated }) {
   const { user, setUser, updateProfileImage } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const fileInputRef = useRef(null);
-  
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -45,7 +45,7 @@ function AccountSettingsPage() {
     newPassword: "",
     confirmPassword: "",
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -54,8 +54,8 @@ function AccountSettingsPage() {
   const [profileImage, setProfileImage] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'success'
+    message: "",
+    severity: "success",
   });
 
   useEffect(() => {
@@ -68,7 +68,7 @@ function AccountSettingsPage() {
         email: user.email || "",
         phone: user.phone || "",
       }));
-      
+
       // Set profile image from user object if available
       if (user.profileImage) {
         setProfileImage(user.profileImage);
@@ -88,16 +88,20 @@ function AccountSettingsPage() {
         updateProfileImage(result.imageUrl);
       }
     } catch (error) {
-      console.error('Error fetching profile image:', error);
+      console.error("Error fetching profile image:", error);
     }
   };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     // Clear password error when user types
-    if (name === 'newPassword' || name === 'confirmPassword' || name === 'currentPassword') {
+    if (
+      name === "newPassword" ||
+      name === "confirmPassword" ||
+      name === "currentPassword"
+    ) {
       setPasswordError(null);
     }
   };
@@ -106,11 +110,11 @@ function AccountSettingsPage() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const showNotification = (message, severity = 'success') => {
+  const showNotification = (message, severity = "success") => {
     setSnackbar({
       open: true,
       message,
-      severity
+      severity,
     });
   };
 
@@ -124,24 +128,24 @@ function AccountSettingsPage() {
       const result = await userService.updateUserProfile({
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: formData.phone
+        phone: formData.phone,
       });
-      
+
       if (result.success) {
         // Update local user state with new information
-        setUser(prev => ({
+        setUser((prev) => ({
           ...prev,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          phone: formData.phone
+          phone: formData.phone,
         }));
-        
-        showNotification('Profile updated successfully');
+
+        showNotification("Profile updated successfully");
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
-      setError(error.message || 'Failed to update profile');
-      showNotification('Failed to update profile', 'error');
+      console.error("Error updating profile:", error);
+      setError(error.message || "Failed to update profile");
+      showNotification("Failed to update profile", "error");
     } finally {
       setLoading(false);
     }
@@ -150,25 +154,25 @@ function AccountSettingsPage() {
   const handlePasswordChange = async (event) => {
     event.preventDefault();
     setPasswordError(null);
-    
+
     // Validate passwords
     if (formData.newPassword !== formData.confirmPassword) {
       setPasswordError("New passwords do not match.");
       return;
     }
-    
+
     if (!formData.currentPassword) {
       setPasswordError("Current password is required.");
       return;
     }
-    
+
     // Validate password strength
     const validation = validatePassword(formData.newPassword);
     if (!validation.isValid) {
       setPasswordError(validation.message);
       return;
     }
-    
+
     setPasswordLoading(true);
 
     try {
@@ -177,31 +181,31 @@ function AccountSettingsPage() {
         formData.currentPassword,
         formData.newPassword
       );
-      
+
       if (result.success) {
         // Clear password fields
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
         }));
-        
-        showNotification('Password changed successfully');
+
+        showNotification("Password changed successfully");
       }
     } catch (error) {
-      console.error('Error changing password:', error);
-      
+      console.error("Error changing password:", error);
+
       // Handle specific Cognito error messages
-      if (error.name === 'NotAuthorizedException') {
-        setPasswordError('Incorrect current password');
-      } else if (error.name === 'LimitExceededException') {
-        setPasswordError('Too many attempts. Please try again later');
+      if (error.name === "NotAuthorizedException") {
+        setPasswordError("Incorrect current password");
+      } else if (error.name === "LimitExceededException") {
+        setPasswordError("Too many attempts. Please try again later");
       } else {
-        setPasswordError(error.message || 'Failed to change password');
+        setPasswordError(error.message || "Failed to change password");
       }
-      
-      showNotification('Failed to change password', 'error');
+
+      showNotification("Failed to change password", "error");
     } finally {
       setPasswordLoading(false);
     }
@@ -217,15 +221,18 @@ function AccountSettingsPage() {
     if (!file) return;
 
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!validTypes.includes(file.type)) {
-      showNotification('Please select a valid image file (JPEG, PNG, GIF, WEBP)', 'error');
+      showNotification(
+        "Please select a valid image file (JPEG, PNG, GIF, WEBP)",
+        "error"
+      );
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      showNotification('Image size should be less than 5MB', 'error');
+      showNotification("Image size should be less than 5MB", "error");
       return;
     }
 
@@ -234,19 +241,38 @@ function AccountSettingsPage() {
     try {
       // Convert file to base64
       const base64 = await convertFileToBase64(file);
-      
       // Upload image
       const result = await userService.uploadProfileImage(base64);
-      
       if (result.success) {
         setProfileImage(result.imageUrl);
         // Also update in auth context
         updateProfileImage(result.imageUrl);
-        showNotification('Profile image updated successfully');
+        showNotification("Profile image updated successfully");
+        if (typeof onProfileImageUpdated === "function") {
+          onProfileImageUpdated();
+        }
       }
     } catch (error) {
-      console.error('Error uploading profile image:', error);
-      showNotification('Failed to upload profile image', 'error');
+      console.error("Error uploading profile image:", error);
+      showNotification("Failed to upload profile image", "error");
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  const handleRemoveProfileImage = async () => {
+    setImageLoading(true);
+    try {
+      await userService.removeProfileImage();
+      setProfileImage(null);
+      updateProfileImage(null);
+      showNotification("Profile image removed successfully");
+      if (typeof onProfileImageUpdated === "function") {
+        onProfileImageUpdated();
+      }
+    } catch (error) {
+      console.error("Error removing profile image:", error);
+      showNotification("Failed to remove profile image", "error");
     } finally {
       setImageLoading(false);
     }
@@ -263,7 +289,14 @@ function AccountSettingsPage() {
 
   if (!user) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -271,9 +304,9 @@ function AccountSettingsPage() {
 
   return (
     <Container maxWidth="md" sx={{ py: 2 }}>
-      <Typography 
-        variant="h4" 
-        component="h1" 
+      <Typography
+        variant="h4"
+        component="h1"
         gutterBottom
         color="primary.main"
         fontWeight="medium"
@@ -281,68 +314,102 @@ function AccountSettingsPage() {
       >
         Account Settings
       </Typography>
-      
+
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
-      
+
       {/* Profile Section */}
-      <Card 
-        elevation={0} 
-        sx={{ 
-          mb: 4, 
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2
+      <Card
+        elevation={0}
+        sx={{
+          mb: 4,
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 2,
         }}
       >
         <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
             <PersonIcon color="primary" sx={{ mr: 1 }} />
             <Typography variant="h6" fontWeight="medium">
               Profile Information
             </Typography>
           </Box>
-          
+
           <Box component="form" onSubmit={handleProfileUpdate} noValidate>
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, mb: 3, alignItems: { xs: 'center', sm: 'flex-start' } }}>
-              <Box sx={{ position: 'relative', mr: { xs: 0, sm: 4 }, mb: { xs: 3, sm: 0 } }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                mb: 3,
+                alignItems: { xs: "center", sm: "flex-start" },
+              }}
+            >
+              <Box
+                sx={{
+                  position: "relative",
+                  mr: { xs: 0, sm: 4 },
+                  mb: { xs: 3, sm: 0 },
+                }}
+              >
                 <Badge
                   overlap="circular"
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                   badgeContent={
-                    <Tooltip title="Upload profile picture">
-                      <IconButton 
-                        onClick={handleImageClick}
-                        disabled={imageLoading}
-                        sx={{ 
-                          bgcolor: 'background.paper',
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          '&:hover': {
-                            bgcolor: 'background.paper',
-                          }
-                        }}
-                        size="small"
-                      >
-                        {imageLoading ? (
-                          <CircularProgress size={16} />
-                        ) : (
-                          <PhotoCameraIcon fontSize="small" />
-                        )}
-                      </IconButton>
-                    </Tooltip>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <Tooltip title="Upload profile picture">
+                        <IconButton
+                          onClick={handleImageClick}
+                          disabled={imageLoading}
+                          sx={{
+                            bgcolor: "background.paper",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            "&:hover": {
+                              bgcolor: "background.paper",
+                            },
+                          }}
+                          size="small"
+                        >
+                          {imageLoading ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <PhotoCameraIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                      {profileImage && (
+                        <Tooltip title="Remove profile picture">
+                          <IconButton
+                            onClick={handleRemoveProfileImage}
+                            disabled={imageLoading}
+                            sx={{
+                              bgcolor: "background.paper",
+                              border: "1px solid",
+                              borderColor: "divider",
+                              "&:hover": {
+                                bgcolor: "background.paper",
+                              },
+                            }}
+                            size="small"
+                          >
+                            <PersonIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
                   }
                 >
                   <Avatar
                     src={profileImage}
-                    sx={{ 
-                      width: 100, 
+                    sx={{
+                      width: 100,
                       height: 100,
-                      bgcolor: 'primary.main',
-                      fontSize: '2.5rem'
+                      bgcolor: "primary.main",
+                      fontSize: "2.5rem",
                     }}
                   >
                     {user?.firstName?.[0] || user?.username?.[0] || "U"}
@@ -353,10 +420,10 @@ function AccountSettingsPage() {
                   ref={fileInputRef}
                   onChange={handleImageChange}
                   accept="image/jpeg,image/png,image/gif,image/webp"
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                 />
               </Box>
-              
+
               <Grid container spacing={2} sx={{ flexGrow: 1 }}>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -402,16 +469,22 @@ function AccountSettingsPage() {
                   />
                 </Grid>
                 <Grid item xs={12}>
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                     <Button
                       type="submit"
                       variant="contained"
                       disabled={loading}
-                      startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                      sx={{ 
-                        py: 1, 
+                      startIcon={
+                        loading ? (
+                          <CircularProgress size={20} color="inherit" />
+                        ) : (
+                          <SaveIcon />
+                        )
+                      }
+                      sx={{
+                        py: 1,
                         px: 3,
-                        borderRadius: 1.5
+                        borderRadius: 1.5,
                       }}
                     >
                       Save Profile
@@ -423,31 +496,31 @@ function AccountSettingsPage() {
           </Box>
         </CardContent>
       </Card>
-      
+
       {/* Password Section */}
-      <Card 
-        elevation={0} 
-        sx={{ 
-          mb: 4, 
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2
+      <Card
+        elevation={0}
+        sx={{
+          mb: 4,
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 2,
         }}
       >
         <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
             <LockIcon color="primary" sx={{ mr: 1 }} />
             <Typography variant="h6" fontWeight="medium">
               Change Password
             </Typography>
           </Box>
-          
+
           {passwordError && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {passwordError}
             </Alert>
           )}
-          
+
           <Box component="form" onSubmit={handlePasswordChange} noValidate>
             <Grid container spacing={2}>
               <Grid item xs={12} md={4}>
@@ -475,7 +548,8 @@ function AccountSettingsPage() {
                 />
                 <PasswordStrengthMeter password={formData.newPassword} />
                 <FormHelperText>
-                  Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                  Password must be at least 8 characters with uppercase,
+                  lowercase, number, and special character
                 </FormHelperText>
               </Grid>
               <Grid item xs={12} md={4}>
@@ -488,22 +562,41 @@ function AccountSettingsPage() {
                   onChange={handleChange}
                   variant="outlined"
                   required
-                  error={formData.newPassword !== formData.confirmPassword && formData.confirmPassword !== ''}
-                  helperText={formData.newPassword !== formData.confirmPassword && formData.confirmPassword !== '' ? 'Passwords do not match' : ''}
+                  error={
+                    formData.newPassword !== formData.confirmPassword &&
+                    formData.confirmPassword !== ""
+                  }
+                  helperText={
+                    formData.newPassword !== formData.confirmPassword &&
+                    formData.confirmPassword !== ""
+                      ? "Passwords do not match"
+                      : ""
+                  }
                 />
               </Grid>
               <Grid item xs={12}>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                   <Button
                     type="submit"
                     variant="contained"
                     color="secondary"
-                    disabled={passwordLoading || !formData.currentPassword || !formData.newPassword || !formData.confirmPassword}
-                    startIcon={passwordLoading ? <CircularProgress size={20} color="inherit" /> : <PasswordIcon />}
-                    sx={{ 
-                      py: 1, 
+                    disabled={
+                      passwordLoading ||
+                      !formData.currentPassword ||
+                      !formData.newPassword ||
+                      !formData.confirmPassword
+                    }
+                    startIcon={
+                      passwordLoading ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        <PasswordIcon />
+                      )
+                    }
+                    sx={{
+                      py: 1,
                       px: 3,
-                      borderRadius: 1.5
+                      borderRadius: 1.5,
                     }}
                   >
                     Change Password
@@ -514,18 +607,18 @@ function AccountSettingsPage() {
           </Box>
         </CardContent>
       </Card>
-      
+
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbar.severity} 
-          sx={{ width: '100%' }}
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
           variant="filled"
         >
           {snackbar.message}

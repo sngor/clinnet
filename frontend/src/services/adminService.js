@@ -1,5 +1,5 @@
 // src/services/adminService.js
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { getAuthToken } from '../utils/cognito-helpers';
 
 /**
  * Service for admin-specific operations with Cognito
@@ -13,11 +13,9 @@ export const adminService = {
   async listUsers(options = {}) {
     try {
       console.log('Listing users with options:', options);
-      
-      // Get the current auth session to include the token
-      const { tokens } = await fetchAuthSession();
-      const idToken = tokens.idToken.toString();
-      
+      // Get the current auth token using Cognito helpers
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
       // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users?limit=${options.limit || 60}${options.nextToken ? `&nextToken=${options.nextToken}` : ''}`, {
         method: 'GET',
@@ -52,7 +50,7 @@ export const adminService = {
         return {
           users: [
             {
-              username: 'admin@clinnet.com',
+              uniqueId: 'admin@clinnet.com',
               enabled: true,
               userStatus: 'CONFIRMED',
               firstName: 'Adam',
@@ -61,7 +59,7 @@ export const adminService = {
               role: 'admin'
             },
             {
-              username: 'doctor@clinnet.com',
+              uniqueId: 'doctor@clinnet.com',
               enabled: true,
               userStatus: 'CONFIRMED',
               firstName: 'David',
@@ -70,7 +68,7 @@ export const adminService = {
               role: 'doctor'
             },
             {
-              username: 'frontdesk@clinnet.com',
+              uniqueId: 'frontdesk@clinnet.com',
               enabled: true,
               userStatus: 'CONFIRMED',
               firstName: 'Frank',
@@ -82,7 +80,11 @@ export const adminService = {
           nextToken: null
         };
       }
-      
+      // Map Cognito data to use uniqueId instead of username
+      data.users = data.users.map(user => ({
+        ...user,
+        uniqueId: user.username,
+      }));
       return data;
     } catch (error) {
       console.error('Error listing users:', error);
@@ -92,7 +94,7 @@ export const adminService = {
       return {
         users: [
           {
-            username: 'admin@clinnet.com',
+            uniqueId: 'admin@clinnet.com',
             enabled: true,
             userStatus: 'CONFIRMED',
             firstName: 'Adam',
@@ -101,7 +103,7 @@ export const adminService = {
             role: 'admin'
           },
           {
-            username: 'doctor@clinnet.com',
+            uniqueId: 'doctor@clinnet.com',
             enabled: true,
             userStatus: 'CONFIRMED',
             firstName: 'David',
@@ -110,7 +112,7 @@ export const adminService = {
             role: 'doctor'
           },
           {
-            username: 'frontdesk@clinnet.com',
+            uniqueId: 'frontdesk@clinnet.com',
             enabled: true,
             userStatus: 'CONFIRMED',
             firstName: 'Frank',
@@ -132,11 +134,9 @@ export const adminService = {
   async createUser(userData) {
     try {
       console.log('Creating user with data:', userData);
-      
-      // Get the current auth session to include the token
-      const { tokens } = await fetchAuthSession();
-      const idToken = tokens.idToken.toString();
-      
+      // Get the current auth token using Cognito helpers
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
       // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users`, {
         method: 'POST',
@@ -181,11 +181,9 @@ export const adminService = {
   async updateUser(username, userData) {
     try {
       console.log(`Updating user ${username} with data:`, userData);
-      
-      // Get the current auth session to include the token
-      const { tokens } = await fetchAuthSession();
-      const idToken = tokens.idToken.toString();
-      
+      // Get the current auth token using Cognito helpers
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
       // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
         method: 'PUT',
@@ -229,11 +227,9 @@ export const adminService = {
   async deleteUser(username) {
     try {
       console.log(`Deleting user ${username}`);
-      
-      // Get the current auth session to include the token
-      const { tokens } = await fetchAuthSession();
-      const idToken = tokens.idToken.toString();
-      
+      // Get the current auth token using Cognito helpers
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
       // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
         method: 'DELETE',
@@ -277,9 +273,9 @@ export const adminService = {
     try {
       console.log(`Enabling user ${username}`);
       
-      // Get the current auth session to include the token
-      const { tokens } = await fetchAuthSession();
-      const idToken = tokens.idToken.toString();
+      // Get the current auth token using Cognito helpers
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
       
       // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}/enable`, {
@@ -324,9 +320,9 @@ export const adminService = {
     try {
       console.log(`Disabling user ${username}`);
       
-      // Get the current auth session to include the token
-      const { tokens } = await fetchAuthSession();
-      const idToken = tokens.idToken.toString();
+      // Get the current auth token using Cognito helpers
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
       
       // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}/disable`, {

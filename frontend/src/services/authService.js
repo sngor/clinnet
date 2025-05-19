@@ -1,8 +1,8 @@
 // src/services/authService.js
-import { Auth } from 'aws-amplify';
+import { cognitoSignIn, cognitoSignOut, getCognitoSession, getAuthToken } from '../utils/cognito-helpers';
 
 /**
- * Service for handling authentication with AWS Cognito
+ * Service for handling authentication with AWS Cognito (direct Cognito SDK)
  */
 const authService = {
   /**
@@ -13,24 +13,21 @@ const authService = {
    */
   signIn: async (username, password) => {
     try {
-      const user = await Auth.signIn(username, password);
-      
+      const result = await cognitoSignIn(username, password);
       // Store the token in localStorage
-      if (user.signInUserSession) {
-        const token = user.signInUserSession.idToken.jwtToken;
-        localStorage.setItem('token', token);
-        
-        // Store user info
+      if (result.idToken) {
+        localStorage.setItem('token', result.idToken);
+        // Parse user info from token
+        const payload = JSON.parse(atob(result.idToken.split('.')[1]));
         const userInfo = {
-          username: user.username,
-          email: user.attributes?.email,
-          role: user.attributes?.['custom:role'] || 'user',
-          name: `${user.attributes?.given_name || ''} ${user.attributes?.family_name || ''}`.trim()
+          username: payload['cognito:username'] || '',
+          email: payload.email || '',
+          role: payload['custom:role'] || 'user',
+          name: (payload.given_name || '') + ' ' + (payload.family_name || '')
         };
         localStorage.setItem('userInfo', JSON.stringify(userInfo));
       }
-      
-      return user;
+      return result;
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;
@@ -43,12 +40,9 @@ const authService = {
    */
   signOut: async () => {
     try {
-      // Clear local storage
       localStorage.removeItem('token');
       localStorage.removeItem('userInfo');
-      
-      // Sign out from Cognito
-      await Auth.signOut();
+      await cognitoSignOut();
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -61,26 +55,14 @@ const authService = {
    */
   isAuthenticated: async () => {
     try {
-      const session = await Auth.currentSession();
-      // Update token in localStorage
-      localStorage.setItem('token', session.getIdToken().getJwtToken());
-      return true;
+      const session = await getCognitoSession();
+      if (session && session.isValid()) {
+        localStorage.setItem('token', session.getIdToken().getJwtToken());
+        return true;
+      }
+      return false;
     } catch (error) {
       return false;
-    }
-  },
-
-  /**
-   * Get the current authenticated user
-   * @returns {Promise} Promise with user data
-   */
-  getCurrentUser: async () => {
-    try {
-      const user = await Auth.currentAuthenticatedUser();
-      return user;
-    } catch (error) {
-      console.error('Error getting current user:', error);
-      throw error;
     }
   },
 

@@ -1,5 +1,71 @@
 // src/utils/cognito-helpers.js
-import { fetchAuthSession } from 'aws-amplify/auth';
+import {
+  CognitoUserPool,
+  CognitoUser,
+  AuthenticationDetails
+} from 'amazon-cognito-identity-js';
+
+const poolData = {
+  UserPoolId: import.meta.env.VITE_USER_POOL_ID,
+  ClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
+};
+const userPool = new CognitoUserPool(poolData);
+
+/**
+ * Sign in a user using Cognito
+ * @param {string} username - The username
+ * @param {string} password - The password
+ * @returns {Promise<Object>} The signed-in user and tokens
+ */
+export const cognitoSignIn = (username, password) => {
+  return new Promise((resolve, reject) => {
+    const user = new CognitoUser({ Username: username, Pool: userPool });
+    const authDetails = new AuthenticationDetails({ Username: username, Password: password });
+    user.authenticateUser(authDetails, {
+      onSuccess: (result) => {
+        resolve({
+          user,
+          idToken: result.getIdToken().getJwtToken(),
+          accessToken: result.getAccessToken().getJwtToken(),
+          refreshToken: result.getRefreshToken().getToken(),
+        });
+      },
+      onFailure: (err) => {
+        reject(err);
+      },
+      newPasswordRequired: (userAttributes, requiredAttributes) => {
+        reject({
+          message: 'NEW_PASSWORD_REQUIRED',
+          userAttributes,
+          requiredAttributes
+        });
+      }
+    });
+  });
+};
+
+/**
+ * Sign out the current user
+ */
+export const cognitoSignOut = () => {
+  const user = userPool.getCurrentUser();
+  if (user) user.signOut();
+};
+
+/**
+ * Get the current user's Cognito session
+ * @returns {Promise<Object|null>} The Cognito session or null if not authenticated
+ */
+export const getCognitoSession = () => {
+  return new Promise((resolve, reject) => {
+    const user = userPool.getCurrentUser();
+    if (!user) return resolve(null);
+    user.getSession((err, session) => {
+      if (err || !session || !session.isValid()) return reject(err || new Error('Invalid session'));
+      resolve(session);
+    });
+  });
+};
 
 /**
  * Get the current user's JWT token
@@ -7,10 +73,9 @@ import { fetchAuthSession } from 'aws-amplify/auth';
  */
 export const getAuthToken = async () => {
   try {
-    const session = await fetchAuthSession();
-    return session.tokens?.idToken?.toString() || null;
+    const session = await getCognitoSession();
+    return session ? session.getIdToken().getJwtToken() : null;
   } catch (error) {
-    console.error('Error getting auth token:', error);
     return null;
   }
 };
@@ -98,4 +163,54 @@ export const isTokenExpired = async (bufferSeconds = 300) => {
     console.error('Error checking token expiration:', error);
     return true;
   }
+};
+
+/**
+ * Get user attributes from Cognito
+ * @returns {Promise<Object>} User attributes as a key-value object
+ */
+export const getCognitoUserAttributes = () => {
+  return new Promise((resolve, reject) => {
+    const user = userPool.getCurrentUser();
+    if (!user) return resolve(null);
+    user.getSession((err, session) => {
+      if (err || !session || !session.isValid()) return reject(err || new Error('Invalid session'));
+      user.getUserAttributes((err, attributes) => {
+        if (err) return reject(err);
+        const attrObj = {};
+        attributes.forEach(attr => {
+          attrObj[attr.getName()] = attr.getValue();
+        });
+        resolve(attrObj);
+      });
+    });
+  });
+};
+
+/**
+ * Parse user info (name, email, etc) from Cognito session or attributes
+ * @returns {Promise<Object>} User info object
+ */
+export const getCognitoUserInfo = async () => {
+  const user = userPool.getCurrentUser();
+  if (!user) return null;
+  const session = await getCognitoSession();
+  if (!session) return null;
+  const idToken = session.getIdToken().getJwtToken();
+  const payload = JSON.parse(atob(idToken.split('.')[1]));
+  // Try to get attributes for more up-to-date info
+  let attributes = {};
+  try {
+    attributes = await getCognitoUserAttributes();
+  } catch {}
+  return {
+    username: payload['cognito:username'] || attributes['preferred_username'] || '',
+    email: payload.email || attributes.email || '',
+    firstName: payload.given_name || attributes.given_name || '',
+    lastName: payload.family_name || attributes.family_name || '',
+    name: (payload.given_name || attributes.given_name || '') + ' ' + (payload.family_name || attributes.family_name || ''),
+    phone: payload.phone_number || attributes.phone_number || '',
+    role: payload['custom:role'] || attributes['custom:role'] || 'user',
+    ...attributes
+  };
 };

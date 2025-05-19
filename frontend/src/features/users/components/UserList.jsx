@@ -53,6 +53,7 @@ import {
   AppIconButton,
   FlexBox,
 } from "../../../components/ui";
+import Avatar from "@mui/material/Avatar";
 
 // Table column definitions
 const columns = [
@@ -102,6 +103,12 @@ function stableSort(array, comparator) {
   return stabilizedThis.map((el) => el[0]);
 }
 
+// When creating or updating a user, set username to the first part of the email
+const getUsernameFromEmail = (email) => {
+  if (!email) return "";
+  return email.split("@")[0];
+};
+
 function UserList() {
   // Use the custom hook for user management
   const {
@@ -143,9 +150,19 @@ function UserList() {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("username");
 
-  // Load users on component mount
+  // Load users on component mount and when the page regains focus (automatic sync)
   useEffect(() => {
     fetchUsers();
+    // Add event listener for visibility change (tab focus)
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchUsers();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [fetchUsers]);
 
   // Handle form input changes
@@ -200,7 +217,7 @@ function UserList() {
   const handleEditUser = (user) => {
     setCurrentUser(user);
     setFormData({
-      username: user.username,
+      username: user.email ? getUsernameFromEmail(user.email) : user.username,
       firstName: user.firstName || "",
       lastName: user.lastName || "",
       email: user.email || "",
@@ -303,14 +320,18 @@ function UserList() {
     setActionLoading(true);
 
     try {
+      const userPayload = {
+        ...formData,
+        username: getUsernameFromEmail(formData.email),
+      };
       if (currentUser) {
         // Edit existing user
-        const updatedUser = await updateUser(currentUser.username, formData);
+        const updatedUser = await updateUser(currentUser.uniqueId, userPayload);
 
         showNotification(`User ${updatedUser.username} updated successfully`);
       } else {
         // Add new user
-        const newUser = await createUser(formData);
+        const newUser = await createUser(userPayload);
         showNotification(`User ${newUser.username} created successfully`);
       }
 
@@ -375,14 +396,8 @@ function UserList() {
     <PageContainer>
       <SectionContainer>
         <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
-          <Typography variant="h5">User List</Typography>
-          <PrimaryButton
-            startIcon={<AddIcon />}
-            size="large"
-            onClick={handleAddUser}
-          >
-            Add User
-          </PrimaryButton>
+          <Typography variant="h5">User Management</Typography>
+          {/* Only keep one Add User button in the table action bar below */}
         </FlexBox>
         <CardContainer>
           <TableContainer title="Users" action={actionButtons}>
@@ -433,7 +448,34 @@ function UserList() {
                             "&:last-child td, &:last-child th": { border: 0 },
                           }}
                         >
-                          <TableCell>{user.username}</TableCell>
+                          <TableCell>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <Avatar
+                                src={user.profileImage || undefined}
+                                alt={
+                                  user.firstName ||
+                                  user.email?.split("@")[0] ||
+                                  "User"
+                                }
+                                sx={{ width: 32, height: 32, fontSize: 16 }}
+                              >
+                                {user.firstName
+                                  ? user.firstName[0]
+                                  : user.email
+                                  ? user.email[0].toUpperCase()
+                                  : "U"}
+                              </Avatar>
+                              <span>
+                                {user.email ? user.email.split("@")[0] : "-"}
+                              </span>
+                            </Box>
+                          </TableCell>
                           <TableCell>{user.firstName || "-"}</TableCell>
                           <TableCell>{user.lastName || "-"}</TableCell>
                           <TableCell>{user.email || "-"}</TableCell>
@@ -537,10 +579,13 @@ function UserList() {
               name="username"
               label="Username"
               fullWidth
-              value={formData.username}
-              onChange={handleInputChange}
+              value={
+                formData.email
+                  ? getUsernameFromEmail(formData.email)
+                  : formData.username
+              }
+              InputProps={{ readOnly: true }}
               required
-              disabled={!!currentUser} // Disable username field when editing
               error={!!formErrors.username}
               helperText={formErrors.username}
             />

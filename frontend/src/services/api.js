@@ -1,8 +1,6 @@
 // src/services/api.js
 import axios from 'axios';
-
-// Remove all aws-amplify/api and aws-amplify/auth usage from this file
-// If you need authentication, use a custom solution or fetch from localStorage/sessionStorage
+import { getAuthToken } from '../utils/cognito-helpers';
 
 // Create an axios instance with base configuration
 const api = axios.create({
@@ -17,16 +15,14 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      // If you need authentication, use a custom solution or fetch from localStorage/sessionStorage
-      const token = localStorage.getItem('token');
-      
+      // Always get the Cognito token from Cognito helpers
+      const token = await getAuthToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.error('Error getting auth token:', error);
+      console.error('Error getting auth token from Cognito:', error);
     }
-    
     // Log requests in development
     if (import.meta.env.DEV) {
       console.log('API Request:', {
@@ -39,7 +35,6 @@ api.interceptors.request.use(
         }
       });
     }
-    
     return config;
   },
   (error) => {

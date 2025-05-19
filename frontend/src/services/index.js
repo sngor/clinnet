@@ -2,12 +2,11 @@
 // Centralized export for all service modules
 // Selects the correct API implementation based on environment
 
-import apiAmplify from './api-amplify';
 import api from './api';
 import serviceApi from './serviceApi';
 
-// Use S3/CloudFront API by default, Amplify only if explicitly set
-const apiService = process.env.VITE_USE_AMPLIFY === 'true' ? apiAmplify : api;
+// Use S3/CloudFront API by default
+const apiService = api;
 
 // Export all services for easy import elsewhere
 export { default as authService } from './authService';

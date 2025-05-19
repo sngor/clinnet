@@ -14,6 +14,7 @@ import {
   CircularProgress,
   Link,
   TextField,
+  Avatar,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -21,6 +22,8 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
 import { demoCredentials } from "../config/auth-config";
+import { extractUsername } from "../services/userService";
+import { styled } from "@mui/material/styles";
 
 import {
   PageContainer,
@@ -30,6 +33,28 @@ import {
   BodyText,
   SecondaryText,
 } from "../components/ui";
+
+const AnimatedAlert = styled(Alert)(({ theme }) => ({
+  transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)",
+  opacity: 1,
+  marginBottom: theme.spacing(2),
+}));
+
+const LoadingOverlay = styled(Box)(({ theme }) => ({
+  position: "absolute",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  background: "rgba(255,255,255,0.7)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 10,
+  opacity: 1,
+  pointerEvents: "all",
+  transition: "opacity 0.4s cubic-bezier(0.4,0,0.2,1)",
+}));
 
 function LoginPage() {
   const [username, setUsername] = useState("");
@@ -46,17 +71,21 @@ function LoginPage() {
     event.preventDefault();
     setError("");
     setIsLoading(true);
-
     try {
-      console.log('Login attempt with:', { username });
-      
-      const result = await login({ username, password });
+      let loginUsername = username;
+      if (loginUsername && !loginUsername.includes("@")) {
+        loginUsername = `${loginUsername}@clinnet.com`;
+      }
+      const result = await login({ username: loginUsername, password });
       if (!result.success) {
-        setError(result.error || "Login failed. Please check your credentials.");
+        setError(
+          result.error || "Login failed. Please check your credentials."
+        );
       }
     } catch (err) {
-      console.error("Login failed:", err);
-      setError(`Login failed: ${err.message || "Please check your credentials."}`);
+      setError(
+        `Login failed: ${err.message || "Please check your credentials."}`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +113,13 @@ function LoginPage() {
         backgroundColor: "#f5f7fa",
       }}
     >
-      <Box maxWidth="md" sx={{ width: "100%" }}>
+      <Box maxWidth="md" sx={{ width: "100%", position: "relative" }}>
+        {/* Loading overlay above the Paper */}
+        {(isLoading || authLoading) && (
+          <LoadingOverlay>
+            <CircularProgress size={48} color="primary" thickness={4} />
+          </LoadingOverlay>
+        )}
         <Paper
           elevation={4}
           sx={{
@@ -93,6 +128,8 @@ function LoginPage() {
             borderRadius: 3,
             overflow: "hidden",
             boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            position: "relative",
+            minHeight: 480,
           }}
         >
           {/* Left side - Brand/Logo section */}
@@ -184,16 +221,23 @@ function LoginPage() {
             </SecondaryText>
 
             {error && (
-              <Alert
+              <AnimatedAlert
                 severity="error"
                 sx={{
                   width: "100%",
                   mb: 3,
                   borderRadius: 1.5,
+                  animation: "shake 0.3s",
+                  "@keyframes shake": {
+                    "10%, 90%": { transform: "translateX(-2px)" },
+                    "20%, 80%": { transform: "translateX(4px)" },
+                    "30%, 50%, 70%": { transform: "translateX(-8px)" },
+                    "40%, 60%": { transform: "translateX(8px)" },
+                  },
                 }}
               >
                 {error}
-              </Alert>
+              </AnimatedAlert>
             )}
 
             <Box
@@ -207,7 +251,7 @@ function LoginPage() {
                 required
                 fullWidth
                 id="username"
-                label="Email"
+                label="Email or Username"
                 name="username"
                 autoComplete="email"
                 autoFocus
@@ -221,6 +265,7 @@ function LoginPage() {
                     </InputAdornment>
                   ),
                 }}
+                disabled={isLoading || authLoading}
               />
               <TextField
                 margin="normal"
@@ -246,6 +291,7 @@ function LoginPage() {
                         aria-label="toggle password visibility"
                         onClick={togglePasswordVisibility}
                         edge="end"
+                        disabled={isLoading || authLoading}
                       >
                         {showPassword ? (
                           <VisibilityOffIcon />
@@ -256,6 +302,7 @@ function LoginPage() {
                     </InputAdornment>
                   ),
                 }}
+                disabled={isLoading || authLoading}
               />
 
               <PrimaryButton
@@ -263,19 +310,26 @@ function LoginPage() {
                 fullWidth
                 size="large"
                 disabled={isLoading || authLoading || !username || !password}
-                sx={{ mt: 1, mb: 3 }}
+                sx={{
+                  mt: 1,
+                  mb: 3,
+                  position: "relative",
+                  fontWeight: 600,
+                  fontSize: 18,
+                  borderRadius: 2,
+                  boxShadow: 1,
+                  transition: "all 0.2s",
+                  background:
+                    "linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)",
+                  "&:hover": {
+                    background:
+                      "linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)",
+                  },
+                }}
               >
-                {isLoading || authLoading ? (
-                  <CircularProgress
-                    size={24}
-                    sx={{
-                      color: "white",
-                      position: "absolute",
-                    }}
-                  />
-                ) : (
-                  "Sign In"
-                )}
+                <span style={{ opacity: isLoading || authLoading ? 0.5 : 1 }}>
+                  Sign In
+                </span>
               </PrimaryButton>
 
               <Box sx={{ mb: 3 }}>
@@ -307,6 +361,7 @@ function LoginPage() {
                       handleDemoLogin(demo.username, demo.password)
                     }
                     sx={{ flex: { sm: 1 } }}
+                    disabled={isLoading || authLoading}
                   >
                     {demo.role}
                   </SecondaryButton>

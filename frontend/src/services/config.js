@@ -1,6 +1,3 @@
-// src/services/config.js
-import { Amplify } from 'aws-amplify';
-
 const config = {
   API_ENDPOINT: process.env.REACT_APP_API_ENDPOINT || process.env.VITE_API_ENDPOINT || 
     'https://v30yfenncd.execute-api.us-east-2.amazonaws.com/prod',
@@ -14,8 +11,5 @@ const config = {
     REGION: process.env.REACT_APP_S3_REGION || process.env.VITE_S3_REGION || 'us-east-2',
   }
 };
-
-// We don't need to configure Amplify here since it's already done in AmplifyProvider
-// This avoids duplicate configuration
 
 export default config;

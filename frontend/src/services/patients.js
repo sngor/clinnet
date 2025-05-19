@@ -1,60 +1,30 @@
 // src/services/patients.js
-// Patient service for CRUD operations with DynamoDB structure
-import axios from 'axios';
-import { fetchAuthSession } from 'aws-amplify/auth';
-
-const API_BASE_URL = import.meta.env.VITE_API_ENDPOINT;
+// Patient service for CRUD operations with DynamoDB structure using Cognito/axios
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api-helper';
 
 // Fetch all patients
 export async function fetchPatients() {
-  if (!API_BASE_URL) throw new Error('VITE_API_URL is not configured.');
-  const { tokens } = await fetchAuthSession();
-  const idToken = tokens?.idToken?.toString();
-  if (!idToken) throw new Error('No ID token found.');
-  const res = await axios.get(`${API_BASE_URL}/patients`, { headers: { Authorization: idToken } });
-  return res.data.map(transformPatientFromDynamo);
+  return await apiGet('/patients');
 }
 
 // Fetch a single patient by ID
 export async function fetchPatientById(id) {
-  if (!API_BASE_URL) throw new Error('VITE_API_URL is not configured.');
-  const { tokens } = await fetchAuthSession();
-  const idToken = tokens?.idToken?.toString();
-  if (!idToken) throw new Error('No ID token found.');
-  const res = await axios.get(`${API_BASE_URL}/patients/${id}`, { headers: { Authorization: idToken } });
-  return transformPatientFromDynamo(res.data);
+  return await apiGet(`/patients/${id}`);
 }
 
 // Create a new patient
 export async function createPatient(patientData) {
-  if (!API_BASE_URL) throw new Error('VITE_API_URL is not configured.');
-  const { tokens } = await fetchAuthSession();
-  const idToken = tokens?.idToken?.toString();
-  if (!idToken) throw new Error('No ID token found.');
-  const transformedData = transformPatientToDynamo(patientData);
-  const res = await axios.post(`${API_BASE_URL}/patients`, transformedData, { headers: { Authorization: idToken } });
-  return transformPatientFromDynamo(res.data);
+  return await apiPost('/patients', patientData);
 }
 
 // Update an existing patient
 export async function updatePatient(id, patientData) {
-  if (!API_BASE_URL) throw new Error('VITE_API_URL is not configured.');
-  const { tokens } = await fetchAuthSession();
-  const idToken = tokens?.idToken?.toString();
-  if (!idToken) throw new Error('No ID token found.');
-  const transformedData = transformPatientToDynamo(patientData);
-  const res = await axios.put(`${API_BASE_URL}/patients/${id}`, transformedData, { headers: { Authorization: idToken } });
-  return transformPatientFromDynamo(res.data);
+  return await apiPut(`/patients/${id}`, patientData);
 }
 
 // Delete a patient
 export async function deletePatient(id) {
-  if (!API_BASE_URL) throw new Error('VITE_API_URL is not configured.');
-  const { tokens } = await fetchAuthSession();
-  const idToken = tokens?.idToken?.toString();
-  if (!idToken) throw new Error('No ID token found.');
-  await axios.delete(`${API_BASE_URL}/patients/${id}`, { headers: { Authorization: idToken } });
-  return true;
+  return await apiDelete(`/patients/${id}`);
 }
 
 // Transform frontend patient data to DynamoDB format

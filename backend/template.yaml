@@ -599,6 +599,34 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  RemoveProfileImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: remove_profile_image.lambda_handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminUpdateUserAttributes
+                - cognito-idp:AdminGetUser
+              Resource: !GetAtt UserPool.Arn
+            - Effect: Allow
+              Action:
+                - s3:DeleteObject
+                - s3:GetObject
+              Resource: !Sub "${DocumentsBucket.Arn}/profile-images/*"
+      Events:
+        RemoveProfileImage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users/profile-image
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # Lambda Functions for Appointments
   GetAppointmentsFunction:
     Type: AWS::Serverless::Function
