@@ -1,0 +1,22 @@
+{
+  "name": "your-package-name",
+  "version": "1.0.0",
+  "description": "Your package description",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/username/repo.git"
+  },
+  "keywords": [
+    "keyword1",
+    "keyword2"
+  ],
+  "author": "Your Name",
+  "license": "ISC",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -4,8 +4,13 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    global: {},
-    process: { env: {} },
+    // Better Node.js polyfills
+    global: 'globalThis',
+    process: { 
+      env: {}, 
+      browser: true 
+    },
+    Buffer: ['buffer', 'Buffer'],
   },
   server: {
     proxy: {
@@ -16,9 +21,19 @@ export default defineConfig({
       },
     },
   },
-  build: {
-    rollupOptions: {
-      external: ['amazon-cognito-identity-js'],
-    },
+  resolve: {
+    alias: {
+      // Add Node.js module aliases for browser compatibility
+      'buffer': 'buffer/',
+      'process': 'process/browser',
+    }
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis'
+      }
+    }
+  }
 });

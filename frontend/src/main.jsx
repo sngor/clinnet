@@ -1,4 +1,14 @@
 // src/main.jsx
+
+// Import polyfills
+import "buffer";
+import process from "process";
+
+// Set global polyfills
+window.process = process;
+window.global = window;
+
+// Import React and your app component
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App";
@@ -20,7 +30,7 @@ window.addEventListener("error", function (e) {
 });
 
 // Log environment for debugging
-console.log('Environment:', {
+console.log("Environment:", {
   NODE_ENV: import.meta.env.MODE,
   BASE_URL: import.meta.env.BASE_URL,
 });
