@@ -22,6 +22,16 @@ jobs:
           pip install --upgrade --user awscli
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
+      - name: Create .env file from secrets
+        working-directory: frontend
+        run: |
+          echo "VITE_API_ENDPOINT=${{ secrets.VITE_API_ENDPOINT }}" >> .env
+          echo "VITE_COGNITO_REGION=${{ secrets.VITE_COGNITO_REGION }}" >> .env
+          echo "VITE_USER_POOL_ID=${{ secrets.VITE_USER_POOL_ID }}" >> .env
+          echo "VITE_USER_POOL_CLIENT_ID=${{ secrets.VITE_USER_POOL_CLIENT_ID }}" >> .env
+          echo "VITE_S3_BUCKET=${{ secrets.VITE_S3_BUCKET }}" >> .env
+          echo "VITE_S3_REGION=${{ secrets.VITE_S3_REGION }}" >> .env
+
       - name: Install dependencies and build frontend
         working-directory: frontend
         run: |
