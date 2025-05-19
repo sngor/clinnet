@@ -248,6 +248,7 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
         // Also update in auth context
         updateProfileImage(result.imageUrl);
         showNotification("Profile image updated successfully");
+        // Notify parent component if callback provided
         if (typeof onProfileImageUpdated === "function") {
           onProfileImageUpdated();
         }
@@ -265,8 +266,10 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
     try {
       await userService.removeProfileImage();
       setProfileImage(null);
+      // Update in auth context
       updateProfileImage(null);
       showNotification("Profile image removed successfully");
+      // Notify parent component if callback provided
       if (typeof onProfileImageUpdated === "function") {
         onProfileImageUpdated();
       }

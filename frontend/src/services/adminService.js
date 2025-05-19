@@ -2,6 +2,18 @@
 import { getAuthToken } from '../utils/cognito-helpers';
 
 /**
+ * Extract username from email (part before @)
+ * @param {string} email - Email address 
+ * @returns {string} - Username portion
+ */
+function extractUsernameFromEmail(email) {
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    return email || '';
+  }
+  return email.split('@')[0];
+}
+
+/**
  * Service for admin-specific operations with Cognito
  */
 export const adminService = {
@@ -84,6 +96,8 @@ export const adminService = {
       data.users = data.users.map(user => ({
         ...user,
         uniqueId: user.username,
+        // Extract username from email for display
+        displayUsername: user.email ? extractUsernameFromEmail(user.email) : user.username
       }));
       return data;
     } catch (error) {
@@ -95,6 +109,7 @@ export const adminService = {
         users: [
           {
             uniqueId: 'admin@clinnet.com',
+            displayUsername: 'admin',
             enabled: true,
             userStatus: 'CONFIRMED',
             firstName: 'Adam',
@@ -104,6 +119,7 @@ export const adminService = {
           },
           {
             uniqueId: 'doctor@clinnet.com',
+            displayUsername: 'doctor',
             enabled: true,
             userStatus: 'CONFIRMED',
             firstName: 'David',
@@ -113,6 +129,7 @@ export const adminService = {
           },
           {
             uniqueId: 'frontdesk@clinnet.com',
+            displayUsername: 'frontdesk',
             enabled: true,
             userStatus: 'CONFIRMED',
             firstName: 'Frank',
@@ -181,6 +198,18 @@ export const adminService = {
   async updateUser(username, userData) {
     try {
       console.log(`Updating user ${username} with data:`, userData);
+      
+      // Validate username is provided
+      if (!username) {
+        throw new Error('Username is required for updating a user');
+      }
+      
+      // Format phone number if provided
+      if (userData.phone) {
+        const { formatPhoneNumber } = await import('../utils/cognito-helpers');
+        userData.phone = formatPhoneNumber(userData.phone);
+      }
+      
       // Get the current auth token using Cognito helpers
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
@@ -354,6 +383,113 @@ export const adminService = {
       }
     } catch (error) {
       console.error('Error disabling user:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Update an existing user
+   * @param {string} userId - User ID (sub)
+   * @param {Object} userData - User data to update
+   * @returns {Promise<Object>} Updated user data
+   */
+  async updateUser(userId, userData) {
+    try {
+      console.log('Updating user', userId, 'with data:', userData);
+      
+      // Validate userId is provided
+      if (!userId) {
+        throw new Error('User ID is required for updating a user');
+      }
+      
+      // Format phone number if provided
+      if (userData.phone) {
+        const { formatPhoneNumber } = await import('../utils/cognito-helpers');
+        userData.phone = formatPhoneNumber(userData.phone);
+      }
+      
+      const idToken = await getAuthToken();
+      
+      // Extract username from email for consistent display
+      const displayUsername = userData.email ? extractUsernameFromEmail(userData.email) : userData.username;
+      
+      // Include profile image if provided
+      const requestBody = {
+        username: userData.username,
+        displayUsername: displayUsername, // Add display username explicitly
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone || '',
+        role: userData.role,
+        enabled: userData.enabled,
+      };
+      
+      // Add profile image if it exists
+      if (userData.profileImage) {
+        requestBody.profileImage = userData.profileImage;
+      }
+      
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      console.log('API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('API response text:', errorText);
+        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Enable or disable a user
+   * @param {string} userId - User ID (sub)
+   * @param {boolean} enabled - Whether the user should be enabled
+   * @returns {Promise<Object>} Result of the operation
+   */
+  async toggleUserStatus(userId, enabled) {
+    try {
+      // Validate userId is provided
+      if (!userId) {
+        throw new Error('User ID is required for toggling user status');
+      }
+      
+      console.log(`${enabled ? 'Enabling' : 'Disabling'} user:`, userId);
+      
+      const idToken = await getAuthToken();
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          enabled
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('API response text:', errorText);
+        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`Error ${enabled ? 'enabling' : 'disabling'} user:`, error);
       throw error;
     }
   }

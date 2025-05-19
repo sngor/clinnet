@@ -1,20 +1,28 @@
 // src/components/ui/ContentCard.jsx
-import React from 'react';
-import { Paper, Box, Typography, Divider } from '@mui/material';
-import { styled } from '@mui/material/styles';
+// Consistent content card for Clinnet-EMR UI system
+//
+// Accessibility & Best Practices:
+// - Uses <Paper> for grouping content
+// - Optional title, subtitle, and action
+// - Responsive padding and layout
+//
+// Usage Example:
+// import { ContentCard } from '../components/ui';
+// <ContentCard title="Summary" action={<TextButton>Edit</TextButton>}>...</ContentCard>
+
+import React from "react";
+import { Paper, Box, Typography, Divider } from "@mui/material";
+import { styled } from "@mui/material/styles";
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(3),
   borderRadius: theme.shape.borderRadius * 1.5,
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-  [theme.breakpoints.down('sm')]: {
-    padding: theme.spacing(2),
-  },
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+  overflow: "hidden",
 }));
 
 /**
  * A consistent content card component for displaying content with an optional title
- * 
+ *
  * @param {Object} props - Component props
  * @param {string} [props.title] - Optional title for the card
  * @param {string} [props.subtitle] - Optional subtitle for the card
@@ -24,81 +32,58 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
  * @param {boolean} [props.divider=false] - Whether to show a divider below the heading
  * @param {Object} [props.sx] - Additional styles to apply to the card
  * @param {Object} [props.contentSx] - Additional styles to apply to the content container
+ * @param {boolean} [props.noPadding=false] - Whether to disable padding
  */
-function ContentCard({ 
-  title, 
-  subtitle, 
-  action, 
-  children, 
-  elevation = 1, 
+const ContentCard = ({
+  children,
+  title,
+  subtitle,
+  action,
+  elevation = 1,
   divider = false,
   sx = {},
-  contentSx = {}
-}) {
+  contentSx = {},
+  noPadding = false,
+  ...props
+}) => {
   return (
-    <StyledPaper elevation={elevation} sx={sx}>
+    <StyledPaper
+      elevation={elevation}
+      sx={sx}
+      {...props}
+      aria-label={props["aria-label"] || title || "Content card"}
+    >
       {title && (
-        <>
-          <Box 
-            sx={{ 
-              mb: divider ? 2 : 3,
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'space-between',
-              alignItems: { xs: 'flex-start', sm: 'center' },
-              gap: 2
+        <Box
+          sx={{
+            p: 2,
+            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
-            <Box sx={{ textAlign: 'left', width: '100%' }}>
-              <Typography 
-                variant="h6" 
-                component="h3"
-                sx={{ 
-                  mb: subtitle ? 0.5 : 0, 
-                  textAlign: 'left',
-                  fontWeight: 600,
-                  color: 'primary.main',
-                  lineHeight: 1.4
-                }}
-              >
+            <Box>
+              <Typography variant="h6" component="h2">
                 {title}
               </Typography>
-              
               {subtitle && (
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary"
-                  sx={{ 
-                    mt: 0.5, 
-                    mb: 0, 
-                    textAlign: 'left',
-                    lineHeight: 1.4
-                  }}
-                >
+                <Typography variant="body2" color="text.secondary">
                   {subtitle}
                 </Typography>
               )}
             </Box>
-            
-            {action && (
-              <Box sx={{ 
-                alignSelf: { xs: 'flex-start', sm: 'center' },
-                flexShrink: 0
-              }}>
-                {action}
-              </Box>
-            )}
+            {action && <Box>{action}</Box>}
           </Box>
-          
-          {divider && <Divider sx={{ mb: 3 }} />}
-        </>
+        </Box>
       )}
-      
-      <Box sx={contentSx}>
-        {children}
-      </Box>
+      <Box sx={{ p: noPadding ? 0 : 2, ...(contentSx || {}) }}>{children}</Box>
     </StyledPaper>
   );
-}
+};
 
 export default ContentCard;

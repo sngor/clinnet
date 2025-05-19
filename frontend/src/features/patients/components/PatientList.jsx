@@ -511,6 +511,7 @@ function PatientList({ onPatientSelect }) {
             <CircularProgress />
           </FlexBox>
         ) : (
+          /* Use CardContainer directly without nesting in SectionContainer */
           <CardContainer>
             <TableHead sx={tableHeaderStyle}>
               <TableRow>

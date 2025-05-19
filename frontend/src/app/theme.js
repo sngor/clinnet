@@ -168,7 +168,10 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.1)',
+          backgroundColor: '#fff', // White topbar
+          color: '#1976d2',        // Primary text color
+          boxShadow: '0px 1px 4px rgba(0,0,0,0.06)',
+          borderBottom: '1px solid #e0e0e0',
         },
       },
     },

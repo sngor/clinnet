@@ -1,4 +1,14 @@
 // src/components/ui/PageContainer.jsx
+// Consistent page container for Clinnet-EMR UI system
+//
+// Accessibility & Best Practices:
+// - Uses <Container> for responsive layout
+// - Use as outermost wrapper for pages
+//
+// Usage Example:
+// import { PageContainer } from '../components/ui';
+// <PageContainer><PageHeading ... /></PageContainer>
+
 import React from "react";
 import { Container } from "@mui/material";
 
@@ -14,20 +24,22 @@ import { Container } from "@mui/material";
  *   ...
  * </PageContainer>
  */
-function PageContainer({ children, sx = {} }) {
+const PageContainer = ({
+  children,
+  maxWidth = "lg",
+  padding = 3,
+  ...props
+}) => {
   return (
     <Container
-      maxWidth="xl"
-      disableGutters
-      sx={{
-        width: "100%",
-        px: { xs: 1, sm: 2, md: 3 }, // Responsive horizontal padding
-        ...sx,
-      }}
+      maxWidth={maxWidth}
+      sx={{ py: padding }}
+      {...props}
+      aria-label={props["aria-label"] || "Page container"} // Ensure aria-label is provided
     >
       {children}
     </Container>
   );
-}
+};
 
 export default PageContainer;

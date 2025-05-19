@@ -5,12 +5,17 @@ import React, {
   useContext,
   useMemo,
   useEffect,
+  useCallback,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getCognitoSession,
   cognitoSignOut,
   cognitoSignIn,
+  cognitoSignUp,
+  cognitoConfirmSignUp,
+  cognitoForgotPassword,
+  cognitoForgotPasswordSubmit,
 } from "../../utils/cognito-helpers";
 import { userService } from "../../services/userService";
 
@@ -19,8 +24,64 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [authToken, setAuthToken] = useState(null);
+  // Add state for profile image
+  const [profileImage, setProfileImage] = useState(
+    localStorage.getItem("userProfileImage") || null
+  );
   const navigate = useNavigate();
+
+  // Function to update profile image in user state
+  const updateProfileImage = useCallback(
+    (imageUrl) => {
+      // Store in local storage to persist across refreshes
+      if (imageUrl) {
+        localStorage.setItem("userProfileImage", imageUrl);
+      } else {
+        localStorage.removeItem("userProfileImage");
+      }
+
+      setProfileImage(imageUrl);
+
+      // Update user object with profile image
+      setUser((prevUser) => {
+        if (!prevUser) return null;
+        return {
+          ...prevUser,
+          profileImage: imageUrl,
+        };
+      });
+    },
+    [setUser]
+  );
+
+  // Function to refresh user data from Cognito
+  const refreshUserData = useCallback(async () => {
+    try {
+      const session = await getCognitoSession();
+      if (session && session.isValid()) {
+        const userInfo = await userService.getUserInfo();
+
+        // Preserve profile image if it exists in current user data
+        if (user?.profileImage && !userInfo.profileImage) {
+          userInfo.profileImage = user.profileImage;
+        }
+
+        // Store profile image in local storage if available
+        if (userInfo.profileImage) {
+          localStorage.setItem("userProfileImage", userInfo.profileImage);
+        }
+
+        setUser(userInfo);
+        return userInfo;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error refreshing user data:", error);
+      return null;
+    }
+  }, [user]);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -31,6 +92,13 @@ export const AuthProvider = ({ children }) => {
         if (session && session.isValid()) {
           // Always get full user info from Cognito attributes
           const userInfo = await userService.getUserInfo();
+
+          // Add profile image from local storage if available
+          const storedProfileImage = localStorage.getItem("userProfileImage");
+          if (storedProfileImage) {
+            userInfo.profileImage = storedProfileImage;
+          }
+
           setAuthToken(session.getIdToken().getJwtToken());
           setUser(userInfo);
           // Redirect if at login page
@@ -83,9 +151,9 @@ export const AuthProvider = ({ children }) => {
 
     const refreshToken = async () => {
       try {
-        const session = await fetchAuthSession();
-        if (session && session.tokens && session.tokens.idToken) {
-          const token = session.tokens.idToken.toString();
+        const session = await getCognitoSession();
+        if (session && session.isValid()) {
+          const token = session.getIdToken().getJwtToken();
           setAuthToken(token);
           console.log("Auth token refreshed successfully");
         }
@@ -133,12 +201,86 @@ export const AuthProvider = ({ children }) => {
       cognitoSignOut();
       setUser(null);
       setAuthToken(null);
+      // Clear profile image data
+      localStorage.removeItem("userProfileImage");
+      setProfileImage(null);
       navigate("/login");
     } catch (error) {
       console.error("Error signing out:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Register with Cognito
+  const register = async (username, password, email, attributes) => {
+    try {
+      setLoading(true);
+      const result = await cognitoSignUp(username, password, email, attributes);
+      return { success: true, user: result.user };
+    } catch (error) {
+      console.error("Error registering:", error);
+      return { success: false, error: error.message || "Failed to register" };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirm registration with Cognito
+  const confirmRegistration = async (username, code) => {
+    try {
+      setLoading(true);
+      await cognitoConfirmSignUp(username, code);
+      return { success: true };
+    } catch (error) {
+      console.error("Error confirming registration:", error);
+      return {
+        success: false,
+        error: error.message || "Failed to confirm registration",
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset password with Cognito
+  const resetPassword = async (username) => {
+    try {
+      setLoading(true);
+      await cognitoForgotPassword(username);
+      return { success: true };
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      return {
+        success: false,
+        error: error.message || "Failed to reset password",
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirm reset password with Cognito
+  const confirmResetPassword = async (username, code, newPassword) => {
+    try {
+      setLoading(true);
+      await cognitoForgotPasswordSubmit(username, code, newPassword);
+      return { success: true };
+    } catch (error) {
+      console.error("Error confirming reset password:", error);
+      return {
+        success: false,
+        error: error.message || "Failed to confirm reset password",
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if user has required role
+  const hasRole = (requiredRole) => {
+    if (!user || !user.role) return false;
+    return user.role.toLowerCase() === requiredRole.toLowerCase();
   };
 
   // Memoize the context value to prevent unnecessary re-renders
@@ -150,20 +292,15 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated: !!user,
       login,
       logout,
-      setUser, // <-- add this
-      updateProfileImage: async (imageUrl) => {
-        // Fetch latest user info, but always overwrite profileImage
-        let latestUser = user;
-        try {
-          const backendUser = await userService.getUserInfo();
-          latestUser = { ...backendUser };
-        } catch (e) {
-          // fallback to current user if backend fails
-        }
-        setUser({ ...latestUser, profileImage: imageUrl });
-      }, // <-- add this
+      register,
+      confirmRegistration,
+      resetPassword,
+      confirmResetPassword,
+      hasRole,
+      updateProfileImage,
+      refreshUserData, // Add the new method to the context
     }),
-    [user, authToken, loading]
+    [user, authToken, loading, updateProfileImage, refreshUserData]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

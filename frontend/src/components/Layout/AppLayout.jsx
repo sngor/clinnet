@@ -75,9 +75,9 @@ function AppLayout() {
     } else if (user?.firstName) {
       return user.firstName;
     } else if (user?.email) {
-      return user.email.split('@')[0];
+      return user.email.split("@")[0];
     } else {
-      return user?.username || 'User';
+      return user?.username || "User";
     }
   };
 
@@ -88,7 +88,7 @@ function AppLayout() {
     } else if (user?.username) {
       return user.username[0].toUpperCase();
     } else {
-      return 'U';
+      return "U";
     }
   };
 
@@ -108,16 +108,19 @@ function AppLayout() {
 
   const drawer = React.useMemo(
     () => (
-      <Box sx={{ 
-        display: "flex", 
-        flexDirection: "column", 
-        height: "100%",
-        width: drawerCollapsed ? collapsedDrawerWidth : drawerWidth,
-        transition: theme => theme.transitions.create('width', {
-          easing: theme.transitions.easing.sharp,
-          duration: theme.transitions.duration.enteringScreen,
-        }),
-      }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          width: drawerCollapsed ? collapsedDrawerWidth : drawerWidth,
+          transition: (theme) =>
+            theme.transitions.create("width", {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+        }}
+      >
         <Toolbar
           sx={{
             display: "flex",
@@ -163,7 +166,11 @@ function AppLayout() {
               >
                 CLINNET
               </Typography>
-              <Typography variant="caption" color="text.secondary" align="center">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                align="center"
+              >
                 Healthcare Management
               </Typography>
             </>
@@ -181,23 +188,25 @@ function AppLayout() {
           {renderSidebar()}
         </Box>
         <Divider />
-        <Box sx={{ 
-          p: 2, 
-          display: 'flex', 
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
+        <Box
+          sx={{
+            p: 2,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           {/* Collapse/Expand button */}
           <Tooltip title={drawerCollapsed ? "Expand" : "Collapse"}>
-            <IconButton 
+            <IconButton
               onClick={handleDrawerCollapse}
               sx={{
-                borderRadius: '50%',
-                bgcolor: 'background.paper',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                '&:hover': {
-                  bgcolor: 'background.paper',
-                }
+                borderRadius: "50%",
+                bgcolor: "background.paper",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                "&:hover": {
+                  bgcolor: "background.paper",
+                },
               }}
             >
               {drawerCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -216,7 +225,9 @@ function AppLayout() {
     [user?.role, isMobile, drawerCollapsed, theme]
   );
 
-  const currentDrawerWidth = drawerCollapsed ? collapsedDrawerWidth : drawerWidth;
+  const currentDrawerWidth = drawerCollapsed
+    ? collapsedDrawerWidth
+    : drawerWidth;
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -226,15 +237,26 @@ function AppLayout() {
           width: { sm: `calc(100% - ${currentDrawerWidth}px)` },
           ml: { sm: `${currentDrawerWidth}px` },
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          transition: theme => theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
+          backgroundColor: "background.paper", // White topbar
+          color: "primary.main", // Primary text color
+          boxShadow: "0px 1px 4px rgba(0,0,0,0.06)",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          transition: (theme) =>
+            theme.transitions.create(
+              ["width", "margin", "background-color", "color"],
+              {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }
+            ),
         }}
       >
-        <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }}>
+        <Toolbar
+          sx={{ minHeight: { xs: "56px", sm: "64px" }, px: { xs: 1, sm: 3 } }}
+        >
           <IconButton
-            color="inherit"
+            color="primary"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
@@ -252,7 +274,7 @@ function AppLayout() {
               position: "absolute",
               left: 0,
               right: 0,
-              pointerEvents: "none", // Ensures clicks pass through to elements below
+              pointerEvents: "none",
             }}
           >
             <Typography
@@ -260,8 +282,12 @@ function AppLayout() {
               noWrap
               component="div"
               sx={{
-                fontWeight: 500,
+                fontWeight: 600,
                 letterSpacing: 1,
+                color: "primary.main",
+                textAlign: "center",
+                textTransform: "uppercase",
+                lineHeight: 1.3,
               }}
             >
               {user?.role?.toUpperCase()} PORTAL
@@ -272,66 +298,61 @@ function AppLayout() {
           <Box
             sx={{
               flexShrink: 0,
-              ml: "auto", // Push to the right edge
+              ml: "auto",
             }}
           >
-            <Stack 
-              direction="row" 
-              spacing={1} 
+            <Stack
+              direction="row"
+              spacing={1.5}
               alignItems="center"
               onClick={handleMenuOpen}
-              sx={{ 
-                cursor: 'pointer',
-                '&:hover': {
-                  opacity: 0.9
-                }
+              sx={{
+                cursor: "pointer",
+                "&:hover": {
+                  opacity: 0.9,
+                },
               }}
             >
               {/* User Name - Hide on mobile */}
               {!isMobile && (
-                <Typography 
-                  variant="body2" 
-                  color="inherit"
-                  sx={{ 
+                <Typography
+                  variant="body2"
+                  color="primary"
+                  sx={{
                     fontWeight: 500,
-                    display: { xs: 'none', sm: 'block' }
+                    display: { xs: "none", sm: "block" },
+                    letterSpacing: 0.2,
                   }}
                 >
                   {getUserDisplayName()}
                 </Typography>
               )}
-              
+
               {/* Avatar */}
-              <IconButton
-                size={isMobile ? "medium" : "large"}
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                color="inherit"
-                sx={{ p: { xs: 0.5, sm: 1 } }}
-              >
-                {user?.profileImage ? (
-                  <Avatar
-                    alt={getUserDisplayName()}
-                    src={user.profileImage}
-                    sx={{ width: { xs: 32, sm: 36 }, height: { xs: 32, sm: 36 } }}
-                  />
-                ) : (
-                  <Avatar
-                    sx={{
-                      width: { xs: 32, sm: 36 },
-                      height: { xs: 32, sm: 36 },
-                      bgcolor: "secondary.main",
-                      fontSize: { xs: 16, sm: 18 },
-                      fontWeight: 500
-                    }}
-                  >
-                    {getAvatarLetter()}
-                  </Avatar>
-                )}
-              </IconButton>
+              {user?.profileImage ? (
+                <Avatar
+                  alt={getUserDisplayName()}
+                  src={user.profileImage}
+                  sx={{
+                    width: { xs: 32, sm: 36 },
+                    height: { xs: 32, sm: 36 },
+                  }}
+                />
+              ) : (
+                <Avatar
+                  sx={{
+                    width: { xs: 32, sm: 36 },
+                    height: { xs: 32, sm: 36 },
+                    bgcolor: "secondary.main",
+                    fontSize: { xs: 16, sm: 18 },
+                    fontWeight: 500,
+                  }}
+                >
+                  {getAvatarLetter()}
+                </Avatar>
+              )}
             </Stack>
-            
+
             <Menu
               id="menu-appbar"
               anchorEl={anchorEl}
@@ -344,6 +365,8 @@ function AppLayout() {
                 sx: {
                   minWidth: 200,
                   mt: 0.5,
+                  boxShadow: "0px 4px 16px rgba(0,0,0,0.08)",
+                  borderRadius: 2,
                   "& .MuiMenuItem-root": {
                     px: 2,
                     py: 1,
@@ -356,7 +379,9 @@ function AppLayout() {
               }}
             >
               {/* User info in menu */}
-              <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center' }}>
+              <Box
+                sx={{ px: 2, py: 1.5, display: "flex", alignItems: "center" }}
+              >
                 {user?.profileImage ? (
                   <Avatar
                     alt={getUserDisplayName()}
@@ -371,14 +396,17 @@ function AppLayout() {
                       mr: 1.5,
                       bgcolor: "secondary.main",
                       fontSize: 18,
-                      fontWeight: 500
+                      fontWeight: 500,
                     }}
                   >
                     {getAvatarLetter()}
                   </Avatar>
                 )}
                 <Box>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ fontWeight: 600, color: "primary.main" }}
+                  >
                     {getUserDisplayName()}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -387,7 +415,7 @@ function AppLayout() {
                 </Box>
               </Box>
               <Divider />
-              
+
               <MenuItem onClick={() => handleNavigate("/account-settings")}>
                 <ListItemIcon>
                   <SettingsIcon fontSize="small" />
@@ -419,13 +447,14 @@ function AppLayout() {
       </AppBar>
       <Box
         component="nav"
-        sx={{ 
-          width: { sm: currentDrawerWidth }, 
+        sx={{
+          width: { sm: currentDrawerWidth },
           flexShrink: { sm: 0 },
-          transition: theme => theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
+          transition: (theme) =>
+            theme.transitions.create("width", {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
         }}
         aria-label="navigation drawer"
       >
@@ -458,11 +487,12 @@ function AppLayout() {
               borderRight: "none",
               boxShadow: "4px 0 10px rgba(0, 0, 0, 0.12)",
               zIndex: (theme) => theme.zIndex.drawer,
-              transition: theme => theme.transitions.create('width', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
-              overflowX: 'hidden',
+              transition: (theme) =>
+                theme.transitions.create("width", {
+                  easing: theme.transitions.easing.sharp,
+                  duration: theme.transitions.duration.enteringScreen,
+                }),
+              overflowX: "hidden",
             },
           }}
           open
@@ -476,10 +506,11 @@ function AppLayout() {
           flexGrow: 1,
           p: { xs: 2, sm: 3 },
           width: { sm: `calc(100% - ${currentDrawerWidth}px)` },
-          transition: theme => theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
+          transition: (theme) =>
+            theme.transitions.create(["width", "margin"], {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
         }}
       >
         <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }} />

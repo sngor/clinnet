@@ -271,77 +271,97 @@ function FrontdeskPatientList({ onPatientSelect }) {
 
   return (
     <PageContainer>
-      <SectionContainer>
-        <FlexBox justifyContent="space-between" alignItems="center" mb={2}>
-          {" "}
-          {/* Adjusted margin */}
-          <Typography variant="h5" component="h1">
-            Patient List
-          </Typography>
-          <Box sx={{ display: "flex", gap: 1 }}>
-            {" "}
-            {/* Reduced gap */}
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleRefresh}
-              disabled={loading || refreshing}
-              size="small"
-            >
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </Button>
-            <PrimaryButton
-              // startIcon={<AddIcon />} // Assuming AddIcon is imported
-              onClick={handleAddPatientClick}
-              size="small"
-            >
-              Add New Patient
-            </PrimaryButton>
-          </Box>
-        </FlexBox>
-
-        <CardContainer>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {typeof error === "string" ? error : "An error occurred."}
-            </Alert>
-          )}
-
-          <TextField
-            fullWidth
+      <FlexBox justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5" component="h1">
+          Patient List
+        </Typography>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button
             variant="outlined"
-            placeholder="Search patients by name, phone, or email..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ mb: 2 }}
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={loading || refreshing}
             size="small"
-          />
+          >
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </Button>
+          <PrimaryButton onClick={handleAddPatientClick} size="small">
+            Add New Patient
+          </PrimaryButton>
+        </Box>
+      </FlexBox>
 
-          <Box sx={{ height: 600, width: "100%" }}>
-            {" "}
-            {/* Ensured defined height for DataGrid */}
-            <DataGrid
-              rows={filteredPatients || []}
-              columns={columns}
-              pageSizeOptions={[10, 25, 50]}
-              initialState={{
-                pagination: { paginationModel: { pageSize: 10 } },
-              }}
-              loading={loading}
-              getRowId={(row) => row.id || row.PK || Math.random().toString()} // Use id or PK, fallback to random for safety
-              autoHeight={false} // Set to false when height is specified for the container
-              density="compact" // Make rows more compact
-            />
-          </Box>
-        </CardContainer>
-      </SectionContainer>
+      {/* Fix DataGrid container to avoid nesting issues */}
+      <Box
+        sx={{
+          bgcolor: "background.paper",
+          borderRadius: 1,
+          boxShadow: 1,
+          p: 2,
+          width: "100%",
+        }}
+      >
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {typeof error === "string" ? error : "An error occurred."}
+          </Alert>
+        )}
+
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Search patients by name, phone, or email..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ mb: 2 }}
+          size="small"
+        />
+
+        <Box
+          sx={{
+            height: 600,
+            width: "100%",
+            "& .MuiDataGrid-root": {
+              border: "none",
+              "& .MuiDataGrid-cell:focus-within": {
+                outline: "none",
+              },
+            },
+          }}
+        >
+          <DataGrid
+            rows={filteredPatients || []}
+            columns={columns}
+            pageSizeOptions={[10, 25, 50]}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 10 } },
+              sorting: {
+                sortModel: [{ field: "name", sort: "asc" }],
+              },
+            }}
+            loading={loading}
+            getRowId={(row) => row.id || row.PK || Math.random().toString()}
+            autoHeight={false}
+            density="compact"
+            disableRowSelectionOnClick
+            slotProps={{
+              toolbar: {
+                showQuickFilter: false,
+              },
+            }}
+            components={{
+              LoadingOverlay: CustomLoadingOverlay,
+            }}
+          />
+        </Box>
+      </Box>
 
       {/* Delete Confirmation Dialog (example) */}
       <Dialog
@@ -375,5 +395,23 @@ function FrontdeskPatientList({ onPatientSelect }) {
     </PageContainer>
   );
 }
+
+// Custom loading overlay to improve UX
+const CustomLoadingOverlay = () => {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+      }}
+    >
+      <CircularProgress size={40} />
+      <Typography sx={{ mt: 2 }}>Loading patients...</Typography>
+    </Box>
+  );
+};
 
 export default FrontdeskPatientList;

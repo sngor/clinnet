@@ -110,6 +110,23 @@ export const userService = {
       }
       const result = await response.json();
       console.log('Profile image uploaded successfully:', result);
+      
+      // Try to store in Cognito, but this is optional now since we also use local storage
+      if (result && result.imageUrl) {
+        try {
+          const { updateUserAttributes } = await import('../utils/cognito-helpers');
+          const user = userPool.getCurrentUser();
+          if (user) {
+            await updateUserAttributes(user.getUsername(), {
+              'custom:profileImage': result.imageUrl
+            });
+          }
+        } catch (attributeError) {
+          // Just log the error - we're storing the image URL in the AuthProvider state too
+          console.warn('Note: Could not store profile image URL in Cognito:', attributeError.message);
+        }
+      }
+      
       return result;
     } catch (error) {
       console.error('Error uploading profile image:', error);
@@ -131,7 +148,6 @@ export const userService = {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'application/json'
         }
       });
       if (!response.ok) {
@@ -139,31 +155,28 @@ export const userService = {
         throw new Error(`Failed to get profile image: ${errorText}`);
       }
       const result = await response.json();
-      console.log('Profile image retrieved:', result);
+      console.log('Profile image retrieved successfully:', result);
       return result;
     } catch (error) {
       console.error('Error getting profile image:', error);
-      // Return a default response instead of throwing
-      return {
-        success: false,
-        hasImage: false,
-        message: 'Failed to retrieve profile image'
-      };
+      throw error;
     }
   },
-
+  
   /**
    * Remove the user's profile image
    * @returns {Promise<Object>} - Result of the operation
    */
   async removeProfileImage() {
     try {
+      console.log('Removing profile image');
+      // Get the current auth token
       const idToken = await getAuthToken();
+      // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'application/json'
         }
       });
       if (!response.ok) {
@@ -171,12 +184,44 @@ export const userService = {
         throw new Error(`Failed to remove profile image: ${errorText}`);
       }
       const result = await response.json();
+      console.log('Profile image removed successfully:', result);
+      
+      // Try to remove from Cognito attributes (if the custom attribute exists)
+      try {
+        const { updateUserAttributes } = await import('../utils/cognito-helpers');
+        const user = userPool.getCurrentUser();
+        if (user) {
+          await updateUserAttributes(user.getUsername(), {
+            'custom:profileImage': ''
+          });
+        }
+      } catch (attributeError) {
+        // Just log the error
+        console.warn('Could not update Cognito attributes:', attributeError.message);
+      }
+      
       return result;
     } catch (error) {
       console.error('Error removing profile image:', error);
       throw error;
     }
+  },
+
+  /**
+   * Extract username from email
+   * @param {string} email - Email address
+   * @returns {string} - Extracted username
+   */
+  extractUsername(email) {
+    if (!email) return "";
+    return email.split("@")[0];
   }
 };
 
-export default userService;
+// For backward compatibility
+const userServiceExports = {
+  ...userService,
+  extractUsername: userService.extractUsername
+};
+
+export default userServiceExports;

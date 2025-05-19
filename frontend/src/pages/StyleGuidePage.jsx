@@ -1,5 +1,5 @@
 // src/pages/StyleGuidePage.jsx
-import React from 'react';
+import React from "react";
 import {
   Box,
   Typography,
@@ -12,11 +12,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  useTheme
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+  useTheme,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 
 import {
   PageContainer,
@@ -34,8 +34,8 @@ import {
   SecondaryButton,
   TextButton,
   DangerButton,
-  AppIconButton
-} from '../components/ui';
+  AppIconButton,
+} from "../components/ui";
 
 function StyleGuidePage() {
   const theme = useTheme();
@@ -44,8 +44,9 @@ function StyleGuidePage() {
     <PageContainer>
       <PageTitle>Style Guide</PageTitle>
       <BodyText>
-        This page demonstrates the consistent UI components and styling used throughout the application.
-        Use these components to maintain visual consistency across all pages.
+        This page demonstrates the consistent UI components and styling used
+        throughout the application. Use these components to maintain visual
+        consistency across all pages.
       </BodyText>
 
       <SectionContainer>
@@ -57,17 +58,24 @@ function StyleGuidePage() {
               <SectionTitle>Section Title (h5)</SectionTitle>
               <SubsectionTitle>Subsection Title (h6)</SubsectionTitle>
               <BodyText>
-                Body Text (body1) - This is the standard paragraph text used throughout the application.
-                It should be used for most content on the page.
+                Body Text (body1) - This is the standard paragraph text used
+                throughout the application. It should be used for most content
+                on the page.
               </BodyText>
               <SecondaryText>
-                Secondary Text (body2) - Used for less important information, descriptions, or supporting text.
+                Secondary Text (body2) - Used for less important information,
+                descriptions, or supporting text.
               </SecondaryText>
               <Box sx={{ mb: 2 }}>
                 <LabelText>Label Text (subtitle2)</LabelText>
-                <BodyText sx={{ mt: 0 }}>Used for form labels or small headings.</BodyText>
+                <BodyText sx={{ mt: 0 }}>
+                  Used for form labels or small headings.
+                </BodyText>
               </Box>
-              <Caption>Caption Text (caption) - Used for timestamps, footnotes, or other small text.</Caption>
+              <Caption>
+                Caption Text (caption) - Used for timestamps, footnotes, or
+                other small text.
+              </Caption>
             </Box>
           </Grid>
           <Grid item xs={12} md={6}>
@@ -124,7 +132,12 @@ function StyleGuidePage() {
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <SubsectionTitle>Button Variants</SubsectionTitle>
-            <FlexBox direction="column" align="flex-start" spacing={2} sx={{ mb: 3 }}>
+            <FlexBox
+              direction="column"
+              align="flex-start"
+              spacing={2}
+              sx={{ mb: 3 }}
+            >
               <PrimaryButton>Primary Button</PrimaryButton>
               <SecondaryButton>Secondary Button</SecondaryButton>
               <TextButton>Text Button</TextButton>
@@ -162,23 +175,27 @@ function StyleGuidePage() {
           <Grid item xs={12} md={6}>
             <SubsectionTitle>Button Usage Guidelines</SubsectionTitle>
             <BodyText>
-              <strong>Primary Button:</strong> Use for the main action on a page or in a section.
-              There should typically be only one primary button per section.
+              <strong>Primary Button:</strong> Use for the main action on a page
+              or in a section. There should typically be only one primary button
+              per section.
             </BodyText>
             <BodyText>
-              <strong>Secondary Button:</strong> Use for secondary actions that are less important
-              than the primary action but still need emphasis.
+              <strong>Secondary Button:</strong> Use for secondary actions that
+              are less important than the primary action but still need
+              emphasis.
             </BodyText>
             <BodyText>
-              <strong>Text Button:</strong> Use for tertiary actions, links, or in places where
-              space is limited.
+              <strong>Text Button:</strong> Use for tertiary actions, links, or
+              in places where space is limited.
             </BodyText>
             <BodyText>
-              <strong>Danger Button:</strong> Use for destructive actions like delete or remove.
+              <strong>Danger Button:</strong> Use for destructive actions like
+              delete or remove.
             </BodyText>
             <SecondaryText>
-              Always use the appropriate button variant based on the action's importance.
-              Maintain consistent button sizing and spacing throughout the application.
+              Always use the appropriate button variant based on the action's
+              importance. Maintain consistent button sizing and spacing
+              throughout the application.
             </SecondaryText>
           </Grid>
         </Grid>
@@ -191,14 +208,16 @@ function StyleGuidePage() {
             <CardContainer>
               <SubsectionTitle>Card Container</SubsectionTitle>
               <SecondaryText>
-                Used for content cards, list items, or any content that should be visually grouped.
-                Has hover effects and consistent padding.
+                Used for content cards, list items, or any content that should
+                be visually grouped. Has hover effects and consistent padding.
               </SecondaryText>
             </CardContainer>
           </Grid>
           <Grid item xs={12} md={8}>
-            <SectionContainer elevation={2}>
-              <SubsectionTitle>Section Container with Elevation</SubsectionTitle>
+            <CardContainer>
+              <SubsectionTitle>
+                Section Container with Elevation
+              </SubsectionTitle>
               <SecondaryText>
                 Used for major sections of a page. Can have elevation or border.
                 Provides consistent padding and margin.
@@ -207,7 +226,7 @@ function StyleGuidePage() {
                 <TextButton>Cancel</TextButton>
                 <PrimaryButton>Save</PrimaryButton>
               </FlexBox>
-            </SectionContainer>
+            </CardContainer>
           </Grid>
         </Grid>
       </SectionContainer>
@@ -216,7 +235,7 @@ function StyleGuidePage() {
         <SectionTitle>Color Palette</SectionTitle>
         <Grid container spacing={2}>
           {Object.entries(theme.palette).map(([key, value]) => {
-            if (typeof value === 'object' && value.main && key !== 'common') {
+            if (typeof value === "object" && value.main && key !== "common") {
               return (
                 <Grid item xs={6} sm={4} md={3} key={key}>
                   <Box sx={{ mb: 2 }}>
@@ -226,10 +245,12 @@ function StyleGuidePage() {
                         height: 80,
                         borderRadius: 1,
                         mb: 1,
-                        boxShadow: 1
+                        boxShadow: 1,
                       }}
                     />
-                    <LabelText sx={{ textTransform: 'capitalize' }}>{key}</LabelText>
+                    <LabelText sx={{ textTransform: "capitalize" }}>
+                      {key}
+                    </LabelText>
                     <Caption>{value.main}</Caption>
                   </Box>
                 </Grid>
@@ -243,8 +264,8 @@ function StyleGuidePage() {
       <SectionContainer>
         <SectionTitle>Spacing</SectionTitle>
         <BodyText>
-          The application uses a consistent spacing system based on a unit of 8px.
-          Spacing values are multipliers of this base unit.
+          The application uses a consistent spacing system based on a unit of
+          8px. Spacing values are multipliers of this base unit.
         </BodyText>
         <Grid container spacing={2}>
           {[1, 2, 3, 4, 6, 8].map((spacing) => (
@@ -253,9 +274,9 @@ function StyleGuidePage() {
                 <Box
                   sx={{
                     height: theme.spacing(spacing),
-                    bgcolor: 'primary.light',
+                    bgcolor: "primary.light",
                     borderRadius: 1,
-                    mb: 1
+                    mb: 1,
                   }}
                 />
                 <Caption>

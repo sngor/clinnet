@@ -1,30 +1,44 @@
 // src/components/ui/TableStyles.jsx
-import React from 'react';
-import { Paper, TableContainer, Table } from '@mui/material';
+// Consistent table styles for Clinnet-EMR UI system
+//
+// Accessibility & Best Practices:
+// - Uses <Paper> and <TableContainer> for tables
+// - Standard header and action button styles
+//
+// Usage Example:
+// import { StyledTableContainer, tableHeaderStyle, actionButtonsStyle } from '../components/ui';
+// <StyledTableContainer><Table>...</Table></StyledTableContainer>
+
+import React from "react";
+import { Paper, TableContainer, Table } from "@mui/material";
 
 /**
  * A consistent table wrapper with standardized styling
- * 
+ *
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - The table content
  * @param {Object} [props.sx] - Additional styles to apply to the Paper component
  * @param {Object} [props.tableSx] - Additional styles to apply to the Table component
  */
 export const StyledTableContainer = ({ children, sx = {}, tableSx = {} }) => (
-  <Paper 
-    elevation={0} 
-    sx={{ 
+  <Paper
+    elevation={0}
+    sx={{
       borderRadius: 2,
-      overflow: 'hidden',
-      border: '1px solid',
-      borderColor: 'divider',
-      ...sx
+      overflow: "hidden",
+      border: "1px solid",
+      borderColor: "divider",
+      backgroundColor: "background.paper",
+      ...sx,
     }}
   >
-    <TableContainer sx={{ boxShadow: "none" }}>
+    <TableContainer
+      sx={{ boxShadow: "none", backgroundColor: "background.paper" }}
+    >
       <Table
         sx={{
           minWidth: 650,
+          backgroundColor: "background.paper",
           "& .MuiTableCell-root": {
             borderBottom: "none",
             padding: "16px",
@@ -43,7 +57,7 @@ export const StyledTableContainer = ({ children, sx = {}, tableSx = {} }) => (
           "& thead tr th:last-of-type": {
             borderRadius: "0 8px 8px 0",
           },
-          ...tableSx
+          ...tableSx,
         }}
       >
         {children}
@@ -56,7 +70,7 @@ export const StyledTableContainer = ({ children, sx = {}, tableSx = {} }) => (
  * Standard styles for table headers
  */
 export const tableHeaderStyle = {
-  backgroundColor: "#f5f5f5"
+  backgroundColor: "#f5f5f5",
 };
 
 /**
@@ -64,5 +78,5 @@ export const tableHeaderStyle = {
  */
 export const actionButtonsStyle = {
   display: "flex",
-  gap: 1
+  gap: 1,
 };

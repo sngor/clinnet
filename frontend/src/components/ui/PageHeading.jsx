@@ -1,10 +1,22 @@
 // src/components/ui/PageHeading.jsx
-import React from 'react';
-import { Box, Divider, Typography } from '@mui/material';
+// Consistent page heading component for Clinnet-EMR UI system
+//
+// Accessibility & Best Practices:
+// - Uses semantic <h1> for page title
+// - Optional subtitle and action button
+// - Responsive spacing and layout
+// - Use as the first element in a page for accessibility
+//
+// Usage Example:
+// import { PageHeading } from '../components/ui';
+// <PageHeading title="Patients" subtitle="Manage all patients" action={<PrimaryButton>Add</PrimaryButton>} />
+
+import React from "react";
+import { Box, Divider, Typography } from "@mui/material";
 
 /**
  * A consistent page heading component that can be used across all pages
- * 
+ *
  * @param {Object} props - Component props
  * @param {string} props.title - The page title
  * @param {string} [props.subtitle] - Optional subtitle text
@@ -15,61 +27,63 @@ import { Box, Divider, Typography } from '@mui/material';
 function PageHeading({ title, subtitle, action, divider = false, sx = {} }) {
   return (
     <>
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           mb: divider ? 2 : 4,
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'space-between',
-          alignItems: { xs: 'flex-start', sm: 'center' },
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "flex-start", sm: "center" },
           gap: 2,
           pb: 2,
-          borderBottom: divider ? 'none' : '1px solid',
-          borderColor: 'divider',
-          ...sx
+          borderBottom: divider ? "none" : "1px solid",
+          borderColor: "divider",
+          ...sx,
         }}
       >
-        <Box sx={{ textAlign: 'left', width: '100%' }}>
-          <Typography 
-            variant="h4" 
+        <Box sx={{ textAlign: "left", width: "100%" }}>
+          <Typography
+            variant="h4"
             component="h1"
-            sx={{ 
-              mb: subtitle ? 0.5 : 0, 
-              textAlign: 'left',
+            sx={{
+              mb: subtitle ? 0.5 : 0,
+              textAlign: "left",
               fontWeight: 600,
-              color: 'primary.main',
-              lineHeight: 1.3
+              color: "primary.main",
+              lineHeight: 1.3,
             }}
           >
             {title}
           </Typography>
-          
+
           {subtitle && (
-            <Typography 
-              variant="subtitle1" 
+            <Typography
+              variant="subtitle1"
               color="text.secondary"
-              sx={{ 
-                mt: 0.5, 
-                mb: 0, 
-                textAlign: 'left',
-                lineHeight: 1.4
+              sx={{
+                mt: 0.5,
+                mb: 0,
+                textAlign: "left",
+                lineHeight: 1.4,
               }}
             >
               {subtitle}
             </Typography>
           )}
         </Box>
-        
+
         {action && (
-          <Box sx={{ 
-            alignSelf: { xs: 'flex-start', sm: 'center' },
-            flexShrink: 0
-          }}>
+          <Box
+            sx={{
+              alignSelf: { xs: "flex-start", sm: "center" },
+              flexShrink: 0,
+            }}
+          >
             {action}
           </Box>
         )}
       </Box>
-      
+
       {divider && <Divider sx={{ mb: 4 }} />}
     </>
   );

@@ -378,6 +378,7 @@ function UserList() {
           onClick={handleRefresh}
           disabled={loading}
           sx={{ mr: 1 }}
+          aria-label="Refresh user list"
         >
           <RefreshIcon />
         </AppIconButton>
@@ -386,6 +387,7 @@ function UserList() {
         startIcon={<AddIcon />}
         onClick={handleAddUser}
         sx={{ borderRadius: 1.5 }}
+        aria-label="Add new user"
       >
         Add User
       </PrimaryButton>
@@ -394,174 +396,181 @@ function UserList() {
 
   return (
     <PageContainer>
-      <SectionContainer>
-        <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
-          <Typography variant="h5">User Management</Typography>
-          {/* Only keep one Add User button in the table action bar below */}
-        </FlexBox>
-        <CardContainer>
-          <TableContainer title="Users" action={actionButtons}>
-            {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {error}
-              </Alert>
-            )}
+      <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
+        <Typography variant="h5">User Management</Typography>
+        {/* Only keep one Add User button in the table action bar below */}
+      </FlexBox>
 
-            {loading && !openAddEdit && !openDelete ? (
-              <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <StyledTableContainer>
-                <TableHead sx={tableHeaderStyle}>
-                  <TableRow>
-                    {columns.map((column) => (
-                      <TableCell
-                        key={column.id}
-                        sortDirection={orderBy === column.id ? order : false}
+      {/* Replace nested containers with just CardContainer */}
+      <CardContainer>
+        <TableContainer
+          title="Users"
+          action={actionButtons}
+          aria-label="Users table"
+        >
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+
+          {loading && !openAddEdit && !openDelete ? (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <StyledTableContainer>
+              <TableHead sx={tableHeaderStyle}>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      sortDirection={orderBy === column.id ? order : false}
+                    >
+                      <TableSortLabel
+                        active={orderBy === column.id}
+                        direction={orderBy === column.id ? order : "asc"}
+                        onClick={createSortHandler(column.id)}
                       >
-                        <TableSortLabel
-                          active={orderBy === column.id}
-                          direction={orderBy === column.id ? order : "asc"}
-                          onClick={createSortHandler(column.id)}
-                        >
-                          {column.label}
-                        </TableSortLabel>
-                      </TableCell>
-                    ))}
-                    <TableCell align="center">Actions</TableCell>
+                        {column.label}
+                      </TableSortLabel>
+                    </TableCell>
+                  ))}
+                  <TableCell align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length + 1} align="center">
+                      No users found
+                    </TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={columns.length + 1} align="center">
-                        No users found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    stableSort(users, getComparator(order, orderBy)).map(
-                      (user) => (
-                        <TableRow
-                          key={user.username}
-                          sx={{
-                            "&:last-child td, &:last-child th": { border: 0 },
-                          }}
-                        >
-                          <TableCell>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
+                ) : (
+                  stableSort(users, getComparator(order, orderBy)).map(
+                    (user) => (
+                      <TableRow
+                        key={user.username}
+                        sx={{
+                          "&:last-child td, &:last-child th": { border: 0 },
+                        }}
+                      >
+                        <TableCell>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Avatar
+                              src={user.profileImage || undefined}
+                              alt={
+                                user.firstName ||
+                                user.email?.split("@")[0] ||
+                                "User"
+                              }
+                              sx={{ width: 32, height: 32, fontSize: 16 }}
                             >
-                              <Avatar
-                                src={user.profileImage || undefined}
-                                alt={
-                                  user.firstName ||
-                                  user.email?.split("@")[0] ||
-                                  "User"
-                                }
-                                sx={{ width: 32, height: 32, fontSize: 16 }}
-                              >
-                                {user.firstName
-                                  ? user.firstName[0]
-                                  : user.email
-                                  ? user.email[0].toUpperCase()
-                                  : "U"}
-                              </Avatar>
-                              <span>
-                                {user.email ? user.email.split("@")[0] : "-"}
-                              </span>
-                            </Box>
-                          </TableCell>
-                          <TableCell>{user.firstName || "-"}</TableCell>
-                          <TableCell>{user.lastName || "-"}</TableCell>
-                          <TableCell>{user.email || "-"}</TableCell>
-                          <TableCell>{user.phone || "-"}</TableCell>
-                          <TableCell>
-                            <Chip
-                              label={
-                                user.role.charAt(0).toUpperCase() +
-                                user.role.slice(1)
-                              }
+                              {user.firstName
+                                ? user.firstName[0]
+                                : user.email
+                                ? user.email[0].toUpperCase()
+                                : "U"}
+                            </Avatar>
+                            <span>
+                              {user.email ? user.email.split("@")[0] : "-"}
+                            </span>
+                          </Box>
+                        </TableCell>
+                        <TableCell>{user.firstName || "-"}</TableCell>
+                        <TableCell>{user.lastName || "-"}</TableCell>
+                        <TableCell>{user.email || "-"}</TableCell>
+                        <TableCell>{user.phone || "-"}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={
+                              user.role.charAt(0).toUpperCase() +
+                              user.role.slice(1)
+                            }
+                            size="small"
+                            color={
+                              user.role === "admin"
+                                ? "error"
+                                : user.role === "doctor"
+                                ? "primary"
+                                : "secondary"
+                            }
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            icon={
+                              user.enabled ? <CheckCircleIcon /> : <BlockIcon />
+                            }
+                            label={user.enabled ? "Active" : "Disabled"}
+                            size="small"
+                            color={user.enabled ? "success" : "default"}
+                            variant={user.enabled ? "filled" : "outlined"}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Tooltip title="Edit User">
+                            <AppIconButton
+                              color="primary"
                               size="small"
-                              color={
-                                user.role === "admin"
-                                  ? "error"
-                                  : user.role === "doctor"
-                                  ? "primary"
-                                  : "secondary"
-                              }
-                              variant="outlined"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              icon={
-                                user.enabled ? (
-                                  <CheckCircleIcon />
-                                ) : (
-                                  <BlockIcon />
-                                )
-                              }
-                              label={user.enabled ? "Active" : "Disabled"}
+                              onClick={() => handleEditUser(user)}
+                              disabled={actionLoading}
+                              aria-label={`Edit user ${user.firstName} ${user.lastName}`}
+                            >
+                              <EditIcon fontSize="small" />
+                            </AppIconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete User">
+                            <AppIconButton
+                              color="error"
                               size="small"
-                              color={user.enabled ? "success" : "default"}
-                              variant={user.enabled ? "filled" : "outlined"}
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <Tooltip title="Edit User">
-                              <AppIconButton
-                                color="primary"
-                                size="small"
-                                onClick={() => handleEditUser(user)}
-                                disabled={actionLoading}
-                              >
-                                <EditIcon fontSize="small" />
-                              </AppIconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete User">
-                              <AppIconButton
-                                color="error"
-                                size="small"
-                                onClick={() => handleDeleteClick(user)}
-                                disabled={actionLoading}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </AppIconButton>
-                            </Tooltip>
-                            <Tooltip
-                              title={
-                                user.enabled ? "Disable User" : "Enable User"
+                              onClick={() => handleDeleteClick(user)}
+                              disabled={actionLoading}
+                              aria-label={`Delete user ${user.firstName} ${user.lastName}`}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </AppIconButton>
+                          </Tooltip>
+                          <Tooltip
+                            title={
+                              user.enabled ? "Disable User" : "Enable User"
+                            }
+                          >
+                            <AppIconButton
+                              color={user.enabled ? "default" : "success"}
+                              size="small"
+                              onClick={() => handleToggleUserStatus(user)}
+                              disabled={actionLoading}
+                              aria-label={
+                                user.enabled
+                                  ? `Disable user ${user.firstName} ${user.lastName}`
+                                  : `Enable user ${user.firstName} ${user.lastName}`
                               }
                             >
-                              <AppIconButton
-                                color={user.enabled ? "default" : "success"}
-                                size="small"
-                                onClick={() => handleToggleUserStatus(user)}
-                                disabled={actionLoading}
-                              >
-                                {user.enabled ? (
-                                  <BlockIcon fontSize="small" />
-                                ) : (
-                                  <CheckCircleIcon fontSize="small" />
-                                )}
-                              </AppIconButton>
-                            </Tooltip>
-                          </TableCell>
-                        </TableRow>
-                      )
+                              {user.enabled ? (
+                                <BlockIcon fontSize="small" />
+                              ) : (
+                                <CheckCircleIcon fontSize="small" />
+                              )}
+                            </AppIconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
                     )
-                  )}
-                </TableBody>
-              </StyledTableContainer>
-            )}
-          </TableContainer>
-        </CardContainer>
-      </SectionContainer>
+                  )
+                )}
+              </TableBody>
+            </StyledTableContainer>
+          )}
+        </TableContainer>
+      </CardContainer>
 
       {/* Add/Edit User Dialog */}
       <Dialog
@@ -575,6 +584,34 @@ function UserList() {
         </DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+            {/* Display user avatar at the top of the form if editing an existing user */}
+            {currentUser && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mb: 2,
+                }}
+              >
+                <Avatar
+                  src={currentUser.profileImage || undefined}
+                  alt={
+                    currentUser.firstName ||
+                    getUsernameFromEmail(currentUser.email) ||
+                    "User"
+                  }
+                  sx={{ width: 64, height: 64, fontSize: 32 }}
+                >
+                  {currentUser.firstName
+                    ? currentUser.firstName[0]
+                    : currentUser.email
+                    ? currentUser.email[0].toUpperCase()
+                    : "U"}
+                </Avatar>
+              </Box>
+            )}
+
             <TextField
               name="username"
               label="Username"

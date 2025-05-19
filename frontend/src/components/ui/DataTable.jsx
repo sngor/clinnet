@@ -1,24 +1,35 @@
 // src/components/ui/DataTable.jsx
-import React from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
+// Consistent data table for Clinnet-EMR UI system
+//
+// Accessibility & Best Practices:
+// - Uses semantic <table> structure
+// - Keyboard and screen reader accessible
+// - Supports loading and empty states
+//
+// Usage Example:
+// import { DataTable } from '../components/ui';
+// <DataTable columns={columns} rows={rows} loading={loading} />
+
+import React from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
   TablePagination,
   Box,
   Typography,
-  CircularProgress
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
+  CircularProgress,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   borderRadius: theme.shape.borderRadius,
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-  overflow: 'hidden',
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+  overflow: "hidden",
 }));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -28,7 +39,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 
 /**
  * A consistent data table component for displaying tabular data
- * 
+ *
  * @param {Object} props - Component props
  * @param {Array} props.columns - Array of column definitions with { id, label, align, format, minWidth }
  * @param {Array} props.rows - Array of data rows
@@ -41,27 +52,28 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
  * @param {number} [props.totalCount] - Total number of rows (for server-side pagination)
  * @param {Object} [props.sx] - Additional styles to apply
  */
-function DataTable({ 
-  columns, 
-  rows, 
-  loading = false, 
+function DataTable({
+  columns,
+  rows,
+  loading = false,
   pagination = true,
-  page = 0, 
-  rowsPerPage = 10, 
-  onPageChange, 
+  page = 0,
+  rowsPerPage = 10,
+  onPageChange,
   onRowsPerPageChange,
   totalCount,
-  sx = {} 
+  sx = {},
 }) {
   // For client-side pagination when totalCount is not provided
-  const displayedRows = pagination && !totalCount 
-    ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) 
-    : rows;
-  
+  const displayedRows =
+    pagination && !totalCount
+      ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+      : rows;
+
   const count = totalCount || rows.length;
-  
+
   return (
-    <Box sx={{ width: '100%', ...sx }}>
+    <Box sx={{ width: "100%", ...sx }}>
       <StyledTableContainer component={Paper}>
         <Table stickyHeader aria-label="data table">
           <TableHead>
@@ -69,7 +81,7 @@ function DataTable({
               {columns.map((column) => (
                 <StyledTableCell
                   key={column.id}
-                  align={column.align || 'left'}
+                  align={column.align || "left"}
                   style={{ minWidth: column.minWidth }}
                 >
                   {column.label}
@@ -77,11 +89,15 @@ function DataTable({
               ))}
             </TableRow>
           </TableHead>
-          
+
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center" sx={{ py: 6 }}>
+                <TableCell
+                  colSpan={columns.length}
+                  align="center"
+                  sx={{ py: 6 }}
+                >
                   <CircularProgress size={40} />
                 </TableCell>
               </TableRow>
@@ -91,7 +107,7 @@ function DataTable({
                   {columns.map((column) => {
                     const value = row[column.id];
                     return (
-                      <TableCell key={column.id} align={column.align || 'left'}>
+                      <TableCell key={column.id} align={column.align || "left"}>
                         {column.format ? column.format(value, row) : value}
                       </TableCell>
                     );
@@ -100,7 +116,11 @@ function DataTable({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center" sx={{ py: 6 }}>
+                <TableCell
+                  colSpan={columns.length}
+                  align="center"
+                  sx={{ py: 6 }}
+                >
                   <Typography variant="body1" color="text.secondary">
                     No data available
                   </Typography>
@@ -110,7 +130,7 @@ function DataTable({
           </TableBody>
         </Table>
       </StyledTableContainer>
-      
+
       {pagination && (
         <TablePagination
           rowsPerPageOptions={[5, 10, 25, 50]}

@@ -1,17 +1,28 @@
 // src/components/ui/FormDialog.jsx
-import React from 'react';
-import { 
-  Dialog, 
-  DialogActions, 
-  DialogContent, 
+// Consistent form dialog for Clinnet-EMR UI system
+//
+// Accessibility & Best Practices:
+// - Uses <Dialog> and <form> for accessibility
+// - Keyboard and screen reader accessible
+// - Loading and disabled states for submit
+//
+// Usage Example:
+// import { FormDialog } from '../components/ui';
+// <FormDialog open={open} onClose={close} title="Edit" onSubmit={handleSubmit}>...</FormDialog>
+
+import React from "react";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
   Button,
-  Box
-} from '@mui/material';
-import DialogHeading from './DialogHeading';
+  Box,
+} from "@mui/material";
+import DialogHeading from "./DialogHeading";
 
 /**
  * A consistent form dialog component for displaying forms in a dialog
- * 
+ *
  * @param {Object} props - Component props
  * @param {boolean} props.open - Whether the dialog is open
  * @param {Function} props.onClose - Callback for closing the dialog
@@ -27,53 +38,47 @@ import DialogHeading from './DialogHeading';
  * @param {boolean} [props.fullWidth=true] - Whether the dialog takes up the full width
  * @param {Object} [props.sx] - Additional styles to apply to the dialog
  */
-function FormDialog({ 
-  open, 
-  onClose, 
-  title, 
-  icon, 
-  children, 
-  submitText = 'Submit', 
-  cancelText = 'Cancel',
+function FormDialog({
+  open,
+  onClose,
+  title,
+  icon,
+  children,
+  submitText = "Submit",
+  cancelText = "Cancel",
   onSubmit,
   loading = false,
   disabled = false,
-  maxWidth = 'sm',
+  maxWidth = "sm",
   fullWidth = true,
-  sx = {}
+  sx = {},
 }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(e);
   };
-  
+
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={loading ? null : onClose}
       maxWidth={maxWidth}
       fullWidth={fullWidth}
       sx={sx}
     >
       <DialogHeading title={title} icon={icon} />
-      
+
       <form onSubmit={handleSubmit}>
-        <DialogContent sx={{ pt: 3 }}>
-          {children}
-        </DialogContent>
-        
+        <DialogContent sx={{ pt: 3 }}>{children}</DialogContent>
+
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Box sx={{ display: 'flex', gap: 2, ml: 'auto' }}>
-            <Button 
-              onClick={onClose} 
-              disabled={loading}
-              variant="outlined"
-            >
+          <Box sx={{ display: "flex", gap: 2, ml: "auto" }}>
+            <Button onClick={onClose} disabled={loading} variant="outlined">
               {cancelText}
             </Button>
-            <Button 
-              type="submit" 
-              variant="contained" 
+            <Button
+              type="submit"
+              variant="contained"
               disabled={disabled || loading}
             >
               {submitText}
