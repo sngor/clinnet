@@ -34,6 +34,35 @@ See [docs/project-structure.md](./docs/project-structure.md) for a detailed dire
 | SAM CLI     | Latest       | [Install Guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) |
 | AWS Account |              | Permissions for Lambda, API Gateway, DynamoDB, Cognito                                                               |
 
+### Troubleshooting npm Dependency Issues
+
+If you encounter npm deprecated package warnings:
+
+1. Use the provided helper script to update dependencies:
+
+   ```bash
+   cd frontend
+   chmod +x ./scripts/update-dependencies.sh
+   ./scripts/update-dependencies.sh
+   ```
+
+2. For manual dependency cleanup:
+
+   ```bash
+   cd frontend
+   npm install -g npm-check-updates
+   ncu -u
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+3. Make sure you're using Node.js 18:
+   ```bash
+   nvm use 18
+   # Or install it if you don't have it
+   nvm install 18
+   ```
+
 ---
 
 ## ⚡ Quickstart

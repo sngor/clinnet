@@ -1,39 +1,42 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  define: {
-    // Better Node.js polyfills
-    global: 'globalThis',
-    process: { 
-      env: {}, 
-      browser: true 
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
     },
-    Buffer: ['buffer', 'Buffer'],
+  },
+  // Polyfill for Node.js built-ins required by some dependencies
+  define: {
+    'process.env': {},
+    global: 'window',
   },
   server: {
-    proxy: {
-      '/api': {
-        target: process.env.VITE_API_ENDPOINT || 'https://ilw09lpwga.execute-api.us-east-2.amazonaws.com/dev',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+    port: 5173,
+    host: true,
+    open: true,
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          mui: ['@mui/material', '@mui/icons-material'],
+        },
       },
     },
   },
-  resolve: {
-    alias: {
-      // Add Node.js module aliases for browser compatibility
-      'buffer': 'buffer/',
-      'process': 'process/browser',
-    }
-  },
   optimizeDeps: {
     esbuildOptions: {
-      // Node.js global to browser globalThis
       define: {
-        global: 'globalThis'
-      }
-    }
-  }
+        global: 'globalThis',
+      },
+    },
+  },
 });
