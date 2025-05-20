@@ -32,6 +32,10 @@ jobs:
           echo "VITE_S3_BUCKET=${{ secrets.VITE_S3_BUCKET }}" >> .env
           echo "VITE_S3_REGION=${{ secrets.VITE_S3_REGION }}" >> .env
 
+      - name: Print .env for debugging
+        working-directory: frontend
+        run: cat .env
+
       - name: Install dependencies and build frontend
         working-directory: frontend
         run: |
