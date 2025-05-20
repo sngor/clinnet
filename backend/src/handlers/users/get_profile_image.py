@@ -77,6 +77,18 @@ def lambda_handler(event, context):
     """
     logger.info(f"Received event: {json.dumps(event)}")
     
+    # Handle CORS preflight OPTIONS request
+    if event.get('httpMethod', '').upper() == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+            },
+            'body': json.dumps({'message': 'CORS preflight OK'})
+        }
+    
     try:
         # Extract username from request context (from Cognito authorizer)
         try:

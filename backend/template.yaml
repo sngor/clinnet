@@ -627,6 +627,21 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  # Explicit OPTIONS method for /users/profile-image to ensure CORS preflight is not blocked by Cognito
+  GetProfileImageOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/users/
+      Handler: get_profile_image.lambda_handler # Dummy handler, not actually invoked
+      Events:
+        GetProfileImageOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users/profile-image
+            Method: options
+            Auth: NONE
+
   # Lambda Functions for Appointments
   GetAppointmentsFunction:
     Type: AWS::Serverless::Function
