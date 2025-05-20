@@ -546,7 +546,7 @@ function AppLayout() {
             },
           }}
         >
-          {/* Show logo and shadow above drawer content on mobile */}
+          {/* Show logo above drawer content on mobile, no nested container */}
           <Box sx={{
             width: '100%',
             display: { xs: 'flex', sm: 'none' },
@@ -561,43 +561,29 @@ function AppLayout() {
             borderBottom: '1px solid #e0e0e0',
             overflow: 'visible',
           }}>
-            <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Box
-                sx={{
-                  width: 44,
-                  height: 44,
-                  bgcolor: 'primary.main',
-                  background: 'linear-gradient(135deg, #4361ee 0%, #3a56d4 100%)',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  mt: 0.5,
-                  zIndex: 3,
-                }}
+            <Box
+              sx={{
+                width: 44,
+                height: 44,
+                bgcolor: 'primary.main',
+                background: 'linear-gradient(135deg, #4361ee 0%, #3a56d4 100%)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                mt: 0.5,
+                zIndex: 3,
+              }}
+            >
+              <Typography
+                variant="h5"
+                color="white"
+                fontWeight="bold"
+                align="center"
               >
-                <Typography
-                  variant="h5"
-                  color="white"
-                  fontWeight="bold"
-                  align="center"
-                >
-                  C
-                </Typography>
-              </Box>
-              {/* Gradient shadow below logo */}
-              <Box
-                sx={{
-                  width: 44,
-                  height: 16,
-                  mt: '-4px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(180deg, rgba(67,97,238,0.18) 0%, rgba(67,97,238,0) 100%)',
-                  filter: 'blur(2px)',
-                  zIndex: 2,
-                }}
-              />
+                C
+              </Typography>
             </Box>
           </Box>
           <Box sx={{ mt: '56px', width: '100%' }}>{drawer}</Box>

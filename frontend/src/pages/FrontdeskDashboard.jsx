@@ -1,12 +1,12 @@
 // src/pages/FrontdeskDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
-import { 
-  Grid, 
-  Typography, 
-  useMediaQuery, 
-  useTheme, 
-  Box, 
+import {
+  Grid,
+  Typography,
+  useMediaQuery,
+  useTheme,
+  Box,
   Button,
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
@@ -24,12 +24,12 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { useNavigate } from "react-router-dom";
 
 // Import UI components
-import { 
-  PageHeading, 
-  ContentCard, 
+import {
+  PageHeading,
+  ContentCard,
   AppointmentList,
   DialogHeading,
-  PageContainer
+  PageContainer,
 } from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
@@ -41,7 +41,7 @@ import { getTimeBasedGreeting } from "../utils/dateUtils";
 function FrontdeskDashboard() {
   const { user } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +51,7 @@ function FrontdeskDashboard() {
     patientName: "",
     doctorName: "",
     type: "Walk-in",
-    notes: ""
+    notes: "",
   });
 
   // Fetch today's appointments (using mock data)
@@ -78,7 +78,9 @@ function FrontdeskDashboard() {
           appt.id === appointmentId ? { ...appt, status: "Checked-in" } : appt
         )
       );
-      console.log(`Patient with appointment ID ${appointmentId} checked in successfully`);
+      console.log(
+        `Patient with appointment ID ${appointmentId} checked in successfully`
+      );
     } catch (err) {
       setError(`Failed to check in: ${err.message}`);
       console.error("Check-in error:", err);
@@ -96,9 +98,9 @@ function FrontdeskDashboard() {
 
   const handleWalkInFormChange = (e) => {
     const { name, value } = e.target;
-    setWalkInForm(prev => ({
+    setWalkInForm((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -119,28 +121,37 @@ function FrontdeskDashboard() {
     }; // Mock data
     setAppointments((prev) => [newWalkInAppointment, ...prev]); // Add to top of list
     handleCloseWalkInModal(); // Close modal on success
-    
+
     // Reset form
     setWalkInForm({
       patientName: "",
       doctorName: "",
       type: "Walk-in",
-      notes: ""
+      notes: "",
     });
   };
 
   return (
     <PageContainer>
       {/* Page header */}
-      <PageHeading 
-        title={`${getTimeBasedGreeting()}, ${user?.firstName || user?.username || "Front Desk"}!`}
+      <PageHeading
+        title={`${getTimeBasedGreeting()}, ${
+          user?.firstName || user?.username || "Front Desk"
+        }!`}
         subtitle={`${appointments.length} appointments scheduled for today`}
       />
 
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <DashboardCard 
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          md={4}
+          lg={3}
+          sx={{ minWidth: 260, maxWidth: 320 }}
+        >
+          <DashboardCard
             icon={<EventIcon fontSize="large" />}
             title="Appointments"
             value={appointments.length}
@@ -149,8 +160,15 @@ function FrontdeskDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <DashboardCard 
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          md={4}
+          lg={3}
+          sx={{ minWidth: 260, maxWidth: 320 }}
+        >
+          <DashboardCard
             icon={<PeopleIcon fontSize="large" />}
             title="Patients"
             value={42} // Mock value
@@ -159,8 +177,15 @@ function FrontdeskDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <DashboardCard 
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          md={4}
+          lg={3}
+          sx={{ minWidth: 260, maxWidth: 320 }}
+        >
+          <DashboardCard
             icon={<CalendarMonthIcon fontSize="large" />}
             title="Schedule"
             value={7} // Mock value
@@ -172,8 +197,8 @@ function FrontdeskDashboard() {
 
       {/* Quick Actions */}
       <Box sx={{ mb: 4 }}>
-        <Typography 
-          variant="h5" 
+        <Typography
+          variant="h5"
           color="primary.main"
           fontWeight="medium"
           sx={{ mb: 2 }}
@@ -182,8 +207,8 @@ function FrontdeskDashboard() {
         </Typography>
         <Grid container spacing={2}>
           <Grid item>
-            <Button 
-              variant="contained" 
+            <Button
+              variant="contained"
               startIcon={<PersonAddIcon />}
               onClick={handleOpenWalkInModal}
               sx={{ borderRadius: 1.5 }}
@@ -198,12 +223,12 @@ function FrontdeskDashboard() {
       <ContentCard
         title="Upcoming Appointments"
         elevation={0}
-        sx={{ 
-          border: '1px solid',
-          borderColor: 'divider'
+        sx={{
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
-        <AppointmentList 
+        <AppointmentList
           appointments={appointments}
           loading={loading}
           onAction={handleCheckIn}
@@ -213,8 +238,8 @@ function FrontdeskDashboard() {
       </ContentCard>
 
       {/* Walk-in Registration Modal */}
-      <Dialog 
-        open={isWalkInModalOpen} 
+      <Dialog
+        open={isWalkInModalOpen}
         onClose={handleCloseWalkInModal}
         maxWidth="sm"
         fullWidth
@@ -242,7 +267,7 @@ function FrontdeskDashboard() {
                     onChange={handleWalkInFormChange}
                     label="Doctor"
                   >
-                    {mockDoctors.map(doctor => (
+                    {mockDoctors.map((doctor) => (
                       <MenuItem key={doctor.id} value={doctor.name}>
                         {doctor.name} ({doctor.specialty})
                       </MenuItem>
@@ -266,8 +291,8 @@ function FrontdeskDashboard() {
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={handleCloseWalkInModal}>Cancel</Button>
-          <Button 
-            onClick={handleSubmitWalkIn} 
+          <Button
+            onClick={handleSubmitWalkIn}
             variant="contained"
             disabled={!walkInForm.patientName}
           >

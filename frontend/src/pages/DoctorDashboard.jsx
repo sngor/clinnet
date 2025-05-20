@@ -1,22 +1,18 @@
 // src/pages/DoctorDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
-import { 
-  Grid, 
-  useMediaQuery, 
-  useTheme
-} from "@mui/material";
+import { Grid, useMediaQuery, useTheme } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import { useNavigate } from "react-router-dom";
 
 // Import UI components
-import { 
-  PageHeading, 
-  ContentCard, 
+import {
+  PageHeading,
+  ContentCard,
   AppointmentList,
-  PageContainer
+  PageContainer,
 } from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
@@ -29,13 +25,13 @@ const mockPatients = [
   { id: 1, name: "John Doe", lastVisit: "2023-11-20" },
   { id: 2, name: "Jane Smith", lastVisit: "2023-10-05" },
   { id: 3, name: "Michael Johnson", lastVisit: "2023-09-20" },
-  { id: 4, name: "Emily Williams", lastVisit: "2023-11-25" }
+  { id: 4, name: "Emily Williams", lastVisit: "2023-11-25" },
 ];
 
 function DoctorDashboard() {
   const { user } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
@@ -60,15 +56,24 @@ function DoctorDashboard() {
   return (
     <PageContainer>
       {/* Page header */}
-      <PageHeading 
-        title={`${getTimeBasedGreeting()}, Dr. ${user?.lastName || user?.username || "Smith"}!`}
+      <PageHeading
+        title={`${getTimeBasedGreeting()}, Dr. ${
+          user?.lastName || user?.username || "Smith"
+        }!`}
         subtitle={`${appointments.length} appointments scheduled for today`}
       />
 
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <DashboardCard 
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          md={4}
+          lg={3}
+          sx={{ minWidth: 260, maxWidth: 320 }}
+        >
+          <DashboardCard
             icon={<EventIcon fontSize="large" />}
             title="Appointments"
             value={appointments.length}
@@ -77,8 +82,15 @@ function DoctorDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <DashboardCard 
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          md={4}
+          lg={3}
+          sx={{ minWidth: 260, maxWidth: 320 }}
+        >
+          <DashboardCard
             icon={<PeopleIcon fontSize="large" />}
             title="Patients"
             value={patients.length}
@@ -87,8 +99,15 @@ function DoctorDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <DashboardCard 
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          md={4}
+          lg={3}
+          sx={{ minWidth: 260, maxWidth: 320 }}
+        >
+          <DashboardCard
             icon={<AssignmentIcon fontSize="large" />}
             title="Records"
             value={12}
@@ -102,13 +121,13 @@ function DoctorDashboard() {
       <ContentCard
         title="Today's Schedule"
         elevation={0}
-        sx={{ 
-          border: '1px solid',
-          borderColor: 'divider',
-          mb: 4
+        sx={{
+          border: "1px solid",
+          borderColor: "divider",
+          mb: 4,
         }}
       >
-        <AppointmentList 
+        <AppointmentList
           appointments={appointments}
           loading={loading}
           showAction={false}
