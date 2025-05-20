@@ -22,6 +22,18 @@ def lambda_handler(event, context):
     """
     print(f"Received event: {json.dumps(event)}")
     
+    # --- Handle CORS preflight (OPTIONS) requests ---
+    if event.get('httpMethod', '').upper() == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+            },
+            'body': json.dumps({'message': 'CORS preflight OK'})
+        }
+
     table_name = os.environ.get('APPOINTMENTS_TABLE')
     if not table_name:
         return generate_response(500, {'message': 'Appointments table name not configured'})
