@@ -10,16 +10,20 @@
 // <EmptyState icon={<InboxIcon />} title="No Data" description="Nothing to show." actionText="Add" onAction={handleAdd} />
 
 import React from "react";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Paper } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
-const StyledBox = styled(Box)(({ theme }) => ({
+const StyledBox = styled(Paper)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-  padding: theme.spacing(6),
+  padding: theme.spacing(8),
   textAlign: "center",
+  borderRadius: theme.shape.borderRadius * 1.25,
+  background: "linear-gradient(145deg, #f9faff 0%, #f3f6ff 100%)",
+  border: "1px solid rgba(231, 236, 248, 0.8)",
+  boxShadow: "0 8px 40px rgba(67, 97, 238, 0.05)",
 }));
 
 /**
@@ -50,11 +54,20 @@ function EmptyState({
       {icon && (
         <Box
           sx={{
-            mb: 3,
-            color: "text.secondary",
+            mb: 4,
+            color: "primary.main",
+            background: "rgba(67, 97, 238, 0.07)",
+            borderRadius: "50%",
+            padding: 3,
+            width: 100,
+            height: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 12px 30px rgba(67, 97, 238, 0.1)",
             "& svg": {
-              fontSize: "4rem",
-              opacity: 0.7,
+              fontSize: "3.5rem",
+              opacity: 0.9,
             },
           }}
         >
@@ -65,7 +78,16 @@ function EmptyState({
       <Typography
         variant="h5"
         color="text.primary"
-        sx={{ mb: description ? 1 : 3, fontWeight: 500 }}
+        sx={{
+          mb: description ? 1.5 : 3,
+          fontWeight: 600,
+          background: "linear-gradient(90deg, #4361ee, #7209b7)",
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          color: "transparent" /* Fallback */,
+          letterSpacing: "-0.01em",
+        }}
       >
         {title}
       </Typography>
@@ -75,19 +97,40 @@ function EmptyState({
           <Typography
             variant="body1"
             color="text.secondary"
-            sx={{ mb: 3, maxWidth: 400 }}
+            sx={{
+              mb: 4,
+              maxWidth: 450,
+              lineHeight: 1.6,
+              fontSize: "1rem",
+              opacity: 0.8,
+            }}
           >
             {description}
           </Typography>
         ) : (
-          <Box sx={{ mb: 3, maxWidth: 400 }}>{description}</Box>
+          <Box sx={{ mb: 4, maxWidth: 450 }}>{description}</Box>
         ))}
 
       {action
         ? action
         : actionText &&
           onAction && (
-            <Button variant={buttonVariant} onClick={onAction}>
+            <Button
+              variant={buttonVariant}
+              onClick={onAction}
+              sx={{
+                px: 4,
+                py: 1.2,
+                boxShadow: "0 8px 20px rgba(67, 97, 238, 0.15)",
+                borderRadius: 50,
+                fontWeight: 600,
+                transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                "&:hover": {
+                  transform: "translateY(-3px)",
+                  boxShadow: "0 12px 25px rgba(67, 97, 238, 0.2)",
+                },
+              }}
+            >
               {actionText}
             </Button>
           )}

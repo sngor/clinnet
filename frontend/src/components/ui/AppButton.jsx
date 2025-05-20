@@ -15,9 +15,14 @@
 
 import React, { forwardRef } from "react";
 import PropTypes from "prop-types";
-import { Button, IconButton, Tooltip } from "@mui/material";
-import { styled } from "@mui/material/styles";
-import CircularProgress from "@mui/material/CircularProgress";
+import {
+  Button,
+  IconButton,
+  Tooltip,
+  useMediaQuery,
+  CircularProgress,
+} from "@mui/material";
+import { styled, useTheme } from "@mui/material/styles";
 
 // Base styled button with common properties
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -44,6 +49,22 @@ const StyledButton = styled(Button)(({ theme }) => ({
     opacity: 0.6,
     cursor: "not-allowed",
     boxShadow: "none",
+  },
+  // Enhanced touch target for mobile devices
+  [theme.breakpoints.down("sm")]: {
+    minHeight: 44,
+    padding: "10px 16px",
+    fontSize: "0.9375rem",
+    // Increase touch target without affecting visual size
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      top: -8,
+      right: -8,
+      bottom: -8,
+      left: -8,
+      zIndex: -1,
+    },
   },
 }));
 
@@ -123,6 +144,8 @@ export const AppIconButton = forwardRef(
     ref
   ) => {
     const IconComponent = icon;
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
     // Use provided aria-label, or tooltip, or a default derived from icon
     const buttonAriaLabel =
@@ -130,14 +153,26 @@ export const AppIconButton = forwardRef(
       tooltip ||
       (IconComponent ? IconComponent.displayName || "Icon button" : "Button");
 
+    // Adjust size for mobile
+    const effectiveSize = isMobile && size === "medium" ? "large" : size;
+
     const button = (
       <IconButton
         onClick={onClick}
         color={color}
-        size={size}
+        size={effectiveSize}
         disabled={disabled}
         ref={ref}
         aria-label={buttonAriaLabel}
+        sx={{
+          // Enhanced touch target for mobile
+          ...(isMobile && {
+            p: 1.2,
+            "& .MuiSvgIcon-root": {
+              fontSize: "1.3rem",
+            },
+          }),
+        }}
         {...props}
       >
         {IconComponent ? <IconComponent /> : null}

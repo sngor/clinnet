@@ -29,13 +29,13 @@ function PageHeading({ title, subtitle, action, divider = false, sx = {} }) {
     <>
       <Box
         sx={{
-          mb: divider ? 2 : 4,
+          mb: divider ? 1.5 : { xs: 2.5, md: 4 }, // Reduced margin on mobile
           display: "flex",
-          flexDirection: { xs: "column", sm: "row" },
+          flexDirection: { xs: "column", md: "row" }, // Stack on mobile and tablets
           justifyContent: "space-between",
-          alignItems: { xs: "flex-start", sm: "center" },
-          gap: 2,
-          pb: 2,
+          alignItems: { xs: "flex-start", md: "center" },
+          gap: { xs: 1.5, md: 2 }, // Tighter spacing on mobile
+          pb: { xs: 1.5, md: 2 }, // Less padding on mobile
           borderBottom: divider ? "none" : "1px solid",
           borderColor: "divider",
           ...sx,
@@ -46,11 +46,12 @@ function PageHeading({ title, subtitle, action, divider = false, sx = {} }) {
             variant="h4"
             component="h1"
             sx={{
-              mb: subtitle ? 0.5 : 0,
-              textAlign: "left",
-              fontWeight: 600,
-              color: "primary.main",
+              color: (theme) => theme.palette.primary.main,
+              fontWeight: 700,
               lineHeight: 1.3,
+              mb: 1,
+              textAlign: "left",
+              fontSize: { xs: "1.75rem", sm: "2rem", md: "2.125rem" }, // Responsive font size
             }}
           >
             {title}

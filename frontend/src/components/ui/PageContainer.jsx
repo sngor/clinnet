@@ -27,13 +27,19 @@ import { Container } from "@mui/material";
 const PageContainer = ({
   children,
   maxWidth = "lg",
-  padding = 3,
+  padding = { xs: 2, sm: 3, md: 3 }, // Responsive padding
+  disableGutters = false,
   ...props
 }) => {
   return (
     <Container
       maxWidth={maxWidth}
-      sx={{ py: padding }}
+      disableGutters={disableGutters}
+      sx={{
+        py: padding,
+        px: disableGutters ? 0 : undefined,
+        overflow: "hidden", // Prevent horizontal scrolling on mobile
+      }}
       {...props}
       aria-label={props["aria-label"] || "Page container"} // Ensure aria-label is provided
     >

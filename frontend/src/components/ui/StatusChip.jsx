@@ -10,13 +10,33 @@
 // <StatusChip status="Scheduled" />
 
 import React from "react";
-import { Chip } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { Chip, Box } from "@mui/material";
+import { styled, keyframes } from "@mui/material/styles";
 import { getAppointmentStatusColor } from "../../mock/mockAppointments";
 
-const StyledChip = styled(Chip)(({ theme }) => ({
-  fontWeight: 500,
-  borderRadius: 16,
+// Add a subtle pulse animation for attention-requiring statuses
+const pulsate = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
+
+const StyledChip = styled(Chip)(({ theme, animate, color }) => ({
+  fontWeight: 600,
+  borderRadius: 50, // Pill-shaped
+  fontSize: "0.75rem",
+  letterSpacing: "0.02em",
+  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+  border: "1px solid",
+  borderColor: `${
+    theme.palette[color]?.light || color || theme.palette.primary.light
+  }40`,
+  transition: "all 0.2s ease",
+  animation: animate ? `${pulsate} 2s infinite ease-in-out` : "none",
+  "&:hover": {
+    transform: "translateY(-2px)",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+  },
   "& .MuiChip-label": {
     padding: "0 12px",
   },
@@ -40,20 +60,34 @@ function StatusChip({
   color,
   icon,
   chipProps = {},
+  animate = false,
   ...rest
 }) {
   const resolvedColor = color || getAppointmentStatusColor(status);
 
+  // Determine if status should have animation (could be based on status priority)
+  const shouldAnimate =
+    animate || status === "Urgent" || status === "Cancelled";
+
   return (
-    <StyledChip
-      label={status}
-      color={resolvedColor}
-      size={size}
-      icon={icon}
-      sx={sx}
-      {...chipProps}
-      {...rest}
-    />
+    <Box sx={{ display: "inline-flex" }}>
+      <StyledChip
+        label={status}
+        color={resolvedColor}
+        size={size}
+        icon={icon}
+        animate={shouldAnimate}
+        sx={{
+          "& .MuiChip-icon": {
+            color: "inherit",
+            marginLeft: "8px",
+          },
+          ...sx,
+        }}
+        {...chipProps}
+        {...rest}
+      />
+    </Box>
   );
 }
 

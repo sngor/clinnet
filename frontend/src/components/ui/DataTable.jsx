@@ -5,10 +5,13 @@
 // - Uses semantic <table> structure
 // - Keyboard and screen reader accessible
 // - Supports loading and empty states
+// - Mobile responsive with horizontal scrolling
 //
 // Usage Example:
 // import { DataTable } from '../components/ui';
 // <DataTable columns={columns} rows={rows} loading={loading} />
+//
+// For fully responsive tables with mobile card layout, use ResponsiveTable instead
 
 import React from "react";
 import {
@@ -23,18 +26,52 @@ import {
   Box,
   Typography,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   borderRadius: theme.shape.borderRadius,
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+  boxShadow: "0 10px 30px rgba(67, 97, 238, 0.05)",
   overflow: "hidden",
+  border: "1px solid rgba(231, 236, 248, 0.8)",
+  transition: "all 0.3s ease",
+  // Enhanced mobile support with better scrolling
+  [theme.breakpoints.down("sm")]: {
+    "-webkit-overflow-scrolling": "touch",
+    borderRadius: theme.shape.borderRadius - 4,
+    boxShadow: "0 6px 16px rgba(67, 97, 238, 0.03)",
+    "&::-webkit-scrollbar": {
+      height: 6,
+    },
+    "&::-webkit-scrollbar-thumb": {
+      backgroundColor: "rgba(0, 0, 0, 0.1)",
+      borderRadius: 10,
+    },
+  },
 }));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   fontWeight: 600,
-  backgroundColor: theme.palette.grey[50],
+  backgroundColor: "rgba(67, 97, 238, 0.03)",
+  color: theme.palette.primary.main,
+  fontSize: "0.875rem",
+  letterSpacing: "0.01em",
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  padding: "16px 20px",
+  // Responsive styling for mobile
+  [theme.breakpoints.down("sm")]: {
+    padding: "12px 16px",
+    fontSize: "0.8125rem",
+    "&:first-of-type": {
+      position: "sticky",
+      left: 0,
+      backgroundColor: "rgba(67, 97, 238, 0.05)",
+      zIndex: 2,
+      boxShadow: "2px 0 4px rgba(0, 0, 0, 0.05)",
+    },
+  },
 }));
 
 /**
@@ -50,6 +87,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
  * @param {Function} [props.onPageChange] - Callback for page change
  * @param {Function} [props.onRowsPerPageChange] - Callback for rows per page change
  * @param {number} [props.totalCount] - Total number of rows (for server-side pagination)
+ * @param {boolean} [props.stickyFirstColumn=false] - Whether to make the first column sticky for horizontal scrolling
  * @param {Object} [props.sx] - Additional styles to apply
  */
 function DataTable({
@@ -62,8 +100,12 @@ function DataTable({
   onPageChange,
   onRowsPerPageChange,
   totalCount,
+  stickyFirstColumn = false,
   sx = {},
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   // For client-side pagination when totalCount is not provided
   const displayedRows =
     pagination && !totalCount
@@ -96,9 +138,20 @@ function DataTable({
                 <TableCell
                   colSpan={columns.length}
                   align="center"
-                  sx={{ py: 6 }}
+                  sx={{ py: 8 }}
                 >
-                  <CircularProgress size={40} />
+                  <CircularProgress
+                    size={45}
+                    thickness={4}
+                    sx={{ color: "primary.light" }}
+                  />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 2 }}
+                  >
+                    Loading data...
+                  </Typography>
                 </TableCell>
               </TableRow>
             ) : displayedRows.length > 0 ? (
