@@ -33,11 +33,10 @@ Globals:
       - x86_64
   Api:
     Cors:
-      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'" # Added inner single quotes
-      AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'" # Added inner single quotes
-      AllowOrigin: "'*'" # Added inner single quotes
-      # MaxAge: "600" # Optional: You can uncomment and set this
-      # AllowCredentials: true # Optional: Uncomment if you need to handle cookies/credentials
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+      AllowOrigin: "'*'"
+      AllowCredentials: true
 
 Resources:
   # DynamoDB Table for Patients and Medical Records (hybrid single-table design)
@@ -130,7 +129,7 @@ Resources:
   ClinicAPI:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: !Ref Environment # Use the Environment parameter for stage name
+      StageName: !Ref Environment
       Auth:
         DefaultAuthorizer: CognitoAuthorizer
         Authorizers:
@@ -141,15 +140,17 @@ Resources:
         DEFAULT_4XX:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'*'" # Added inner single quotes
-              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'" # Added inner single quotes
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'" # Added inner single quotes
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              Access-Control-Allow-Credentials: "'true'"
         DEFAULT_5XX:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'*'" # Added inner single quotes
-              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'" # Added inner single quotes
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'" # Added inner single quotes
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              Access-Control-Allow-Credentials: "'true'"
 
   # Cognito User Pool
   UserPool:
@@ -832,11 +833,33 @@ Resources:
             QueryString: false
             Cookies:
               Forward: none
+          # Add cache control settings
+          MinTTL: 0
+          DefaultTTL: 86400  # 1 day for most assets
+          MaxTTL: 31536000  # 1 year max
+        # Add a specific cache behavior for index.html
+        CacheBehaviors:
+          - PathPattern: '/index.html'
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            ForwardedValues:
+              QueryString: false
+              Cookies:
+                Forward: none
+            MinTTL: 0
+            DefaultTTL: 0  # Don't cache index.html
+            MaxTTL: 0      # Always fetch the latest version
         ViewerCertificate:
           CloudFrontDefaultCertificate: true
         PriceClass: PriceClass_100
         CustomErrorResponses:
-          - ErrorCode: 404
+          - ErrorCode: 403  # Add 403 error handling
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404  # Keep existing 404 handling
             ResponseCode: 200
             ResponsePagePath: /index.html
 

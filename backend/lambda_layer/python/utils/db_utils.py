@@ -216,17 +216,18 @@ def generate_response(status_code, body):
     Returns:
         dict: API Gateway response object
     """
-    return {
+    response = {
         'statusCode': status_code,
         'headers': {
-            # Required for CORS support to work
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Credentials': True,
             'Content-Type': 'application/json'
         },
         # Use the custom DecimalEncoder to handle DynamoDB numbers
         'body': json.dumps(body, cls=DecimalEncoder)
     }
+    
+    # Import here to avoid circular imports
+    from utils.cors import add_cors_headers
+    return add_cors_headers(response)
 
 def get_patient_by_pk_sk(table_name, pk, sk):
     """
