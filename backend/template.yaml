@@ -440,6 +440,8 @@ Resources:
               Action:
                 - cognito-idp:ListUsers
               Resource: !GetAtt UserPool.Arn
+      Layers:
+        - !Ref UtilsLayer
       Events:
         ListUsers:
           Type: Api

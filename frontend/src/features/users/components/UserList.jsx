@@ -518,25 +518,23 @@ function UserList() {
                         <TableCell align="center">
                           <Tooltip title="Edit User">
                             <AppIconButton
+                              icon={EditIcon}
                               color="primary"
                               size="small"
                               onClick={() => handleEditUser(user)}
                               disabled={actionLoading}
                               aria-label={`Edit user ${user.firstName} ${user.lastName}`}
-                            >
-                              <EditIcon fontSize="small" />
-                            </AppIconButton>
+                            />
                           </Tooltip>
                           <Tooltip title="Delete User">
                             <AppIconButton
+                              icon={DeleteIcon}
                               color="error"
                               size="small"
                               onClick={() => handleDeleteClick(user)}
                               disabled={actionLoading}
                               aria-label={`Delete user ${user.firstName} ${user.lastName}`}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </AppIconButton>
+                            />
                           </Tooltip>
                           <Tooltip
                             title={
@@ -544,6 +542,7 @@ function UserList() {
                             }
                           >
                             <AppIconButton
+                              icon={user.enabled ? BlockIcon : CheckCircleIcon}
                               color={user.enabled ? "default" : "success"}
                               size="small"
                               onClick={() => handleToggleUserStatus(user)}
@@ -553,13 +552,7 @@ function UserList() {
                                   ? `Disable user ${user.firstName} ${user.lastName}`
                                   : `Enable user ${user.firstName} ${user.lastName}`
                               }
-                            >
-                              {user.enabled ? (
-                                <BlockIcon fontSize="small" />
-                              ) : (
-                                <CheckCircleIcon fontSize="small" />
-                              )}
-                            </AppIconButton>
+                            />
                           </Tooltip>
                         </TableCell>
                       </TableRow>
