@@ -9,6 +9,13 @@ import boto3
 import logging
 from botocore.exceptions import ClientError
 
+# Attempt to import add_cors_headers from utils.cors, fallback to lambda_layer.python.utils.cors for local testing
+try:
+    from utils.cors import add_cors_headers
+except ImportError:
+    # For local testing if Lambda layer is not in path
+    from lambda_layer.python.utils.cors import add_cors_headers
+
 # Setup logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -25,10 +32,10 @@ def build_error_response(status_code, error_type, message):
     Returns:
         dict: API Gateway response with error details
     """
-    return {
+    response = {
         'statusCode': status_code,
         'headers': {
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net',
             'Access-Control-Allow-Headers': 'Content-Type,Authorization',
             'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
         },
@@ -37,6 +44,7 @@ def build_error_response(status_code, error_type, message):
             'message': message
         })
     }
+    return response
 
 def handle_exception(exception):
     """
@@ -136,7 +144,7 @@ def lambda_handler(event, context):
         response = {
             'statusCode': 200,
             'headers': {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net',
                 'Access-Control-Allow-Headers': 'Content-Type,Authorization',
                 'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
             },

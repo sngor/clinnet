@@ -41,7 +41,7 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // CORS header
+        'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net', // CORS header
         'Access-Control-Allow-Credentials': true
       },
       body: JSON.stringify({
@@ -56,7 +56,7 @@ exports.handler = async (event) => {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // CORS header
+        'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net', // CORS header
         'Access-Control-Allow-Credentials': true
       },
       body: JSON.stringify({

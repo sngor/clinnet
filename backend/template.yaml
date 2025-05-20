@@ -35,7 +35,7 @@ Globals:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
       AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-      AllowOrigin: "'*'"
+      AllowOrigin: "'https://d23hk32py5djal.cloudfront.net'"
       AllowCredentials: false
       MaxAge: "'7200'" # Added for consistency with Lambda OPTIONS handlers
 
