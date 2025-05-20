@@ -632,7 +632,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/users/
-      Handler: get_profile_image.lambda_handler # Dummy handler, not actually invoked
+      Handler: cors_options.lambda_handler # Changed to a dedicated CORS handler
       Events:
         GetProfileImageOptions:
           Type: Api
@@ -640,7 +640,54 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /users/profile-image
             Method: options
-            Auth: NONE
+            Auth:
+              Authorizer: NONE
+
+  # Add explicit OPTIONS handlers for other endpoints
+  ServicesOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/cors/
+      Handler: cors_options.lambda_handler
+      Events:
+        ServicesOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /services
+            Method: options
+            Auth:
+              Authorizer: NONE
+
+  PatientsOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/cors/
+      Handler: cors_options.lambda_handler
+      Events:
+        PatientsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /patients
+            Method: options
+            Auth:
+              Authorizer: NONE
+
+  UsersOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/cors/
+      Handler: cors_options.lambda_handler
+      Events:
+        UsersOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   # Lambda Functions for Appointments
   GetAppointmentsFunction:

@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 # Import utility functions
 from utils.db_utils import query_table, generate_response
 from utils.responser_helper import handle_exception
+from utils.cors import add_cors_headers, build_cors_preflight_response
 
 def lambda_handler(event, context):
     """
@@ -30,6 +31,10 @@ def lambda_handler(event, context):
     if not table_name:
         logger.error('Services table name not configured')
         return generate_response(500, {'message': 'Services table name not configured'})
+    
+    # Handle CORS preflight requests
+    if event.get('httpMethod') == 'OPTIONS':
+        return build_cors_preflight_response()
     
     try:
         # Get query parameters
@@ -61,7 +66,10 @@ def lambda_handler(event, context):
         services = query_table(table_name, **kwargs)
         logger.info(f"Fetched {len(services)} services from DynamoDB")
         
-        return generate_response(200, services)
+        response = generate_response(200, services)
+        
+        # Add CORS headers to response
+        return add_cors_headers(response)
     
     except ClientError as e:
         logger.error(f"ClientError: {e}", exc_info=True)
@@ -69,7 +77,9 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(f"Error fetching services: {e}", exc_info=True)
         print(f"Error fetching services: {e}")
-        return generate_response(500, {
+        error_response = generate_response(500, {
             'message': 'Error fetching services',
             'error': str(e)
         })
+        # Add CORS headers even to error responses
+        return add_cors_headers(error_response)

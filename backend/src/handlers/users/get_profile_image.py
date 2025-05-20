@@ -77,16 +77,19 @@ def lambda_handler(event, context):
     """
     logger.info(f"Received event: {json.dumps(event)}")
     
-    # Handle CORS preflight OPTIONS request
-    if event.get('httpMethod', '').upper() == 'OPTIONS':
+    # Add CORS headers to every response
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+    }
+    
+    # Check if this is an OPTIONS request and return early with just the headers
+    if event.get('httpMethod') == 'OPTIONS':
         return {
             'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-            },
-            'body': json.dumps({'message': 'CORS preflight OK'})
+            'headers': headers,
+            'body': json.dumps({})
         }
     
     try:
@@ -130,11 +133,7 @@ def lambda_handler(event, context):
             logger.info(f"No profile image found for user: {username}")
             return {
                 'statusCode': 200,
-                'headers': {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-                    'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-                },
+                'headers': headers,
                 'body': json.dumps({
                     'success': True,
                     'hasImage': False,
@@ -159,11 +158,7 @@ def lambda_handler(event, context):
                 logger.warning(f"Profile image not found in S3: {profile_image_key}")
                 return {
                     'statusCode': 200,
-                    'headers': {
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-                        'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-                    },
+                    'headers': headers,
                     'body': json.dumps({
                         'success': True,
                         'hasImage': False,
@@ -183,11 +178,7 @@ def lambda_handler(event, context):
         # Return success response with the image URL
         response = {
             'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-            },
+            'headers': headers,
             'body': json.dumps({
                 'success': True,
                 'hasImage': True,
