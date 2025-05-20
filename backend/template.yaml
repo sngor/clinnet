@@ -33,11 +33,11 @@ Globals:
       - x86_64
   Api:
     Cors:
-      AllowMethods: "'GET, POST, PUT, DELETE, OPTIONS'"
-      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
       AllowOrigin: "'*'"
-      MaxAge: "'3600'"
       AllowCredentials: false
+      MaxAge: "'7200'" # Added for consistency with Lambda OPTIONS handlers
 
 Resources:
   # DynamoDB Table for Patients and Medical Records (hybrid single-table design)
@@ -178,10 +178,10 @@ Resources:
         RESOURCE_NOT_FOUND:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Max-Age: "'7200'"
+              Access-Control-Allow-Origin: "'''*'''"
+              Access-Control-Allow-Headers: "'''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''"
+              Access-Control-Allow-Methods: "'''GET,POST,PUT,DELETE,OPTIONS'''"
+              Access-Control-Max-Age: "'''7200'''"
 
   # Cognito User Pool
   UserPool:
@@ -610,6 +610,10 @@ Resources:
     Properties:
       CodeUri: src/handlers/users/
       Handler: get_profile_image.lambda_handler
+      Environment: # Add Environment Variables
+        Variables:
+          DOCUMENTS_BUCKET: !Ref DocumentsBucket
+          USER_POOL_ID: !Ref UserPool
       Policies:
         - Version: '2012-10-17'
           Statement:

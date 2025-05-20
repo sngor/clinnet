@@ -3,6 +3,7 @@ def lambda_handler(event, context):
     Handle OPTIONS requests for CORS preflight.
     Returns appropriate CORS headers to allow cross-origin requests.
     """
+    print("CORS OPTIONS event:", event)  # Debug log for troubleshooting
     return {
         'statusCode': 200,
         'headers': {

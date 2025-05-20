@@ -23,8 +23,8 @@ api.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
       
-      // Add Origin header to help with CORS
-      config.headers.Origin = window.location.origin;
+      // Remove manual setting of Origin header to avoid CORS issues
+      // config.headers.Origin = window.location.origin; // REMOVED: Browsers set this automatically
     } catch (error) {
       console.error('Error getting auth token from Cognito:', error);
     }
