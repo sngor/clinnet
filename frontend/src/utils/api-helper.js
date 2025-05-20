@@ -20,7 +20,9 @@ export const createAuthenticatedAxios = async () => {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
-    }
+    },
+    // Make sure this matches your API Gateway configuration
+    withCredentials: false
   });
 };
 

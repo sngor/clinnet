@@ -9,6 +9,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Enable CORS with credentials
+  withCredentials: false // Explicitly set this to false to match API Gateway configuration
 });
 
 // Add request interceptor for authentication
