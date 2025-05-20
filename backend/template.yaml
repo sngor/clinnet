@@ -595,6 +595,8 @@ Resources:
                 - s3:PutObject
                 - s3:GetObject
               Resource: !Sub "${DocumentsBucket.Arn}/profile-images/*"
+      Layers:
+        - !Ref UtilsLayer
       Events:
         UploadProfileImage:
           Type: Api
@@ -625,6 +627,8 @@ Resources:
               Action:
                 - s3:GetObject
               Resource: !Sub "${DocumentsBucket.Arn}/profile-images/*"
+      Layers:
+        - !Ref UtilsLayer
       Events:
         GetProfileImage:
           Type: Api
@@ -653,6 +657,8 @@ Resources:
                 - s3:DeleteObject
                 - s3:GetObject
               Resource: !Sub "${DocumentsBucket.Arn}/profile-images/*"
+      Layers:
+        - !Ref UtilsLayer
       Events:
         RemoveProfileImage:
           Type: Api
