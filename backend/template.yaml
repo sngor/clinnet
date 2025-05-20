@@ -33,10 +33,10 @@ Globals:
       - x86_64
   Api:
     Cors:
-      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+      AllowMethods: "'GET, POST, PUT, DELETE, OPTIONS'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
       AllowOrigin: "'*'"
-      AllowCredentials: true
+      AllowCredentials: false
 
 Resources:
   # DynamoDB Table for Patients and Medical Records (hybrid single-table design)
@@ -136,21 +136,47 @@ Resources:
           CognitoAuthorizer:
             UserPoolArn: !GetAtt UserPool.Arn
         AddDefaultAuthorizerToCorsPreflight: false
+      Cors:
+        AllowMethods: "'GET, POST, PUT, DELETE, OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+        AllowCredentials: false
       GatewayResponses:
         DEFAULT_4XX:
           ResponseParameters:
             Headers:
               Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
               Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Allow-Credentials: "'true'"
+              Access-Control-Allow-Credentials: "'false'"
         DEFAULT_5XX:
           ResponseParameters:
             Headers:
               Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
               Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Allow-Credentials: "'true'"
+              Access-Control-Allow-Credentials: "'false'"
+        UNAUTHORIZED:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              Access-Control-Allow-Credentials: "'false'"
+        ACCESS_DENIED:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              Access-Control-Allow-Credentials: "'false'"
+        RESOURCE_NOT_FOUND:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              Access-Control-Allow-Credentials: "'false'"
 
   # Cognito User Pool
   UserPool:
