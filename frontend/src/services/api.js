@@ -9,8 +9,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // Enable CORS with credentials
-  withCredentials: false // Explicitly set this to false to match API Gateway configuration
+  // Set CORS settings to match the backend configuration
+  withCredentials: false // Must be false to match API Gateway CORS configuration
 });
 
 // Add request interceptor for authentication
@@ -22,6 +22,9 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      
+      // Add Origin header to help with CORS
+      config.headers.Origin = window.location.origin;
     } catch (error) {
       console.error('Error getting auth token from Cognito:', error);
     }

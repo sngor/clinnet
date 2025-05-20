@@ -138,6 +138,8 @@ Resources:
             UserPoolArn: !GetAtt UserPool.Arn
         AddDefaultAuthorizerToCorsPreflight: false
       # Improve CORS configuration
+      BinaryMediaTypes:
+        - '*/*'
       Cors:
         AllowMethods: "'GET, POST, PUT, DELETE, OPTIONS'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
@@ -672,25 +674,6 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
-            # Add explicit CORS configuration at the method level
-            MethodResponses:
-              - StatusCode: 200
-                ResponseParameters:
-                  method.response.header.Access-Control-Allow-Headers: true
-                  method.response.header.Access-Control-Allow-Methods: true
-                  method.response.header.Access-Control-Allow-Origin: true
-                  method.response.header.Access-Control-Max-Age: true
-            Integration:
-              Type: MOCK
-              IntegrationResponses:
-                - StatusCode: 200
-                  ResponseParameters:
-                    method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
-                    method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-                    method.response.header.Access-Control-Allow-Origin: "'*'"
-                    method.response.header.Access-Control-Max-Age: "'7200'"
-              RequestTemplates:
-                application/json: '{"statusCode": 200}'
 
   # Add explicit OPTIONS handlers for other endpoints
   ServicesOptions:
@@ -966,6 +949,7 @@ Outputs:
   FrontendBucketName:
     Description: S3 bucket for static frontend hosting
     Value: !Ref FrontendBucket
+    
   CloudFrontDistributionDomain:
     Description: CloudFront distribution domain name
     Value: !GetAtt FrontendDistribution.DomainName
