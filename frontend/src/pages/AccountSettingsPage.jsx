@@ -31,7 +31,7 @@ import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
 import { validatePassword } from "../utils/password-validator";
 
 function AccountSettingsPage({ onProfileImageUpdated }) {
-  const { user, setUser, updateProfileImage } = useAuth();
+  const { user, updateProfileImage, refreshUserData } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const fileInputRef = useRef(null);
@@ -132,14 +132,10 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
       });
 
       if (result.success) {
-        // Update local user state with new information
-        setUser((prev) => ({
-          ...prev,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phone: formData.phone,
-        }));
-
+        // Refresh user data in auth context
+        if (typeof refreshUserData === "function") {
+          await refreshUserData();
+        }
         showNotification("Profile updated successfully");
       }
     } catch (error) {
@@ -190,7 +186,10 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
           newPassword: "",
           confirmPassword: "",
         }));
-
+        // Refresh user data in auth context
+        if (typeof refreshUserData === "function") {
+          await refreshUserData();
+        }
         showNotification("Password changed successfully");
       }
     } catch (error) {

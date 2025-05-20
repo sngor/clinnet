@@ -57,41 +57,9 @@ export const adminService = {
         throw new Error(`Failed to parse response as JSON: ${responseText}`);
       }
       
-      // Return mock data if the API fails
+      // If the API returns no users, treat as error
       if (!data || !data.users) {
-        console.warn('API returned invalid data, using mock data instead');
-        return {
-          users: [
-            {
-              uniqueId: 'admin@clinnet.com',
-              enabled: true,
-              userStatus: 'CONFIRMED',
-              firstName: 'Adam',
-              lastName: 'Admin',
-              email: 'admin@clinnet.com',
-              role: 'admin'
-            },
-            {
-              uniqueId: 'doctor@clinnet.com',
-              enabled: true,
-              userStatus: 'CONFIRMED',
-              firstName: 'David',
-              lastName: 'Doctor',
-              email: 'doctor@clinnet.com',
-              role: 'doctor'
-            },
-            {
-              uniqueId: 'frontdesk@clinnet.com',
-              enabled: true,
-              userStatus: 'CONFIRMED',
-              firstName: 'Frank',
-              lastName: 'Frontdesk',
-              email: 'frontdesk@clinnet.com',
-              role: 'frontdesk'
-            }
-          ],
-          nextToken: null
-        };
+        throw new Error('API returned invalid data: missing users array');
       }
       // Map Cognito data to use uniqueId instead of username
       data.users = data.users.map(user => ({
@@ -103,44 +71,7 @@ export const adminService = {
       return data;
     } catch (error) {
       console.error('Error listing users:', error);
-      
-      // Return mock data if there's an error
-      console.warn('Using mock data due to error');
-      return {
-        users: [
-          {
-            uniqueId: 'admin@clinnet.com',
-            displayUsername: 'admin',
-            enabled: true,
-            userStatus: 'CONFIRMED',
-            firstName: 'Adam',
-            lastName: 'Admin',
-            email: 'admin@clinnet.com',
-            role: 'admin'
-          },
-          {
-            uniqueId: 'doctor@clinnet.com',
-            displayUsername: 'doctor',
-            enabled: true,
-            userStatus: 'CONFIRMED',
-            firstName: 'David',
-            lastName: 'Doctor',
-            email: 'doctor@clinnet.com',
-            role: 'doctor'
-          },
-          {
-            uniqueId: 'frontdesk@clinnet.com',
-            displayUsername: 'frontdesk',
-            enabled: true,
-            userStatus: 'CONFIRMED',
-            firstName: 'Frank',
-            lastName: 'Frontdesk',
-            email: 'frontdesk@clinnet.com',
-            role: 'frontdesk'
-          }
-        ],
-        nextToken: null
-      };
+      throw error; // Do not return mock data, propagate error to UI
     }
   },
   
