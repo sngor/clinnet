@@ -1,12 +1,16 @@
 // src/main.jsx
 
-// Import polyfills
-import "buffer";
-import process from "process";
+// Add polyfills at the very top of this file
+if (typeof global === "undefined") {
+  window.global = window;
+}
+if (typeof process === "undefined") {
+  window.process = { env: {} };
+}
 
-// Set global polyfills
-window.process = process;
-window.global = window;
+// Import buffer for Cognito
+import { Buffer } from "buffer";
+window.Buffer = Buffer;
 
 // Import React and your app component
 import React from "react";

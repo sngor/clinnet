@@ -1,10 +1,23 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react'; // or your framework's plugin
 
 export default defineConfig({
-  // ...existing code...
+  plugins: [react()],
   define: {
-    'process.env.REACT_APP_USER_POOL_ID': JSON.stringify(process.env.REACT_APP_USER_POOL_ID),
-    'process.env.REACT_APP_CLIENT_ID': JSON.stringify(process.env.REACT_APP_CLIENT_ID),
+    global: 'window',
+    'process.env': process.env
   },
-  // ...existing code...
+  resolve: {
+    alias: {
+      './runtimeConfig': './runtimeConfig.browser',
+      buffer: 'buffer/'
+    }
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis'
+      }
+    }
+  }
 });

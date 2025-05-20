@@ -18,5 +18,8 @@
   "license": "ISC",
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "buffer": "^6.0.3"
   }
 }
