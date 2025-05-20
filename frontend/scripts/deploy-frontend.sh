@@ -9,6 +9,16 @@ FRONTEND_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TEMPLATE_FILE="$FRONTEND_DIR/../backend/template.yaml"
 
 cd "$FRONTEND_DIR"
+
+# Ensure .env exists and is not empty
+if [ ! -s .env ]; then
+  echo "ERROR: .env file is missing or empty in $FRONTEND_DIR. Deployment aborted."
+  exit 1
+fi
+
+echo "Using .env file for build:"
+cat .env
+
 echo "Building frontend..."
 npm install
 npm run build

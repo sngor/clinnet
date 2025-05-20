@@ -10,11 +10,6 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
-  // Polyfill for Node.js built-ins required by some dependencies
-  define: {
-    'process.env': {},
-    global: 'window',
-  },
   server: {
     port: 5173,
     host: true,
@@ -29,13 +24,6 @@ export default defineConfig({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           mui: ['@mui/material', '@mui/icons-material'],
         },
-      },
-    },
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      define: {
-        global: 'globalThis',
       },
     },
   },
