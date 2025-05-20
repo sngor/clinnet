@@ -76,6 +76,7 @@ def lambda_handler(event, context):
         dict: API Gateway response
     """
     logger.info(f"Received event: {json.dumps(event)}")
+    logger.info(f"Event body: {event.get('body')}")
     
     try:
         # Parse request body

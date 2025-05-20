@@ -20,7 +20,7 @@ except ImportError:
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def build_error_response(status_code, error_type, message):
+def build_error_response(status_code, error_type, message, exception=None):
     """
     Build a standardized error response
     
@@ -32,6 +32,12 @@ def build_error_response(status_code, error_type, message):
     Returns:
         dict: API Gateway response with error details
     """
+    body = {
+        'error': error_type,
+        'message': message
+    }
+    if exception is not None:
+        body['exception'] = str(exception)
     response = {
         'statusCode': status_code,
         'headers': {
@@ -39,10 +45,7 @@ def build_error_response(status_code, error_type, message):
             'Access-Control-Allow-Headers': 'Content-Type,Authorization',
             'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
         },
-        'body': json.dumps({
-            'error': error_type,
-            'message': message
-        })
+        'body': json.dumps(body)
     }
     return response
 
@@ -60,17 +63,17 @@ def handle_exception(exception):
         error_code = exception.response.get('Error', {}).get('Code', 'UnknownError')
         
         if error_code == 'ResourceNotFoundException':
-            return build_error_response(404, 'Not Found', str(exception))
+            return build_error_response(404, 'Not Found', str(exception), exception)
         elif error_code == 'ValidationException':
-            return build_error_response(400, 'Validation Error', str(exception))
+            return build_error_response(400, 'Validation Error', str(exception), exception)
         elif error_code == 'AccessDeniedException':
-            return build_error_response(403, 'Access Denied', str(exception))
+            return build_error_response(403, 'Access Denied', str(exception), exception)
         else:
             logger.error(f"AWS ClientError: {error_code} - {str(exception)}")
-            return build_error_response(500, 'AWS Error', str(exception))
+            return build_error_response(500, 'AWS Error', str(exception), exception)
     else:
         logger.error(f"Unexpected error: {str(exception)}")
-        return build_error_response(500, 'Internal Server Error', str(exception))
+        return build_error_response(500, 'Internal Server Error', str(exception), exception)
 
 def lambda_handler(event, context):
     """

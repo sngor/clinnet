@@ -244,7 +244,7 @@ export const getCognitoUserInfo = async () => {
       lastName: attributes.family_name,
       phone: attributes.phone_number,
       role: attributes['custom:role'] || 'user',
-      profileImage: attributes['custom:profileImage'] || null,
+      profileImage: attributes['custom:profile_image'] || null,
       // Add other fields as needed
     };
   } catch (error) {

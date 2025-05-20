@@ -124,7 +124,7 @@ export const userService = {
           const user = userPool.getCurrentUser();
           if (user) {
             await updateUserAttributes(user.getUsername(), {
-              'custom:profileImage': result.imageUrl
+              'custom:profile_image': result.imageUrl
             });
           }
         } catch (attributeError) {
@@ -220,7 +220,7 @@ export const userService = {
         const user = userPool.getCurrentUser();
         if (user) {
           await updateUserAttributes(user.getUsername(), {
-            'custom:profileImage': ''
+            'custom:profile_image': ''
           });
         }
       } catch (attributeError) {

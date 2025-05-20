@@ -12,7 +12,7 @@ from utils.cors import add_cors_headers, build_cors_preflight_response
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def build_error_response(status_code, error_type, message):
+def build_error_response(status_code, error_type, message, exception=None):
     """
     Build a standardized error response
     
@@ -28,7 +28,8 @@ def build_error_response(status_code, error_type, message):
         'statusCode': status_code,
         'body': json.dumps({
             'error': error_type,
-            'message': message
+            'message': message,
+            'exception': str(exception) if exception else None
         }),
         'headers': {
             'Content-Type': 'application/json'
@@ -50,19 +51,19 @@ def handle_exception(exception):
         error_code = exception.response.get('Error', {}).get('Code', 'UnknownError')
         
         if error_code == 'ResourceNotFoundException':
-            return build_error_response(404, 'Not Found', str(exception))
+            return build_error_response(404, 'Not Found', str(exception), exception)
         elif error_code == 'ValidationException':
-            return build_error_response(400, 'Validation Error', str(exception))
+            return build_error_response(400, 'Validation Error', str(exception), exception)
         elif error_code == 'AccessDeniedException':
-            return build_error_response(403, 'Access Denied', str(exception))
+            return build_error_response(403, 'Access Denied', str(exception), exception)
         elif error_code == 'NoSuchKey':
-            return build_error_response(404, 'Not Found', 'Profile image not found')
+            return build_error_response(404, 'Not Found', 'Profile image not found', exception)
         else:
             logger.error(f"AWS ClientError: {error_code} - {str(exception)}")
-            return build_error_response(500, 'AWS Error', str(exception))
+            return build_error_response(500, 'AWS Error', str(exception), exception)
     else:
         logger.error(f"Unexpected error: {str(exception)}")
-        return build_error_response(500, 'Internal Server Error', str(exception))
+        return build_error_response(500, 'Internal Server Error', str(exception), exception)
 
 def lambda_handler(event, context):
     """
@@ -120,7 +121,7 @@ def lambda_handler(event, context):
         # If no profile image is set, return a default response
         if not profile_image_key:
             logger.info(f"No profile image found for user: {username}")
-            return {
+            response = {
                 'statusCode': 200,
                 'body': json.dumps({
                     'success': True,
@@ -131,6 +132,7 @@ def lambda_handler(event, context):
                     'Content-Type': 'application/json'
                 }
             }
+            return add_cors_headers(response)
         
         # Get S3 bucket name from environment variable
         bucket_name = os.environ.get('DOCUMENTS_BUCKET')
@@ -147,7 +149,7 @@ def lambda_handler(event, context):
         except ClientError as e:
             if e.response['Error']['Code'] == '404':
                 logger.warning(f"Profile image not found in S3: {profile_image_key}")
-                return {
+                response = {
                     'statusCode': 200,
                     'body': json.dumps({
                         'success': True,
@@ -158,6 +160,7 @@ def lambda_handler(event, context):
                         'Content-Type': 'application/json'
                     }
                 }
+                return add_cors_headers(response)
             else:
                 raise
         
