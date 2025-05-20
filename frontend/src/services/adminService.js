@@ -1,6 +1,7 @@
 // src/services/adminService.js
 import { getAuthToken } from '../utils/cognito-helpers';
 import cognitoConfig from '../../../src/config.js';
+import { transformUserForFrontend } from '../utils/user-transformers';
 
 /**
  * Extract username from email (part before @)
@@ -61,13 +62,15 @@ export const adminService = {
       if (!data || !data.users) {
         throw new Error('API returned invalid data: missing users array');
       }
-      // Map Cognito data to use uniqueId instead of username
-      data.users = data.users.map(user => ({
-        ...user,
-        uniqueId: user.username,
-        // Extract username from email for display
-        displayUsername: user.email ? extractUsernameFromEmail(user.email) : user.username
-      }));
+      // Map Cognito data to use uniqueId instead of username and transform for frontend
+      data.users = data.users.map(user => {
+        const transformed = transformUserForFrontend(user);
+        return {
+          ...transformed,
+          uniqueId: user.username,
+          displayUsername: user.email ? extractUsernameFromEmail(user.email) : user.username
+        };
+      });
       return data;
     } catch (error) {
       console.error('Error listing users:', error);
