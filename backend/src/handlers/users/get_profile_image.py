@@ -29,7 +29,10 @@ def build_error_response(status_code, error_type, message):
         'body': json.dumps({
             'error': error_type,
             'message': message
-        })
+        }),
+        'headers': {
+            'Content-Type': 'application/json'
+        }
     }
     return add_cors_headers(response)
 
@@ -123,7 +126,10 @@ def lambda_handler(event, context):
                     'success': True,
                     'hasImage': False,
                     'message': 'No profile image set'
-                })
+                }),
+                'headers': {
+                    'Content-Type': 'application/json'
+                }
             }
         
         # Get S3 bucket name from environment variable
@@ -147,7 +153,10 @@ def lambda_handler(event, context):
                         'success': True,
                         'hasImage': False,
                         'message': 'Profile image not found in storage'
-                    })
+                    }),
+                    'headers': {
+                        'Content-Type': 'application/json'
+                    }
                 }
             else:
                 raise
@@ -167,7 +176,10 @@ def lambda_handler(event, context):
                 'hasImage': True,
                 'imageUrl': image_url,
                 'imageKey': profile_image_key
-            })
+            }),
+            'headers': {
+                'Content-Type': 'application/json'
+            }
         }
         
         logger.info(f"Profile image URL generated successfully for user: {username}")
