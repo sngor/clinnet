@@ -15,9 +15,11 @@ import {
   Button,
   Paper,
   Drawer,
+  IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import {
   PageContainer,
   PageHeading,
@@ -27,6 +29,15 @@ import {
 import { useAppData } from "../../hooks/useAppData";
 import PatientDetailView from "../../features/patients/components/PatientDetailView";
 import DebugPanel from "../components/DebugPanel";
+import TableContainer from "../../components/TableContainer";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer as MuiTableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 
 function FrontdeskPatientsPage() {
   const navigate = useNavigate();
@@ -79,6 +90,33 @@ function FrontdeskPatientsPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Table columns
+  const columns = [
+    { label: "Name", render: (p) => `${p.firstName} ${p.lastName}` },
+    { label: "ID", render: (p) => p.patientId || p.id },
+    { label: "Email", render: (p) => p.email || "N/A" },
+    { label: "Phone", render: (p) => p.phone || "N/A" },
+    {
+      label: "DOB",
+      render: (p) =>
+        p.dateOfBirth || p.dob
+          ? new Date(p.dateOfBirth || p.dob).toLocaleDateString()
+          : "N/A",
+    },
+    {
+      label: "Status",
+      render: (p) => (
+        <Chip
+          label={p.status || "Active"}
+          size="small"
+          color={
+            String(p.status).toLowerCase() === "active" ? "success" : "default"
+          }
+        />
+      ),
+    },
+  ];
+
   if (loading) {
     return (
       <PageContainer>
@@ -116,12 +154,10 @@ function FrontdeskPatientsPage() {
     <PageContainer>
       {/* Debug Panel (hidden by default, toggle with Ctrl+Shift+D) */}
       {showDebug && <DebugPanel />}
-
       <PageHeading
         title="Patient Records"
         subtitle="Manage and view patient information"
       />
-
       <Box
         sx={{
           display: "flex",
@@ -149,84 +185,50 @@ function FrontdeskPatientsPage() {
           Add New Patient
         </PrimaryButton>
       </Box>
-
-      <ContentCard
-        elevation={0}
-        sx={{ border: "1px solid", borderColor: "divider" }}
-      >
-        {filteredPatients.length === 0 && !loading && (
-          <Typography
-            variant="subtitle1"
-            sx={{ textAlign: "center", p: 3, color: "text.secondary" }}
+      <TableContainer
+        title="Patients Table"
+        action={
+          <IconButton
+            onClick={refreshPatients}
+            disabled={loading}
+            aria-label="Refresh"
           >
-            No patients found. Use the search above or add a new patient.
-          </Typography>
-        )}
-        <Grid container spacing={3} sx={{ p: 2 }}>
-          {filteredPatients.map((patient) => (
-            <Grid
-              item
-              xs={12}
-              sm={6}
-              md={4}
-              lg={3}
-              key={patient.patientId || patient.id}
-            >
-              <Card
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  cursor: "pointer",
-                  transition: "box-shadow 0.3s",
-                  "&:hover": {
-                    boxShadow: 6,
-                  },
-                }}
-                onClick={() => handlePatientSelect(patient)}
-                elevation={2}
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography variant="h6" component="div" noWrap>
-                    {patient.firstName} {patient.lastName}
-                  </Typography>
-                  <Typography
-                    sx={{ mb: 1, fontSize: "0.8rem" }}
-                    color="text.secondary"
-                  >
-                    ID: {patient.patientId || patient.id}
-                  </Typography>
-                  <Typography sx={{ mb: 0.5 }} color="text.secondary" noWrap>
-                    Email: {patient.email || "N/A"}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Phone: {patient.phone || "N/A"}
-                  </Typography>
-                  {patient.dob && (
-                    <Typography variant="body2" color="text.secondary">
-                      DOB: {new Date(patient.dob).toLocaleDateString()}
-                    </Typography>
-                  )}
-                  {patient.status && (
-                    <Chip
-                      label={patient.status}
-                      size="small"
-                      sx={{ mt: 1.5 }}
-                      color={
-                        patient.status === "Active"
-                          ? "success"
-                          : patient.status === "Inactive"
-                          ? "error"
-                          : "default"
-                      }
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </ContentCard>
+            <RefreshIcon />
+          </IconButton>
+        }
+      >
+        <MuiTableContainer component={Paper}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                {columns.map((col) => (
+                  <TableCell key={col.label}>{col.label}</TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredPatients.length === 0 && !loading ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length} align="center">
+                    No patients found. Use the search above or add a new
+                    patient.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredPatients.map((patient) => (
+                  <TableRow key={patient.patientId || patient.id} hover>
+                    {columns.map((col) => (
+                      <TableCell key={col.label}>
+                        {col.render(patient)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </MuiTableContainer>
+      </TableContainer>
 
       {/* Patient Detail View Drawer */}
       <Drawer

@@ -4,7 +4,16 @@ import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api-helper';
 
 // Fetch all patients
 export async function fetchPatients() {
-  return await apiGet('/patients');
+  const raw = await apiGet('/patients');
+  // If the backend returns an array, normalize each patient
+  if (Array.isArray(raw)) {
+    return raw.map(transformPatientFromDynamo);
+  }
+  // If the backend returns an object with 'patients' key
+  if (raw && Array.isArray(raw.patients)) {
+    return raw.patients.map(transformPatientFromDynamo);
+  }
+  return [];
 }
 
 // Fetch a single patient by ID
@@ -14,22 +23,21 @@ export async function fetchPatientById(id) {
 
 // Create a new patient
 export async function createPatient(patientData) {
-  // Transform to backend format
+  // Only send fields the backend expects, and ensure all are strings or omitted
   const transformed = {
-    firstName: patientData.firstName,
-    lastName: patientData.lastName,
-    dateOfBirth: patientData.dateOfBirth || patientData.dob,
-    phone: patientData.phone,
-    gender: patientData.gender || 'Not Specified',
-    email: patientData.email,
-    address: patientData.address,
-    insuranceProvider: patientData.insuranceProvider,
-    insuranceNumber: patientData.insuranceNumber,
-    status: patientData.status,
-    type: patientData.type || 'PATIENT',
-    createdAt: patientData.createdAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    firstName: String(patientData.firstName || ''),
+    lastName: String(patientData.lastName || ''),
+    dateOfBirth: patientData.dateOfBirth || patientData.dob || undefined,
+    phone: patientData.phone ? String(patientData.phone) : undefined,
+    gender: patientData.gender ? String(patientData.gender) : undefined,
+    email: patientData.email ? String(patientData.email) : undefined,
+    address: patientData.address ? String(patientData.address) : undefined,
+    insuranceProvider: patientData.insuranceProvider ? String(patientData.insuranceProvider) : undefined,
+    insuranceNumber: patientData.insuranceNumber ? String(patientData.insuranceNumber) : undefined,
+    status: patientData.status ? String(patientData.status).toLowerCase() : 'active',
   };
+  // Remove undefined fields
+  Object.keys(transformed).forEach(key => transformed[key] === undefined && delete transformed[key]);
   console.log('[createPatient] Payload to backend:', transformed); // <-- log remains for debug
   return await apiPost('/patients', transformed);
 }
@@ -90,6 +98,7 @@ function transformPatientToDynamo(patient) {
 function transformPatientFromDynamo(item) {
   if (!item) return null;
   const id = item.id || (item.PK ? item.PK.split('#')[1] : null);
+  // Accept both 'dob' and 'dateOfBirth', and normalize type/status casing
   return {
     id,
     PK: item.PK || `PAT#${id}`,
@@ -98,16 +107,17 @@ function transformPatientFromDynamo(item) {
     GSI1SK: item.GSI1SK || `PAT#${id}`,
     GSI2PK: item.GSI2PK || `PAT#${id}`,
     GSI2SK: item.GSI2SK || 'PROFILE#1',
-    type: item.type || 'PATIENT',
+    type: (item.type || 'PATIENT').toLowerCase(),
     firstName: item.firstName,
     lastName: item.lastName,
-    dob: item.dob || item.dateOfBirth,
+    dateOfBirth: item.dateOfBirth || item.dob || '',
+    dob: item.dateOfBirth || item.dob || '',
     phone: item.phone,
     email: item.email,
     address: item.address,
     insuranceProvider: item.insuranceProvider,
     insuranceNumber: item.insuranceNumber,
-    status: item.status || 'Active',
+    status: (item.status || 'Active').toLowerCase(),
     lastVisit: item.lastVisit,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt

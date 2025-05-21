@@ -76,8 +76,15 @@ def lambda_handler(event, context=None):
         return generate_response(500, {'message': 'PatientRecords table name not configured'})
 
     try:
-        from boto3.dynamodb.conditions import Attr
-        patients = query_table(table_name, FilterExpression=Attr('type').eq('patient'))
+        from boto3.dynamodb.conditions import Attr, Or
+        # Robust filter: match both 'patient' and 'PATIENT' for type
+        patients = query_table(
+            table_name,
+            FilterExpression=Or(
+                Attr('type').eq('patient'),
+                Attr('type').eq('PATIENT')
+            )
+        )
         logger.info(f"Fetched {len(patients)} patients from DynamoDB")
         return generate_response(200, patients)
     except Exception as e:
