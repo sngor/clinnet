@@ -108,24 +108,19 @@ function NewPatientPage() {
     setSubmitting(true);
 
     try {
-      // Transform patientData to match backend expectations
+      // Only pass the fields the backend expects, let the service handle transformation
       const newPatientData = {
-        type: "PATIENT",
         firstName: patientData.firstName,
         lastName: patientData.lastName,
         dateOfBirth: patientData.dob, // Use dateOfBirth for backend
-        phone: patientData.phone, // Use phone for backend
+        phone: patientData.phone,
         gender: patientData.gender || "Not Specified",
         email: patientData.email,
         address: patientData.address,
         insuranceProvider: patientData.insuranceProvider,
         insuranceNumber: patientData.insuranceNumber,
         status: patientData.status,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
-      if (!newPatientData.dateOfBirth) delete newPatientData.dateOfBirth;
-      if (!newPatientData.phone) delete newPatientData.phone;
       await addPatient(newPatientData);
 
       // Show success message

@@ -56,14 +56,18 @@ function FrontdeskPatientsPage() {
   // Filter patients by search term
   useEffect(() => {
     if (Array.isArray(patients)) {
-      const lower = searchTerm.toLowerCase();
+      const lower = searchTerm.trim().toLowerCase();
+      if (!lower) {
+        setFilteredPatients(patients);
+        return;
+      }
       setFilteredPatients(
         patients.filter(
           (p) =>
-            p.firstName?.toLowerCase().includes(lower) ||
-            p.lastName?.toLowerCase().includes(lower) ||
-            p.email?.toLowerCase().includes(lower) ||
-            p.phone?.toLowerCase().includes(lower)
+            (p.firstName && p.firstName.toLowerCase().includes(lower)) ||
+            (p.lastName && p.lastName.toLowerCase().includes(lower)) ||
+            (p.email && p.email.toLowerCase().includes(lower)) ||
+            (p.phone && p.phone.includes(lower))
         )
       );
     } else {
@@ -92,8 +96,11 @@ function FrontdeskPatientsPage() {
 
   // Table columns
   const columns = [
-    { label: "Name", render: (p) => `${p.firstName} ${p.lastName}` },
-    { label: "ID", render: (p) => p.patientId || p.id },
+    {
+      label: "Name",
+      render: (p) => `${p.firstName || ""} ${p.lastName || ""}`,
+    },
+    { label: "ID", render: (p) => p.id },
     { label: "Email", render: (p) => p.email || "N/A" },
     { label: "Phone", render: (p) => p.phone || "N/A" },
     {
@@ -107,7 +114,11 @@ function FrontdeskPatientsPage() {
       label: "Status",
       render: (p) => (
         <Chip
-          label={p.status || "Active"}
+          label={
+            p.status
+              ? p.status.charAt(0).toUpperCase() + p.status.slice(1)
+              : "Active"
+          }
           size="small"
           color={
             String(p.status).toLowerCase() === "active" ? "success" : "default"
@@ -216,7 +227,7 @@ function FrontdeskPatientsPage() {
                 </TableRow>
               ) : (
                 filteredPatients.map((patient) => (
-                  <TableRow key={patient.patientId || patient.id} hover>
+                  <TableRow key={patient.id} hover>
                     {columns.map((col) => (
                       <TableCell key={col.label}>
                         {col.render(patient)}
