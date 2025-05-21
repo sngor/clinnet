@@ -40,15 +40,8 @@ export const DataProvider = ({ children }) => {
 
         // Fetch real patients data from the API
         const patientsData = await patientService.fetchPatients();
-        if (patientsData && patientsData.length > 0) {
-          console.log("Patients loaded from API:", patientsData);
-          setPatients(patientsData);
-        } else {
-          console.warn("No patients returned from API, using mock data");
-          // Import mock data if API returns empty result
-          const { mockPatients } = await import("../../mock/mockPatients");
-          setPatients(mockPatients);
-        }
+        console.log("[DataProvider] setPatients (API):", patientsData);
+        setPatients(patientsData || []);
 
         // Fetch appointments from API
         const appointmentsData = await appointmentApi.getAllAppointments();
@@ -64,6 +57,7 @@ export const DataProvider = ({ children }) => {
         try {
           console.warn("Falling back to mock data due to API error");
           const { mockPatients } = await import("../../mock/mockPatients");
+          console.log("[DataProvider] setPatients (mock):", mockPatients);
           setPatients(mockPatients);
         } catch (mockErr) {
           console.error("Error loading mock data:", mockErr);
