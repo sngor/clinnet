@@ -75,14 +75,14 @@ function FrontdeskPatientsPage() {
     }
   }, [searchTerm, patients]);
 
-  // Debug: Log filteredPatients and first patient in detail
+  // Debug: Log filteredPatients and first patient in detail (deep)
   useEffect(() => {
-    console.log("[FrontdeskPatientsPage] filteredPatients:", filteredPatients);
+    console.log(
+      "[FrontdeskPatientsPage] filteredPatients (count):",
+      filteredPatients.length
+    );
     if (filteredPatients.length > 0) {
-      console.log(
-        "[FrontdeskPatientsPage] first patient object:",
-        filteredPatients[0]
-      );
+      console.dir(filteredPatients[0], { depth: null });
     }
   }, [filteredPatients]);
 
