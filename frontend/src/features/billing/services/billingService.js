@@ -108,7 +108,23 @@ const billingService = {
       console.error(`Error processing payment for billing ${id}:`, error);
       throw error;
     }
+  },
+
+  /**
+   * Get all available services
+   * @returns {Promise} Promise with services data
+   */
+  getServices: async () => {
+    try {
+      const response = await api.get('/services');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      throw error;
+    }
   }
 };
 
 export default billingService;
+export const { getServices } = billingService;
+export const getPatientBillingHistory = billingService.getPatientBillingHistory;

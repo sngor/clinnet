@@ -146,177 +146,191 @@ function NewPatientPage() {
         </Typography>
       </Box>
 
-      <Paper sx={{ p: 3, borderRadius: 2 }}>
+      <Paper
+        sx={{ p: 4, borderRadius: 3, maxWidth: 900, mx: "auto", boxShadow: 3 }}
+      >
         <form onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
-            {/* Personal Information */}
-            <Grid item xs={12}>
-              <Typography
-                variant="h6"
-                sx={{ mb: 3, fontWeight: 500, color: "primary.main" }}
-              >
-                Personal Information
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="First Name"
-                name="firstName"
-                value={patientData.firstName}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Last Name"
-                name="lastName"
-                value={patientData.lastName}
-                onChange={handleInputChange}
-                fullWidth
-                required
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Gender</InputLabel>
-                <Select
-                  name="gender"
-                  value={patientData.gender}
+          {/* Personal Information Section */}
+          <Paper variant="outlined" sx={{ p: 3, mb: 4, background: "#fafbfc" }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, color: "primary.main", mb: 1 }}
+            >
+              Personal Information
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6} lg={4}>
+                <TextField
+                  label="First Name"
+                  name="firstName"
+                  value={patientData.firstName}
                   onChange={handleInputChange}
-                  label="Gender"
-                >
-                  <MenuItem value="Male">Male</MenuItem>
-                  <MenuItem value="Female">Female</MenuItem>
-                  <MenuItem value="Other">Other</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="Date of Birth"
-                  value={
-                    isValidDateString(patientData.dob)
-                      ? new Date(patientData.dob)
-                      : null
-                  }
-                  onChange={handleDateChange}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
+                  fullWidth
+                  required
+                  size="medium"
                 />
-              </LocalizationProvider>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Email"
-                name="email"
-                type="email"
-                value={patientData.email}
-                onChange={handleInputChange}
-                fullWidth
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Phone"
-                name="phone"
-                value={patientData.phone}
-                onChange={handleInputChange}
-                fullWidth
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Address"
-                name="address"
-                value={patientData.address}
-                onChange={handleInputChange}
-                fullWidth
-                multiline
-                rows={2}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Divider sx={{ my: 2 }} />
-            </Grid>
-
-            {/* Insurance Information */}
-            <Grid item xs={12}>
-              <Typography
-                variant="h6"
-                sx={{ mb: 3, fontWeight: 500, color: "primary.main" }}
-              >
-                Insurance Information
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Insurance Provider"
-                name="insuranceProvider"
-                value={patientData.insuranceProvider}
-                onChange={handleInputChange}
-                fullWidth
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Insurance Number"
-                name="insuranceNumber"
-                value={patientData.insuranceNumber}
-                onChange={handleInputChange}
-                fullWidth
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  name="status"
-                  value={patientData.status}
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <TextField
+                  label="Last Name"
+                  name="lastName"
+                  value={patientData.lastName}
                   onChange={handleInputChange}
-                  label="Status"
-                >
-                  <MenuItem value="Active">Active</MenuItem>
-                  <MenuItem value="Inactive">Inactive</MenuItem>
-                </Select>
-              </FormControl>
+                  fullWidth
+                  required
+                  size="medium"
+                />
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <FormControl fullWidth sx={{ minWidth: 180, maxWidth: 220 }}>
+                  <InputLabel>Gender</InputLabel>
+                  <Select
+                    name="gender"
+                    value={patientData.gender}
+                    onChange={handleInputChange}
+                    label="Gender"
+                  >
+                    <MenuItem value="Male">Male</MenuItem>
+                    <MenuItem value="Female">Female</MenuItem>
+                    <MenuItem value="Other">Other</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    label="Date of Birth"
+                    value={
+                      isValidDateString(patientData.dob)
+                        ? new Date(patientData.dob)
+                        : null
+                    }
+                    onChange={handleDateChange}
+                    renderInput={(params) => (
+                      <TextField {...params} fullWidth />
+                    )}
+                  />
+                </LocalizationProvider>
+              </Grid>
             </Grid>
+          </Paper>
 
-            <Grid item xs={12}>
-              <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
-                <Button
-                  variant="outlined"
-                  onClick={handleBackClick}
-                  sx={{ mr: 2 }}
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  startIcon={
-                    submitting ? <CircularProgress size={20} /> : <SaveIcon />
-                  }
-                  disabled={submitting || loading}
-                >
-                  {submitting ? "Saving..." : "Save Patient"}
-                </Button>
-              </Box>
+          {/* Contact Information Section */}
+          <Paper variant="outlined" sx={{ p: 3, mb: 4, background: "#fafbfc" }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, color: "primary.main", mb: 1 }}
+            >
+              Contact Information
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6} lg={4}>
+                <TextField
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={patientData.email}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="medium"
+                />
+              </Grid>
+              <Grid item xs={12} md={6} lg={4}>
+                <TextField
+                  label="Phone"
+                  name="phone"
+                  value={patientData.phone}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="medium"
+                />
+              </Grid>
+              <Grid item xs={12} lg={4}>
+                <TextField
+                  label="Address"
+                  name="address"
+                  value={patientData.address}
+                  onChange={handleInputChange}
+                  fullWidth
+                  multiline
+                  rows={2}
+                  size="medium"
+                />
+              </Grid>
             </Grid>
-          </Grid>
+          </Paper>
+
+          {/* Insurance Information Section */}
+          <Paper variant="outlined" sx={{ p: 3, mb: 4, background: "#fafbfc" }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, color: "primary.main", mb: 1 }}
+            >
+              Insurance Information
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Insurance Provider"
+                  name="insuranceProvider"
+                  value={patientData.insuranceProvider}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="medium"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Insurance Number"
+                  name="insuranceNumber"
+                  value={patientData.insuranceNumber}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="medium"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    name="status"
+                    value={patientData.status}
+                    onChange={handleInputChange}
+                    label="Status"
+                  >
+                    <MenuItem value="Active">Active</MenuItem>
+                    <MenuItem value="Inactive">Inactive</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </Paper>
+
+          {/* Actions */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={handleBackClick}
+              sx={{ mr: 2 }}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={
+                submitting ? <CircularProgress size={20} /> : <SaveIcon />
+              }
+              disabled={submitting || loading}
+              sx={{ minWidth: 140 }}
+            >
+              {submitting ? "Saving..." : "Save Patient"}
+            </Button>
+          </Box>
         </form>
       </Paper>
 

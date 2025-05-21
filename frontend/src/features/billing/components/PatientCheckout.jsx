@@ -34,7 +34,7 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import PaymentIcon from "@mui/icons-material/Payment";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { getServices, getPaymentMethods } from "../services/billingService";
+import { getServices } from "../services/billingService";
 
 function PatientCheckout({
   patient,
@@ -44,7 +44,6 @@ function PatientCheckout({
   // State for selected services
   const [selectedServices, setSelectedServices] = useState([]);
   const [services, setServices] = useState([]);
-  const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -88,7 +87,7 @@ function PatientCheckout({
     }
   }, [initialServices]);
 
-  // Fetch services and payment methods
+  // Fetch services
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -97,10 +96,6 @@ function PatientCheckout({
         // Fetch services
         const servicesData = await getServices();
         setServices(servicesData);
-
-        // Fetch payment methods
-        const paymentMethodsData = await getPaymentMethods();
-        setPaymentMethods(paymentMethodsData);
       } catch (err) {
         setError("Failed to load data: " + err.message);
       } finally {
@@ -492,7 +487,11 @@ function PatientCheckout({
               label="Payment Method"
               onChange={(e) => setPaymentMethod(e.target.value)}
             >
-              {paymentMethods.map((method) => (
+              {[
+                { id: "cash", name: "Cash" },
+                { id: "credit_card", name: "Credit Card" },
+                { id: "insurance", name: "Insurance" },
+              ].map((method) => (
                 <MenuItem key={method.id} value={method.id}>
                   {method.name}
                 </MenuItem>

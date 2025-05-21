@@ -91,7 +91,7 @@ function stableSort(array, comparator) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-function PatientList({ onPatientSelect }) {
+function PatientList({ onPatientSelect, patients: propPatients }) {
   const {
     patients: apiPatients,
     loading: apiLoading,
@@ -101,15 +101,14 @@ function PatientList({ onPatientSelect }) {
     deletePatient,
   } = useAppData();
 
-  const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+  // Always use propPatients if provided, otherwise use context
+  const patients = (propPatients || apiPatients || []).map((p) => ({
+    ...p,
+    dateOfBirth: p.dateOfBirth || p.dob || "",
+    gender: p.gender || "N/A",
+  }));
+  const loading = apiLoading;
+  const error = apiError;
 
   // Pagination state
   const [page, setPage] = useState(0);
@@ -125,13 +124,14 @@ function PatientList({ onPatientSelect }) {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    dob: "",
+    dateOfBirth: "",
     phone: "",
     email: "",
     address: "",
     insuranceProvider: "",
     insuranceNumber: "",
     status: "Active",
+    gender: "N/A",
   });
 
   // State for delete confirmation
@@ -179,7 +179,10 @@ function PatientList({ onPatientSelect }) {
 
   // Use data from API when available
   useEffect(() => {
-    if (apiPatients && apiPatients.length > 0) {
+    if (propPatients) {
+      setPatients(propPatients);
+      setLoading(false);
+    } else if (apiPatients && apiPatients.length > 0) {
       console.log("Using patients data from API:", apiPatients);
 
       // Transform API data to match the expected format for display
@@ -217,21 +220,7 @@ function PatientList({ onPatientSelect }) {
       setError(apiError);
       setLoading(false);
     }
-  }, [apiPatients, apiLoading, apiError]);
-
-  // Filter patients based on search term
-  const filteredPatients = patients.filter((patient) => {
-    // Safety check for invalid patient objects
-    if (!patient || !patient.firstName || !patient.lastName) return false;
-
-    const fullName = `${patient.firstName} ${patient.lastName}`.toLowerCase();
-    return (
-      fullName.includes(searchTerm.toLowerCase()) ||
-      (patient.phone && patient.phone.includes(searchTerm)) ||
-      (patient.email &&
-        patient.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  });
+  }, [propPatients, apiPatients, apiLoading, apiError]);
 
   // Get stable sorted array for the table
   function stableSortArray(array, comparator) {
@@ -266,11 +255,11 @@ function PatientList({ onPatientSelect }) {
   // Safely compute current patients with pagination and sorting
   const currentPatients = React.useMemo(() => {
     // Safety check
-    if (!filteredPatients || !Array.isArray(filteredPatients)) return [];
+    if (!patients || !Array.isArray(patients)) return [];
 
     // Apply sorting
     const sortedPatients = stableSortArray(
-      filteredPatients,
+      patients,
       getComparator(order, orderBy)
     );
 
@@ -279,31 +268,24 @@ function PatientList({ onPatientSelect }) {
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage
     );
-  }, [filteredPatients, order, orderBy, page, rowsPerPage]);
-
-  // Handle search input change
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
+  }, [patients, order, orderBy, page, rowsPerPage]);
 
   // Handle opening the patient form dialog for adding/editing
   const handleOpenDialog = (patient = null) => {
     if (patient) {
       // Editing existing patient
-      // Format the date properly if it exists
-      const formattedDob = formatDateForInput(patient.dob || "");
-
       setCurrentPatient(patient);
       setFormData({
         firstName: patient.firstName || "",
         lastName: patient.lastName || "",
-        dob: formattedDob,
+        dateOfBirth: patient.dateOfBirth || patient.dob || "",
         phone: patient.phone || "",
         email: patient.email || "",
         address: patient.address || "",
         insuranceProvider: patient.insuranceProvider || "",
         insuranceNumber: patient.insuranceNumber || "",
         status: patient.status || "Active",
+        gender: patient.gender || "N/A",
       });
     } else {
       // Adding new patient
@@ -311,13 +293,14 @@ function PatientList({ onPatientSelect }) {
       setFormData({
         firstName: "",
         lastName: "",
-        dob: "",
+        dateOfBirth: "",
         phone: "",
         email: "",
         address: "",
         insuranceProvider: "",
         insuranceNumber: "",
         status: "Active",
+        gender: "N/A",
       });
     }
     setIsDialogOpen(true);
@@ -333,7 +316,7 @@ function PatientList({ onPatientSelect }) {
     const { name, value } = event.target;
 
     // Special handling for date fields
-    if (name === "dob") {
+    if (name === "dateOfBirth") {
       // Ensure the date is in a valid format
       setFormData({
         ...formData,
@@ -351,7 +334,7 @@ function PatientList({ onPatientSelect }) {
   const handleSubmit = async () => {
     try {
       // Validate date format before submission
-      if (formData.dob && !isValidDateFormat(formData.dob)) {
+      if (formData.dateOfBirth && !isValidDateFormat(formData.dateOfBirth)) {
         alert("Please enter a valid date in YYYY-MM-DD format");
         return;
       }
@@ -361,14 +344,7 @@ function PatientList({ onPatientSelect }) {
       if (currentPatient) {
         // Update existing patient in DynamoDB
         const patientData = {
-          PK: currentPatient.PK || `PAT#${currentPatient.id}`,
-          SK: currentPatient.SK || "PROFILE#1",
-          id: currentPatient.id,
-          GSI1PK: currentPatient.GSI1PK || `CLINIC#DEFAULT`,
-          GSI1SK: currentPatient.GSI1SK || `PAT#${currentPatient.id}`,
-          GSI2PK: currentPatient.GSI2PK || `PAT#${currentPatient.id}`,
-          GSI2SK: currentPatient.GSI2SK || "PROFILE#1",
-          type: "PATIENT",
+          ...currentPatient,
           ...formData,
           updatedAt: new Date().toISOString(),
         };
@@ -384,14 +360,7 @@ function PatientList({ onPatientSelect }) {
         // Add new patient to DynamoDB
         const id = `${Date.now()}`; // Simple ID generation
         const patientData = {
-          PK: `PAT#${id}`,
-          SK: "PROFILE#1",
-          id: id,
-          GSI1PK: `CLINIC#DEFAULT`, // Can be updated later with actual clinic ID
-          GSI1SK: `PAT#${id}`,
-          GSI2PK: `PAT#${id}`,
-          GSI2SK: "PROFILE#1",
-          type: "PATIENT",
+          id,
           ...formData,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -473,45 +442,19 @@ function PatientList({ onPatientSelect }) {
   return (
     <PageContainer>
       <SectionContainer>
-        <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
-          <TextField
-            placeholder="Search patients..."
-            variant="outlined"
-            size="small"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ width: "300px" }}
-          />
-          <PrimaryButton
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{ borderRadius: 1.5 }}
-          >
-            Add Patient
-          </PrimaryButton>
-        </FlexBox>
-
+        {/* Removed duplicate search bar and Add Patient button for clean UI */}
         {/* Error message */}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-
         {/* Loading indicator or table */}
         {loading ? (
           <FlexBox justify="center" sx={{ mt: 4 }}>
             <CircularProgress />
           </FlexBox>
         ) : (
-          /* Use CardContainer directly without nesting in SectionContainer */
           <CardContainer>
             <TableHead sx={tableHeaderStyle}>
               <TableRow>
@@ -533,7 +476,7 @@ function PatientList({ onPatientSelect }) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {!filteredPatients || filteredPatients.length === 0 ? (
+              {!patients || patients.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center">
                     No patients found
@@ -631,7 +574,7 @@ function PatientList({ onPatientSelect }) {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={filteredPatients.length}
+              count={patients.length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
@@ -674,24 +617,28 @@ function PatientList({ onPatientSelect }) {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  name="dob"
+                  name="dateOfBirth"
                   label="Date of Birth"
                   type="date"
-                  value={formData.dob}
+                  value={formData.dateOfBirth}
                   onChange={handleInputChange}
                   fullWidth
                   required
                   InputLabelProps={{ shrink: true }}
-                  error={formData.dob && !isValidDateFormat(formData.dob)}
+                  error={
+                    formData.dateOfBirth &&
+                    !isValidDateFormat(formData.dateOfBirth)
+                  }
                   helperText={
-                    formData.dob && !isValidDateFormat(formData.dob)
+                    formData.dateOfBirth &&
+                    !isValidDateFormat(formData.dateOfBirth)
                       ? "Please use YYYY-MM-DD format"
                       : ""
                   }
                   onBlur={(e) => {
                     if (e.target.value) {
                       const formattedDate = formatDateForInput(e.target.value);
-                      setFormData({ ...formData, dob: formattedDate });
+                      setFormData({ ...formData, dateOfBirth: formattedDate });
                     }
                   }}
                 />
@@ -755,7 +702,8 @@ function PatientList({ onPatientSelect }) {
               disabled={
                 !formData.firstName ||
                 !formData.lastName ||
-                (formData.dob && !isValidDateFormat(formData.dob))
+                (formData.dateOfBirth &&
+                  !isValidDateFormat(formData.dateOfBirth))
               }
             >
               {currentPatient ? "Update" : "Add"}
