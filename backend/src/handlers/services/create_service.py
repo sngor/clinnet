@@ -8,12 +8,8 @@ from datetime import datetime
 from botocore.exceptions import ClientError
 
 # Import utility functions
-try:
-    from utils.db_utils import create_item, generate_response
-    from utils.responser_helper import handle_exception
-except ImportError:
-    from lambda_layer.python.utils.db_utils import create_item, generate_response
-    from lambda_layer.python.utils.responser_helper import handle_exception
+from utils.db_utils import create_item, generate_response
+from utils.responser_helper import handle_exception
 
 def lambda_handler(event, context):
     """

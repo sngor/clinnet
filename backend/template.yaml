@@ -264,6 +264,8 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref ServicesTable
+      Layers:
+        - !Ref UtilsLayer
       Events:
         GetServiceById:
           Type: Api
@@ -282,6 +284,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ServicesTable
+      Layers:
+        - !Ref UtilsLayer
       Events:
         CreateService:
           Type: Api
@@ -299,6 +303,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ServicesTable
+      Layers:
+        - !Ref UtilsLayer
       Events:
         UpdateService:
           Type: Api
@@ -316,6 +322,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ServicesTable
+      Layers:
+        - !Ref UtilsLayer
       Events:
         DeleteService:
           Type: Api
