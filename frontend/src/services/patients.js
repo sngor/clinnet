@@ -18,9 +18,9 @@ export async function createPatient(patientData) {
   const transformed = {
     firstName: patientData.firstName,
     lastName: patientData.lastName,
-    dateOfBirth: patientData.dob || patientData.dateOfBirth,
+    dob: patientData.dob || patientData.dateOfBirth,
+    phone: patientData.phone || patientData.contactNumber,
     gender: patientData.gender || 'Not Specified',
-    contactNumber: patientData.phone || patientData.contactNumber,
     email: patientData.email,
     address: patientData.address,
     insuranceProvider: patientData.insuranceProvider,
@@ -30,6 +30,7 @@ export async function createPatient(patientData) {
     createdAt: patientData.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
+  console.log('[createPatient] Payload to backend:', transformed); // <-- Added log
   return await apiPost('/patients', transformed);
 }
 

@@ -113,9 +113,9 @@ function NewPatientPage() {
         type: "PATIENT",
         firstName: patientData.firstName,
         lastName: patientData.lastName,
-        dateOfBirth: patientData.dob, // Backend expects dateOfBirth
+        dateOfBirth: patientData.dob, // Use dateOfBirth for backend
+        contactNumber: patientData.phone, // Use contactNumber for backend
         gender: patientData.gender || "Not Specified",
-        contactNumber: patientData.phone, // Backend expects contactNumber
         email: patientData.email,
         address: patientData.address,
         insuranceProvider: patientData.insuranceProvider,
