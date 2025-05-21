@@ -67,7 +67,7 @@ function createNewPatient(formData) {
     // Patient attributes from form
     firstName: formData.firstName,
     lastName: formData.lastName,
-    dob: formData.dob,
+    dateOfBirth: formData.dateOfBirth,
     // ... other fields
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

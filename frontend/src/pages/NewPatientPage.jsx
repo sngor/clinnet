@@ -177,24 +177,44 @@ function NewPatientPage() {
             <Grid container spacing={3}>
               <Grid item xs={12} md={6} lg={4}>
                 <TextField
-                  label="First Name"
+                  label={
+                    <span>
+                      First Name <span style={{ color: "red" }}>*</span>
+                    </span>
+                  }
                   name="firstName"
                   value={patientData.firstName}
                   onChange={handleInputChange}
                   fullWidth
                   required
                   size="medium"
+                  error={!patientData.firstName && submitting}
+                  helperText={
+                    !patientData.firstName && submitting
+                      ? "First name is required"
+                      : ""
+                  }
                 />
               </Grid>
               <Grid item xs={12} md={6} lg={4}>
                 <TextField
-                  label="Last Name"
+                  label={
+                    <span>
+                      Last Name <span style={{ color: "red" }}>*</span>
+                    </span>
+                  }
                   name="lastName"
                   value={patientData.lastName}
                   onChange={handleInputChange}
                   fullWidth
                   required
                   size="medium"
+                  error={!patientData.lastName && submitting}
+                  helperText={
+                    !patientData.lastName && submitting
+                      ? "Last name is required"
+                      : ""
+                  }
                 />
               </Grid>
               <Grid item xs={12} md={6} lg={4}>
@@ -215,7 +235,11 @@ function NewPatientPage() {
               <Grid item xs={12} md={6} lg={4}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
-                    label="Date of Birth"
+                    label={
+                      <span>
+                        Date of Birth <span style={{ color: "red" }}>*</span>
+                      </span>
+                    }
                     value={
                       isValidDateString(patientData.dob)
                         ? new Date(patientData.dob)
@@ -223,7 +247,17 @@ function NewPatientPage() {
                     }
                     onChange={handleDateChange}
                     renderInput={(params) => (
-                      <TextField {...params} fullWidth />
+                      <TextField
+                        {...params}
+                        fullWidth
+                        required
+                        error={!patientData.dob && submitting}
+                        helperText={
+                          !patientData.dob && submitting
+                            ? "Date of birth is required"
+                            : ""
+                        }
+                      />
                     )}
                   />
                 </LocalizationProvider>
@@ -254,12 +288,23 @@ function NewPatientPage() {
               </Grid>
               <Grid item xs={12} md={6} lg={4}>
                 <TextField
-                  label="Phone"
+                  label={
+                    <span>
+                      Phone <span style={{ color: "red" }}>*</span>
+                    </span>
+                  }
                   name="phone"
                   value={patientData.phone}
                   onChange={handleInputChange}
                   fullWidth
+                  required
                   size="medium"
+                  error={!patientData.phone && submitting}
+                  helperText={
+                    !patientData.phone && submitting
+                      ? "Phone number is required"
+                      : ""
+                  }
                 />
               </Grid>
               <Grid item xs={12} lg={4}>

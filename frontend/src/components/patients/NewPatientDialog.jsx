@@ -1,5 +1,5 @@
 // src/components/patients/NewPatientDialog.jsx
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -14,26 +14,26 @@ import {
   MenuItem,
   Typography,
   Divider,
-  Box
-} from '@mui/material';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+  Box,
+} from "@mui/material";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 
 const initialPatientData = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  gender: '',
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  gender: "",
   dateOfBirth: null,
-  address: '',
-  city: '',
-  state: '',
-  zipCode: '',
-  insuranceProvider: '',
-  insuranceNumber: '',
-  emergencyContactName: '',
-  emergencyContactPhone: ''
+  address: "",
+  city: "",
+  state: "",
+  zipCode: "",
+  insuranceProvider: "",
+  insuranceNumber: "",
+  emergencyContactName: "",
+  emergencyContactPhone: "",
 };
 
 function NewPatientDialog({ open, onClose, onSave }) {
@@ -42,54 +42,60 @@ function NewPatientDialog({ open, onClose, onSave }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setPatientData(prev => ({
+    setPatientData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Clear error when field is edited
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: null
+        [name]: null,
       }));
     }
   };
 
   const handleDateChange = (date) => {
-    setPatientData(prev => ({
+    setPatientData((prev) => ({
       ...prev,
-      dateOfBirth: date
+      dateOfBirth: date,
     }));
-    
+
     // Clear error when date is changed
     if (errors.dateOfBirth) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        dateOfBirth: null
+        dateOfBirth: null,
       }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Required fields validation
-    if (!patientData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!patientData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!patientData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!patientData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
-    
+    if (!patientData.firstName.trim())
+      newErrors.firstName = "First name is required";
+    if (!patientData.lastName.trim())
+      newErrors.lastName = "Last name is required";
+    if (!patientData.phone.trim()) newErrors.phone = "Phone number is required";
+    if (!patientData.dateOfBirth)
+      newErrors.dateOfBirth = "Date of birth is required";
+
     // Email validation
-    if (patientData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    if (
+      patientData.email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(patientData.email)
+    ) {
+      newErrors.email = "Please enter a valid email address";
     }
-    
+
     // Phone validation
     if (patientData.phone && !/^[0-9+\-() ]{10,15}$/.test(patientData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
+      newErrors.phone = "Please enter a valid phone number";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -101,9 +107,9 @@ function NewPatientDialog({ open, onClose, onSave }) {
         ...patientData,
         id: Date.now(), // Simple ID generation for demo
         lastVisit: null,
-        upcomingAppointment: null
+        upcomingAppointment: null,
       };
-      
+
       onSave(newPatient);
       handleClose();
     }
@@ -116,39 +122,45 @@ function NewPatientDialog({ open, onClose, onSave }) {
   };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleClose}
       maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
           borderRadius: 2,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)'
-        }
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.15)",
+        },
       }}
     >
-      <DialogTitle sx={{ 
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        pb: 2,
-        fontWeight: 500
-      }}>
+      <DialogTitle
+        sx={{
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          pb: 2,
+          fontWeight: 500,
+        }}
+      >
         Register New Patient
       </DialogTitle>
-      
+
       <DialogContent sx={{ pt: 3 }}>
         <Grid container spacing={3}>
-          <Grid sx={{ width: '100%', p: 1.5 }}>
+          <Grid sx={{ width: "100%", p: 1.5 }}>
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
               Personal Information
             </Typography>
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1.5 }}>
             <TextField
               name="firstName"
-              label="First Name"
+              label={
+                <span>
+                  First Name <span style={{ color: "red" }}>*</span>
+                </span>
+              }
               fullWidth
               required
               value={patientData.firstName}
@@ -157,11 +169,15 @@ function NewPatientDialog({ open, onClose, onSave }) {
               helperText={errors.firstName}
             />
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1.5 }}>
             <TextField
               name="lastName"
-              label="Last Name"
+              label={
+                <span>
+                  Last Name <span style={{ color: "red" }}>*</span>
+                </span>
+              }
               fullWidth
               required
               value={patientData.lastName}
@@ -170,11 +186,15 @@ function NewPatientDialog({ open, onClose, onSave }) {
               helperText={errors.lastName}
             />
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1.5 }}>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
-                label="Date of Birth"
+                label={
+                  <span>
+                    Date of Birth <span style={{ color: "red" }}>*</span>
+                  </span>
+                }
                 value={patientData.dateOfBirth}
                 onChange={handleDateChange}
                 slotProps={{
@@ -182,14 +202,14 @@ function NewPatientDialog({ open, onClose, onSave }) {
                     fullWidth: true,
                     required: true,
                     error: !!errors.dateOfBirth,
-                    helperText: errors.dateOfBirth
-                  }
+                    helperText: errors.dateOfBirth,
+                  },
                 }}
               />
             </LocalizationProvider>
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1.5 }}>
             <FormControl fullWidth required>
               <InputLabel id="gender-label">Gender</InputLabel>
               <Select
@@ -206,11 +226,15 @@ function NewPatientDialog({ open, onClose, onSave }) {
               </Select>
             </FormControl>
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1.5 }}>
             <TextField
               name="phone"
-              label="Phone Number"
+              label={
+                <span>
+                  Phone Number <span style={{ color: "red" }}>*</span>
+                </span>
+              }
               fullWidth
               required
               value={patientData.phone}
@@ -219,8 +243,8 @@ function NewPatientDialog({ open, onClose, onSave }) {
               helperText={errors.phone}
             />
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1.5 }}>
             <TextField
               name="email"
               label="Email Address"
@@ -232,15 +256,15 @@ function NewPatientDialog({ open, onClose, onSave }) {
               helperText={errors.email}
             />
           </Grid>
-          
-          <Grid sx={{ width: '100%', p: 1.5 }}>
+
+          <Grid sx={{ width: "100%", p: 1.5 }}>
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
               Address Information
             </Typography>
           </Grid>
-          
-          <Grid sx={{ width: '100%', p: 1.5 }}>
+
+          <Grid sx={{ width: "100%", p: 1.5 }}>
             <TextField
               name="address"
               label="Street Address"
@@ -249,8 +273,8 @@ function NewPatientDialog({ open, onClose, onSave }) {
               onChange={handleChange}
             />
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '33.33%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "33.33%" }, p: 1.5 }}>
             <TextField
               name="city"
               label="City"
@@ -259,8 +283,8 @@ function NewPatientDialog({ open, onClose, onSave }) {
               onChange={handleChange}
             />
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '33.33%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "33.33%" }, p: 1.5 }}>
             <TextField
               name="state"
               label="State/Province"
@@ -269,8 +293,8 @@ function NewPatientDialog({ open, onClose, onSave }) {
               onChange={handleChange}
             />
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '33.33%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "33.33%" }, p: 1.5 }}>
             <TextField
               name="zipCode"
               label="ZIP / Postal Code"
@@ -279,15 +303,15 @@ function NewPatientDialog({ open, onClose, onSave }) {
               onChange={handleChange}
             />
           </Grid>
-          
-          <Grid sx={{ width: '100%', p: 1.5 }}>
+
+          <Grid sx={{ width: "100%", p: 1.5 }}>
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
               Insurance Information
             </Typography>
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1.5 }}>
             <TextField
               name="insuranceProvider"
               label="Insurance Provider"
@@ -296,8 +320,8 @@ function NewPatientDialog({ open, onClose, onSave }) {
               onChange={handleChange}
             />
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1.5 }}>
             <TextField
               name="insuranceNumber"
               label="Insurance Number/ID"
@@ -306,15 +330,15 @@ function NewPatientDialog({ open, onClose, onSave }) {
               onChange={handleChange}
             />
           </Grid>
-          
-          <Grid sx={{ width: '100%', p: 1.5 }}>
+
+          <Grid sx={{ width: "100%", p: 1.5 }}>
             <Divider sx={{ my: 2 }} />
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
               Emergency Contact
             </Typography>
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1.5 }}>
             <TextField
               name="emergencyContactName"
               label="Emergency Contact Name"
@@ -323,8 +347,8 @@ function NewPatientDialog({ open, onClose, onSave }) {
               onChange={handleChange}
             />
           </Grid>
-          
-          <Grid sx={{ width: { xs: '100%', sm: '50%' }, p: 1.5 }}>
+
+          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1.5 }}>
             <TextField
               name="emergencyContactPhone"
               label="Emergency Contact Phone"
@@ -335,16 +359,14 @@ function NewPatientDialog({ open, onClose, onSave }) {
           </Grid>
         </Grid>
       </DialogContent>
-      
-      <DialogActions sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-        <Button onClick={handleClose} sx={{ color: 'text.secondary' }}>
+
+      <DialogActions
+        sx={{ px: 3, py: 2, borderTop: "1px solid", borderColor: "divider" }}
+      >
+        <Button onClick={handleClose} sx={{ color: "text.secondary" }}>
           Cancel
         </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained"
-          sx={{ px: 3 }}
-        >
+        <Button onClick={handleSubmit} variant="contained" sx={{ px: 3 }}>
           Register Patient
         </Button>
       </DialogActions>
