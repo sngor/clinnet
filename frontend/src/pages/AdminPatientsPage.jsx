@@ -20,6 +20,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import PersonIcon from "@mui/icons-material/Person";
 import {
   PageContainer,
   PageHeading,
@@ -29,15 +30,6 @@ import {
 import { useAppData } from "../app/providers/DataProvider";
 import PatientDetailView from "../features/patients/components/PatientDetailView";
 import DebugPanel from "../components/DebugPanel";
-import TableContainer from "../components/TableContainer";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer as MuiTableContainer,
-  TableHead,
-  TableRow,
-} from "@mui/material";
 
 function AdminPatientsPage() {
   const navigate = useNavigate();
@@ -97,43 +89,46 @@ function AdminPatientsPage() {
   // Toggle debug panel with keyboard shortcut (Ctrl+Shift+D)
   // ...existing code for keyboard shortcut if needed...
 
-  // Table columns (copied from FrontdeskPatientsPage for consistency)
-  const columns = [
-    {
-      label: "Name",
-      render: (p) => `${p.firstName || ""} ${p.lastName || ""}`,
-    },
-    { label: "ID", render: (p) => p.id },
-    { label: "Email", render: (p) => p.email || "N/A" },
-    { label: "Phone", render: (p) => p.phone || "N/A" },
-    {
-      label: "DOB",
-      render: (p) =>
-        p.dateOfBirth || p.dob
-          ? new Date(p.dateOfBirth || p.dob).toLocaleDateString()
-          : "N/A",
-    },
-    {
-      label: "Status",
-      render: (p) => (
-        <Chip
-          label={
-            p.status
-              ? p.status.charAt(0).toUpperCase() + p.status.slice(1)
-              : "Active"
-          }
-          size="small"
-          color={
-            String(p.status).toLowerCase() === "active" ? "success" : "default"
-          }
-        />
-      ),
-    },
-  ];
+  // UI rendering (card layout like FrontdeskPatientsPage)
+  if (loading) {
+    return (
+      <PageContainer>
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="200px"
+        >
+          <CircularProgress />
+        </Box>
+      </PageContainer>
+    );
+  }
 
-  // UI rendering (same as frontdesk)
+  if (error) {
+    return (
+      <PageContainer>
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={
+            <Button color="inherit" onClick={() => refreshPatients()}>
+              Retry
+            </Button>
+          }
+        >
+          Error fetching patients:{" "}
+          {typeof error === "string"
+            ? error
+            : error?.message || "An unknown error occurred."}
+        </Alert>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer>
+      {showDebug && <DebugPanel data={filteredPatients} />}
       <PageHeading title="Patients" subtitle="Manage all patients" />
       <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
         <TextField
@@ -161,48 +156,105 @@ function AdminPatientsPage() {
           <RefreshIcon />
         </IconButton>
       </Box>
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
-        </Alert>
+      {filteredPatients.length === 0 && !loading ? (
+        <Paper sx={{ p: 3, textAlign: "center", mt: 2 }}>
+          <Typography variant="h6">No patients found</Typography>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ mt: 1 }}
+          ></Typography>
+        </Paper>
       ) : (
-        <MuiTableContainer component={Paper} sx={{ mt: 2 }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                {columns.map((col) => (
-                  <TableCell key={col.label}>{col.label}</TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredPatients.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
-                    No patients found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredPatients.map((p) => (
-                  <TableRow
-                    key={p.id || p.PK}
-                    hover
-                    sx={{ cursor: "pointer" }}
-                    onClick={() => handlePatientSelect(p)}
+        <Grid container spacing={3}>
+          {filteredPatients.map((patient) => (
+            <Grid item xs={12} sm={6} md={4} key={patient.id || patient.PK}>
+              <Card
+                sx={{
+                  cursor: "pointer",
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: (theme) => theme.shadows[6],
+                  },
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+                onClick={() => handlePatientSelect(patient)}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 1.5,
+                    }}
                   >
-                    {columns.map((col) => (
-                      <TableCell key={col.label}>{col.render(p)}</TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </MuiTableContainer>
+                    <PersonIcon sx={{ mr: 1.5, color: "primary.main" }} />
+                    <Typography
+                      variant="h6"
+                      component="div"
+                      noWrap
+                      sx={{ flexGrow: 1 }}
+                    >
+                      {patient.firstName || ""} {patient.lastName || ""}
+                    </Typography>
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    ID: {patient.id || patient.PK || "N/A"}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Email: {patient.email || "N/A"}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Phone: {patient.phone || "N/A"}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    DOB:{" "}
+                    {patient.dateOfBirth || patient.dob
+                      ? new Date(
+                          patient.dateOfBirth || patient.dob
+                        ).toLocaleDateString()
+                      : "N/A"}
+                  </Typography>
+                  {patient.status && (
+                    <Box sx={{ mt: 1.5 }}>
+                      <Chip
+                        label={
+                          patient.status.charAt(0).toUpperCase() +
+                          patient.status.slice(1)
+                        }
+                        color={
+                          String(patient.status).toLowerCase() === "active"
+                            ? "success"
+                            : "default"
+                        }
+                        size="small"
+                      />
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       )}
       {/* Patient detail drawer */}
       <Drawer
@@ -219,8 +271,6 @@ function AdminPatientsPage() {
           />
         )}
       </Drawer>
-      {/* Debug panel toggle (optional) */}
-      {showDebug && <DebugPanel data={filteredPatients} />}
     </PageContainer>
   );
 }
