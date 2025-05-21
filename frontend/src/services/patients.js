@@ -14,12 +14,44 @@ export async function fetchPatientById(id) {
 
 // Create a new patient
 export async function createPatient(patientData) {
-  return await apiPost('/patients', patientData);
+  // Transform to backend format
+  const transformed = {
+    firstName: patientData.firstName,
+    lastName: patientData.lastName,
+    dateOfBirth: patientData.dob || patientData.dateOfBirth,
+    gender: patientData.gender || 'Not Specified',
+    contactNumber: patientData.phone || patientData.contactNumber,
+    email: patientData.email,
+    address: patientData.address,
+    insuranceProvider: patientData.insuranceProvider,
+    insuranceNumber: patientData.insuranceNumber,
+    status: patientData.status,
+    type: patientData.type || 'PATIENT',
+    createdAt: patientData.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  return await apiPost('/patients', transformed);
 }
 
 // Update an existing patient
 export async function updatePatient(id, patientData) {
-  return await apiPut(`/patients/${id}`, patientData);
+  // Transform to backend format
+  const transformed = {
+    firstName: patientData.firstName,
+    lastName: patientData.lastName,
+    dateOfBirth: patientData.dob || patientData.dateOfBirth,
+    gender: patientData.gender || 'Not Specified',
+    contactNumber: patientData.phone || patientData.contactNumber,
+    email: patientData.email,
+    address: patientData.address,
+    insuranceProvider: patientData.insuranceProvider,
+    insuranceNumber: patientData.insuranceNumber,
+    status: patientData.status,
+    type: patientData.type || 'PATIENT',
+    createdAt: patientData.createdAt,
+    updatedAt: new Date().toISOString()
+  };
+  return await apiPut(`/patients/${id}`, transformed);
 }
 
 // Delete a patient
