@@ -15,17 +15,29 @@ import {
   Button,
   Paper,
   Drawer,
+  IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import {
   PageContainer,
   PageHeading,
   PrimaryButton,
   ContentCard,
-} from "../components/ui";
-import { useAppData } from "../app/providers/DataProvider";
-import PatientDetailView from "../features/patients/components/PatientDetailView";
+} from "../../components/ui";
+import { useAppData } from "../../hooks/useAppData";
+import PatientDetailView from "../../features/patients/components/PatientDetailView";
+import DebugPanel from "../components/DebugPanel";
+import TableContainer from "../../components/TableContainer";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer as MuiTableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 
 function AdminPatientsPage() {
   const navigate = useNavigate();
@@ -34,6 +46,7 @@ function AdminPatientsPage() {
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [detailViewOpen, setDetailViewOpen] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   // Fetch patients on mount or refresh
   useEffect(() => {
@@ -43,14 +56,20 @@ function AdminPatientsPage() {
   // Filter patients by search term
   useEffect(() => {
     if (Array.isArray(patients)) {
-      const lower = searchTerm.toLowerCase();
+      const lower = searchTerm.trim().toLowerCase();
+      if (!lower) {
+        setFilteredPatients(patients);
+        return;
+      }
       setFilteredPatients(
         patients.filter(
           (p) =>
-            p.firstName?.toLowerCase().includes(lower) ||
-            p.lastName?.toLowerCase().includes(lower) ||
-            p.email?.toLowerCase().includes(lower) ||
-            p.phone?.toLowerCase().includes(lower)
+            (p.firstName && p.firstName.toLowerCase().includes(lower)) ||
+            (p.lastName && p.lastName.toLowerCase().includes(lower)) ||
+            (p.email && p.email.toLowerCase().includes(lower)) ||
+            (p.phone && p.phone.includes(lower)) ||
+            (p.id && p.id.toLowerCase().includes(lower)) ||
+            (p.PK && p.PK.toLowerCase().includes(lower))
         )
       );
     } else {
@@ -58,69 +77,69 @@ function AdminPatientsPage() {
     }
   }, [searchTerm, patients]);
 
+  // Debug: Log filteredPatients and first patient in detail (deep)
+  useEffect(() => {
+    console.log(
+      "[AdminPatientsPage] filteredPatients (count):",
+      filteredPatients.length
+    );
+    if (filteredPatients.length > 0) {
+      console.dir(filteredPatients[0], { depth: null });
+    }
+  }, [filteredPatients]);
+
   // Handlers
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
-  const handlePatientSelect = (patient) => {
-    setSelectedPatient(patient);
-    setDetailViewOpen(true);
-  };
+  const handlePatientSelect = (patient) => setSelectedPatient(patient);
   const handleCloseDetailView = () => setDetailViewOpen(false);
   const handleAddNewPatient = () => navigate("/admin/patients/new");
 
-  if (loading) {
-    return (
-      <PageContainer>
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="200px"
-        >
-          <CircularProgress />
-        </Box>
-      </PageContainer>
-    );
-  }
+  // Toggle debug panel with keyboard shortcut (Ctrl+Shift+D)
+  // ...existing code for keyboard shortcut if needed...
 
-  if (error) {
-    return (
-      <PageContainer>
-        <Alert severity="error">
-          Error fetching patients:{" "}
-          {typeof error === "string"
-            ? error
-            : error?.message || "An unknown error occurred."}
-        </Alert>
-        {refreshPatients && (
-          <Button onClick={() => refreshPatients()} sx={{ mt: 2 }}>
-            Try Again
-          </Button>
-        )}
-      </PageContainer>
-    );
-  }
+  // Table columns (copied from FrontdeskPatientsPage for consistency)
+  const columns = [
+    {
+      label: "Name",
+      render: (p) => `${p.firstName || ""} ${p.lastName || ""}`,
+    },
+    { label: "ID", render: (p) => p.id },
+    { label: "Email", render: (p) => p.email || "N/A" },
+    { label: "Phone", render: (p) => p.phone || "N/A" },
+    {
+      label: "DOB",
+      render: (p) =>
+        p.dateOfBirth || p.dob
+          ? new Date(p.dateOfBirth || p.dob).toLocaleDateString()
+          : "N/A",
+    },
+    {
+      label: "Status",
+      render: (p) => (
+        <Chip
+          label={
+            p.status
+              ? p.status.charAt(0).toUpperCase() + p.status.slice(1)
+              : "Active"
+          }
+          size="small"
+          color={
+            String(p.status).toLowerCase() === "active" ? "success" : "default"
+          }
+        />
+      ),
+    },
+  ];
 
+  // UI rendering (same as frontdesk)
   return (
     <PageContainer>
-      <PageHeading
-        title="Patient Records"
-        subtitle="Manage and view patient information"
-      />
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
+      <PageHeading title="Patients" subtitle="Manage all patients" />
+      <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
         <TextField
-          variant="outlined"
-          label="Search Patients"
-          placeholder="Search by name, email, or phone..."
+          placeholder="Search patients by name, email, phone, or ID"
           value={searchTerm}
           onChange={handleSearchChange}
-          sx={{ width: "40%" }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -128,101 +147,80 @@ function AdminPatientsPage() {
               </InputAdornment>
             ),
           }}
+          sx={{ flex: 1, mr: 2 }}
         />
-        <PrimaryButton startIcon={<AddIcon />} onClick={handleAddNewPatient}>
-          Add New Patient
-        </PrimaryButton>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleAddNewPatient}
+          sx={{ borderRadius: 1.5 }}
+        >
+          New Patient
+        </Button>
+        <IconButton onClick={refreshPatients} sx={{ ml: 1 }}>
+          <RefreshIcon />
+        </IconButton>
       </Box>
-      <ContentCard
-        elevation={0}
-        sx={{ border: "1px solid", borderColor: "divider" }}
-      >
-        {filteredPatients.length === 0 && !loading && (
-          <Typography
-            variant="subtitle1"
-            sx={{ textAlign: "center", p: 3, color: "text.secondary" }}
-          >
-            No patients found. Use the search above or add a new patient.
-          </Typography>
-        )}
-        <Grid container spacing={3} sx={{ p: 2 }}>
-          {filteredPatients.map((patient) => (
-            <Grid
-              item
-              xs={12}
-              sm={6}
-              md={4}
-              lg={3}
-              key={patient.patientId || patient.id}
-            >
-              <Card
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  cursor: "pointer",
-                  transition: "box-shadow 0.3s",
-                  "&:hover": {
-                    boxShadow: 6,
-                  },
-                }}
-                onClick={() => handlePatientSelect(patient)}
-                elevation={2}
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography variant="h6" component="div" noWrap>
-                    {patient.firstName} {patient.lastName}
-                  </Typography>
-                  <Typography
-                    sx={{ mb: 1, fontSize: "0.8rem" }}
-                    color="text.secondary"
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      ) : (
+        <MuiTableContainer component={Paper} sx={{ mt: 2 }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                {columns.map((col) => (
+                  <TableCell key={col.label}>{col.label}</TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredPatients.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length} align="center">
+                    No patients found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredPatients.map((p) => (
+                  <TableRow
+                    key={p.id || p.PK}
+                    hover
+                    sx={{ cursor: "pointer" }}
+                    onClick={() => handlePatientSelect(p)}
                   >
-                    ID: {patient.patientId || patient.id}
-                  </Typography>
-                  <Typography sx={{ mb: 0.5 }} color="text.secondary" noWrap>
-                    Email: {patient.email || "N/A"}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Phone: {patient.phone || "N/A"}
-                  </Typography>
-                  {patient.dob && (
-                    <Typography variant="body2" color="text.secondary">
-                      DOB: {new Date(patient.dob).toLocaleDateString()}
-                    </Typography>
-                  )}
-                  {patient.status && (
-                    <Chip
-                      label={patient.status}
-                      size="small"
-                      sx={{ mt: 1.5 }}
-                      color={
-                        patient.status === "Active"
-                          ? "success"
-                          : patient.status === "Inactive"
-                          ? "error"
-                          : "default"
-                      }
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </ContentCard>
+                    {columns.map((col) => (
+                      <TableCell key={col.label}>{col.render(p)}</TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </MuiTableContainer>
+      )}
+      {/* Patient detail drawer */}
       <Drawer
         anchor="right"
-        open={detailViewOpen}
+        open={!!selectedPatient}
         onClose={handleCloseDetailView}
-        sx={{ "& .MuiDrawer-paper": { width: "50%", maxWidth: "600px" } }}
+        PaperProps={{ sx: { width: { xs: "100vw", sm: 480 } } }}
       >
         {selectedPatient && (
           <PatientDetailView
             patient={selectedPatient}
             onClose={handleCloseDetailView}
+            mode="admin"
           />
         )}
       </Drawer>
+      {/* Debug panel toggle (optional) */}
+      {showDebug && <DebugPanel data={filteredPatients} />}
     </PageContainer>
   );
 }
