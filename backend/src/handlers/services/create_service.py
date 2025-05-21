@@ -29,8 +29,12 @@ def lambda_handler(event, context):
         return generate_response(500, {'message': 'Services table name not configured'})
     
     try:
-        # Parse request body
-        body = json.loads(event.get('body', '{}'))
+        # Parse request body (handle base64 encoding from API Gateway)
+        body_str = event.get('body', '{}')
+        if event.get('isBase64Encoded'):
+            import base64
+            body_str = base64.b64decode(body_str).decode('utf-8')
+        body = json.loads(body_str)
         
         # Validate required fields
         required_fields = ['name', 'description', 'price', 'duration']

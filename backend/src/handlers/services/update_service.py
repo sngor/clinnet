@@ -37,7 +37,12 @@ def lambda_handler(event, context):
         return generate_response(400, {'message': 'Missing service ID'})
 
     try:
-        body = json.loads(event.get('body', '{}'))
+        # Parse request body (handle base64 encoding from API Gateway)
+        body_str = event.get('body', '{}')
+        if event.get('isBase64Encoded'):
+            import base64
+            body_str = base64.b64decode(body_str).decode('utf-8')
+        body = json.loads(body_str)
         existing_service = get_item_by_id(table_name, service_id)
         if not existing_service:
             logger.error(f'Service with ID {service_id} not found')
