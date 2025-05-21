@@ -26,10 +26,10 @@ import {
   PrimaryButton,
   ContentCard,
 } from "../components/ui";
-import { useAppData } from "../../hooks/useAppData";
-import PatientDetailView from "../../features/patients/components/PatientDetailView";
+import { useAppData } from "../hooks/useAppData";
+import PatientDetailView from "../features/patients/components/PatientDetailView";
 import DebugPanel from "../components/DebugPanel";
-import TableContainer from "../../components/TableContainer";
+import TableContainer from "../components/TableContainer";
 import {
   Table,
   TableBody,
