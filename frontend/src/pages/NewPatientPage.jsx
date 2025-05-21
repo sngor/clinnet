@@ -96,21 +96,24 @@ function NewPatientPage() {
     setSubmitting(true);
 
     try {
-      // Format data for DynamoDB
+      // Transform patientData to match backend expectations
       const newPatientData = {
-        // PK, SK, id, and GSI keys will be set by the backend
         type: "PATIENT",
-        ...patientData, // Spread the rest of the form data
-        // dob is already formatted correctly by handleDateChange
-        createdAt: new Date().toISOString(), // Keep createdAt for local use if needed, backend will also set it
-        updatedAt: new Date().toISOString(), // Keep updatedAt for local use if needed, backend will also set it
+        firstName: patientData.firstName,
+        lastName: patientData.lastName,
+        dateOfBirth: patientData.dob, // Backend expects dateOfBirth
+        gender: patientData.gender || "Not Specified",
+        contactNumber: patientData.phone, // Backend expects contactNumber
+        email: patientData.email,
+        address: patientData.address,
+        insuranceProvider: patientData.insuranceProvider,
+        insuranceNumber: patientData.insuranceNumber,
+        status: patientData.status,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
-
-      // Remove dob if it's null, as the backend expects a string or undefined
-      if (newPatientData.dob === null) {
-        delete newPatientData.dob;
-      }
-
+      if (!newPatientData.dateOfBirth) delete newPatientData.dateOfBirth;
+      if (!newPatientData.contactNumber) delete newPatientData.contactNumber;
       await addPatient(newPatientData);
 
       // Show success message
