@@ -76,8 +76,13 @@ def lambda_handler(event, context):
     
     try:
         # Parse request body
-        request_body = json.loads(event.get('body', '{}'))
-        
+        if event.get('isBase64Encoded'):
+            import base64
+            decoded = base64.b64decode(event.get('body', ''))
+            request_body = json.loads(decoded)
+        else:
+            request_body = json.loads(event.get('body', '{}'))
+        print(f"[DEBUG] Decoded request body: {request_body}")
         # Validate required fields
         required_fields = ['firstName', 'lastName']
         missing_fields = [field for field in required_fields if field not in request_body]

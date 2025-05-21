@@ -52,6 +52,9 @@ export const apiGet = async (path, params = {}) => {
 export const apiPost = async (path, data = {}) => {
   try {
     const api = await createAuthenticatedAxios();
+    // DEBUG: Log the token and headers
+    const token = await getAuthToken();
+    console.log('[apiPost] Using token:', token ? token.substring(0, 30) + '...' : 'NO TOKEN');
     const response = await api.post(path, data);
     return response.data;
   } catch (error) {
