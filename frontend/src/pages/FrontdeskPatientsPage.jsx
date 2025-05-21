@@ -75,6 +75,17 @@ function FrontdeskPatientsPage() {
     }
   }, [searchTerm, patients]);
 
+  // Debug: Log filteredPatients and first patient in detail
+  useEffect(() => {
+    console.log("[FrontdeskPatientsPage] filteredPatients:", filteredPatients);
+    if (filteredPatients.length > 0) {
+      console.log(
+        "[FrontdeskPatientsPage] first patient object:",
+        filteredPatients[0]
+      );
+    }
+  }, [filteredPatients]);
+
   // Handlers
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
   const handlePatientSelect = (patient) => setSelectedPatient(patient);
