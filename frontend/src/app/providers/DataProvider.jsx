@@ -38,30 +38,32 @@ export const DataProvider = ({ children }) => {
           setServices([]);
         }
 
-        // Fetch real patients data from the API
-        const patientsData = await patientService.fetchPatients();
-        console.log("[DataProvider] setPatients (API):", patientsData);
-        setPatients(patientsData || []);
+        // Fetch real patients data from the API (with isolated error handling)
+        let patientsData = [];
+        try {
+          patientsData = await patientService.fetchPatients();
+          console.log("[DataProvider] setPatients (API):", patientsData);
+          setPatients(patientsData || []);
+        } catch (err) {
+          console.warn("Falling back to mock data due to patients API error");
+          const { mockPatients } = await import("../../mock/mockPatients");
+          console.log("[DataProvider] setPatients (mock):", mockPatients);
+          setPatients(mockPatients);
+        }
 
-        // Fetch appointments from API
-        const appointmentsData = await appointmentApi.getAllAppointments();
-        setAppointments(appointmentsData || []);
+        // Fetch appointments from API (do not affect patients state)
+        try {
+          const appointmentsData = await appointmentApi.getAllAppointments();
+          setAppointments(appointmentsData || []);
+        } catch (err) {
+          console.error("Error fetching appointments:", err);
+        }
 
         setInitialized(true);
         console.log("Data initialization complete");
       } catch (err) {
         console.error("Error initializing data:", err);
         setError(err.message || "Failed to initialize application data");
-
-        // Fallback to mock data on error
-        try {
-          console.warn("Falling back to mock data due to API error");
-          const { mockPatients } = await import("../../mock/mockPatients");
-          console.log("[DataProvider] setPatients (mock):", mockPatients);
-          setPatients(mockPatients);
-        } catch (mockErr) {
-          console.error("Error loading mock data:", mockErr);
-        }
       } finally {
         setLoading(false);
       }
