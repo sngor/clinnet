@@ -92,6 +92,18 @@ function NewPatientPage() {
       setSnackbarOpen(true);
       return;
     }
+    if (!patientData.dob) {
+      setSnackbarMessage("Date of birth is required");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
+    if (!patientData.phone) {
+      setSnackbarMessage("Phone number is required");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
 
     setSubmitting(true);
 
