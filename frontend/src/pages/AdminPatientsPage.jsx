@@ -26,7 +26,7 @@ import {
   PrimaryButton,
   ContentCard,
 } from "../components/ui";
-import { useAppData } from "../hooks/useAppData";
+import { useAppData } from "../app/providers/DataProvider";
 import PatientDetailView from "../features/patients/components/PatientDetailView";
 import DebugPanel from "../components/DebugPanel";
 import TableContainer from "../components/TableContainer";
