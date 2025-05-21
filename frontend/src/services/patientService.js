@@ -31,9 +31,9 @@ export const createPatient = async (patientData) => {
     const transformedData = {
       firstName: patientData.firstName,
       lastName: patientData.lastName,
-      dateOfBirth: patientData.dob,
+      dateOfBirth: patientData.dateOfBirth || patientData.dob,
       gender: patientData.gender || 'Not Specified',
-      contactNumber: patientData.phone,
+      phone: patientData.phone,
       email: patientData.email,
       address: patientData.address,
       insuranceProvider: patientData.insuranceProvider,
@@ -58,9 +58,9 @@ export const updatePatient = async (patientId, patientData) => {
     const transformedData = {
       firstName: patientData.firstName,
       lastName: patientData.lastName,
-      dateOfBirth: patientData.dob,
+      dateOfBirth: patientData.dateOfBirth || patientData.dob,
       gender: patientData.gender || 'Not Specified',
-      contactNumber: patientData.phone,
+      phone: patientData.phone,
       email: patientData.email,
       address: patientData.address,
       insuranceProvider: patientData.insuranceProvider,

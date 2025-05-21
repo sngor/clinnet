@@ -114,7 +114,7 @@ function NewPatientPage() {
         firstName: patientData.firstName,
         lastName: patientData.lastName,
         dateOfBirth: patientData.dob, // Use dateOfBirth for backend
-        contactNumber: patientData.phone, // Use contactNumber for backend
+        phone: patientData.phone, // Use phone for backend
         gender: patientData.gender || "Not Specified",
         email: patientData.email,
         address: patientData.address,
@@ -125,7 +125,7 @@ function NewPatientPage() {
         updatedAt: new Date().toISOString(),
       };
       if (!newPatientData.dateOfBirth) delete newPatientData.dateOfBirth;
-      if (!newPatientData.contactNumber) delete newPatientData.contactNumber;
+      if (!newPatientData.phone) delete newPatientData.phone;
       await addPatient(newPatientData);
 
       // Show success message

@@ -18,8 +18,8 @@ export async function createPatient(patientData) {
   const transformed = {
     firstName: patientData.firstName,
     lastName: patientData.lastName,
-    dob: patientData.dob || patientData.dateOfBirth,
-    phone: patientData.phone || patientData.contactNumber,
+    dateOfBirth: patientData.dateOfBirth || patientData.dob,
+    phone: patientData.phone,
     gender: patientData.gender || 'Not Specified',
     email: patientData.email,
     address: patientData.address,
@@ -30,7 +30,7 @@ export async function createPatient(patientData) {
     createdAt: patientData.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  console.log('[createPatient] Payload to backend:', transformed); // <-- Added log
+  console.log('[createPatient] Payload to backend:', transformed); // <-- log remains for debug
   return await apiPost('/patients', transformed);
 }
 
@@ -40,9 +40,9 @@ export async function updatePatient(id, patientData) {
   const transformed = {
     firstName: patientData.firstName,
     lastName: patientData.lastName,
-    dateOfBirth: patientData.dob || patientData.dateOfBirth,
+    dateOfBirth: patientData.dateOfBirth || patientData.dob,
+    phone: patientData.phone,
     gender: patientData.gender || 'Not Specified',
-    contactNumber: patientData.phone || patientData.contactNumber,
     email: patientData.email,
     address: patientData.address,
     insuranceProvider: patientData.insuranceProvider,
