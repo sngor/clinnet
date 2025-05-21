@@ -23,7 +23,6 @@ export const serviceCategories = [
   "laboratory",
   "imaging",
   "procedure",
-  "therapy",
   "vaccination",
   "other"
 ];

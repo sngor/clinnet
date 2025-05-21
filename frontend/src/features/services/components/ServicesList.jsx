@@ -53,7 +53,7 @@ import {
 
 // Table column definitions
 const columns = [
-  { id: "id", label: "ID", numeric: true },
+  // { id: "id", label: "ID", numeric: true }, // HIDE ID COLUMN
   { id: "name", label: "Service Name", numeric: false },
   { id: "category", label: "Category", numeric: false },
   { id: "price", label: "Price ($)", numeric: true },
@@ -324,7 +324,7 @@ function ServicesList() {
         <Typography variant="h5">Medical Services</Typography>
         {actionButton}
       </FlexBox>
-      
+
       {/* Replace nested containers with just CardContainer */}
       <CardContainer>
         <TableContainer>
@@ -375,9 +375,7 @@ function ServicesList() {
                           "&:last-child td, &:last-child th": { border: 0 },
                         }}
                       >
-                        <TableCell component="th" scope="row">
-                          {service.id}
-                        </TableCell>
+                        {/* <TableCell component="th" scope="row">{service.id}</TableCell> */}
                         <TableCell>
                           <Typography variant="body2" fontWeight="medium">
                             {service.name}
@@ -441,21 +439,19 @@ function ServicesList() {
                         <TableCell align="center">
                           <Tooltip title="Edit Service">
                             <AppIconButton
+                              icon={EditIcon}
                               aria-label="Edit"
                               color="primary"
                               onClick={() => handleEditService(service)}
-                            >
-                              <EditIcon fontSize="small" />
-                            </AppIconButton>
+                            />
                           </Tooltip>
                           <Tooltip title="Delete Service">
                             <AppIconButton
+                              icon={DeleteIcon}
                               aria-label="Delete"
                               color="error"
                               onClick={() => handleDeleteClick(service)}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </AppIconButton>
+                            />
                           </Tooltip>
                         </TableCell>
                       </TableRow>
@@ -463,10 +459,10 @@ function ServicesList() {
                   )
                 )}
               </TableBody>
-              </StyledTableContainer>
-            )}
-          </TableContainer>
-        </CardContainer>
+            </StyledTableContainer>
+          )}
+        </TableContainer>
+      </CardContainer>
 
       {/* Add/Edit Service Dialog */}
       <Dialog
