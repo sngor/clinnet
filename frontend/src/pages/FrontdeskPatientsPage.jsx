@@ -67,7 +67,9 @@ function FrontdeskPatientsPage() {
             (p.firstName && p.firstName.toLowerCase().includes(lower)) ||
             (p.lastName && p.lastName.toLowerCase().includes(lower)) ||
             (p.email && p.email.toLowerCase().includes(lower)) ||
-            (p.phone && p.phone.includes(lower))
+            (p.phone && p.phone.includes(lower)) ||
+            (p.id && p.id.toLowerCase().includes(lower)) ||
+            (p.PK && p.PK.toLowerCase().includes(lower))
         )
       );
     } else {
