@@ -37,9 +37,11 @@ function PatientSearch({
           ),
         }}
       />
-      <PrimaryButton startIcon={<AddIcon />} onClick={onAddNew}>
-        Add New Patient
-      </PrimaryButton>
+      {onAddNew && (
+        <PrimaryButton startIcon={<AddIcon />} onClick={onAddNew}>
+          Add New Patient
+        </PrimaryButton>
+      )}
       <IconButton
         onClick={onRefresh}
         disabled={loading}

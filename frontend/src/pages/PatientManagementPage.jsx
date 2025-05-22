@@ -1,19 +1,13 @@
 // src/pages/PatientManagementPage.jsx
 import React, { useState, useMemo } from "react";
 import {
-  Box,
-  Typography,
-  Paper,
-  Container,
   Button,
-  Divider,
-  Chip,
 } from "@mui/material";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../app/providers/AuthProvider";
 import { useAppData } from "../app/providers/DataProvider";
-import PageHeader from "../components/PageHeader";
+import { PageLayout } from "../components/ui";
 import PatientList from "../features/patients/components/PatientList";
 import PatientGrid from "../components/patients/PatientGrid";
 import PatientSearch from "../components/patients/PatientSearch";
@@ -110,24 +104,22 @@ function PatientManagementPage() {
       : "Search, view, and manage patient records";
 
   return (
-    <Container maxWidth="xl" disableGutters>
-      {/* Use the consistent PageHeader component */}
-      <PageHeader
-        title={pageTitle}
-        subtitle={pageSubtitle}
-        action={actionButton}
-      />
-
+    <PageLayout
+      title={pageTitle}
+      subtitle={pageSubtitle}
+      loading={loading}
+      error={error}
+      action={actionButton}
+      maxWidth="xl"
+    >
       {/* Search bar */}
       <PatientSearch 
         searchTerm={searchTerm}
         onSearchChange={(e) => setSearchTerm(e.target.value)}
-        onAddNew={handleNewPatient}
+        onAddNew={null}
         onRefresh={() => {}}
         loading={loading}
       />
-
-      {/* Removed tab navigation for doctor view as requested */}
 
       {/* Patient display area: organized in a grid with consistent width */}
       {viewMode === "card" ? (
@@ -139,7 +131,7 @@ function PatientManagementPage() {
       ) : (
         <PatientList patients={filteredPatients} />
       )}
-    </Container>
+    </PageLayout>
   );
 }
 

@@ -1,17 +1,12 @@
 // src/pages/DoctorPatientsPage.jsx
 import React, { useState, useEffect } from "react";
 import {
-  Box,
-  CircularProgress,
-  Alert,
-  Button,
   Drawer,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "../app/providers/DataProvider";
 import {
-  PageContainer,
-  PageHeading,
+  PageLayout,
 } from "../components/ui";
 import PatientDetailView from "../components/patients/PatientDetailView";
 import PatientGrid from "../components/patients/PatientGrid";
@@ -86,58 +81,20 @@ function DoctorPatientsPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // UI rendering (card layout for consistency)
-  if (loading) {
-    return (
-      <PageContainer>
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="200px"
-        >
-          <CircularProgress />
-        </Box>
-      </PageContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <PageContainer>
-        <Alert
-          severity="error"
-          sx={{ mb: 2 }}
-          action={
-            <Button
-              color="inherit"
-              onClick={() => refreshPatients()}
-              variant="outlined"
-            >
-              Retry
-            </Button>
-          }
-        >
-          Error fetching patients:{" "}
-          {typeof error === "string"
-            ? error
-            : error?.message || "An unknown error occurred."}
-        </Alert>
-      </PageContainer>
-    );
-  }
-
   return (
-    <PageContainer>
-      {showDebug && <DebugPanel data={filteredPatients} />}
-      <PageHeading
-        title="My Patients"
-        subtitle="View and manage your patient records"
-      />
+    <PageLayout
+      title="My Patients"
+      subtitle="View and manage your patient records"
+      loading={loading}
+      error={error}
+      onRetry={() => refreshPatients()}
+      showDebug={showDebug}
+      debugPanel={<DebugPanel data={filteredPatients} />}
+    >
       <PatientSearch 
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
-        onAddNew={handleAddNewPatient}
+        onAddNew={null}
         onRefresh={refreshPatients}
         loading={loading}
       />
