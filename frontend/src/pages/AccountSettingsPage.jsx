@@ -487,52 +487,48 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
                   onChange={handleChange}
                 />
                 
-                <Grid item xs={12}>
-                  <FormField
-                    type="email"
-                    name="email"
-                    label="Email Address"
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled
-                    helperText="Email cannot be changed as it's used for authentication"
-                  />
-                </Grid>
+                <FormField
+                  type="email"
+                  name="email"
+                  label="Email Address"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled
+                  helperText="Email cannot be changed as it's used for authentication"
+                  sx={{ gridColumn: "span 2" }}
+                />
                 
-                <Grid item xs={12}>
-                  <FormField
-                    type="tel"
-                    name="phone"
-                    label="Phone Number"
-                    value={formData.phone}
-                    onChange={handleChange}
-                  />
-                </Grid>
+                <FormField
+                  type="tel"
+                  name="phone"
+                  label="Phone Number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  sx={{ gridColumn: "span 2" }}
+                />
+                
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gridColumn: "span 2" }}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={loading}
+                    startIcon={
+                      loading ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        <SaveIcon />
+                      )
+                    }
+                    sx={{
+                      py: 1,
+                      px: 3,
+                      borderRadius: 1.5,
+                    }}
+                  >
+                    Save Profile
+                  </Button>
+                </Box>
               </FormLayout>
-                <Grid item xs={12}>
-                  <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      disabled={loading}
-                      startIcon={
-                        loading ? (
-                          <CircularProgress size={20} color="inherit" />
-                        ) : (
-                          <SaveIcon />
-                        )
-                      }
-                      sx={{
-                        py: 1,
-                        px: 3,
-                        borderRadius: 1.5,
-                      }}
-                    >
-                      Save Profile
-                    </Button>
-                  </Box>
-                </Grid>
-              </Grid>
             </Box>
           </Box>
         </CardContent>
@@ -564,7 +560,6 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
 
           <Box component="form" onSubmit={handlePasswordChange} noValidate>
             <FormLayout spacing={2} withPaper={false}>
-              <Grid item xs={12} md={4}>
                 <FormField
                   type="password"
                   name="currentPassword"
@@ -573,23 +568,23 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
                   onChange={handleChange}
                   required
                 />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FormField
-                  type="password"
-                  name="newPassword"
-                  label="New Password"
-                  value={formData.newPassword}
-                  onChange={handleChange}
-                  required
-                />
-                <PasswordStrengthMeter password={formData.newPassword} />
-                <FormHelperText>
-                  Password must be at least 8 characters with uppercase,
-                  lowercase, number, and special character
-                </FormHelperText>
-              </Grid>
-              <Grid item xs={12} md={4}>
+                
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
+                  <FormField
+                    type="password"
+                    name="newPassword"
+                    label="New Password"
+                    value={formData.newPassword}
+                    onChange={handleChange}
+                    required
+                  />
+                  <PasswordStrengthMeter password={formData.newPassword} />
+                  <FormHelperText>
+                    Password must be at least 8 characters with uppercase,
+                    lowercase, number, and special character
+                  </FormHelperText>
+                </Box>
+                
                 <FormField
                   type="password"
                   name="confirmPassword"
@@ -608,9 +603,8 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
                       : ""
                   }
                 />
-              </Grid>
-              <Grid item xs={12}>
-                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gridColumn: "span 3" }}>
                   <Button
                     type="submit"
                     variant="contained"
@@ -637,8 +631,7 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
                     Change Password
                   </Button>
                 </Box>
-              </Grid>
-            </Grid>
+            </FormLayout>
           </Box>
         </CardContent>
       </Card>

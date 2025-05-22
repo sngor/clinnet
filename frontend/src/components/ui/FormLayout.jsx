@@ -36,8 +36,17 @@ const FormLayout = ({
         if (!child) return null;
         
         // If child already has Grid item props, use them
-        if (child.type === Grid && child.props.item) {
+        if (child && child.type === Grid && child.props.item) {
           return child;
+        }
+        
+        // If child is a Box with gridColumn span prop, respect it
+        if (child && child.props && child.props.sx && child.props.sx.gridColumn) {
+          return (
+            <Grid item xs={12} key={index}>
+              {child}
+            </Grid>
+          );
         }
         
         // Default to full width on mobile, half width on larger screens

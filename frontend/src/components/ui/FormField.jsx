@@ -53,6 +53,7 @@ const FormField = ({
 }) => {
   const fieldStyles = {
     mb: 2,
+    width: '100%',
     ...sx,
   };
 
