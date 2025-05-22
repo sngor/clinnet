@@ -176,8 +176,22 @@ function PatientDetailPage() {
     setSnackbarOpen(true);
   };
 
+  // Determine role for consistent navigation and UI
+  const getRole = () => {
+    if (window.location.pathname.startsWith("/doctor")) return "doctor";
+    if (window.location.pathname.startsWith("/frontdesk")) return "frontdesk";
+    return "admin";
+  };
+
+  // Consistent back navigation for all roles
+  const handleBackClick = () => {
+    const role = getRole();
+    if (role === "doctor") navigate("/doctor/patients");
+    else if (role === "frontdesk") navigate("/frontdesk/patients");
+    else navigate("/admin/patients");
+  };
+
   // Navigation and snackbar handlers
-  const handleBackClick = () => navigate(-1);
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
   // Loading, error, and not-found states
@@ -207,7 +221,7 @@ function PatientDetailPage() {
         <Button
           variant="contained"
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate("/patients")}
+          onClick={handleBackClick}
         >
           Return to Patients
         </Button>
@@ -225,7 +239,7 @@ function PatientDetailPage() {
             <Button
               variant="contained"
               startIcon={<ArrowBackIcon />}
-              onClick={() => navigate("/patients")}
+              onClick={handleBackClick}
             >
               Return to Patients
             </Button>

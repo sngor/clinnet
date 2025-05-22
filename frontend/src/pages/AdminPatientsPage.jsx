@@ -80,16 +80,40 @@ function AdminPatientsPage() {
     }
   }, [filteredPatients]);
 
+  // Helper to calculate age from date of birth
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return "N/A";
+    try {
+      const birthDate = new Date(dateOfBirth);
+      if (isNaN(birthDate.getTime())) return "N/A";
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age >= 0 ? age.toString() : "N/A";
+    } catch (e) {
+      return "N/A";
+    }
+  };
+
   // Handlers
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
-  const handlePatientSelect = (patient) => setSelectedPatient(patient);
+  const handlePatientSelect = (patient) => {
+    // Navigate to patient detail page for editing
+    if (window.location.pathname.startsWith("/doctor")) {
+      navigate(`/doctor/patients/${patient.id || patient.PK}`);
+    } else if (window.location.pathname.startsWith("/frontdesk")) {
+      navigate(`/frontdesk/patients/${patient.id || patient.PK}`);
+    } else {
+      navigate(`/admin/patients/${patient.id || patient.PK}`);
+    }
+  };
   const handleCloseDetailView = () => setDetailViewOpen(false);
   const handleAddNewPatient = () => navigate("/admin/patients/new");
 
-  // Toggle debug panel with keyboard shortcut (Ctrl+Shift+D)
-  // ...existing code for keyboard shortcut if needed...
-
-  // UI rendering (card layout like FrontdeskPatientsPage)
+  // UI rendering (card layout for consistency)
   if (loading) {
     return (
       <PageContainer>
@@ -129,12 +153,25 @@ function AdminPatientsPage() {
   return (
     <PageContainer>
       {showDebug && <DebugPanel data={filteredPatients} />}
-      <PageHeading title="Patients" subtitle="Manage all patients" />
-      <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
+      <PageHeading
+        title="Patient Records"
+        subtitle="Manage and view patient information"
+      />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
         <TextField
-          placeholder="Search patients by name, email, phone, or ID"
+          variant="outlined"
+          label="Search Patients"
+          placeholder="Search by name, email, or phone..."
           value={searchTerm}
           onChange={handleSearchChange}
+          sx={{ width: "40%" }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -142,28 +179,22 @@ function AdminPatientsPage() {
               </InputAdornment>
             ),
           }}
-          sx={{ flex: 1, mr: 2 }}
         />
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddNewPatient}
-          sx={{ borderRadius: 1.5 }}
+        <PrimaryButton startIcon={<AddIcon />} onClick={handleAddNewPatient}>
+          Add New Patient
+        </PrimaryButton>
+        <IconButton
+          onClick={refreshPatients}
+          disabled={loading}
+          aria-label="Refresh"
+          sx={{ ml: 2 }}
         >
-          New Patient
-        </Button>
-        <IconButton onClick={refreshPatients} sx={{ ml: 1 }}>
           <RefreshIcon />
         </IconButton>
       </Box>
       {filteredPatients.length === 0 && !loading ? (
         <Paper sx={{ p: 3, textAlign: "center", mt: 2 }}>
           <Typography variant="h6">No patients found</Typography>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={{ mt: 1 }}
-          ></Typography>
         </Paper>
       ) : (
         <Grid container spacing={3}>
@@ -206,7 +237,7 @@ function AdminPatientsPage() {
                     color="text.secondary"
                     gutterBottom
                   >
-                    ID: {patient.id || patient.PK || "N/A"}
+                    Age: {calculateAge(patient.dateOfBirth || patient.dob)}
                   </Typography>
                   <Typography
                     variant="body2"
@@ -220,7 +251,7 @@ function AdminPatientsPage() {
                     color="text.secondary"
                     gutterBottom
                   >
-                    Phone: {patient.phone || "N/A"}
+                    Phone: {patient.phone || patient.contactNumber || "N/A"}
                   </Typography>
                   <Typography
                     variant="body2"
@@ -256,12 +287,12 @@ function AdminPatientsPage() {
           ))}
         </Grid>
       )}
-      {/* Patient detail drawer */}
+      {/* Patient Detail View Drawer */}
       <Drawer
         anchor="right"
         open={!!selectedPatient}
         onClose={handleCloseDetailView}
-        PaperProps={{ sx: { width: { xs: "100vw", sm: 480 } } }}
+        sx={{ "& .MuiDrawer-paper": { width: "50%", maxWidth: "600px" } }}
       >
         {selectedPatient && (
           <PatientDetailView

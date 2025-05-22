@@ -65,18 +65,22 @@ function DoctorPatientsPage() {
 
   // Handle patient card click
   const handlePatientClick = (patient) => {
-    if (patient && patient.id) {
-      navigate(`/patients/${patient.id}`);
+    // Navigate to patient detail page for editing
+    if (window.location.pathname.startsWith("/doctor")) {
+      navigate(`/doctor/patients/${patient.id || patient.PK}`);
+    } else if (window.location.pathname.startsWith("/frontdesk")) {
+      navigate(`/frontdesk/patients/${patient.id || patient.PK}`);
+    } else {
+      navigate(`/admin/patients/${patient.id || patient.PK}`);
     }
   };
 
-  // Calculate age from date of birth
+  // Helper to calculate age from date of birth
   const calculateAge = (dateOfBirth) => {
     if (!dateOfBirth) return "N/A";
     try {
       const birthDate = new Date(dateOfBirth);
       if (isNaN(birthDate.getTime())) return "N/A";
-
       const today = new Date();
       let age = today.getFullYear() - birthDate.getFullYear();
       const m = today.getMonth() - birthDate.getMonth();
@@ -89,6 +93,7 @@ function DoctorPatientsPage() {
     }
   };
 
+  // UI rendering (card layout for consistency)
   if (loading) {
     return (
       <PageContainer>
@@ -107,17 +112,22 @@ function DoctorPatientsPage() {
   if (error) {
     return (
       <PageContainer>
-        <Alert severity="error">
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={
+            refreshPatients ? (
+              <Button color="inherit" onClick={() => refreshPatients()}>
+                Retry
+              </Button>
+            ) : null
+          }
+        >
           Error fetching patients:{" "}
           {typeof error === "string"
             ? error
             : error?.message || "An unknown error occurred."}
         </Alert>
-        {refreshPatients && (
-          <Button onClick={() => refreshPatients()} sx={{ mt: 2 }}>
-            Try Again
-          </Button>
-        )}
       </PageContainer>
     );
   }
@@ -144,7 +154,6 @@ function DoctorPatientsPage() {
           Refresh
         </Button>
       </Box>
-
       <Box sx={{ mb: 3 }}>
         <TextField
           fullWidth
@@ -161,141 +170,93 @@ function DoctorPatientsPage() {
           }}
         />
       </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {typeof error === "string"
-            ? error
-            : "An error occurred while fetching patients."}
-        </Alert>
-      )}
-
-      {filteredPatients.length === 0 && !loading && (
-        <Typography
-          variant="subtitle1"
-          sx={{ textAlign: "center", mt: 4, color: "text.secondary" }}
-        >
-          No patients found.
-        </Typography>
-      )}
-
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <CircularProgress />
-        </Box>
+      {filteredPatients.length === 0 && !loading ? (
+        <Paper sx={{ p: 3, textAlign: "center", mt: 2 }}>
+          <Typography variant="h6">No patients found</Typography>
+        </Paper>
       ) : (
         <Grid container spacing={3}>
-          {filteredPatients && filteredPatients.length > 0 ? (
-            filteredPatients.map((patient) => (
-              <Grid item xs={12} sm={6} md={4} key={patient.id || patient.PK}>
-                <Card
-                  sx={{
-                    cursor: "pointer",
-                    transition: "transform 0.2s, box-shadow 0.2s",
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      boxShadow: (theme) => theme.shadows[6],
-                    },
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                  onClick={() => handlePatientClick(patient)}
-                >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", mb: 1.5 }}
+          {filteredPatients.map((patient) => (
+            <Grid item xs={12} sm={6} md={4} key={patient.id || patient.PK}>
+              <Card
+                sx={{
+                  cursor: "pointer",
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: (theme) => theme.shadows[6],
+                  },
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+                onClick={() => handlePatientClick(patient)}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
+                    <PersonIcon sx={{ mr: 1.5, color: "primary.main" }} />
+                    <Typography
+                      variant="h6"
+                      component="div"
+                      noWrap
+                      sx={{ flexGrow: 1 }}
                     >
-                      <PersonIcon sx={{ mr: 1.5, color: "primary.main" }} />
-                      <Typography variant="h6" component="div" noWrap>
-                        {patient.firstName || ""} {patient.lastName || ""}
-                      </Typography>
+                      {patient.firstName || ""} {patient.lastName || ""}
+                    </Typography>
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Age: {calculateAge(patient.dateOfBirth || patient.dob)}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Email: {patient.email || "N/A"}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Phone: {patient.phone || patient.contactNumber || "N/A"}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    DOB:{" "}
+                    {patient.dateOfBirth || patient.dob
+                      ? new Date(
+                          patient.dateOfBirth || patient.dob
+                        ).toLocaleDateString()
+                      : "N/A"}
+                  </Typography>
+                  {patient.status && (
+                    <Box sx={{ mt: 1.5 }}>
+                      <Chip
+                        label={
+                          patient.status.charAt(0).toUpperCase() +
+                          patient.status.slice(1)
+                        }
+                        color={
+                          String(patient.status).toLowerCase() === "active"
+                            ? "success"
+                            : "default"
+                        }
+                        size="small"
+                      />
                     </Box>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      gutterBottom
-                    >
-                      Age: {calculateAge(patient.dateOfBirth || patient.dob)}
-                    </Typography>
-                    {patient.gender && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        gutterBottom
-                      >
-                        Gender: {patient.gender}
-                      </Typography>
-                    )}
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      gutterBottom
-                    >
-                      Phone: {patient.phone || patient.contactNumber || "N/A"}
-                    </Typography>
-                    {patient.email && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        gutterBottom
-                        sx={{ wordBreak: "break-all" }}
-                      >
-                        Email: {patient.email}
-                      </Typography>
-                    )}
-                    {patient.insuranceProvider && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        gutterBottom
-                      >
-                        Insurance: {patient.insuranceProvider}
-                      </Typography>
-                    )}
-                    {patient.lastVisit && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        gutterBottom
-                      >
-                        Last Visit:{" "}
-                        {new Date(patient.lastVisit).toLocaleDateString()}
-                      </Typography>
-                    )}
-                    {patient.status && (
-                      <Box sx={{ mt: 1.5 }}>
-                        <Chip
-                          label={patient.status}
-                          color={
-                            patient.status.toLowerCase() === "active"
-                              ? "success"
-                              : "default"
-                          }
-                          size="small"
-                        />
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))
-          ) : (
-            <Grid item xs={12}>
-              <Paper sx={{ p: 3, textAlign: "center", mt: 2 }}>
-                <Typography variant="h6">No patients found</Typography>
-                <Typography
-                  variant="body1"
-                  color="text.secondary"
-                  sx={{ mt: 1 }}
-                >
-                  {searchTerm
-                    ? "No patients match your search criteria."
-                    : "There are no patients to display."}
-                </Typography>
-              </Paper>
+                  )}
+                </CardContent>
+              </Card>
             </Grid>
-          )}
+          ))}
         </Grid>
       )}
     </PageContainer>

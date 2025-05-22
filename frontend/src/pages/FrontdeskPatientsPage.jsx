@@ -20,6 +20,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import PersonIcon from "@mui/icons-material/Person";
 import {
   PageContainer,
   PageHeading,
@@ -90,7 +91,16 @@ function FrontdeskPatientsPage() {
 
   // Handlers
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
-  const handlePatientSelect = (patient) => setSelectedPatient(patient);
+  const handlePatientSelect = (patient) => {
+    // Navigate to patient detail page for editing
+    if (window.location.pathname.startsWith("/doctor")) {
+      navigate(`/doctor/patients/${patient.id || patient.PK}`);
+    } else if (window.location.pathname.startsWith("/frontdesk")) {
+      navigate(`/frontdesk/patients/${patient.id || patient.PK}`);
+    } else {
+      navigate(`/admin/patients/${patient.id || patient.PK}`);
+    }
+  };
   const handleCloseDetailView = () => setDetailViewOpen(false);
   const handleAddNewPatient = () => navigate("/frontdesk/patients/new");
 
@@ -106,6 +116,24 @@ function FrontdeskPatientsPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Helper to calculate age from date of birth
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return "N/A";
+    try {
+      const birthDate = new Date(dateOfBirth);
+      if (isNaN(birthDate.getTime())) return "N/A";
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age >= 0 ? age.toString() : "N/A";
+    } catch (e) {
+      return "N/A";
+    }
+  };
 
   // Table columns
   const columns = [
@@ -141,6 +169,7 @@ function FrontdeskPatientsPage() {
     },
   ];
 
+  // UI rendering (card layout for consistency)
   if (loading) {
     return (
       <PageContainer>
@@ -159,25 +188,31 @@ function FrontdeskPatientsPage() {
   if (error) {
     return (
       <PageContainer>
-        <Alert severity="error">
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={
+            <Button
+              color="inherit"
+              onClick={() => refreshPatients()}
+              variant="outlined"
+            >
+              Retry
+            </Button>
+          }
+        >
           Error fetching patients:{" "}
           {typeof error === "string"
             ? error
             : error?.message || "An unknown error occurred."}
         </Alert>
-        {refreshPatients && (
-          <Button onClick={() => refreshPatients()} sx={{ mt: 2 }}>
-            Try Again
-          </Button>
-        )}
       </PageContainer>
     );
   }
 
   return (
     <PageContainer>
-      {/* Debug Panel (hidden by default, toggle with Ctrl+Shift+D) */}
-      {showDebug && <DebugPanel />}
+      {showDebug && <DebugPanel data={filteredPatients} />}
       <PageHeading
         title="Patient Records"
         subtitle="Manage and view patient information"
@@ -208,56 +243,114 @@ function FrontdeskPatientsPage() {
         <PrimaryButton startIcon={<AddIcon />} onClick={handleAddNewPatient}>
           Add New Patient
         </PrimaryButton>
+        <IconButton
+          onClick={refreshPatients}
+          disabled={loading}
+          aria-label="Refresh"
+          sx={{ ml: 2 }}
+        >
+          <RefreshIcon />
+        </IconButton>
       </Box>
-      <TableContainer
-        title="Patients Table"
-        action={
-          <IconButton
-            onClick={refreshPatients}
-            disabled={loading}
-            aria-label="Refresh"
-          >
-            <RefreshIcon />
-          </IconButton>
-        }
-      >
-        <MuiTableContainer component={Paper}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                {columns.map((col) => (
-                  <TableCell key={col.label}>{col.label}</TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredPatients.length === 0 && !loading ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} align="center">
-                    No patients found. Use the search above or add a new
-                    patient.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredPatients.map((patient) => (
-                  <TableRow key={patient.id} hover>
-                    {columns.map((col) => (
-                      <TableCell key={col.label}>
-                        {col.render(patient)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </MuiTableContainer>
-      </TableContainer>
-
+      {filteredPatients.length === 0 && !loading ? (
+        <Paper sx={{ p: 3, textAlign: "center", mt: 2 }}>
+          <Typography variant="h6">No patients found</Typography>
+        </Paper>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredPatients.map((patient) => (
+            <Grid item xs={12} sm={6} md={4} key={patient.id || patient.PK}>
+              <Card
+                sx={{
+                  cursor: "pointer",
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: (theme) => theme.shadows[6],
+                  },
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+                onClick={() => handlePatientSelect(patient)}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 1.5,
+                    }}
+                  >
+                    <PersonIcon sx={{ mr: 1.5, color: "primary.main" }} />
+                    <Typography
+                      variant="h6"
+                      component="div"
+                      noWrap
+                      sx={{ flexGrow: 1 }}
+                    >
+                      {patient.firstName || ""} {patient.lastName || ""}
+                    </Typography>
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Age: {calculateAge(patient.dateOfBirth || patient.dob)}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Email: {patient.email || "N/A"}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Phone: {patient.phone || patient.contactNumber || "N/A"}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    DOB:{" "}
+                    {patient.dateOfBirth || patient.dob
+                      ? new Date(
+                          patient.dateOfBirth || patient.dob
+                        ).toLocaleDateString()
+                      : "N/A"}
+                  </Typography>
+                  {patient.status && (
+                    <Box sx={{ mt: 1.5 }}>
+                      <Chip
+                        label={
+                          patient.status.charAt(0).toUpperCase() +
+                          patient.status.slice(1)
+                        }
+                        color={
+                          String(patient.status).toLowerCase() === "active"
+                            ? "success"
+                            : "default"
+                        }
+                        size="small"
+                      />
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
       {/* Patient Detail View Drawer */}
       <Drawer
         anchor="right"
-        open={detailViewOpen}
+        open={!!selectedPatient}
         onClose={handleCloseDetailView}
         sx={{ "& .MuiDrawer-paper": { width: "50%", maxWidth: "600px" } }}
       >
@@ -265,6 +358,7 @@ function FrontdeskPatientsPage() {
           <PatientDetailView
             patient={selectedPatient}
             onClose={handleCloseDetailView}
+            mode="admin"
           />
         )}
       </Drawer>
