@@ -19,11 +19,7 @@ export const createAuthenticatedAxios = async () => {
     baseURL: API_ENDPOINT,
     headers: {
       'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      // Add CORS headers to help with preflight requests
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization, X-Request-With'
+      'Content-Type': 'application/json'
     },
     // Make sure this matches your API Gateway configuration
     withCredentials: false
@@ -38,9 +34,33 @@ export const createAuthenticatedAxios = async () => {
  */
 export const apiGet = async (path, params = {}) => {
   try {
-    const api = await createAuthenticatedAxios();
-    const response = await api.get(path, { params });
-    return response.data;
+    // Try with axios first
+    try {
+      const api = await createAuthenticatedAxios();
+      const response = await api.get(path, { params });
+      return response.data;
+    } catch (axiosError) {
+      console.log(`Axios GET failed for ${path}, trying with fetch`, axiosError);
+      
+      // Fall back to fetch if axios fails
+      const token = await getAuthToken();
+      const queryString = new URLSearchParams(params).toString();
+      const url = `${API_ENDPOINT}${path}${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Fetch GET failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
+    }
   } catch (error) {
     console.error(`Error in GET ${path}:`, error);
     throw error;
@@ -55,12 +75,36 @@ export const apiGet = async (path, params = {}) => {
  */
 export const apiPost = async (path, data = {}) => {
   try {
-    const api = await createAuthenticatedAxios();
-    // DEBUG: Log the token and headers
-    const token = await getAuthToken();
-    console.log('[apiPost] Using token:', token ? token.substring(0, 30) + '...' : 'NO TOKEN');
-    const response = await api.post(path, data);
-    return response.data;
+    // Try with axios first
+    try {
+      const api = await createAuthenticatedAxios();
+      // DEBUG: Log the token and headers
+      const token = await getAuthToken();
+      console.log('[apiPost] Using token:', token ? token.substring(0, 30) + '...' : 'NO TOKEN');
+      const response = await api.post(path, data);
+      return response.data;
+    } catch (axiosError) {
+      console.log(`Axios POST failed for ${path}, trying with fetch`, axiosError);
+      
+      // Fall back to fetch if axios fails
+      const token = await getAuthToken();
+      
+      const response = await fetch(`${API_ENDPOINT}${path}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Fetch POST failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
+    }
   } catch (error) {
     console.error(`Error in POST ${path}:`, error);
     throw error;
@@ -75,45 +119,56 @@ export const apiPost = async (path, data = {}) => {
  */
 export const apiPut = async (path, data = {}) => {
   try {
-    const api = await createAuthenticatedAxios();
-    
-    // First try to send an OPTIONS request to handle CORS preflight
+    // Try with axios first
     try {
-      await axios({
-        method: 'OPTIONS',
-        url: `${API_ENDPOINT}${path}`,
-        headers: {
-          'Access-Control-Request-Method': 'PUT',
-          'Access-Control-Request-Headers': 'Authorization, Content-Type',
-          'Origin': window.location.origin
-        }
-      });
-    } catch (preflightError) {
-      console.log('Preflight request failed, continuing with main request');
-    }
-    
-    const response = await api.put(path, data);
-    return response.data;
-  } catch (error) {
-    console.error(`Error in PUT ${path}:`, error);
-    
-    // If it's a CORS error, try a workaround with POST and method override
-    if (error.message && error.message.includes('Network Error')) {
+      const api = await createAuthenticatedAxios();
+      const response = await api.put(path, data);
+      return response.data;
+    } catch (axiosError) {
+      console.log(`Axios PUT failed for ${path}, trying with fetch`, axiosError);
+      
+      // Try fetch PUT
       try {
-        console.log('Attempting PUT via POST with X-HTTP-Method-Override');
-        const api = await createAuthenticatedAxios();
-        const response = await api.post(path, data, {
+        const token = await getAuthToken();
+        const response = await fetch(`${API_ENDPOINT}${path}`, {
+          method: 'PUT',
           headers: {
-            'X-HTTP-Method-Override': 'PUT'
-          }
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(data)
         });
-        return response.data;
-      } catch (fallbackError) {
-        console.error('Fallback method also failed:', fallbackError);
-        throw fallbackError;
+        
+        if (!response.ok) {
+          throw new Error(`Fetch PUT failed with status: ${response.status}`);
+        }
+        
+        return await response.json();
+      } catch (fetchPutError) {
+        // If fetch PUT fails, try fetch POST with method override
+        console.log('Fetch PUT failed, trying POST with X-HTTP-Method-Override');
+        const token = await getAuthToken();
+        const response = await fetch(`${API_ENDPOINT}${path}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-HTTP-Method-Override': 'PUT'
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Fetch POST override failed with status: ${response.status}`);
+        }
+        
+        return await response.json();
       }
     }
-    
+  } catch (error) {
+    console.error(`Error in PUT ${path}:`, error);
     throw error;
   }
 };
@@ -125,9 +180,31 @@ export const apiPut = async (path, data = {}) => {
  */
 export const apiDelete = async (path) => {
   try {
-    const api = await createAuthenticatedAxios();
-    const response = await api.delete(path);
-    return response.data;
+    // Try with axios first
+    try {
+      const api = await createAuthenticatedAxios();
+      const response = await api.delete(path);
+      return response.data;
+    } catch (axiosError) {
+      console.log(`Axios DELETE failed for ${path}, trying with fetch`, axiosError);
+      
+      // Fall back to fetch if axios fails
+      const token = await getAuthToken();
+      
+      const response = await fetch(`${API_ENDPOINT}${path}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Fetch DELETE failed with status: ${response.status}`);
+      }
+      
+      return await response.json();
+    }
   } catch (error) {
     console.error(`Error in DELETE ${path}:`, error);
     throw error;

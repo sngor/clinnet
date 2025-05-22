@@ -97,31 +97,36 @@ export const userService = {
       // Get the current auth token
       const idToken = await getAuthToken();
       
-      // Create FormData for multipart/form-data upload
-      const formData = new FormData();
+      // Create a simple JSON payload instead of FormData
+      // This avoids CORS issues with multipart/form-data
+      let jsonPayload;
       
-      // If imageData is a base64 string, convert it to a Blob
+      // If imageData is a base64 string, use it directly
       if (typeof imageData === 'string') {
         // Check if it's already a clean base64 string or has the data URL prefix
         const base64Data = imageData.includes('base64,') ? 
           imageData.split('base64,')[1] : imageData;
           
-        // Convert base64 to binary
-        const byteCharacters = atob(base64Data);
-        const byteArrays = [];
-        
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteArrays.push(byteCharacters.charCodeAt(i));
-        }
-        
-        const byteArray = new Uint8Array(byteArrays);
-        const blob = new Blob([byteArray], { type: 'image/jpeg' });
-        
-        // Append the blob to FormData
-        formData.append('image', blob, 'profile.jpg');
+        // Use the base64 string directly in JSON
+        jsonPayload = JSON.stringify({
+          image: base64Data,
+          contentType: 'image/jpeg'
+        });
       } else {
-        // If it's already a File or Blob
-        formData.append('image', imageData);
+        // If it's a File or Blob, convert to base64 first
+        const base64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(imageData);
+        });
+        
+        const base64Data = base64.includes('base64,') ? 
+          base64.split('base64,')[1] : base64;
+          
+        jsonPayload = JSON.stringify({
+          image: base64Data,
+          contentType: imageData.type || 'image/jpeg'
+        });
       }
       
       // Call the API Gateway endpoint with proper authorization
@@ -129,9 +134,9 @@ export const userService = {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${idToken}`,
-          // Don't set Content-Type header, let the browser set it with the boundary
+          'Content-Type': 'application/json'
         },
-        body: formData
+        body: jsonPayload
       });
       if (!response.ok) {
         let errorText;

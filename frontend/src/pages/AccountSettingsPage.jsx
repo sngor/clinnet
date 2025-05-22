@@ -305,18 +305,28 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
     });
   };
   
-  // Alternative direct file upload without base64 conversion
+  // Alternative direct file upload using JSON
   const uploadFileDirectly = async (file) => {
     const idToken = await getAuthToken();
-    const formData = new FormData();
-    formData.append('image', file);
+    
+    // Convert file to base64
+    const base64 = await convertFileToBase64(file);
+    const base64Data = base64.includes('base64,') ? 
+      base64.split('base64,')[1] : base64;
+    
+    // Create JSON payload
+    const jsonPayload = JSON.stringify({
+      image: base64Data,
+      contentType: file.type || 'image/jpeg'
+    });
     
     const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${idToken}`
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
       },
-      body: formData
+      body: jsonPayload
     });
     
     if (!response.ok) {
