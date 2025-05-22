@@ -8,13 +8,8 @@ import {
   Button,
   TextField,
   InputAdornment,
-  Grid,
-  Card,
-  CardContent,
   Divider,
   Chip,
-  Tab,
-  Tabs,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -23,6 +18,7 @@ import { useAuth } from "../app/providers/AuthProvider";
 import { useAppData } from "../app/providers/DataProvider";
 import PageHeader from "../components/PageHeader";
 import PatientList from "../features/patients/components/PatientList";
+import PatientGrid from "../components/patients/PatientGrid";
 
 function PatientManagementPage() {
   const navigate = useNavigate();
@@ -30,7 +26,7 @@ function PatientManagementPage() {
   const { patients, addPatient, updatePatient, deletePatient, loading, error } =
     useAppData();
   const [searchTerm, setSearchTerm] = useState("");
-  const [tabValue, setTabValue] = useState(0);
+  // Removed tab value state as tabs are no longer needed
   const [viewMode, setViewMode] = useState("card"); // New state for view mode
 
   // Helper to normalize patient date of birth for both views
@@ -42,9 +38,13 @@ function PatientManagementPage() {
 
   // Filter patients by search term and normalize
   const filteredPatients = useMemo(() => {
+    if (!patients || !Array.isArray(patients)) return [];
+    
     const searchLower = searchTerm.toLowerCase();
     return patients.map(normalizePatient).filter((p) => {
-      const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+      if (!searchLower) return true;
+      
+      const fullName = `${p.firstName || ''} ${p.lastName || ''}`.toLowerCase();
       return (
         fullName.includes(searchLower) ||
         (p.email && p.email.toLowerCase().includes(searchLower)) ||
@@ -88,10 +88,7 @@ function PatientManagementPage() {
   };
   const handleNewPatient = () => navigate("/frontdesk/patients/new");
 
-  // Handle tab change
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
+  // Removed tab change handler as tabs are no longer needed
 
   // Action button for the header - only show for frontdesk role
   const actionButton =
@@ -148,47 +145,15 @@ function PatientManagementPage() {
         />
       </Paper>
 
-      {/* Tab navigation for doctor view */}
-      {user?.role === "doctor" && (
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          sx={{
-            mb: 3,
-            borderBottom: 1,
-            borderColor: "divider",
-            "& .MuiTab-root": {
-              fontWeight: 500,
-              fontSize: "1rem",
-              textTransform: "none",
-            },
-          }}
-        >
-          <Tab label="All Patients" />
-          <Tab label="Recent Patients" />
-          <Tab label="Upcoming Appointments" />
-        </Tabs>
-      )}
+      {/* Removed tab navigation for doctor view as requested */}
 
-      {/* Patient display area: toggle between card and list view */}
+      {/* Patient display area: organized in a grid with consistent width */}
       {viewMode === "card" ? (
-        <Grid container spacing={3}>
-          {filteredPatients.length > 0 ? (
-            filteredPatients.map((patient) => (
-              <Grid item xs={12} sm={6} md={4} key={patient.id}>
-                <Card
-                  sx={{
-                    height: "100%",
-                    transition:
-                      "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
-                      cursor: "pointer",
-                    },
-                  }}
-                  onClick={() => handleViewPatient(patient.id)}
-                >
+        <PatientGrid 
+          patients={filteredPatients}
+          onPatientSelect={handleViewPatient}
+          loading={loading}
+        />
                   <CardContent>
                     <Typography
                       variant="h6"
