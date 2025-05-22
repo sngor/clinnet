@@ -6,12 +6,9 @@ import {
   Paper,
   Container,
   Button,
-  TextField,
-  InputAdornment,
   Divider,
   Chip,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../app/providers/AuthProvider";
@@ -19,6 +16,7 @@ import { useAppData } from "../app/providers/DataProvider";
 import PageHeader from "../components/PageHeader";
 import PatientList from "../features/patients/components/PatientList";
 import PatientGrid from "../components/patients/PatientGrid";
+import PatientSearch from "../components/patients/PatientSearch";
 
 function PatientManagementPage() {
   const navigate = useNavigate();
@@ -121,29 +119,13 @@ function PatientManagementPage() {
       />
 
       {/* Search bar */}
-      <Paper
-        sx={{
-          p: { xs: 2, sm: 3 },
-          mb: 4,
-          borderRadius: 2,
-          boxShadow: 2,
-        }}
-      >
-        <TextField
-          fullWidth
-          placeholder="Search patients by name, email, or phone number"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 0 }}
-        />
-      </Paper>
+      <PatientSearch 
+        searchTerm={searchTerm}
+        onSearchChange={(e) => setSearchTerm(e.target.value)}
+        onAddNew={handleNewPatient}
+        onRefresh={() => {}}
+        loading={loading}
+      />
 
       {/* Removed tab navigation for doctor view as requested */}
 

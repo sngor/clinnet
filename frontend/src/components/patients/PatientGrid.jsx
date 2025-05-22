@@ -6,8 +6,11 @@ import PatientCard from "./PatientCard";
 function PatientGrid({ patients, onPatientSelect, loading }) {
   if (patients.length === 0 && !loading) {
     return (
-      <Paper sx={{ p: 3, textAlign: "center", mt: 2 }}>
+      <Paper sx={{ p: 3, textAlign: "center", mt: 2, borderRadius: 2 }}>
         <Typography variant="h6">No patients found</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Try adjusting your search or add a new patient
+        </Typography>
       </Paper>
     );
   }

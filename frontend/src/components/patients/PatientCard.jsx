@@ -7,6 +7,7 @@ import {
   Typography,
   Chip,
   Avatar,
+  Divider,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 
@@ -60,18 +61,31 @@ function PatientCard({ patient, onClick }) {
             variant="h6"
             component="div"
             noWrap
-            sx={{ flexGrow: 1 }}
+            sx={{ flexGrow: 1, fontWeight: 500 }}
           >
             {patient.firstName || ""} {patient.lastName || ""}
           </Typography>
         </Box>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          gutterBottom
-        >
-          Age: {calculateAge(patient.dateOfBirth || patient.dob)}
-        </Typography>
+        
+        <Box sx={{ display: "flex", gap: 1, mt: 1, mb: 2 }}>
+          <Chip
+            label={`${calculateAge(patient.dateOfBirth || patient.dob)} years`}
+            size="small"
+            color="primary"
+            variant="outlined"
+          />
+          {patient.gender && (
+            <Chip
+              label={patient.gender}
+              size="small"
+              color="secondary"
+              variant="outlined"
+            />
+          )}
+        </Box>
+        
+        <Divider sx={{ my: 1.5 }} />
+        
         <Typography
           variant="body2"
           color="text.secondary"
@@ -98,6 +112,9 @@ function PatientCard({ patient, onClick }) {
               ).toLocaleDateString()
             : "N/A"}
         </Typography>
+        
+        <Divider sx={{ my: 1.5 }} />
+        
         {patient.status && (
           <Box sx={{ mt: 1.5 }}>
             <Chip
