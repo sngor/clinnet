@@ -40,10 +40,10 @@ function AdminPatientsPage() {
   const [detailViewOpen, setDetailViewOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
 
-  // Fetch patients on mount or refresh
+  // Fetch patients on mount only
   useEffect(() => {
     if (refreshPatients) refreshPatients();
-  }, [refreshPatients]);
+  }, []); // Only run once on mount
 
   // Filter patients by search term
   useEffect(() => {
