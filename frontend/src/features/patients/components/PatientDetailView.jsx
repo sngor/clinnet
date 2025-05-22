@@ -40,7 +40,7 @@ function TabPanel(props) {
   );
 }
 
-function PatientDetailView({ patient, onClose }) {
+function PatientDetailView({ patient, onClose, mode = "admin" }) {
   // Safety check for null/undefined patient
   if (!patient) {
     return (
@@ -102,6 +102,7 @@ function PatientDetailView({ patient, onClose }) {
               justifyContent: { xs: "flex-start", sm: "flex-end" },
             }}
           >
+            {(mode === "admin" || mode === "frontdesk") && (
             <Button
               variant="contained"
               startIcon={<PaymentIcon />}
@@ -110,6 +111,7 @@ function PatientDetailView({ patient, onClose }) {
             >
               Checkout
             </Button>
+          )}
             <Button
               variant="outlined"
               startIcon={<CloseIcon />}
@@ -131,7 +133,9 @@ function PatientDetailView({ patient, onClose }) {
         >
           <Tab icon={<PersonIcon />} label="Information" />
           <Tab icon={<EventNoteIcon />} label="Appointments" />
-          <Tab icon={<ReceiptIcon />} label="Billing" />
+          {(mode === "admin" || mode === "frontdesk") && (
+            <Tab icon={<ReceiptIcon />} label="Billing" />
+          )}
         </Tabs>
 
         {/* Patient Information Tab */}
@@ -279,29 +283,33 @@ function PatientDetailView({ patient, onClose }) {
         </TabPanel>
 
         {/* Billing Tab */}
-        <TabPanel value={tabValue} index={2}>
-          <BillingHistory patient={patient} />
-        </TabPanel>
+        {(mode === "admin" || mode === "frontdesk") && (
+          <TabPanel value={tabValue} index={2}>
+            <BillingHistory patient={patient} />
+          </TabPanel>
+        )}
       </Paper>
 
-      {/* Checkout Dialog */}
-      <Dialog
-        open={checkoutDialogOpen}
-        onClose={handleCloseCheckout}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>Patient Checkout</DialogTitle>
-        <DialogContent dividers>
-          <PatientCheckout
-            patient={patient}
-            onCheckoutComplete={handleCheckoutComplete}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseCheckout}>Close</Button>
-        </DialogActions>
-      </Dialog>
+      {/* Checkout Dialog - only for admin and frontdesk */}
+      {(mode === "admin" || mode === "frontdesk") && (
+        <Dialog
+          open={checkoutDialogOpen}
+          onClose={handleCloseCheckout}
+          fullWidth
+          maxWidth="md"
+        >
+          <DialogTitle>Patient Checkout</DialogTitle>
+          <DialogContent dividers>
+            <PatientCheckout
+              patient={patient}
+              onCheckoutComplete={handleCheckoutComplete}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseCheckout}>Close</Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Box>
   );
 }

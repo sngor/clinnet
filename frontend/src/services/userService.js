@@ -96,22 +96,64 @@ export const userService = {
       console.log('Uploading profile image');
       // Get the current auth token
       const idToken = await getAuthToken();
+      
+      // Create FormData for multipart/form-data upload
+      const formData = new FormData();
+      
+      // If imageData is a base64 string, convert it to a Blob
+      if (typeof imageData === 'string') {
+        // Check if it's already a clean base64 string or has the data URL prefix
+        const base64Data = imageData.includes('base64,') ? 
+          imageData.split('base64,')[1] : imageData;
+          
+        // Convert base64 to binary
+        const byteCharacters = atob(base64Data);
+        const byteArrays = [];
+        
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteArrays.push(byteCharacters.charCodeAt(i));
+        }
+        
+        const byteArray = new Uint8Array(byteArrays);
+        const blob = new Blob([byteArray], { type: 'image/jpeg' });
+        
+        // Append the blob to FormData
+        formData.append('image', blob, 'profile.jpg');
+      } else {
+        // If it's already a File or Blob
+        formData.append('image', imageData);
+      }
+      
       // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'application/json'
+          // Don't set Content-Type header, let the browser set it with the boundary
         },
-        body: JSON.stringify({
-          image: imageData
-        })
+        body: formData
       });
       if (!response.ok) {
-        const errorText = await response.text();
+        let errorText;
+        try {
+          errorText = await response.text();
+        } catch (e) {
+          errorText = `HTTP status ${response.status}`;
+        }
         throw new Error(`Failed to upload profile image: ${errorText}`);
       }
-      const result = await response.json();
+      
+      let result;
+      try {
+        result = await response.json();
+      } catch (e) {
+        // If the response is not valid JSON, create a default success response
+        console.warn('Response is not valid JSON, creating default success response');
+        result = { 
+          success: true,
+          imageUrl: `${import.meta.env.VITE_API_ENDPOINT}/users/profile-image?t=${Date.now()}`
+        };
+      }
       console.log('Profile image uploaded successfully:', result);
       
       // Store in local storage for immediate access

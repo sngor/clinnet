@@ -26,19 +26,10 @@ import {
   PageHeading,
   PrimaryButton,
   ContentCard,
-} from "../../components/ui";
-import { useAppData } from "../../hooks/useAppData";
-import PatientDetailView from "../../features/patients/components/PatientDetailView";
+} from "../components/ui";
+import { useAppData } from "../app/providers/DataProvider";
+import PatientDetailView from "../components/patients/PatientDetailView";
 import DebugPanel from "../components/DebugPanel";
-import TableContainer from "../../components/TableContainer";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer as MuiTableContainer,
-  TableHead,
-  TableRow,
-} from "@mui/material";
 
 function FrontdeskPatientsPage() {
   const navigate = useNavigate();
@@ -49,10 +40,10 @@ function FrontdeskPatientsPage() {
   const [detailViewOpen, setDetailViewOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
 
-  // Fetch patients on mount or refresh
+  // Fetch patients on mount only
   useEffect(() => {
     if (refreshPatients) refreshPatients();
-  }, [refreshPatients]);
+  }, []); // Only run once on mount
 
   // Filter patients by search term
   useEffect(() => {
@@ -135,39 +126,18 @@ function FrontdeskPatientsPage() {
     }
   };
 
-  // Table columns
-  const columns = [
-    {
-      label: "Name",
-      render: (p) => `${p.firstName || ""} ${p.lastName || ""}`,
-    },
-    { label: "ID", render: (p) => p.id },
-    { label: "Email", render: (p) => p.email || "N/A" },
-    { label: "Phone", render: (p) => p.phone || "N/A" },
-    {
-      label: "DOB",
-      render: (p) =>
-        p.dateOfBirth || p.dob
-          ? new Date(p.dateOfBirth || p.dob).toLocaleDateString()
-          : "N/A",
-    },
-    {
-      label: "Status",
-      render: (p) => (
-        <Chip
-          label={
-            p.status
-              ? p.status.charAt(0).toUpperCase() + p.status.slice(1)
-              : "Active"
-          }
-          size="small"
-          color={
-            String(p.status).toLowerCase() === "active" ? "success" : "default"
-          }
-        />
-      ),
-    },
-  ];
+  // Toggle debug panel with keyboard shortcut (Ctrl+Shift+D)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === "D") {
+        e.preventDefault();
+        setShowDebug((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // UI rendering (card layout for consistency)
   if (loading) {
@@ -358,7 +328,7 @@ function FrontdeskPatientsPage() {
           <PatientDetailView
             patient={selectedPatient}
             onClose={handleCloseDetailView}
-            mode="admin"
+            mode="frontdesk"
           />
         )}
       </Drawer>

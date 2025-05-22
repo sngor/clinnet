@@ -13,58 +13,65 @@ import {
   Alert,
   Button,
   Paper,
+  Drawer,
+  IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonIcon from "@mui/icons-material/Person";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import AddIcon from "@mui/icons-material/Add";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "../app/providers/DataProvider";
-import { PageContainer } from "../components/ui";
+import {
+  PageContainer,
+  PageHeading,
+  PrimaryButton,
+  ContentCard,
+} from "../components/ui";
+import PatientDetailView from "../components/patients/PatientDetailView";
+import DebugPanel from "../components/DebugPanel";
 
 function DoctorPatientsPage() {
   const navigate = useNavigate();
   const { patients, loading, error, refreshPatients } = useAppData();
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [detailViewOpen, setDetailViewOpen] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
-  // Fetch patients on component mount
+  // Fetch patients on mount only
   useEffect(() => {
-    refreshPatients();
-  }, [refreshPatients]);
+    if (refreshPatients) refreshPatients();
+  }, []); // Only run once on mount
 
-  // Filter patients when search term or patients list changes
+  // Filter patients by search term
   useEffect(() => {
-    if (!patients) {
-      setFilteredPatients([]);
-      return;
-    }
-    if (searchTerm.trim() === "") {
-      setFilteredPatients(patients);
-    } else {
-      const lowercasedSearch = searchTerm.toLowerCase();
-      const filtered = patients.filter(
-        (patient) =>
-          (patient.firstName &&
-            patient.firstName.toLowerCase().includes(lowercasedSearch)) ||
-          (patient.lastName &&
-            patient.lastName.toLowerCase().includes(lowercasedSearch)) ||
-          (patient.phone && patient.phone.includes(searchTerm)) ||
-          (patient.contactNumber &&
-            patient.contactNumber.includes(searchTerm)) ||
-          (patient.email &&
-            patient.email.toLowerCase().includes(lowercasedSearch))
+    if (Array.isArray(patients)) {
+      const lower = searchTerm.trim().toLowerCase();
+      if (!lower) {
+        setFilteredPatients(patients);
+        return;
+      }
+      setFilteredPatients(
+        patients.filter(
+          (p) =>
+            (p.firstName && p.firstName.toLowerCase().includes(lower)) ||
+            (p.lastName && p.lastName.toLowerCase().includes(lower)) ||
+            (p.email && p.email.toLowerCase().includes(lower)) ||
+            (p.phone && p.phone.includes(lower)) ||
+            (p.id && p.id.toLowerCase().includes(lower)) ||
+            (p.PK && p.PK.toLowerCase().includes(lower))
+        )
       );
-      setFilteredPatients(filtered);
+    } else {
+      setFilteredPatients([]);
     }
   }, [searchTerm, patients]);
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Handle patient card click
-  const handlePatientClick = (patient) => {
+  // Handlers
+  const handleSearchChange = (e) => setSearchTerm(e.target.value);
+  const handlePatientSelect = (patient) => {
     // Navigate to patient detail page for editing
     if (window.location.pathname.startsWith("/doctor")) {
       navigate(`/doctor/patients/${patient.id || patient.PK}`);
@@ -74,6 +81,8 @@ function DoctorPatientsPage() {
       navigate(`/admin/patients/${patient.id || patient.PK}`);
     }
   };
+  const handleCloseDetailView = () => setDetailViewOpen(false);
+  const handleAddNewPatient = () => navigate("/doctor/patients/new");
 
   // Helper to calculate age from date of birth
   const calculateAge = (dateOfBirth) => {
@@ -92,6 +101,19 @@ function DoctorPatientsPage() {
       return "N/A";
     }
   };
+  
+  // Toggle debug panel with keyboard shortcut (Ctrl+Shift+D)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === "D") {
+        e.preventDefault();
+        setShowDebug((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // UI rendering (card layout for consistency)
   if (loading) {
@@ -116,11 +138,13 @@ function DoctorPatientsPage() {
           severity="error"
           sx={{ mb: 2 }}
           action={
-            refreshPatients ? (
-              <Button color="inherit" onClick={() => refreshPatients()}>
-                Retry
-              </Button>
-            ) : null
+            <Button
+              color="inherit"
+              onClick={() => refreshPatients()}
+              variant="outlined"
+            >
+              Retry
+            </Button>
           }
         >
           Error fetching patients:{" "}
@@ -134,6 +158,11 @@ function DoctorPatientsPage() {
 
   return (
     <PageContainer>
+      {showDebug && <DebugPanel data={filteredPatients} />}
+      <PageHeading
+        title="My Patients"
+        subtitle="View and manage your patient records"
+      />
       <Box
         sx={{
           display: "flex",
@@ -142,25 +171,13 @@ function DoctorPatientsPage() {
           mb: 3,
         }}
       >
-        <Typography variant="h5" component="h1">
-          My Patients
-        </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={refreshPatients}
-          disabled={loading}
-        >
-          Refresh
-        </Button>
-      </Box>
-      <Box sx={{ mb: 3 }}>
         <TextField
-          fullWidth
           variant="outlined"
-          placeholder="Search patients by name, email, or phone"
+          label="Search Patients"
+          placeholder="Search by name, email, or phone..."
           value={searchTerm}
           onChange={handleSearchChange}
+          sx={{ width: "40%" }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -169,6 +186,17 @@ function DoctorPatientsPage() {
             ),
           }}
         />
+        <PrimaryButton startIcon={<AddIcon />} onClick={handleAddNewPatient}>
+          Add New Patient
+        </PrimaryButton>
+        <IconButton
+          onClick={refreshPatients}
+          disabled={loading}
+          aria-label="Refresh"
+          sx={{ ml: 2 }}
+        >
+          <RefreshIcon />
+        </IconButton>
       </Box>
       {filteredPatients.length === 0 && !loading ? (
         <Paper sx={{ p: 3, textAlign: "center", mt: 2 }}>
@@ -190,10 +218,16 @@ function DoctorPatientsPage() {
                   display: "flex",
                   flexDirection: "column",
                 }}
-                onClick={() => handlePatientClick(patient)}
+                onClick={() => handlePatientSelect(patient)}
               >
                 <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 1.5,
+                    }}
+                  >
                     <PersonIcon sx={{ mr: 1.5, color: "primary.main" }} />
                     <Typography
                       variant="h6"
@@ -259,6 +293,21 @@ function DoctorPatientsPage() {
           ))}
         </Grid>
       )}
+      {/* Patient Detail View Drawer */}
+      <Drawer
+        anchor="right"
+        open={!!selectedPatient}
+        onClose={handleCloseDetailView}
+        sx={{ "& .MuiDrawer-paper": { width: "50%", maxWidth: "600px" } }}
+      >
+        {selectedPatient && (
+          <PatientDetailView
+            patient={selectedPatient}
+            onClose={handleCloseDetailView}
+            mode="doctor"
+          />
+        )}
+      </Drawer>
     </PageContainer>
   );
 }

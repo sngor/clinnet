@@ -22,6 +22,7 @@ import {
   Email as EmailIcon,
 } from "@mui/icons-material";
 import { useAppData } from "../../app/providers/DataProvider";
+import patientService from "../../services/patients";
 
 // Import tab components
 import PersonalInfoTab from "./PersonalInfoTab";
@@ -29,7 +30,7 @@ import MedicalInfoTab from "./MedicalInfoTab";
 import AppointmentsTab from "./AppointmentsTab";
 import MedicalRecordsTab from "./MedicalRecordsTab";
 
-function PatientDetailView({ patient, onClose }) {
+function PatientDetailView({ patient, onClose, mode = "doctor" }) {
   const { updatePatient, refreshPatients } = useAppData();
 
   // Safety check for null/undefined patient
@@ -81,17 +82,9 @@ function PatientDetailView({ patient, onClose }) {
 
       // Format data for API following DynamoDB structure
       const patientData = {
-        PK: patient.PK || `PAT#${patient.id}`,
-        SK: patient.SK || "PROFILE#1",
-        id: patient.id,
-        GSI1PK: patient.GSI1PK || `CLINIC#${editedPatient.clinic || "DEFAULT"}`,
-        GSI1SK: patient.GSI1SK || `PAT#${patient.id}`,
-        GSI2PK: patient.GSI2PK || `PAT#${patient.id}`,
-        GSI2SK: patient.GSI2SK || "PROFILE#1",
-        type: "PATIENT",
         firstName: editedPatient.firstName,
         lastName: editedPatient.lastName,
-        dob: editedPatient.dateOfBirth || editedPatient.dob,
+        dateOfBirth: editedPatient.dateOfBirth || editedPatient.dob,
         phone: editedPatient.phone,
         email: editedPatient.email,
         address: editedPatient.address,
@@ -101,20 +94,64 @@ function PatientDetailView({ patient, onClose }) {
         updatedAt: new Date().toISOString(),
       };
 
-      await updatePatient(patient.id, patientData);
+      // Only include DynamoDB-specific fields if they exist in the original patient
+      if (patient.PK) patientData.PK = patient.PK;
+      if (patient.SK) patientData.SK = patient.SK;
+      if (patient.GSI1PK) patientData.GSI1PK = patient.GSI1PK;
+      if (patient.GSI1SK) patientData.GSI1SK = patient.GSI1SK;
+      if (patient.GSI2PK) patientData.GSI2PK = patient.GSI2PK;
+      if (patient.GSI2SK) patientData.GSI2SK = patient.GSI2SK;
+      patientData.id = patient.id;
+      patientData.type = "PATIENT";
 
-      // Update local state
-      setIsEditing(false);
-
-      // Refresh patients list
-      refreshPatients();
-
-      // Close the dialog
-      if (onClose) {
-        onClose();
+      console.log("Updating patient with data:", patientData);
+      
+      try {
+        await updatePatient(patient.id, patientData);
+        
+        // Update local state
+        setIsEditing(false);
+        
+        // Refresh patients list
+        if (refreshPatients) {
+          refreshPatients();
+        }
+        
+        // Close the dialog if needed
+        if (onClose) {
+          onClose();
+        }
+      } catch (updateError) {
+        console.error("Error during updatePatient:", updateError);
+        
+        // Fallback: Try to update using a direct API call if the service method fails
+        try {
+          const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
+          const response = await fetch(`${API_ENDPOINT}/patients/${patient.id}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-HTTP-Method-Override': 'PUT'
+            },
+            body: JSON.stringify(patientData)
+          });
+          
+          if (response.ok) {
+            console.log("Patient updated successfully via fallback method");
+            setIsEditing(false);
+            if (refreshPatients) refreshPatients();
+            if (onClose) onClose();
+          } else {
+            throw new Error(`API responded with status: ${response.status}`);
+          }
+        } catch (fallbackError) {
+          console.error("Fallback update method also failed:", fallbackError);
+          alert("Could not update patient information. Please try again later.");
+        }
       }
     } catch (error) {
       console.error("Error updating patient:", error);
+      alert("An error occurred while saving patient information.");
     }
   };
 
@@ -326,7 +363,9 @@ function PatientDetailView({ patient, onClose }) {
           <Tab label="Personal Info" />
           <Tab label="Medical Info" />
           <Tab label="Appointments" />
-          <Tab label="Medical Records" />
+          {(mode === "doctor" || mode === "admin") && (
+            <Tab label="Medical Records" />
+          )}
         </Tabs>
       </Box>
 
@@ -344,7 +383,9 @@ function PatientDetailView({ patient, onClose }) {
           <MedicalInfoTab patient={patient} isEditing={isEditing} />
         )}
         {tabValue === 2 && <AppointmentsTab patientId={patient.id} />}
-        {tabValue === 3 && <MedicalRecordsTab patientId={patient.id} />}
+        {tabValue === 3 && (mode === "doctor" || mode === "admin") && (
+          <MedicalRecordsTab patientId={patient.id} />
+        )}
       </Box>
     </Box>
   );

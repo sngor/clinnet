@@ -5,23 +5,14 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Box,
   useMediaQuery,
   useTheme,
   Typography,
-  FormHelperText,
   Grid,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  FormLabel,
 } from "@mui/material";
+import { FormField, FormLayout } from "../../../components/ui";
 
 const roles = ["admin", "doctor", "frontdesk"]; // Define available roles
 const genders = ["Male", "Female", "Other"]; // Define available genders
@@ -154,62 +145,58 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <TextField
+              <FormField
+                type="text"
                 name="username"
                 label="Username"
-                type="text"
-                fullWidth
-                variant="outlined"
                 value={formData.username}
                 onChange={handleChange}
                 error={!!errors.username}
                 helperText={errors.username}
                 size={isMobile ? "small" : "medium"}
+                required
               />
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <TextField
+              <FormField
+                type="password"
                 name="password"
                 label={isEditing ? "New Password (optional)" : "Password"}
-                type="password"
-                fullWidth
-                variant="outlined"
                 value={formData.password}
                 onChange={handleChange}
                 error={!!errors.password}
                 helperText={errors.password}
                 size={isMobile ? "small" : "medium"}
+                required={!isEditing}
               />
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <TextField
+              <FormField
+                type="text"
                 name="firstName"
                 label="First Name"
-                type="text"
-                fullWidth
-                variant="outlined"
                 value={formData.firstName}
                 onChange={handleChange}
                 error={!!errors.firstName}
                 helperText={errors.firstName}
                 size={isMobile ? "small" : "medium"}
+                required
               />
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <TextField
+              <FormField
+                type="text"
                 name="lastName"
                 label="Last Name"
-                type="text"
-                fullWidth
-                variant="outlined"
                 value={formData.lastName}
                 onChange={handleChange}
                 error={!!errors.lastName}
                 helperText={errors.lastName}
                 size={isMobile ? "small" : "medium"}
+                required
               />
             </Grid>
             
@@ -221,32 +208,30 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <TextField
+              <FormField
+                type="email"
                 name="email"
                 label="Email"
-                type="email"
-                fullWidth
-                variant="outlined"
                 value={formData.email}
                 onChange={handleChange}
                 error={!!errors.email}
                 helperText={errors.email}
                 size={isMobile ? "small" : "medium"}
+                required
               />
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <TextField
+              <FormField
+                type="tel"
                 name="phone"
                 label="Phone Number"
-                type="tel"
-                fullWidth
-                variant="outlined"
                 value={formData.phone}
                 onChange={handleChange}
                 error={!!errors.phone}
                 helperText={errors.phone}
                 size={isMobile ? "small" : "medium"}
+                required
               />
             </Grid>
             
@@ -258,55 +243,36 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <FormControl 
-                fullWidth 
+              <FormField
+                type="select"
+                name="gender"
+                label="Gender"
+                value={formData.gender}
+                onChange={handleChange}
                 error={!!errors.gender}
+                helperText={errors.gender}
+                options={genders.map(gender => ({ value: gender, label: gender }))}
                 size={isMobile ? "small" : "medium"}
-              >
-                <InputLabel id="gender-select-label">Gender</InputLabel>
-                <Select
-                  labelId="gender-select-label"
-                  name="gender"
-                  value={formData.gender}
-                  label="Gender"
-                  onChange={handleChange}
-                >
-                  {genders.map((gender) => (
-                    <MenuItem key={gender} value={gender}>
-                      {gender}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.gender && (
-                  <FormHelperText>{errors.gender}</FormHelperText>
-                )}
-              </FormControl>
+                required
+              />
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <FormControl 
-                fullWidth 
+              <FormField
+                type="select"
+                name="role"
+                label="Role"
+                value={formData.role}
+                onChange={handleChange}
                 error={!!errors.role}
+                helperText={errors.role}
+                options={roles.map(role => ({ 
+                  value: role, 
+                  label: role.charAt(0).toUpperCase() + role.slice(1)
+                }))}
                 size={isMobile ? "small" : "medium"}
-              >
-                <InputLabel id="role-select-label">Role</InputLabel>
-                <Select
-                  labelId="role-select-label"
-                  name="role"
-                  value={formData.role}
-                  label="Role"
-                  onChange={handleChange}
-                >
-                  {roles.map((role) => (
-                    <MenuItem key={role} value={role}>
-                      {role.charAt(0).toUpperCase() + role.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {errors.role && (
-                  <FormHelperText>{errors.role}</FormHelperText>
-                )}
-              </FormControl>
+                required
+              />
             </Grid>
           </Grid>
         </DialogContent>

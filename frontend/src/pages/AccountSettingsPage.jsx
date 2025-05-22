@@ -22,6 +22,8 @@ import {
 } from "@mui/material";
 import { useAuth } from "../app/providers/AuthProvider";
 import userService from "../services/userService";
+import { getAuthToken } from "../utils/cognito-helpers";
+import { FormField, FormLayout } from "../components/ui";
 import PersonIcon from "@mui/icons-material/Person";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import LockIcon from "@mui/icons-material/Lock";
@@ -238,11 +240,25 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
     setImageLoading(true);
 
     try {
-      // Convert file to base64
-      const base64 = await convertFileToBase64(file);
-      // Upload image
-      const result = await userService.uploadProfileImage(base64);
-      if (result.success) {
+      // Try direct file upload first (more reliable)
+      let result;
+      try {
+        result = await uploadFileDirectly(file);
+      } catch (directUploadError) {
+        console.log('Direct upload failed, falling back to base64 method', directUploadError);
+        
+        // Fallback to base64 method
+        const base64 = await convertFileToBase64(file);
+        
+        // Remove the data:image/jpeg;base64, prefix if present
+        const imageData = base64.includes('base64,') ? 
+          base64.split('base64,')[1] : base64;
+        
+        // Upload image with proper formatting
+        result = await userService.uploadProfileImage(imageData);
+      }
+      
+      if (result && (result.success || result.imageUrl)) {
         setProfileImage(result.imageUrl);
         // Also update in auth context
         updateProfileImage(result.imageUrl);
@@ -287,6 +303,34 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
       reader.onload = () => resolve(reader.result);
       reader.onerror = (error) => reject(error);
     });
+  };
+  
+  // Alternative direct file upload without base64 conversion
+  const uploadFileDirectly = async (file) => {
+    const idToken = await getAuthToken();
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${idToken}`
+      },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Upload failed with status: ${response.status}`);
+    }
+    
+    try {
+      return await response.json();
+    } catch (e) {
+      return { 
+        success: true,
+        imageUrl: `${import.meta.env.VITE_API_ENDPOINT}/users/profile-image?t=${Date.now()}`
+      };
+    }
   };
 
   if (!user) {
@@ -426,50 +470,45 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
                 />
               </Box>
 
-              <Grid container spacing={2} sx={{ flexGrow: 1 }}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    name="firstName"
-                    label="First Name"
-                    fullWidth
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    variant="outlined"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    name="lastName"
-                    label="Last Name"
-                    fullWidth
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    variant="outlined"
-                  />
-                </Grid>
+              <FormLayout spacing={2} withPaper={false} sx={{ flexGrow: 1 }}>
+                <FormField
+                  type="text"
+                  name="firstName"
+                  label="First Name"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                />
+                
+                <FormField
+                  type="text"
+                  name="lastName"
+                  label="Last Name"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                />
+                
                 <Grid item xs={12}>
-                  <TextField
+                  <FormField
+                    type="email"
                     name="email"
                     label="Email Address"
-                    fullWidth
                     value={formData.email}
                     onChange={handleChange}
-                    variant="outlined"
-                    type="email"
                     disabled
                     helperText="Email cannot be changed as it's used for authentication"
                   />
                 </Grid>
+                
                 <Grid item xs={12}>
-                  <TextField
+                  <FormField
+                    type="tel"
                     name="phone"
                     label="Phone Number"
-                    fullWidth
                     value={formData.phone}
                     onChange={handleChange}
-                    variant="outlined"
                   />
                 </Grid>
+              </FormLayout>
                 <Grid item xs={12}>
                   <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                     <Button
@@ -524,28 +563,24 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
           )}
 
           <Box component="form" onSubmit={handlePasswordChange} noValidate>
-            <Grid container spacing={2}>
+            <FormLayout spacing={2} withPaper={false}>
               <Grid item xs={12} md={4}>
-                <TextField
-                  name="currentPassword"
+                <FormField
                   type="password"
-                  fullWidth
+                  name="currentPassword"
                   label="Current Password"
                   value={formData.currentPassword}
                   onChange={handleChange}
-                  variant="outlined"
                   required
                 />
               </Grid>
               <Grid item xs={12} md={4}>
-                <TextField
-                  name="newPassword"
+                <FormField
                   type="password"
-                  fullWidth
+                  name="newPassword"
                   label="New Password"
                   value={formData.newPassword}
                   onChange={handleChange}
-                  variant="outlined"
                   required
                 />
                 <PasswordStrengthMeter password={formData.newPassword} />
@@ -555,14 +590,12 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
                 </FormHelperText>
               </Grid>
               <Grid item xs={12} md={4}>
-                <TextField
-                  name="confirmPassword"
+                <FormField
                   type="password"
-                  fullWidth
+                  name="confirmPassword"
                   label="Confirm New Password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  variant="outlined"
                   required
                   error={
                     formData.newPassword !== formData.confirmPassword &&

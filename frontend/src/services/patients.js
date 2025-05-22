@@ -60,7 +60,24 @@ export async function updatePatient(id, patientData) {
     createdAt: patientData.createdAt,
     updatedAt: new Date().toISOString()
   };
-  return await apiPut(`/patients/${id}`, transformed);
+  
+  try {
+    return await apiPut(`/patients/${id}`, transformed);
+  } catch (error) {
+    console.error('Error in updatePatient service:', error);
+    
+    // Try alternative approach with POST and method override
+    if (error.message && error.message.includes('Network Error')) {
+      console.log('Attempting alternative update method');
+      const result = await apiPost(`/patients/${id}`, {
+        ...transformed,
+        _method: 'PUT' // Signal to the backend this should be treated as PUT
+      });
+      return result;
+    }
+    
+    throw error;
+  }
 }
 
 // Delete a patient
