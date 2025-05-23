@@ -9,7 +9,11 @@ from botocore.exceptions import ClientError
 # Import utility functions
 from utils.db_utils import query_table, generate_response
 from utils.responser_helper import handle_exception
+
+from response_utils import add_cors_headers # New import from Lambda layer
+
 from utils.response_utils import add_cors_headers
+
 # from utils.cors import build_cors_preflight_response # This will be removed
 
 def lambda_handler(event, context):
@@ -31,7 +35,14 @@ def lambda_handler(event, context):
     table_name = os.environ.get('SERVICES_TABLE')
     if not table_name:
         logger.error('Services table name not configured')
+
+        # Apply add_cors_headers to error responses
         response = generate_response(500, {'message': 'Services table name not configured'})
+        if 'headers' not in response or response['headers'] is None:
+            response['headers'] = {}
+
+        response = generate_response(500, {'message': 'Services table name not configured'})
+
         response['headers'] = add_cors_headers(event, response.get('headers', {}))
         return response
     
@@ -72,13 +83,24 @@ def lambda_handler(event, context):
         response = generate_response(200, services)
         
         # Add CORS headers to response
+
+        if 'headers' not in response or response['headers'] is None:
+            response['headers'] = {}
+
+
         response['headers'] = add_cors_headers(event, response.get('headers', {}))
         return response
     
     except ClientError as e:
-        logger.error(f"ClientError: {e}", exc_info=True)
+
+        # Apply add_cors_headers to error responses from handle_exception
+        response = handle_exception(e) 
+        if 'headers' not in response or response['headers'] is None:
+            response['headers'] = {}
+
         # Assuming handle_exception returns a response dictionary
         response = handle_exception(e) 
+
         response['headers'] = add_cors_headers(event, response.get('headers', {}))
         return response
     except Exception as e:
@@ -89,5 +111,10 @@ def lambda_handler(event, context):
             'error': str(e)
         })
         # Add CORS headers even to error responses
+
+        if 'headers' not in error_response or error_response['headers'] is None:
+            error_response['headers'] = {}
+
+
         error_response['headers'] = add_cors_headers(event, error_response.get('headers', {}))
         return error_response
