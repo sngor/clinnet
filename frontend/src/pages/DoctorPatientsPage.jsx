@@ -1,13 +1,9 @@
 // src/pages/DoctorPatientsPage.jsx
 import React, { useState, useEffect } from "react";
-import {
-  Drawer,
-} from "@mui/material";
+import { Drawer } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "../app/providers/DataProvider";
-import {
-  PageLayout,
-} from "../components/ui";
+import { PageLayout } from "../components/ui";
 import PatientDetailView from "../components/patients/PatientDetailView";
 import PatientGrid from "../components/patients/PatientGrid";
 import PatientSearch from "../components/patients/PatientSearch";
@@ -67,7 +63,7 @@ function DoctorPatientsPage() {
   const handleAddNewPatient = () => navigate("/doctor/patients/new");
 
   // Helper function moved to PatientCard component
-  
+
   // Toggle debug panel with keyboard shortcut (Ctrl+Shift+D)
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -91,14 +87,14 @@ function DoctorPatientsPage() {
       showDebug={showDebug}
       debugPanel={<DebugPanel data={filteredPatients} />}
     >
-      <PatientSearch 
+      <PatientSearch
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
         onAddNew={null}
         onRefresh={refreshPatients}
         loading={loading}
       />
-      <PatientGrid 
+      <PatientGrid
         patients={filteredPatients}
         onPatientSelect={handlePatientSelect}
         loading={loading}
@@ -118,7 +114,7 @@ function DoctorPatientsPage() {
           />
         )}
       </Drawer>
-    </PageContainer>
+    </PageLayout>
   );
 }
 

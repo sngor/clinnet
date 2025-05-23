@@ -1,14 +1,9 @@
 // src/pages/FrontdeskPatientsPage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Button,
-  Drawer,
-} from "@mui/material";
+import { Button, Drawer } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import {
-  PageLayout,
-} from "../components/ui";
+import { PageLayout } from "../components/ui";
 import { useAppData } from "../app/providers/DataProvider";
 import PatientDetailView from "../components/patients/PatientDetailView";
 import PatientGrid from "../components/patients/PatientGrid";
@@ -114,14 +109,14 @@ function FrontdeskPatientsPage() {
         </Button>
       }
     >
-      <PatientSearch 
+      <PatientSearch
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
         onAddNew={null}
         onRefresh={refreshPatients}
         loading={loading}
       />
-      <PatientGrid 
+      <PatientGrid
         patients={filteredPatients}
         onPatientSelect={handlePatientSelect}
         loading={loading}
@@ -141,7 +136,7 @@ function FrontdeskPatientsPage() {
           />
         )}
       </Drawer>
-    </PageContainer>
+    </PageLayout>
   );
 }
 
