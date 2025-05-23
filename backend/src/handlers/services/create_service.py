@@ -10,7 +10,6 @@ from botocore.exceptions import ClientError
 # Import utility functions
 from utils.db_utils import create_item, generate_response
 from utils.responser_helper import handle_exception
-from utils.response_utils import add_cors_headers
 
 def lambda_handler(event, context):
     """
@@ -27,9 +26,7 @@ def lambda_handler(event, context):
     
     table_name = os.environ.get('SERVICES_TABLE')
     if not table_name:
-        response = generate_response(500, {'message': 'Services table name not configured'})
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return generate_response(500, {'message': 'Services table name not configured'})
     
     try:
         # Parse request body (handle base64 encoding from API Gateway)
@@ -43,9 +40,7 @@ def lambda_handler(event, context):
         required_fields = ['name', 'description', 'price', 'duration']
         for field in required_fields:
             if field not in body:
-                response = generate_response(400, {'message': f'Missing required field: {field}'})
-                response['headers'] = add_cors_headers(event, response.get('headers', {}))
-                return response
+                return generate_response(400, {'message': f'Missing required field: {field}'})
         
         # Create service record
         service_id = str(uuid.uuid4())
@@ -67,19 +62,13 @@ def lambda_handler(event, context):
         create_item(table_name, service_item)
         
         # Return the created service
-        response = generate_response(201, service_item)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return generate_response(201, service_item)
     
     except ClientError as e:
-        response = handle_exception(e)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return handle_exception(e)
     except Exception as e:
         print(f"Error creating service: {e}")
-        response = generate_response(500, {
+        return generate_response(500, {
             'message': 'Error creating service',
             'error': str(e)
         })
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response

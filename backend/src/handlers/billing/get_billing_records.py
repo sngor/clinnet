@@ -8,7 +8,6 @@ from botocore.exceptions import ClientError
 # Import utility functions
 from utils.db_utils import query_table, generate_response
 from utils.responser_helper import handle_exception
-from utils.response_utils import add_cors_headers
 
 def lambda_handler(event, context):
     """
@@ -25,9 +24,7 @@ def lambda_handler(event, context):
     
     table_name = os.environ.get('BILLING_TABLE')
     if not table_name:
-        response = generate_response(500, {'message': 'Billing table name not configured'})
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return generate_response(500, {'message': 'Billing table name not configured'})
     
     try:
         # Get query parameters
@@ -61,19 +58,13 @@ def lambda_handler(event, context):
         # Query billing records
         billing_records = query_table(table_name, **kwargs)
         
-        response = generate_response(200, billing_records)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return generate_response(200, billing_records)
     
     except ClientError as e:
-        response = handle_exception(e)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return handle_exception(e)
     except Exception as e:
         print(f"Error fetching billing records: {e}")
-        response = generate_response(500, {
+        return generate_response(500, {
             'message': 'Error fetching billing records',
             'error': str(e)
         })
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
