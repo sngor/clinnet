@@ -9,7 +9,12 @@ import boto3
 import logging
 from botocore.exceptions import ClientError
 
-from utils.response_utils import add_cors_headers
+# Attempt to import add_cors_headers from utils.cors, fallback to lambda_layer.python.utils.cors for local testing
+try:
+    from utils.cors import add_cors_headers
+except ImportError:
+    # For local testing if Lambda layer is not in path
+    from lambda_layer.python.utils.cors import add_cors_headers
 
 # Setup logging
 logger = logging.getLogger()
@@ -36,8 +41,9 @@ def build_error_response(status_code, error_type, message, exception=None):
     response = {
         'statusCode': status_code,
         'headers': {
-            # CORS headers will be added by add_cors_headers in lambda_handler
-            'Content-Type': 'application/json' # Assuming this is desired for errors too
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
         },
         'body': json.dumps(body)
     }
@@ -82,27 +88,24 @@ def lambda_handler(event, context):
     """
     logger.info(f"Received event: {json.dumps(event)}")
     
-    # OPTIONS preflight requests are handled by cors_options.py and APIGW
     # --- Handle CORS preflight (OPTIONS) requests ---
-    # if event.get('httpMethod', '').upper() == 'OPTIONS':
-    #     return {
-    #         'statusCode': 200,
-    #         'headers': {
-    #             'Access-Control-Allow-Origin': '*',
-    #             'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-    #             'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-    #         },
-    #         'body': json.dumps({'message': 'CORS preflight OK'})
-    #     }
+    if event.get('httpMethod', '').upper() == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+            },
+            'body': json.dumps({'message': 'CORS preflight OK'})
+        }
 
     try:
         # Extract user pool ID from environment variable
         user_pool_id = os.environ.get('USER_POOL_ID')
         if not user_pool_id:
             logger.error("Environment variable USER_POOL_ID not set.")
-            response = build_error_response(500, 'Configuration Error', 'User pool ID not configured.')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(500, 'Configuration Error', 'User pool ID not configured.')
         
         # Initialize Cognito client
         cognito = boto3.client('cognito-idp')
@@ -153,28 +156,24 @@ def lambda_handler(event, context):
             })
         
         # Return the formatted response
-        response_payload = { # Renamed to avoid conflict
+        response = {
             'statusCode': 200,
             'headers': {
-                # CORS headers will be added by add_cors_headers
-                'Content-Type': 'application/json' # Keep existing Content-Type
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
             },
             'body': json.dumps({
                 'users': users,
                 'nextToken': result.get('PaginationToken')
             })
         }
-        logger.info(f"Returning response with status code {response_payload['statusCode']}")
-        response_payload['headers'] = add_cors_headers(event, response_payload.get('headers', {}))
-        return response_payload
+        logger.info(f"Returning response with status code {response['statusCode']}")
+        return response
     
     except ClientError as ce:
         logger.error(f"AWS ClientError listing users: {ce}")
-        response = handle_exception(ce)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return handle_exception(ce)
     except Exception as e:
         logger.error(f"Unexpected error listing users: {e}", exc_info=True)
-        response = handle_exception(e)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return handle_exception(e)

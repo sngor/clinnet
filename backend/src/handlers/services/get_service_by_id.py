@@ -8,7 +8,6 @@ from botocore.exceptions import ClientError
 # Import utility functions
 from utils.db_utils import get_item_by_id, generate_response
 from utils.responser_helper import handle_exception
-from utils.response_utils import add_cors_headers
 
 def lambda_handler(event, context):
     """
@@ -25,39 +24,27 @@ def lambda_handler(event, context):
     
     table_name = os.environ.get('SERVICES_TABLE')
     if not table_name:
-        response = generate_response(500, {'message': 'Services table name not configured'})
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return generate_response(500, {'message': 'Services table name not configured'})
     
     # Get service ID from path parameters
     service_id = event.get('pathParameters', {}).get('id')
     if not service_id:
-        response = generate_response(400, {'message': 'Missing service ID'})
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return generate_response(400, {'message': 'Missing service ID'})
     
     try:
         # Get service by ID
         service = get_item_by_id(table_name, service_id)
         
         if not service:
-            response = generate_response(404, {'message': f'Service with ID {service_id} not found'})
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return generate_response(404, {'message': f'Service with ID {service_id} not found'})
         
-        response = generate_response(200, service)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return generate_response(200, service)
     
     except ClientError as e:
-        response = handle_exception(e)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return handle_exception(e)
     except Exception as e:
         print(f"Error fetching service: {e}")
-        response = generate_response(500, {
+        return generate_response(500, {
             'message': 'Error fetching service',
             'error': str(e)
         })
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response

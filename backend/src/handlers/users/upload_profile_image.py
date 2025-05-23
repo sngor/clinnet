@@ -13,8 +13,6 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-from utils.response_utils import add_cors_headers
-
 def build_error_response(status_code, error_type, message):
     """
     Build a standardized error response
@@ -30,8 +28,9 @@ def build_error_response(status_code, error_type, message):
     return {
         'statusCode': status_code,
         'headers': {
-            # CORS headers will be added by add_cors_headers in lambda_handler
-            'Content-Type': 'application/json' # Assuming this is desired for errors too
+            'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
         },
         'body': json.dumps({
             'error': error_type,
@@ -82,9 +81,7 @@ def lambda_handler(event, context):
     try:
         # Parse request body
         if not event.get('body'):
-            response = build_error_response(400, 'Bad Request', 'Request body is required')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(400, 'Bad Request', 'Request body is required')
         
         request_body = json.loads(event['body'])
         
@@ -94,24 +91,18 @@ def lambda_handler(event, context):
             logger.info(f"Processing profile image upload for user: {username}")
         except (KeyError, TypeError):
             logger.error("Could not extract username from request context")
-            response = build_error_response(401, 'Unauthorized', 'User identity not found in request')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(401, 'Unauthorized', 'User identity not found in request')
         
         # Validate required fields
         if not request_body.get('image'):
-            response = build_error_response(400, 'Bad Request', 'Image data is required')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(400, 'Bad Request', 'Image data is required')
         
         # Extract image data
         image_data = request_body.get('image')
         
         # Check if the image is base64 encoded
         if not image_data.startswith('data:image/'):
-            response = build_error_response(400, 'Bad Request', 'Invalid image format. Must be base64 encoded with MIME type')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(400, 'Bad Request', 'Invalid image format. Must be base64 encoded with MIME type')
         
         # Extract the MIME type and base64 data
         try:
@@ -133,9 +124,7 @@ def lambda_handler(event, context):
             decoded_image = base64.b64decode(base64_data)
         except Exception as e:
             logger.error(f"Error processing image data: {e}")
-            response = build_error_response(400, 'Bad Request', 'Invalid image data format')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(400, 'Bad Request', 'Invalid image data format')
         
         # Generate a unique filename
         filename = f"profile-images/{username}/{str(uuid.uuid4())}.{extension}"
@@ -144,9 +133,7 @@ def lambda_handler(event, context):
         bucket_name = os.environ.get('DOCUMENTS_BUCKET')
         if not bucket_name:
             logger.error("Environment variable DOCUMENTS_BUCKET not set")
-            response = build_error_response(500, 'Configuration Error', 'Document storage not configured')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(500, 'Configuration Error', 'Document storage not configured')
         
         # Initialize S3 client
         s3 = boto3.client('s3')
@@ -172,9 +159,7 @@ def lambda_handler(event, context):
         user_pool_id = os.environ.get('USER_POOL_ID')
         if not user_pool_id:
             logger.error("Environment variable USER_POOL_ID not set")
-            response = build_error_response(500, 'Configuration Error', 'User pool ID not configured')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(500, 'Configuration Error', 'User pool ID not configured')
         
         cognito = boto3.client('cognito-idp')
         
@@ -192,11 +177,12 @@ def lambda_handler(event, context):
         )
         
         # Return success response with the image URL
-        response_payload = { # Renamed
+        response = {
             'statusCode': 200,
             'headers': {
-                # CORS headers will be added by add_cors_headers
-                'Content-Type': 'application/json' # Keep existing Content-Type
+                'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
             },
             'body': json.dumps({
                 'success': True,
@@ -207,16 +193,11 @@ def lambda_handler(event, context):
         }
         
         logger.info(f"Profile image uploaded successfully for user: {username}")
-        response_payload['headers'] = add_cors_headers(event, response_payload.get('headers', {}))
-        return response_payload
+        return response
     
     except ClientError as ce:
         logger.error(f"AWS ClientError uploading profile image: {ce}")
-        response = handle_exception(ce)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return handle_exception(ce)
     except Exception as e:
         logger.error(f"Unexpected error uploading profile image: {e}", exc_info=True)
-        response = handle_exception(e)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return handle_exception(e)

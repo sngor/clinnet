@@ -10,7 +10,6 @@ from botocore.exceptions import ClientError
 # Import utility functions
 from utils.db_utils import create_item, generate_response
 from utils.responser_helper import handle_exception
-from utils.response_utils import add_cors_headers
 
 def lambda_handler(event, context):
     """
@@ -27,9 +26,7 @@ def lambda_handler(event, context):
     
     table_name = os.environ.get('APPOINTMENTS_TABLE')
     if not table_name:
-        response = generate_response(500, {'message': 'Appointments table name not configured'})
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return generate_response(500, {'message': 'Appointments table name not configured'})
     
     try:
         # Parse request body
@@ -39,9 +36,7 @@ def lambda_handler(event, context):
         required_fields = ['patientId', 'doctorId', 'date', 'startTime', 'endTime', 'type']
         for field in required_fields:
             if field not in body:
-                response = generate_response(400, {'message': f'Missing required field: {field}'})
-                response['headers'] = add_cors_headers(event, response.get('headers', {}))
-                return response
+                return generate_response(400, {'message': f'Missing required field: {field}'})
         
         # Create appointment record
         appointment_id = str(uuid.uuid4())
@@ -67,19 +62,13 @@ def lambda_handler(event, context):
         create_item(table_name, appointment_item)
         
         # Return the created appointment
-        response = generate_response(201, appointment_item)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return generate_response(201, appointment_item)
     
     except ClientError as e:
-        response = handle_exception(e)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return handle_exception(e)
     except Exception as e:
         print(f"Error creating appointment: {e}")
-        response = generate_response(500, {
+        return generate_response(500, {
             'message': 'Error creating appointment',
             'error': str(e)
         })
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response

@@ -1,14 +1,12 @@
-# In backend/src/utils/response_utils.py
+# In backend/lambda_layer/python/response_utils.py
 
 def add_cors_headers(event, response_headers):
     """
     Adds necessary CORS headers to a Lambda response.
     """
-    # Ensure response_headers is a dictionary
     if response_headers is None:
         response_headers = {}
 
-    # Extract Origin header from the request event
     request_headers = event.get('headers', {})
     if request_headers is None: # Defensive check if event['headers'] is None
         request_headers = {}

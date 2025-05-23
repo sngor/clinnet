@@ -13,8 +13,6 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-from utils.response_utils import add_cors_headers
-
 def build_error_response(status_code, error_type, message):
     """
     Build a standardized error response
@@ -30,8 +28,9 @@ def build_error_response(status_code, error_type, message):
     return {
         'statusCode': status_code,
         'headers': {
-            # CORS headers will be added by add_cors_headers in lambda_handler
-            'Content-Type': 'application/json' # Assuming this is desired for errors too
+            'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
         },
         'body': json.dumps({
             'error': error_type,
@@ -81,16 +80,12 @@ def lambda_handler(event, context):
     try:
         # Parse the request body and get the username from path parameters
         if not event.get('body'):
-            response = build_error_response(400, 'Bad Request', 'Request body is required')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(400, 'Bad Request', 'Request body is required')
         
         request_body = json.loads(event['body'])
         
         if not event.get('pathParameters') or not event['pathParameters'].get('username'):
-            response = build_error_response(400, 'Bad Request', 'Username path parameter is required')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(400, 'Bad Request', 'Username path parameter is required')
         
         username = event['pathParameters']['username']
         
@@ -98,9 +93,7 @@ def lambda_handler(event, context):
         user_pool_id = os.environ.get('USER_POOL_ID')
         if not user_pool_id:
             logger.error("Environment variable USER_POOL_ID not set.")
-            response = build_error_response(500, 'Configuration Error', 'User pool ID not configured.')
-            response['headers'] = add_cors_headers(event, response.get('headers', {}))
-            return response
+            return build_error_response(500, 'Configuration Error', 'User pool ID not configured.')
         
         # Initialize Cognito client
         cognito = boto3.client('cognito-idp')
@@ -128,10 +121,8 @@ def lambda_handler(event, context):
                     logger.info("Standardized role 'receptionist' to 'frontdesk'.")
                 else:
                     logger.warning(f"Invalid role specified: {user_role}")
-                    response = build_error_response(400, 'Validation Error',
+                    return build_error_response(400, 'Validation Error',
                         f"Invalid role specified. Allowed roles: {', '.join(allowed_roles)}")
-                    response['headers'] = add_cors_headers(event, response.get('headers', {}))
-                    return response
             
             user_attributes.append({'Name': 'custom:role', 'Value': user_role})
         
@@ -210,25 +201,21 @@ def lambda_handler(event, context):
         }
         
         # Return the formatted response
-        response_payload = { # Renamed
+        response = {
             'statusCode': 200,
             'headers': {
-                # CORS headers will be added by add_cors_headers
-                'Content-Type': 'application/json' # Keep existing Content-Type
+                'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
             },
             'body': json.dumps(user)
         }
-        logger.info(f"Returning response with status code {response_payload['statusCode']}")
-        response_payload['headers'] = add_cors_headers(event, response_payload.get('headers', {}))
-        return response_payload
+        logger.info(f"Returning response with status code {response['statusCode']}")
+        return response
     
     except ClientError as ce:
         logger.error(f"AWS ClientError updating user: {ce}")
-        response = handle_exception(ce)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return handle_exception(ce)
     except Exception as e:
         logger.error(f"Unexpected error updating user: {e}", exc_info=True)
-        response = handle_exception(e)
-        response['headers'] = add_cors_headers(event, response.get('headers', {}))
-        return response
+        return handle_exception(e)
