@@ -12,6 +12,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from utils.db_utils import get_patient_by_pk_sk, generate_response
+from utils.response_utils import add_cors_headers
 
 def lambda_handler(event, context):
     """
@@ -30,11 +31,15 @@ def lambda_handler(event, context):
     try:
         patient_id = event['pathParameters']['id']
     except (KeyError, TypeError):
-        return generate_response(400, {'message': 'Patient ID is required'})
+        response = generate_response(400, {'message': 'Patient ID is required'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
-        return generate_response(500, {'message': 'PatientRecords table name not configured'})
+        response = generate_response(500, {'message': 'PatientRecords table name not configured'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     try:
         # Get patient by PK/SK (single-table design)
@@ -43,12 +48,18 @@ def lambda_handler(event, context):
         patient = get_patient_by_pk_sk(table_name, pk, sk)
         
         if not patient:
-            return generate_response(404, {'message': 'Patient not found'})
+            response = generate_response(404, {'message': 'Patient not found'})
+            response['headers'] = add_cors_headers(event, response.get('headers', {}))
+            return response
         
-        return generate_response(200, patient)
+        response = generate_response(200, patient)
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     except Exception as e:
         print(f"Error fetching patient {patient_id}: {e}")
-        return generate_response(500, {
+        response = generate_response(500, {
             'message': 'Error fetching patient',
             'error': str(e)
         })
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response

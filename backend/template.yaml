@@ -35,8 +35,8 @@ Globals:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
       AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-      AllowOrigin: "'https://d23hk32py5djal.cloudfront.net'"
-      AllowCredentials: false
+      AllowOrigin: "'*'"
+      AllowCredentials: true
       MaxAge: "'7200'" # Added for consistency with Lambda OPTIONS handlers
 
 Resources:
@@ -145,43 +145,7 @@ Resources:
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
         AllowOrigin: "'*'"
         MaxAge: "'7200'"
-        AllowCredentials: false
-      GatewayResponses:
-        DEFAULT_4XX:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Max-Age: "'7200'"
-        DEFAULT_5XX:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Max-Age: "'7200'"
-        UNAUTHORIZED:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Max-Age: "'7200'"
-        ACCESS_DENIED:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Max-Age: "'7200'"
-        RESOURCE_NOT_FOUND:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'''*'''"
-              Access-Control-Allow-Headers: "'''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''"
-              Access-Control-Allow-Methods: "'''GET,POST,PUT,DELETE,OPTIONS'''"
-              Access-Control-Max-Age: "'''7200'''"
+        AllowCredentials: true
 
   # Cognito User Pool
   UserPool:

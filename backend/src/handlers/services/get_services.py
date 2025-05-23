@@ -9,7 +9,8 @@ from botocore.exceptions import ClientError
 # Import utility functions
 from utils.db_utils import query_table, generate_response
 from utils.responser_helper import handle_exception
-from utils.cors import add_cors_headers, build_cors_preflight_response
+from utils.response_utils import add_cors_headers
+# from utils.cors import build_cors_preflight_response # This will be removed
 
 def lambda_handler(event, context):
     """
@@ -30,11 +31,13 @@ def lambda_handler(event, context):
     table_name = os.environ.get('SERVICES_TABLE')
     if not table_name:
         logger.error('Services table name not configured')
-        return generate_response(500, {'message': 'Services table name not configured'})
+        response = generate_response(500, {'message': 'Services table name not configured'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
-    # Handle CORS preflight requests
-    if event.get('httpMethod') == 'OPTIONS':
-        return build_cors_preflight_response()
+    # CORS preflight requests are handled by cors_options.py and APIGW
+    # if event.get('httpMethod') == 'OPTIONS':
+    #     return build_cors_preflight_response() # REMOVE THIS
     
     try:
         # Get query parameters
@@ -69,11 +72,15 @@ def lambda_handler(event, context):
         response = generate_response(200, services)
         
         # Add CORS headers to response
-        return add_cors_headers(response)
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     except ClientError as e:
         logger.error(f"ClientError: {e}", exc_info=True)
-        return handle_exception(e)
+        # Assuming handle_exception returns a response dictionary
+        response = handle_exception(e) 
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     except Exception as e:
         logger.error(f"Error fetching services: {e}", exc_info=True)
         print(f"Error fetching services: {e}")
@@ -82,4 +89,5 @@ def lambda_handler(event, context):
             'error': str(e)
         })
         # Add CORS headers even to error responses
-        return add_cors_headers(error_response)
+        error_response['headers'] = add_cors_headers(event, error_response.get('headers', {}))
+        return error_response

@@ -11,6 +11,8 @@ from botocore.exceptions import ClientError
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
 
+from utils.response_utils import add_cors_headers
+
 # Helper class to convert a DynamoDB item to JSON
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
@@ -55,8 +57,7 @@ def generate_response(status_code, body):
     return {
         'statusCode': status_code,
         'headers': {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Credentials': True,
+            # CORS headers will be added by add_cors_headers
             'Content-Type': 'application/json'
         },
         'body': json.dumps(body, cls=DecimalEncoder)
@@ -73,7 +74,9 @@ def lambda_handler(event, context=None):
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
         logger.error('PatientRecords table name not configured')
-        return generate_response(500, {'message': 'PatientRecords table name not configured'})
+        response = generate_response(500, {'message': 'PatientRecords table name not configured'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
 
     try:
         from boto3.dynamodb.conditions import Attr, Or
@@ -86,10 +89,14 @@ def lambda_handler(event, context=None):
             )
         )
         logger.info(f"Fetched {len(patients)} patients from DynamoDB")
-        return generate_response(200, patients)
+        response = generate_response(200, patients)
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     except Exception as e:
         logger.error(f"Error fetching patients: {e}", exc_info=True)
-        return generate_response(500, {
+        response = generate_response(500, {
             'message': 'Error fetching patients',
             'error': str(e)
         })
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
