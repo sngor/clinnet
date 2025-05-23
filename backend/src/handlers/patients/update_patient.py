@@ -13,6 +13,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from utils.db_utils import get_patient_by_pk_sk, update_item_by_pk_sk, generate_response
+from utils.response_utils import add_cors_headers
 
 def lambda_handler(event, context):
     """
@@ -31,20 +32,28 @@ def lambda_handler(event, context):
     try:
         patient_id = event['pathParameters']['id']
     except (KeyError, TypeError):
-        return generate_response(400, {'message': 'Patient ID is required'})
+        response = generate_response(400, {'message': 'Patient ID is required'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     # Parse request body
     try:
         if not event.get('body'):
-            return generate_response(400, {'message': 'Request body is required'})
+            response = generate_response(400, {'message': 'Request body is required'})
+            response['headers'] = add_cors_headers(event, response.get('headers', {}))
+            return response
         
         request_body = json.loads(event['body'])
     except json.JSONDecodeError:
-        return generate_response(400, {'message': 'Invalid JSON in request body'})
+        response = generate_response(400, {'message': 'Invalid JSON in request body'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
-        return generate_response(500, {'message': 'PatientRecords table name not configured'})
+        response = generate_response(500, {'message': 'PatientRecords table name not configured'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     try:
         # Check if patient exists
@@ -53,7 +62,9 @@ def lambda_handler(event, context):
         existing_patient = get_patient_by_pk_sk(table_name, pk, sk)
         
         if not existing_patient:
-            return generate_response(404, {'message': 'Patient not found'})
+            response = generate_response(404, {'message': 'Patient not found'})
+            response['headers'] = add_cors_headers(event, response.get('headers', {}))
+            return response
         
         # Extract fields to update
         updates = {}
@@ -67,7 +78,9 @@ def lambda_handler(event, context):
                 updates[field] = request_body[field]
         
         if not updates:
-            return generate_response(400, {'message': 'No valid fields to update'})
+            response = generate_response(400, {'message': 'No valid fields to update'})
+            response['headers'] = add_cors_headers(event, response.get('headers', {}))
+            return response
         
         # Ensure type is preserved
         updates['type'] = 'patient'
@@ -75,10 +88,14 @@ def lambda_handler(event, context):
         # Update patient in DynamoDB
         updated_patient = update_item_by_pk_sk(table_name, pk, sk, updates)
         
-        return generate_response(200, updated_patient)
+        response = generate_response(200, updated_patient)
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     except Exception as e:
         print(f"Error updating patient {patient_id}: {e}")
-        return generate_response(500, {
+        response = generate_response(500, {
             'message': 'Error updating patient',
             'error': str(e)
         })
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response

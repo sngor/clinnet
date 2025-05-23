@@ -10,6 +10,7 @@ from botocore.exceptions import ClientError
 # Import utility functions
 from utils.db_utils import create_item, get_item_by_id, generate_response
 from utils.responser_helper import handle_exception
+from utils.response_utils import add_cors_headers
 
 def lambda_handler(event, context):
     """
@@ -30,7 +31,9 @@ def lambda_handler(event, context):
     services_table = os.environ.get('SERVICES_TABLE')
     
     if not billing_table:
-        return generate_response(500, {'message': 'Billing table name not configured'})
+        response = generate_response(500, {'message': 'Billing table name not configured'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     try:
         # Parse request body
@@ -40,16 +43,22 @@ def lambda_handler(event, context):
         required_fields = ['patientId', 'items', 'paymentMethod']
         for field in required_fields:
             if field not in body:
-                return generate_response(400, {'message': f'Missing required field: {field}'})
+                response = generate_response(400, {'message': f'Missing required field: {field}'})
+                response['headers'] = add_cors_headers(event, response.get('headers', {}))
+                return response
         
         # Validate items structure
         items = body.get('items', [])
         if not isinstance(items, list) or len(items) == 0:
-            return generate_response(400, {'message': 'Items must be a non-empty array'})
+            response = generate_response(400, {'message': 'Items must be a non-empty array'})
+            response['headers'] = add_cors_headers(event, response.get('headers', {}))
+            return response
         
         for item in items:
             if 'serviceId' not in item or 'quantity' not in item:
-                return generate_response(400, {'message': 'Each item must have serviceId and quantity'})
+                response = generate_response(400, {'message': 'Each item must have serviceId and quantity'})
+                response['headers'] = add_cors_headers(event, response.get('headers', {}))
+                return response
         
         # Calculate total amount by fetching service prices
         total_amount = 0
@@ -75,7 +84,9 @@ def lambda_handler(event, context):
                         'total': item_total
                     })
                 else:
-                    return generate_response(400, {'message': f'Service with ID {service_id} not found'})
+                    response = generate_response(400, {'message': f'Service with ID {service_id} not found'})
+                    response['headers'] = add_cors_headers(event, response.get('headers', {}))
+                    return response
             else:
                 # If services table is not configured, use the price from the request
                 price = item.get('price', 0)
@@ -114,13 +125,19 @@ def lambda_handler(event, context):
         create_item(billing_table, billing_item)
         
         # Return the created billing record
-        return generate_response(201, billing_item)
+        response = generate_response(201, billing_item)
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     except ClientError as e:
-        return handle_exception(e)
+        response = handle_exception(e)
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     except Exception as e:
         print(f"Error creating billing record: {e}")
-        return generate_response(500, {
+        response = generate_response(500, {
             'message': 'Error creating billing record',
             'error': str(e)
         })
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
