@@ -1,12 +1,8 @@
 // src/pages/AdminPatientsPage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Drawer,
-} from "@mui/material";
-import {
-  PageLayout,
-} from "../components/ui";
+import { Button, Drawer } from "@mui/material";
+import { PageLayout } from "../components/ui";
 import { useAppData } from "../app/providers/DataProvider";
 import PatientDetailView from "../features/patients/components/PatientDetailView";
 import PatientGrid from "../components/patients/PatientGrid";
@@ -89,23 +85,23 @@ function AdminPatientsPage() {
       showDebug={showDebug}
       debugPanel={<DebugPanel data={filteredPatients} />}
       action={
-        <Button 
-          variant="contained" 
-          color="primary" 
+        <Button
+          variant="contained"
+          color="primary"
           onClick={handleAddNewPatient}
         >
           Add New Patient
         </Button>
       }
     >
-      <PatientSearch 
+      <PatientSearch
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
         onAddNew={null}
         onRefresh={refreshPatients}
         loading={loading}
       />
-      <PatientGrid 
+      <PatientGrid
         patients={filteredPatients}
         onPatientSelect={handlePatientSelect}
         loading={loading}
@@ -125,7 +121,7 @@ function AdminPatientsPage() {
           />
         )}
       </Drawer>
-    </PageContainer>
+    </PageLayout>
   );
 }
 

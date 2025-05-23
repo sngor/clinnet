@@ -9,6 +9,7 @@ import boto3
 from botocore.exceptions import ClientError
 from utils.db_utils import generate_response
 from utils.responser_helper import handle_exception
+from utils.response_utils import add_cors_headers
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
@@ -72,7 +73,9 @@ def lambda_handler(event, context):
     # Get table name from environment
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
-        return generate_response(500, {'message': 'PatientRecords table name not configured'})
+        response = generate_response(500, {'message': 'PatientRecords table name not configured'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     try:
         # Parse request body
@@ -88,10 +91,12 @@ def lambda_handler(event, context):
         missing_fields = [field for field in required_fields if field not in request_body]
         if missing_fields:
             print(f"[DEBUG] Missing fields: {missing_fields}")
-            return generate_response(400, {
+            response = generate_response(400, {
                 'message': 'Missing required fields',
                 'fields': missing_fields
             })
+            response['headers'] = add_cors_headers(event, response.get('headers', {}))
+            return response
         # Check for extra fields and log them
         allowed_fields = ['firstName', 'lastName', 'dateOfBirth', 'phone', 'email', 'address', 'insuranceProvider', 'insuranceNumber', 'status', 'gender']
         extra_fields = [k for k in request_body.keys() if k not in allowed_fields]
@@ -99,13 +104,19 @@ def lambda_handler(event, context):
             print(f"[DEBUG] Extra/unexpected fields in payload: {extra_fields}")
         # Create patient
         created_patient = create_patient(table_name, request_body)
-        return generate_response(201, created_patient)
+        response = generate_response(201, created_patient)
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
         
     except json.JSONDecodeError:
-        return generate_response(400, {'message': 'Invalid request body'})
+        response = generate_response(400, {'message': 'Invalid request body'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     except Exception as e:
         print(f"Error creating patient: {e}")
-        return generate_response(500, {
+        response = generate_response(500, {
             'message': 'Error creating patient',
             'error': str(e)
         })
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response

@@ -13,6 +13,8 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+from utils.response_utils import add_cors_headers
+
 def build_error_response(status_code, error_type, message):
     """
     Build a standardized error response
@@ -28,9 +30,8 @@ def build_error_response(status_code, error_type, message):
     return {
         'statusCode': status_code,
         'headers': {
-            'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+            # CORS headers will be added by add_cors_headers in lambda_handler
+            'Content-Type': 'application/json' # Assuming this is desired for errors too
         },
         'body': json.dumps({
             'error': error_type,
@@ -80,7 +81,9 @@ def lambda_handler(event, context):
     try:
         # Get the username from path parameters
         if not event.get('pathParameters') or not event['pathParameters'].get('username'):
-            return build_error_response(400, 'Bad Request', 'Username path parameter is required')
+            response = build_error_response(400, 'Bad Request', 'Username path parameter is required')
+            response['headers'] = add_cors_headers(event, response.get('headers', {}))
+            return response
         
         username = event['pathParameters']['username']
         
@@ -88,7 +91,9 @@ def lambda_handler(event, context):
         user_pool_id = os.environ.get('USER_POOL_ID')
         if not user_pool_id:
             logger.error("Environment variable USER_POOL_ID not set.")
-            return build_error_response(500, 'Configuration Error', 'User pool ID not configured.')
+            response = build_error_response(500, 'Configuration Error', 'User pool ID not configured.')
+            response['headers'] = add_cors_headers(event, response.get('headers', {}))
+            return response
         
         # Initialize Cognito client
         cognito = boto3.client('cognito-idp')
@@ -103,24 +108,28 @@ def lambda_handler(event, context):
         cognito.admin_delete_user(**params)
         
         # Return success response
-        response = {
+        response_payload = { # Renamed to avoid conflict
             'statusCode': 200,
             'headers': {
-                'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net',
-                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+                # CORS headers will be added by add_cors_headers
+                'Content-Type': 'application/json' # Keep existing Content-Type
             },
             'body': json.dumps({
                 'success': True,
                 'message': f'User {username} deleted successfully'
             })
         }
-        logger.info(f"Returning response with status code {response['statusCode']}")
-        return response
+        logger.info(f"Returning response with status code {response_payload['statusCode']}")
+        response_payload['headers'] = add_cors_headers(event, response_payload.get('headers', {}))
+        return response_payload
     
     except ClientError as ce:
         logger.error(f"AWS ClientError deleting user: {ce}")
-        return handle_exception(ce)
+        response = handle_exception(ce)
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     except Exception as e:
         logger.error(f"Unexpected error deleting user: {e}", exc_info=True)
-        return handle_exception(e)
+        response = handle_exception(ce) # Corrected: should be e, but handle_exception handles both
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response

@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 # Import utility functions
 from utils.db_utils import query_table, generate_response
 from utils.responser_helper import handle_exception
+from utils.response_utils import add_cors_headers
 
 def lambda_handler(event, context):
     """
@@ -22,21 +23,11 @@ def lambda_handler(event, context):
     """
     print(f"Received event: {json.dumps(event)}")
     
-    # --- Handle CORS preflight (OPTIONS) requests ---
-    if event.get('httpMethod', '').upper() == 'OPTIONS':
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-            },
-            'body': json.dumps({'message': 'CORS preflight OK'})
-        }
-
     table_name = os.environ.get('APPOINTMENTS_TABLE')
     if not table_name:
-        return generate_response(500, {'message': 'Appointments table name not configured'})
+        response = generate_response(500, {'message': 'Appointments table name not configured'})
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     try:
         # Get query parameters
@@ -75,13 +66,19 @@ def lambda_handler(event, context):
         # Query appointments
         appointments = query_table(table_name, **kwargs)
         
-        return generate_response(200, appointments)
+        response = generate_response(200, appointments)
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     
     except ClientError as e:
-        return handle_exception(e)
+        response = handle_exception(e)
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
     except Exception as e:
         print(f"Error fetching appointments: {e}")
-        return generate_response(500, {
+        response = generate_response(500, {
             'message': 'Error fetching appointments',
             'error': str(e)
         })
+        response['headers'] = add_cors_headers(event, response.get('headers', {}))
+        return response
