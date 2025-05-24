@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Box,
@@ -26,7 +27,6 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import SyncProblemIcon from '@mui/icons-material/SyncProblem';
-
 import adminService from '../services/adminService';
 
 const initialServicesData = [
@@ -126,23 +126,28 @@ const DiagnosticsPage = () => {
         });
         return afterCatchServices;
       });
+
     }
   };
 
   const getStatusProps = (status) => {
     switch (status) {
+
       case 'Online': return { color: 'success', icon: <CheckCircleOutlineIcon /> };
       case 'Error': return { color: 'error', icon: <ErrorOutlineIcon /> };
       case 'Checking...': return { color: 'warning', icon: <HourglassEmptyIcon /> };
       case 'Potentially Degraded': return { color: 'info', icon: <SyncProblemIcon /> };
       case 'Unknown':
       default: return { color: 'default', icon: <HelpOutlineIcon /> };
+
     }
   };
 
   return (
+
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>System Diagnostics</Typography>
+
       <List>
         {services.map((service) => {
           const statusProps = getStatusProps(service.status);
@@ -155,15 +160,19 @@ const DiagnosticsPage = () => {
                   icon={statusProps.icon}
                   label={service.status}
                   color={statusProps.color}
+
                   variant="filled"
                   sx={{ width: '180px', textAlign: 'left', mr: 2 }}
+
                 />
                 {service.testable && (
                   <Button
                     variant="contained"
                     onClick={() => handleTestService(service.id)}
                     disabled={service.status === 'Checking...'}
+
                     sx={{ width: '100px' }}
+
                   >
                     {service.status === 'Checking...' ? <CircularProgress size={24} /> : 'Test'}
                   </Button>
@@ -214,6 +223,7 @@ const DiagnosticsPage = () => {
                 </ListItem>
               )}
               <Divider component="li" sx={{mb:1}} />
+
             </React.Fragment>
           );
         })}
