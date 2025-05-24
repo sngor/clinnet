@@ -2,17 +2,16 @@
 import React from "react";
 import UserList from "../features/users/components/UserList";
 import { Box } from "@mui/material";
-import { PageHeading, PageContainer, ContentCard } from "../components/ui";
+// Updated imports from ../components/ui
+import { PageLayout, ContentCard } from "../components/ui"; 
 
 function UserManagementPage() {
   return (
-    <PageContainer>
-      {/* Page header */}
-      <PageHeading 
-        title="User Management" 
-        subtitle="Add, edit, and manage system users"
-      />
-
+    <PageLayout
+      title="User Management"
+      subtitle="Add, edit, and manage system users"
+      // maxWidth="lg" // Default is lg, suitable here
+    >
       {/* User list */}
       <ContentCard 
         elevation={0} 
@@ -23,7 +22,7 @@ function UserManagementPage() {
       >
         <UserList />
       </ContentCard>
-    </PageContainer>
+    </PageLayout>
   );
 }
 

@@ -25,11 +25,12 @@ import { useNavigate } from "react-router-dom";
 
 // Import UI components
 import {
-  PageHeading,
+  PageLayout, // Added PageLayout
   ContentCard,
   AppointmentList,
-  DialogHeading,
-  PageContainer,
+  DialogHeading, // DialogHeading is kept
+  // PageContainer, // Removed PageContainer
+  // PageHeading, // Removed PageHeading
 } from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
@@ -132,15 +133,14 @@ function FrontdeskDashboard() {
   };
 
   return (
-    <PageContainer>
-      {/* Page header */}
-      <PageHeading
-        title={`${getTimeBasedGreeting()}, ${
-          user?.firstName || user?.username || "Front Desk"
-        }!`}
-        subtitle={`${appointments.length} appointments scheduled for today`}
-      />
-
+    <PageLayout
+      title={`${getTimeBasedGreeting()}, ${
+        user?.firstName || user?.username || "Front Desk"
+      }!`}
+      subtitle={`${appointments.length} appointments scheduled for today`}
+      loading={loading}
+      error={error}
+    >
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid
@@ -230,7 +230,7 @@ function FrontdeskDashboard() {
       >
         <AppointmentList
           appointments={appointments}
-          loading={loading}
+          // loading={loading} // Removed, as PageLayout handles main loading
           onAction={handleCheckIn}
           actionText="Check In"
           actionStatus="Scheduled"
@@ -300,7 +300,7 @@ function FrontdeskDashboard() {
           </Button>
         </DialogActions>
       </Dialog>
-    </PageContainer>
+    </PageLayout>
   );
 }
 

@@ -9,10 +9,11 @@ import { useNavigate } from "react-router-dom";
 
 // Import UI components
 import {
-  PageHeading,
+  PageLayout, // Added PageLayout
   ContentCard,
   AppointmentList,
-  PageContainer,
+  // PageContainer, // Removed PageContainer
+  // PageHeading, // Removed PageHeading
 } from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
@@ -54,15 +55,14 @@ function DoctorDashboard() {
   }, []);
 
   return (
-    <PageContainer>
-      {/* Page header */}
-      <PageHeading
-        title={`${getTimeBasedGreeting()}, Dr. ${
-          user?.lastName || user?.username || "Smith"
-        }!`}
-        subtitle={`${appointments.length} appointments scheduled for today`}
-      />
-
+    <PageLayout
+      title={`${getTimeBasedGreeting()}, Dr. ${
+        user?.lastName || user?.username || "Smith"
+      }!`}
+      subtitle={`${appointments.length} appointments scheduled for today`}
+      loading={loading}
+      error={error}
+    >
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid
@@ -129,11 +129,11 @@ function DoctorDashboard() {
       >
         <AppointmentList
           appointments={appointments}
-          loading={loading}
+          // loading={loading} // Removed, as PageLayout handles main loading
           showAction={false}
         />
       </ContentCard>
-    </PageContainer>
+    </PageLayout>
   );
 }
 

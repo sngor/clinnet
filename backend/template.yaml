@@ -767,7 +767,24 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /diagnostics/dynamodb
+            Path: /diagnostics/s3
+            Method: options
+            Auth:
+              Authorizer: NONE
+        DynamoCrudDiagnosticsOptions: # New OPTIONS for DynamoDB CRUD
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/crud/{serviceName}
+            Method: options
+            Auth:
+              Authorizer: NONE
+        CognitoUsersDiagnosticsOptions: # New OPTIONS for Cognito CRUD
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/cognito-users
+
             Method: options
             Auth:
               Authorizer: NONE
@@ -796,25 +813,50 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  CheckDynamoDBConnectivityFunction:
+  CheckDynamoDBCrudFunction: # New DynamoDB CRUD Function
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/diagnostics/
-      Handler: check_dynamodb.lambda_handler
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:ListTables
-              Resource: "*"
+      Handler: check_dynamodb_crud.lambda_handler
       Layers:
         - !Ref UtilsLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PatientRecordsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ServicesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AppointmentsTable
       Events:
-        CheckDynamoDB:
+        CheckDynamoCrud:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /diagnostics/dynamodb
+            Path: /diagnostics/crud/{serviceName}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CheckCognitoUserCrudFunction: # New Cognito User CRUD Function
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/diagnostics/
+      Handler: check_cognito_user_crud.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminGetUser
+                - cognito-idp:AdminUpdateUserAttributes
+                - cognito-idp:AdminDeleteUser
+              Resource: !GetAtt UserPool.Arn
+      # USER_POOL_ID is inherited from Globals
+      Events:
+        CheckCognitoCrud:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/cognito-users
+
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
