@@ -129,7 +129,7 @@ function AppRouter() {
         <Route
           path="/admin/settings"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "doctor", "frontdesk"]}>
               <AdminSettingsPage />
             </ProtectedRoute>
           }
