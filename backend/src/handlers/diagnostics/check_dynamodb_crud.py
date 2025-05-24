@@ -47,28 +47,23 @@ def lambda_handler(event, context):
             "body": json.dumps({"success": False, "error": f"Error during setup: {str(e)}"})
         }
 
-    test_item_id = str(uuid.uuid4())
-    # Simplified item structure assuming 'id' is the primary key for all testable tables.
-    # This will need refinement for tables like PatientRecordsTable which use PK/SK.
-    test_item_pk_field = 'id' # Default assumption
-    
-    # Acknowledging PatientRecordsTable might need special handling for PK/SK:
-    # if service_name_path == 'patients':
-    #   test_item_pk_field = 'PK' # or whatever the actual PK field name is
-    #   test_item_id = f"DIAGNOSTIC_USER#{test_item_id}" # Example composite key part
-    #   # test_item_sk_value = "PROFILE#DIAGNOSTICS" # Example SK value
+    test_item_id_str = str(uuid.uuid4()) # Base UUID
 
-    test_item = {test_item_pk_field: test_item_id, 'diagnostics_test_attribute': 'initialValue'}
-    
-    # For PatientRecordsTable, if it strictly requires PK and SK:
-    # if service_name_path == 'patients':
-    #    test_item = {'PK': test_item_id, 'SK': 'DIAGNOSTICS_TEST', 'diagnostics_test_attribute': 'initialValue'}
-
+    if service_name_path == 'patients':
+        pk_val = f"DIAG#{test_item_id_str}"
+        sk_val = "DIAGNOSTIC_PROFILE"
+        current_key = {'PK': pk_val, 'SK': sk_val}
+        item_to_create = {**current_key, 'diagnostics_test_attribute': 'initialValue', 'type': 'Diagnostics'}
+        item_id_for_status = f"{pk_val}::{sk_val}"
+    else: # services, appointments (and any other table using a simple 'id' PK)
+        current_key = {'id': test_item_id_str}
+        item_to_create = {**current_key, 'diagnostics_test_attribute': 'initialValue'}
+        item_id_for_status = test_item_id_str
 
     crud_status = {
         "service": service_name_path,
         "tableName": table_name,
-        "itemId": test_item_id,
+        "itemId": item_id_for_status,
         "create": "PENDING",
         "read": "PENDING",
         "update": "PENDING",
@@ -79,61 +74,66 @@ def lambda_handler(event, context):
     try:
         # Create
         try:
-            table.put_item(Item=test_item)
+            table.put_item(Item=item_to_create)
             crud_status['create'] = "OK"
         except Exception as e:
             crud_status['create'] = str(e)
-            raise Exception(f"Create operation failed: {str(e)}") # Propagate to stop further ops
+            raise Exception(f"Create operation failed for {item_id_for_status}: {str(e)}")
 
         # Read
         try:
-            response = table.get_item(Key={test_item_pk_field: test_item_id})
+            response = table.get_item(Key=current_key)
             if response.get('Item'):
                 crud_status['read'] = "OK"
             else:
                 crud_status['read'] = "NOT_FOUND"
-                raise Exception("Read operation failed: Item not found after create.")
+                raise Exception(f"Read operation failed for {item_id_for_status}: Item not found after create.")
         except Exception as e:
             crud_status['read'] = str(e)
-            raise Exception(f"Read operation failed: {str(e)}")
+            raise Exception(f"Read operation failed for {item_id_for_status}: {str(e)}")
 
         # Update
         try:
             table.update_item(
-                Key={test_item_pk_field: test_item_id},
+                Key=current_key,
                 AttributeUpdates={'diagnostics_test_attribute': {'Value': 'updatedValue', 'Action': 'PUT'}}
             )
             crud_status['update'] = "OK"
         except Exception as e:
             crud_status['update'] = str(e)
-            raise Exception(f"Update operation failed: {str(e)}")
+            raise Exception(f"Update operation failed for {item_id_for_status}: {str(e)}")
 
         # Delete
         try:
-            table.delete_item(Key={test_item_pk_field: test_item_id})
+            table.delete_item(Key=current_key)
             crud_status['delete'] = "OK"
         except Exception as e:
             crud_status['delete'] = str(e)
             # Don't re-raise here, allow finally block to attempt cleanup
-            print(f"Delete operation failed: {str(e)}")
+            print(f"Main delete operation failed for {item_id_for_status}: {str(e)}")
 
 
     except Exception as e:
         # This catches failures from Create, Read, Update that were re-raised
-        print(f"Error during CRUD sequence: {str(e)}")
+        print(f"Error during CRUD sequence for {item_id_for_status}: {str(e)}")
         # Status for the failed operation is already set
 
     finally:
-        try:
-            # Ensure cleanup
-            table.delete_item(Key={test_item_pk_field: test_item_id})
-            # If delete was already OK, this won't change it.
-            # If delete failed, this is a second attempt.
-            # If create failed, this might fail too but it's a cleanup attempt.
-            print(f"Cleanup delete attempt for item ID {test_item_id} from {table_name} was successful or item did not exist.")
-        except Exception as e:
-            crud_status['cleanup_error'] = str(e)
-            print(f"Error during final cleanup delete for item ID {test_item_id}: {str(e)}")
+        # Ensure cleanup: Attempt to delete the item if it was created.
+        # This is important if the main delete operation failed or was not reached.
+        if crud_status['create'] == "OK": # Only attempt cleanup if item was likely created
+            print(f"Attempting cleanup delete for item {item_id_for_status} from {table_name}...")
+            try:
+                table.delete_item(Key=current_key)
+                if crud_status['delete'] != "OK": # If main delete failed, but cleanup worked
+                    crud_status['delete'] = "OK (cleaned up)"
+                print(f"Cleanup delete for item {item_id_for_status} from {table_name} was successful or item did not exist.")
+            except Exception as e:
+                crud_status['cleanup_error'] = str(e)
+                print(f"Error during final cleanup delete for item {item_id_for_status}: {str(e)}")
+        else:
+            print(f"Skipping cleanup delete for item {item_id_for_status} as create operation was not successful.")
+
 
     return {
         "statusCode": 200,
