@@ -427,6 +427,84 @@ export const adminService = {
       console.error(`Error ${enabled ? 'enabling' : 'disabling'} user:`, error);
       throw error;
     }
+  },
+
+  /**
+   * Check S3 connectivity
+   * @returns {Promise<Object>} - S3 connectivity status
+   */
+  async checkS3Connectivity() {
+    try {
+      console.log('Checking S3 connectivity...');
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
+
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/s3`, {
+        method: 'GET',
+        headers: {
+          'Authorization': idToken, // Raw token
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const responseText = await response.text();
+      console.log('S3 Connectivity API response text:', responseText);
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Error parsing S3 connectivity response as JSON:', parseError);
+        throw new Error(`Failed to parse response as JSON: ${responseText}`);
+      }
+      return data;
+    } catch (error) {
+      console.error('Error checking S3 connectivity:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Check DynamoDB connectivity
+   * @returns {Promise<Object>} - DynamoDB connectivity status
+   */
+  async checkDynamoDBConnectivity() {
+    try {
+      console.log('Checking DynamoDB connectivity...');
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
+
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/dynamodb`, {
+        method: 'GET',
+        headers: {
+          'Authorization': idToken, // Raw token
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const responseText = await response.text();
+      console.log('DynamoDB Connectivity API response text:', responseText);
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Error parsing DynamoDB connectivity response as JSON:', parseError);
+        throw new Error(`Failed to parse response as JSON: ${responseText}`);
+      }
+      return data;
+    } catch (error) {
+      console.error('Error checking DynamoDB connectivity:', error);
+      throw error;
+    }
   }
 };
 
