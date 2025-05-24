@@ -1,11 +1,11 @@
 // src/components/Layout/FrontdeskSidebar.jsx
 import React from 'react';
-import { List, Box } from '@mui/material'; // Added Box
+import { List } from '@mui/material'; // Removed Box
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/Person';
 import PaymentIcon from '@mui/icons-material/Payment';
-import SettingsIcon from '@mui/icons-material/Settings'; // Added SettingsIcon
+// import SettingsIcon from '@mui/icons-material/Settings'; // Removed SettingsIcon
 import ActiveNavLink from '../ActiveNavLink';
 
 function FrontdeskSidebar({ collapsed = false }) {
@@ -39,14 +39,6 @@ function FrontdeskSidebar({ collapsed = false }) {
         to="/frontdesk/checkout"
         icon={<PaymentIcon />}
         primary="Checkout"
-        collapsed={collapsed}
-      />
-      <Box sx={{ flexGrow: 1 }} /> {/* This spacer pushes the next item to the bottom */}
-      
-      <ActiveNavLink
-        to="/admin/settings" // Points to the shared settings page
-        icon={<SettingsIcon />}
-        primary="Settings"
         collapsed={collapsed}
       />
     </List>
