@@ -8,7 +8,7 @@ import {
   Grid,
   CircularProgress,
   Alert,
-  Container,
+  // Container, // Removed Container
   Avatar,
   IconButton,
   Card,
@@ -23,7 +23,7 @@ import {
 import { useAuth } from "../app/providers/AuthProvider";
 import userService from "../services/userService";
 import { getAuthToken } from "../utils/cognito-helpers";
-import { FormField, FormLayout } from "../components/ui";
+import { PageLayout, FormField, FormLayout } from "../components/ui"; // Added PageLayout
 import PersonIcon from "@mui/icons-material/Person";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import LockIcon from "@mui/icons-material/Lock";
@@ -359,18 +359,11 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 2 }}>
-      <Typography
-        variant="h4"
-        component="h1"
-        gutterBottom
-        color="primary.main"
-        fontWeight="medium"
-        sx={{ mb: 3 }}
-      >
-        Account Settings
-      </Typography>
-
+    <PageLayout 
+      title="Account Settings" 
+      subtitle="Manage your profile details and password settings."
+      maxWidth="md"
+    >
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
@@ -662,7 +655,7 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Container>
+    </PageLayout>
   );
 }
 

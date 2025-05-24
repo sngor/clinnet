@@ -11,10 +11,11 @@ import { useNavigate } from "react-router-dom";
 
 // Import UI components
 import {
-  PageHeading,
+  PageLayout, // Added PageLayout
   ContentCard,
   AppointmentList,
-  PageContainer,
+  // PageContainer, // Removed PageContainer
+  // PageHeading, // Removed PageHeading
 } from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
@@ -46,15 +47,15 @@ function AdminDashboard() {
   }, []);
 
   return (
-    <PageContainer>
-      {/* Page header */}
-      <PageHeading
-        title={`${getTimeBasedGreeting()}, ${
-          user?.firstName || user?.username || "Admin"
-        }!`}
-        subtitle="Here's what's happening in your clinic today"
-      />
-
+    <PageLayout
+      title={`${getTimeBasedGreeting()}, ${
+        user?.firstName || user?.username || "Admin"
+      }!`}
+      subtitle="Here's what's happening in your clinic today"
+      loading={loading}
+      error={error}
+      // maxWidth="lg" // Default is lg, so this is optional unless a different size is needed
+    >
       {/* Dashboard Summary Cards */}
       <Grid
         container
@@ -113,11 +114,11 @@ function AdminDashboard() {
       >
         <AppointmentList
           appointments={appointments}
-          loading={loading}
+          // loading={loading} // PageLayout now handles top-level loading state
           showAction={false}
         />
       </ContentCard>
-    </PageContainer>
+    </PageLayout>
   );
 }
 

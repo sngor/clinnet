@@ -1,16 +1,16 @@
 // src/pages/AdminAppointmentsPage.jsx
 import React from "react";
-import { PageHeading, PageContainer, ContentCard } from "../components/ui";
+// Updated imports from ../components/ui
+import { PageLayout, ContentCard } from "../components/ui"; 
 import AppointmentCalendar from "../features/appointments/components/AppointmentCalendar";
 
 function AdminAppointmentsPage() {
   return (
-    <PageContainer>
-      <PageHeading 
-        title="Appointment Management" 
-        subtitle="View and manage all appointments"
-      />
-      
+    <PageLayout
+      title="Appointment Management"
+      subtitle="View and manage all appointments"
+      // maxWidth="lg" // Default is lg, suitable here
+    >
       <ContentCard 
         elevation={0} 
         sx={{ 
@@ -20,7 +20,7 @@ function AdminAppointmentsPage() {
       >
         <AppointmentCalendar />
       </ContentCard>
-    </PageContainer>
+    </PageLayout>
   );
 }
 

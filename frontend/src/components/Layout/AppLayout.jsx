@@ -618,7 +618,7 @@ function AppLayout() {
         component="main"
         sx={{
           flexGrow: 1,
-          p: { xs: 2, sm: 3 },
+          // p: { xs: 2, sm: 3 }, // Padding removed as per instruction
           width: "100%", // Take up the whole width
           minHeight: "100vh",
           display: "flex",
