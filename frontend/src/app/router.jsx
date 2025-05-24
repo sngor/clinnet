@@ -22,6 +22,8 @@ import DoctorSchedulePage from "../pages/DoctorSchedulePage";
 import FrontdeskCheckoutPage from "../pages/FrontdeskCheckoutPage";
 import AdminReportsPage from "../pages/AdminReportsPage";
 import StyleGuidePage from "../pages/StyleGuidePage";
+import DiagnosticsPage from "../pages/DiagnosticsPage"; // Import the DiagnosticsPage component
+import AdminSettingsPage from "../pages/AdminSettingsPage"; // Import the AdminSettingsPage component
 import AppLayout from "../components/Layout/AppLayout";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -111,6 +113,24 @@ function AppRouter() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminReportsPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Add route for Admin Diagnostics Page */}
+        <Route
+          path="/admin/diagnostics"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DiagnosticsPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Add route for Admin Settings Page */}
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminSettingsPage />
             </ProtectedRoute>
           }
         />

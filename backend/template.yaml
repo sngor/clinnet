@@ -749,6 +749,76 @@ Resources:
             Auth:
               Authorizer: NONE
 
+  DiagnosticsOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/cors/
+      Handler: cors_options.lambda_handler
+      Events:
+        S3DiagnosticsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/s3
+            Method: options
+            Auth:
+              Authorizer: NONE
+        DynamoDBDiagnosticsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/dynamodb
+            Method: options
+            Auth:
+              Authorizer: NONE
+
+  # Lambda Functions for Diagnostics
+  CheckS3ConnectivityFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/diagnostics/
+      Handler: check_s3.lambda_handler
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListAllMyBuckets
+              Resource: "*"
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        CheckS3:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/s3
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CheckDynamoDBConnectivityFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/diagnostics/
+      Handler: check_dynamodb.lambda_handler
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:ListTables
+              Resource: "*"
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        CheckDynamoDB:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/dynamodb
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # Lambda Functions for Appointments
   GetAppointmentsFunction:
     Type: AWS::Serverless::Function
