@@ -1,184 +1,493 @@
 # 🧑‍💻 Local Development Guide
 
-How to set up and run Clinnet-EMR locally for rapid development and testing.
+Comprehensive guide for setting up and running Clinnet-EMR locally for development and testing.
 
 ---
 
 ## 🛠️ Prerequisites
 
-- Node.js 18.x
-- npm 8.x or later
-- Python 3.9+
-- AWS CLI & SAM CLI
-- AWS credentials configured (`aws configure`)
+Ensure you have the following installed:
+
+| Tool    | Version      | Installation                                                                                                           |
+| ------- | ------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Node.js | 18.x         | [Download](https://nodejs.org/)                                                                                        |
+| npm     | 8.x or later | Comes with Node.js                                                                                                     |
+| Python  | 3.9+         | [Download](https://python.org/)                                                                                        |
+| AWS CLI | Latest       | [Install Guide](https://aws.amazon.com/cli/)                                                                           |
+| SAM CLI | Latest       | [Install SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) |
+
+### Verify Installation
+
+```bash
+node --version    # Should be 18.x
+npm --version     # Should be 8.x+
+python --version  # Should be 3.9+
+aws --version     # Latest
+sam --version     # Latest
+```
 
 ---
 
-## 🖥️ Backend (Lambda, API Gateway, DynamoDB)
+## 🚀 Quick Start
 
-1. **Install dependencies:**
+### 1. Clone and Install Dependencies
 
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   ```
+```bash
+git clone <your-repo-url>
+cd Clinnet-EMR
 
-2. **Run/test Lambda functions locally**:
+# Install root dependencies
+npm install
 
-   ```bash
-   sam local start-api
-   # or test individual functions:
-   sam local invoke <FunctionName>
-   ```
+# Install backend dependencies
+cd backend
+pip install -r requirements.txt
 
-3. **Seed DynamoDB (optional)**:
+# Install frontend dependencies
+cd ../frontend
+npm install
+```
 
-   ```bash
-   cd scripts
-   ./seed_data.sh
-   ```
+### 2. Configure AWS Credentials
+
+```bash
+aws configure
+# Enter your AWS Access Key ID
+# Enter your Secret Access Key
+# Default region name: us-east-1 (or your preferred region)
+# Default output format: json
+```
+
+### 3. Deploy Backend Infrastructure
+
+```bash
+cd backend
+
+# Build and deploy (first time)
+sam build
+sam deploy --guided
+
+# For subsequent deployments
+sam deploy
+```
+
+**Note the outputs:** Save the API Gateway URL, User Pool ID, and other values for frontend configuration.
+
+### 4. Configure Frontend Environment
+
+Create `.env` file in the `frontend` directory:
+
+```env
+# Replace with actual values from SAM deployment output
+VITE_API_URL=https://your-api-id.execute-api.us-east-1.amazonaws.com/dev
+VITE_USER_POOL_ID=us-east-1_xxxxxxxxx
+VITE_USER_POOL_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+VITE_AWS_REGION=us-east-1
+VITE_DOCUMENTS_BUCKET=clinnet-documents-dev-xxx-us-east-1
+```
+
+### 5. Start Development Servers
+
+**Backend (SAM Local API):**
+
+```bash
+cd backend
+sam local start-api --port 3001
+```
+
+**Frontend (Vite Dev Server):**
+
+```bash
+cd frontend
+npm run dev
+```
+
+Access the application at [http://localhost:5173](http://localhost:5173)
 
 ---
 
-## 💻 Frontend (React)
+## 🖥️ Backend Development
 
-1. **Install dependencies**:
+### Running Lambda Functions Locally
 
-   ```bash
-   cd frontend
-   npm install
-   ```
+**Start API Gateway locally:**
 
-2. **Create environment file**:
+```bash
+cd backend
+sam local start-api --port 3001
+```
 
-   Create a `.env` file in the `frontend` directory:
+**Test individual functions:**
 
-   ```env
-   VITE_API_URL=http://localhost:3001
-   ```
+```bash
+# Test a specific function
+sam local invoke GetPatientsFunction
 
-3. **Start the frontend**:
+# Test with event data
+sam local invoke GetPatientsFunction --event events/get-patients.json
+```
 
-   ```bash
-   npm run dev
-   ```
+**Generate sample events:**
 
-   The app will be available at [http://localhost:5173](http://localhost:5173)
+```bash
+sam local generate-event apigateway aws-proxy --method GET --path /patients
+```
 
-4. **(Optional) Start the mock API server**:
-
-   If you need to use the JSON server for API mocking:
-
-   ```bash
-   npm run server
-   ```
-
-   The mock API will be available at [http://localhost:3001](http://localhost:3001)
-
-5. **Configure API endpoints**:
-   - Ensure `src/aws-exports.js` or Amplify config points to your local or deployed API Gateway endpoints.
-
----
-
-## 🗂️ Project Structure (Frontend)
-
-The project follows a feature-based structure:
+### Lambda Function Structure
 
 ```text
-frontend/
-├── src/
-│   ├── app/             # App configuration
-│   ├── components/      # Shared UI components
-│   ├── features/        # Feature modules (appointments, patients, etc.)
-│   ├── mock/            # Mock data
-│   ├── pages/           # Page components
-│   └── utils/           # Utility functions
+backend/src/handlers/
+├── appointments/        # Appointment CRUD operations
+│   ├── get_appointments.py
+│   ├── create_appointment.py
+│   └── ...
+├── patients/           # Patient CRUD operations
+│   ├── get_patients.py
+│   ├── create_patient.py
+│   └── ...
+├── services/           # Service management
+├── users/              # User management
+└── cors/               # CORS handling
 ```
 
----
+### Adding New Lambda Functions
 
-## 🔄 Development Workflow
+1. **Create handler file:**
 
-1. **Component Development**:
+   ```python
+   # backend/src/handlers/new_feature/handler.py
+   import json
+   from utils.response import create_response
 
-   - Create reusable UI components in `src/components/ui/`
-   - Implement feature-specific components in their respective feature folders
-   - Use the UI component system for consistent styling
-
-2. **Page Development**:
-
-   - Create page components in `src/pages/`
-   - Compose pages using UI and feature components
-   - Use the `PageHeading` component for consistent page headers
-
-3. **Feature Development**:
-   - Organize feature code in the appropriate feature folder
-   - Create feature-specific components, hooks, and utilities
-   - Use centralized mock data from the `src/mock/` directory
-
----
-
-## 📚 UI Component System
-
-The application uses a custom UI component library built on top of Material UI:
-
-```jsx
-import {
-  PageHeading,
-  ContentCard,
-  StatusChip,
-  AppointmentList,
-} from "../components/ui";
-
-function MyPage() {
-  return (
-    <Container maxWidth="xl" disableGutters>
-      <PageHeading title="My Page" subtitle="Page description" />
-
-      <ContentCard title="Section Title">{/* Content goes here */}</ContentCard>
-    </Container>
-  );
-}
-```
-
----
-
-## 🥡 Mock Data
-
-The application uses centralized mock data located in `src/mock/`:
-
-```jsx
-import { mockPatients } from "../mock/mockPatients";
-import { mockAppointments } from "../mock/mockAppointments";
-```
-
----
-
-## ⚙️ Utility Functions
-
-Common utility functions are available in `src/utils/`:
-
-```jsx
-import { formatDate, formatTime } from "../utils/dateUtils";
-import { getAppointmentStatusColor } from "../utils/statusUtils";
-```
-
----
-
-## 🚑 Troubleshooting
-
-If you encounter issues:
-
-1. **Node.js Version**: Make sure you're using Node.js version 18.x
-2. **Clean Install**: Try reinstalling dependencies:
-   ```bash
-   rm -rf node_modules
-   npm install
+   def lambda_handler(event, context):
+       try:
+           # Your logic here
+           return create_response(200, {"message": "Success"})
+       except Exception as e:
+           return create_response(500, {"error": str(e)})
    ```
-3. **Port Conflicts**: If port 5173 is in use, Vite will automatically use the next available port
-4. **Browser Cache**: Try clearing your browser cache or using incognito mode
-5. **AWS Credentials**: Ensure your AWS credentials are correctly configured for local development
+
+2. **Update SAM template:**
+
+   ```yaml
+   # In backend/template.yaml
+   NewFeatureFunction:
+     Type: AWS::Serverless::Function
+     Properties:
+       CodeUri: src/handlers/new_feature/
+       Handler: handler.lambda_handler
+       Events:
+         NewFeatureApi:
+           Type: Api
+           Properties:
+             RestApiId: !Ref ClinicAPI
+             Path: /new-feature
+             Method: get
+   ```
+
+3. **Deploy:**
+   ```bash
+   sam build && sam deploy
+   ```
 
 ---
 
-> **Tip:** For troubleshooting, see the main [README.md](../README.md) or open an issue.
+## 💻 Frontend Development
+
+### Development Server
+
+```bash
+cd frontend
+npm run dev
+```
+
+The development server includes:
+
+- **Hot Module Replacement (HMR)** for instant updates
+- **Proxy configuration** for API calls to `localhost:3001`
+- **Environment variable loading** from `.env` files
+
+### Project Structure
+
+```text
+frontend/src/
+├── app/                    # Application configuration
+│   ├── App.jsx             # Main app component
+│   └── theme.js            # Material UI theme
+├── components/             # Reusable components
+│   └── ui/                 # UI component library
+│       ├── PageHeading.jsx
+│       ├── ContentCard.jsx
+│       └── ...
+├── features/               # Feature modules
+│   ├── appointments/
+│   ├── patients/
+│   └── ...
+├── pages/                  # Page components
+├── mock/                   # Mock data
+└── utils/                  # Utility functions
+```
+
+### Component Development Workflow
+
+1. **Create UI Components:**
+
+   ```jsx
+   // src/components/ui/NewComponent.jsx
+   import React from "react";
+   import { Card, CardContent, Typography } from "@mui/material";
+
+   export function NewComponent({ title, children }) {
+     return (
+       <Card>
+         <CardContent>
+           <Typography variant="h6">{title}</Typography>
+           {children}
+         </CardContent>
+       </Card>
+     );
+   }
+   ```
+
+2. **Use in Pages:**
+
+   ```jsx
+   // src/pages/NewPage.jsx
+   import { NewComponent } from "../components/ui/NewComponent";
+
+   export function NewPage() {
+     return (
+       <Container>
+         <NewComponent title="My Feature">Content goes here</NewComponent>
+       </Container>
+     );
+   }
+   ```
+
+### Working with Mock Data
+
+```jsx
+// src/mock/mockData.js
+export const mockPatients = [
+  {
+    id: "1",
+    name: "John Doe",
+    email: "john@example.com",
+    // ... more fields
+  },
+];
+
+// In components
+import { mockPatients } from "../mock/mockData";
+```
+
+---
+
+## 🔧 Configuration Details
+
+### Vite Configuration
+
+The frontend uses a custom Vite configuration with:
+
+```javascript
+// frontend/vite.config.js
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+      buffer: "buffer/",
+      process: "process/browser",
+    },
+  },
+  define: {
+    global: "window",
+    "process.env": {},
+  },
+  server: {
+    port: 5173,
+    proxy: {
+      "/api": "http://localhost:3001",
+    },
+  },
+});
+```
+
+### Environment Variables
+
+**Frontend (.env):**
+
+```env
+VITE_API_URL=http://localhost:3001
+VITE_USER_POOL_ID=your-cognito-user-pool-id
+VITE_USER_POOL_CLIENT_ID=your-cognito-client-id
+VITE_AWS_REGION=us-east-1
+```
+
+**Backend (SAM template):**
+Environment variables are automatically injected into Lambda functions via the SAM template.
+
+---
+
+## 🧪 Testing
+
+### Backend Testing
+
+```bash
+cd backend
+
+# Run Lambda functions locally
+sam local start-api
+
+# Test endpoints
+curl http://localhost:3001/patients
+curl http://localhost:3001/services
+```
+
+### Frontend Testing
+
+```bash
+cd frontend
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run linting
+npm run lint
+```
+
+---
+
+## 🔍 Debugging
+
+### Backend Debugging
+
+**View Lambda logs:**
+
+```bash
+sam logs -n GetPatientsFunction --stack-name your-stack-name --tail
+```
+
+**Local debugging:**
+
+```bash
+# Start with debug mode
+sam local start-api --debug
+
+# Use IDE breakpoints with remote debugging
+```
+
+### Frontend Debugging
+
+**Browser DevTools:**
+
+- React Developer Tools extension
+- Network tab for API requests
+- Console for JavaScript errors
+
+**Vite DevTools:**
+
+```bash
+# Start with debug output
+npm run dev -- --debug
+```
+
+---
+
+## ⚠️ Troubleshooting
+
+### Common Issues
+
+**Port already in use:**
+
+```bash
+# Kill process on port 5173
+lsof -ti:5173 | xargs kill -9
+
+# Or use different port
+npm run dev -- --port 3000
+```
+
+**AWS credentials issues:**
+
+```bash
+# Verify credentials
+aws sts get-caller-identity
+
+# Reconfigure if needed
+aws configure
+```
+
+**Node.js version mismatch:**
+
+```bash
+# Use Node Version Manager
+nvm use 18
+nvm install 18  # if not installed
+```
+
+**Python dependency issues:**
+
+```bash
+cd backend
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**SAM build failures:**
+
+```bash
+# Clean build with container
+sam build --use-container
+
+# If still failing, try Docker build
+sam build --use-container --debug
+```
+
+### Getting Help
+
+1. Check the [Architecture Documentation](./architecture.md)
+2. Review the [Deployment Guide](./deployment.md)
+3. Look at the main [README.md](../README.md)
+4. Open an issue in the repository
+
+---
+
+## 📝 Development Best Practices
+
+### Code Organization
+
+- Keep components small and focused
+- Use custom hooks for API calls
+- Organize features by domain
+- Use TypeScript for better type safety (future enhancement)
+
+### Git Workflow
+
+```bash
+# Create feature branch
+git checkout -b feature/new-feature
+
+# Make changes and commit
+git add .
+git commit -m "Add new feature"
+
+# Push and create PR
+git push origin feature/new-feature
+```
+
+### Testing Strategy
+
+- Unit tests for utility functions
+- Integration tests for API endpoints
+- Component tests for React components
+- End-to-end tests for critical user flows
+
+---
+
+> **Next Steps:** Once your local environment is set up, check out the [Architecture Guide](./architecture.md) to understand the system design, or the [Deployment Guide](./deployment.md) for production deployment.
