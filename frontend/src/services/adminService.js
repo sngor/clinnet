@@ -427,6 +427,124 @@ export const adminService = {
       console.error(`Error ${enabled ? 'enabling' : 'disabling'} user:`, error);
       throw error;
     }
+  },
+
+  /**
+   * Check S3 connectivity
+   * @returns {Promise<Object>} - S3 connectivity status
+   */
+  async checkS3Connectivity() { // This function remains unchanged
+    try {
+      console.log('Checking S3 connectivity...');
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
+
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/s3`, {
+        method: 'GET',
+        headers: {
+          'Authorization': idToken, // Raw token
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const responseText = await response.text();
+      console.log('S3 Connectivity API response text:', responseText);
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Error parsing S3 connectivity response as JSON:', parseError);
+        throw new Error(`Failed to parse response as JSON: ${responseText}`);
+      }
+      return data;
+    } catch (error) {
+      console.error('Error checking S3 connectivity:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Check DynamoDB CRUD for a specific service
+   * @param {string} serviceName - The name of the service (e.g., 'patients', 'services')
+   * @returns {Promise<Object>} - DynamoDB CRUD status
+   */
+  async checkDynamoDBCrud(serviceName) {
+    try {
+      console.log(`Checking DynamoDB CRUD for ${serviceName}...`);
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
+
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/crud/${serviceName}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': idToken, // Raw token
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const responseText = await response.text();
+      // console.log(`DynamoDB CRUD (${serviceName}) API response text:`, responseText); // Optional
+
+      if (!response.ok) {
+        throw new Error(`API request for ${serviceName} CRUD failed with status ${response.status}: ${responseText}`);
+      }
+      
+      let data;
+      try {
+          data = JSON.parse(responseText);
+      } catch (parseError) {
+          console.error(`Error parsing ${serviceName} CRUD response as JSON:`, parseError);
+          throw new Error(`Failed to parse ${serviceName} CRUD response as JSON: ${responseText}`);
+      }
+      return data;
+    } catch (error) {
+      console.error(`Error checking DynamoDB CRUD for ${serviceName}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Check Cognito Users CRUD operations
+   * @returns {Promise<Object>} - Cognito Users CRUD status
+   */
+  async checkCognitoUsersCrud() {
+    try {
+      console.log('Checking Cognito Users CRUD...');
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
+
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/cognito-users`, {
+        method: 'GET',
+        headers: {
+          'Authorization': idToken, // Raw token
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const responseText = await response.text();
+      // console.log('Cognito Users CRUD API response text:', responseText); // Optional
+
+      if (!response.ok) {
+        throw new Error(`API request for Cognito Users CRUD failed with status ${response.status}: ${responseText}`);
+      }
+      
+      let data;
+      try {
+          data = JSON.parse(responseText);
+      } catch (parseError) {
+          console.error('Error parsing Cognito Users CRUD response as JSON:', parseError);
+          throw new Error(`Failed to parse Cognito Users CRUD response as JSON: ${responseText}`);
+      }
+      return data;
+    } catch (error) {
+      console.error('Error checking Cognito Users CRUD:', error);
+      throw error;
+    }
   }
 };
 

@@ -749,6 +749,120 @@ Resources:
             Auth:
               Authorizer: NONE
 
+  DiagnosticsOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/cors/
+      Handler: cors_options.lambda_handler
+      Events:
+        S3DiagnosticsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/s3
+            Method: options
+            Auth:
+              Authorizer: NONE
+        DynamoDBDiagnosticsOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/s3
+            Method: options
+            Auth:
+              Authorizer: NONE
+        DynamoCrudDiagnosticsOptions: # New OPTIONS for DynamoDB CRUD
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/crud/{serviceName}
+            Method: options
+            Auth:
+              Authorizer: NONE
+        CognitoUsersDiagnosticsOptions: # New OPTIONS for Cognito CRUD
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/cognito-users
+            Method: options
+            Auth:
+              Authorizer: NONE
+
+  # Lambda Functions for Diagnostics
+  CheckS3ConnectivityFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/diagnostics/
+      Handler: check_s3.lambda_handler
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListAllMyBuckets
+              Resource: "*"
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        CheckS3:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/s3
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CheckDynamoDBCrudFunction: # New DynamoDB CRUD Function
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/diagnostics/
+      Handler: check_dynamodb_crud.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PatientRecordsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ServicesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AppointmentsTable
+      Events:
+        CheckDynamoCrud:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/crud/{serviceName}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CheckCognitoUserCrudFunction: # New Cognito User CRUD Function
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/diagnostics/
+      Handler: check_cognito_user_crud.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminGetUser
+                - cognito-idp:AdminUpdateUserAttributes
+                - cognito-idp:AdminDeleteUser
+              Resource: !GetAtt UserPool.Arn
+      # USER_POOL_ID is inherited from Globals
+      Events:
+        CheckCognitoCrud:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /diagnostics/cognito-users
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # Lambda Functions for Appointments
   GetAppointmentsFunction:
     Type: AWS::Serverless::Function
