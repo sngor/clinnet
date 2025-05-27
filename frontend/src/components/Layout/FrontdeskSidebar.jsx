@@ -1,11 +1,10 @@
 // src/components/Layout/FrontdeskSidebar.jsx
 import React from 'react';
-import { List, Box } from '@mui/material'; // Added Box
+import { List } from '@mui/material'; // Removed Box
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/Person';
 import PaymentIcon from '@mui/icons-material/Payment';
-import SettingsIcon from '@mui/icons-material/Settings'; // Added SettingsIcon
 import ActiveNavLink from '../ActiveNavLink';
 
 function FrontdeskSidebar({ collapsed = false }) {

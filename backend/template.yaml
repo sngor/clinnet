@@ -66,6 +66,36 @@ Resources:
           Projection:
             ProjectionType: ALL
 
+  MedicalReportsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub clinnet-medical-reports-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: reportId
+          AttributeType: S
+        - AttributeName: patientId
+          AttributeType: S
+        - AttributeName: doctorId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: reportId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: PatientIdIndex
+          KeySchema:
+            - AttributeName: patientId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: DoctorIdIndex
+          KeySchema:
+            - AttributeName: doctorId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      DeletionPolicy: Retain # Retaining the table on stack deletion
+
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -819,6 +849,7 @@ Resources:
       Handler: check_dynamodb_crud.lambda_handler
       Layers:
         - !Ref UtilsLayer
+
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PatientRecordsTable
@@ -951,6 +982,99 @@ Resources:
             Path: /appointments/{id}
             Method: delete
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
+
+  MedicalReportsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/medical_reports/
+      Handler: index.handler # Assuming index.js as the entry point
+      Runtime: nodejs18.x
+      # Environment variables are inherited from Globals
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MedicalReportsTable
+      Events:
+        CreateReport:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GetReportById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports/{reportId}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GetReportsByPatientId:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports/patient/{patientId}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+        GetReportsByDoctorId:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports/doctor/{doctorId}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+        UpdateReport:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports/{reportId}
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+        DeleteReport:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports/{reportId}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+        # OPTIONS for CORS preflight
+        OptionsReportsBase:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports
+            Method: options
+            Auth:
+              Authorizer: NONE # OPTIONS should not be auth-protected
+        OptionsReportsById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports/{reportId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+        OptionsReportsByPatientId:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports/patient/{patientId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+        OptionsReportsByDoctorId:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports/doctor/{doctorId}
+            Method: options
+            Auth:
+              Authorizer: NONE
 
   # --- Frontend (S3 + CloudFront) ---
   FrontendBucket:

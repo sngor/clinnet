@@ -28,6 +28,7 @@ import { useAuth } from "../../app/providers/AuthProvider";
 import AdminSidebar from "./AdminSidebar";
 import DoctorSidebar from "./DoctorSidebar";
 import FrontdeskSidebar from "./FrontdeskSidebar";
+import ActiveNavLink from '../ActiveNavLink'; // Ensure ActiveNavLink is imported
 
 const drawerWidth = 240;
 const collapsedDrawerWidth = 72;
@@ -218,7 +219,19 @@ function AppLayout() {
         >
           {renderSidebar()}
         </Box>
-        <Divider />
+        
+        {/* Inserted Settings Link Start */}
+        <Box sx={{ p: 0.5 }}> {/* Using similar padding as sidebar lists items for consistency */}
+          <ActiveNavLink
+            to="/admin/settings" // Path to the shared settings page
+            icon={<SettingsIcon />}
+            primary="Settings"
+            collapsed={drawerCollapsed} // Use the AppLayout's state for collapsed status
+          />
+        </Box>
+        {/* Inserted Settings Link End */}
+
+        <Divider /> {/* Existing divider above collapse button */}
         {/* Collapse/Expand button - hidden on mobile */}
         {!isMobile && (
           <Box

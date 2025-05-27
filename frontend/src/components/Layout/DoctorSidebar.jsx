@@ -1,12 +1,11 @@
 // src/components/Layout/DoctorSidebar.jsx
 import React from 'react';
-import { List, Box } from '@mui/material'; // Added Box
+import { List } from '@mui/material'; // Removed Box
 import HomeIcon from '@mui/icons-material/Home';
 import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/Person';
 import MedicalInformationIcon from '@mui/icons-material/MedicalInformation';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import SettingsIcon from '@mui/icons-material/Settings'; // Added SettingsIcon
 import ActiveNavLink from '../ActiveNavLink';
 
 function DoctorSidebar({ collapsed = false }) {
