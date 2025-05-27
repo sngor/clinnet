@@ -1,22 +1,25 @@
 // src/components/Layout/DoctorSidebar.jsx
-import React from 'react';
-import { List } from '@mui/material'; // Removed Box
-import HomeIcon from '@mui/icons-material/Home';
-import EventIcon from '@mui/icons-material/Event';
-import PersonIcon from '@mui/icons-material/Person';
-import MedicalInformationIcon from '@mui/icons-material/MedicalInformation';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import ActiveNavLink from '../ActiveNavLink';
+import React from "react";
+import { List, Box } from "@mui/material";
+import HomeIcon from "@mui/icons-material/Home";
+import EventIcon from "@mui/icons-material/Event";
+import PersonIcon from "@mui/icons-material/Person";
+import MedicalInformationIcon from "@mui/icons-material/MedicalInformation";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import SettingsIcon from "@mui/icons-material/Settings";
+import ActiveNavLink from "../ActiveNavLink";
 
 function DoctorSidebar({ collapsed = false }) {
   return (
-    <List sx={{ 
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      p: 0.5 // Reduced padding to give more space to buttons
-    }}>
+    <List
+      sx={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        p: 0.5, // Reduced padding to give more space to buttons
+      }}
+    >
       <ActiveNavLink
         to="/doctor"
         icon={<HomeIcon />}
@@ -47,8 +50,8 @@ function DoctorSidebar({ collapsed = false }) {
         primary="Medical Records"
         collapsed={collapsed}
       />
-      <Box sx={{ flexGrow: 1 }} /> {/* This spacer pushes the next item to the bottom */}
-      
+      <Box sx={{ flexGrow: 1 }} />{" "}
+      {/* This spacer pushes the next item to the bottom */}
       <ActiveNavLink
         to="/admin/settings" // Points to the shared settings page
         icon={<SettingsIcon />}

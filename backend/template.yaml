@@ -94,7 +94,7 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
-      DeletionPolicy: Retain # Retaining the table on stack deletion
+    DeletionPolicy: Retain # Retaining the table on stack deletion
 
   UsersTable:
     Type: AWS::DynamoDB::Table
