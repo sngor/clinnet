@@ -767,7 +767,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /diagnostics/s3
+            Path: /diagnostics/dynamodb
             Method: options
             Auth:
               Authorizer: NONE
@@ -784,7 +784,6 @@ Resources:
           Properties:
             RestApiId: !Ref ClinicAPI
             Path: /diagnostics/cognito-users
-
             Method: options
             Auth:
               Authorizer: NONE
@@ -844,6 +843,11 @@ Resources:
       Handler: check_cognito_user_crud.lambda_handler
       Layers:
         - !Ref UtilsLayer
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
                 - cognito-idp:AdminCreateUser
                 - cognito-idp:AdminGetUser
                 - cognito-idp:AdminUpdateUserAttributes
@@ -856,7 +860,6 @@ Resources:
           Properties:
             RestApiId: !Ref ClinicAPI
             Path: /diagnostics/cognito-users
-
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
