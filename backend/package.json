@@ -4,7 +4,9 @@
   "description": "Backend services for Clinnet-EMR",
   "main": "src/handlers/medical_reports/index.js",
   "scripts": {
-    "test": "jest"
+    "test:js": "jest",
+    "test:python": "python3 -m venv .venv_test_py && . .venv_test_py/bin/activate && pip install -r requirements.txt -r requirements-dev.txt && pytest tests/python && deactivate && rm -rf .venv_test_py",
+    "test": "npm run test:js && npm run test:python"
   },
   "keywords": [
     "emr",
