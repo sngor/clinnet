@@ -26,7 +26,6 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import SyncProblemIcon from '@mui/icons-material/SyncProblem';
-
 import adminService from '../services/adminService';
 
 const initialServicesData = [
@@ -96,6 +95,7 @@ const DiagnosticsPage = () => {
               return { ...s, status: 'Error', details: response?.message || `${s.name} test failed.` };
             }
           }
+
         }
         return s;
       });
@@ -113,6 +113,7 @@ const DiagnosticsPage = () => {
         }
         return s;
       });
+
       setServices(servicesAfterTest);
 
     } catch (error) {
@@ -141,8 +142,10 @@ const DiagnosticsPage = () => {
   };
 
   return (
+
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>System Diagnostics</Typography>
+
       <List>
         {services.map((service) => {
           const statusProps = getStatusProps(service.status);
@@ -155,8 +158,10 @@ const DiagnosticsPage = () => {
                   icon={statusProps.icon}
                   label={service.status}
                   color={statusProps.color}
+
                   variant="filled"
                   sx={{ width: '180px', textAlign: 'left', mr: 2 }}
+
                 />
                 {service.testable && (
                   <Button
@@ -214,6 +219,7 @@ const DiagnosticsPage = () => {
                 </ListItem>
               )}
               <Divider component="li" sx={{mb:1}} />
+
             </React.Fragment>
           );
         })}

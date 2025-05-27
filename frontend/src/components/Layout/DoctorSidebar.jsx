@@ -6,7 +6,6 @@ import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/Person';
 import MedicalInformationIcon from '@mui/icons-material/MedicalInformation';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-// import SettingsIcon from '@mui/icons-material/Settings'; // Removed SettingsIcon
 import ActiveNavLink from '../ActiveNavLink';
 
 function DoctorSidebar({ collapsed = false }) {
@@ -46,6 +45,14 @@ function DoctorSidebar({ collapsed = false }) {
         to="/doctor/medical-records"
         icon={<MedicalInformationIcon />}
         primary="Medical Records"
+        collapsed={collapsed}
+      />
+      <Box sx={{ flexGrow: 1 }} /> {/* This spacer pushes the next item to the bottom */}
+      
+      <ActiveNavLink
+        to="/admin/settings" // Points to the shared settings page
+        icon={<SettingsIcon />}
+        primary="Settings"
         collapsed={collapsed}
       />
     </List>

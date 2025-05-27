@@ -819,6 +819,7 @@ Resources:
       Handler: check_dynamodb_crud.lambda_handler
       Layers:
         - !Ref UtilsLayer
+
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PatientRecordsTable
@@ -847,6 +848,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
+
                 - cognito-idp:AdminCreateUser
                 - cognito-idp:AdminGetUser
                 - cognito-idp:AdminUpdateUserAttributes
