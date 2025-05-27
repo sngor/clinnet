@@ -1,0 +1,3 @@
+pytest
+moto[dynamodb,cognito-idp,s3]>=4.0.0
+boto3
