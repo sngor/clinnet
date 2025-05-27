@@ -1,0 +1,29 @@
+{
+  "name": "clinnet-emr-backend",
+  "version": "1.0.0",
+  "description": "Backend services for Clinnet-EMR",
+  "main": "src/handlers/medical_reports/index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "emr",
+    "aws",
+    "serverless"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.27.1",
+    "@babel/preset-env": "^7.27.2",
+    "aws-sdk-client-mock": "^4.1.0",
+    "aws-sdk-client-mock-jest": "^4.1.0",
+    "babel-jest": "^30.0.0-beta.3",
+    "jest": "^30.0.0-beta.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.817.0",
+    "@aws-sdk/lib-dynamodb": "^3.817.0",
+    "uuid": "^11.1.0"
+  }
+}
