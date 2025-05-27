@@ -537,7 +537,7 @@ export const adminService = {
       if (!response.ok) {
         throw new Error(`API request for Cognito Users CRUD failed with status ${response.status}: ${responseText}`);
       }
-     
+
       let data;
       try {
           data = JSON.parse(responseText);

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Box,
@@ -96,6 +95,7 @@ const DiagnosticsPage = () => {
               return { ...s, status: 'Error', details: response?.message || `${s.name} test failed.` };
             }
           }
+
         }
         return s;
       });
@@ -113,6 +113,7 @@ const DiagnosticsPage = () => {
         }
         return s;
       });
+
       setServices(servicesAfterTest);
 
     } catch (error) {
@@ -126,20 +127,17 @@ const DiagnosticsPage = () => {
         });
         return afterCatchServices;
       });
-
     }
   };
 
   const getStatusProps = (status) => {
     switch (status) {
-
       case 'Online': return { color: 'success', icon: <CheckCircleOutlineIcon /> };
       case 'Error': return { color: 'error', icon: <ErrorOutlineIcon /> };
       case 'Checking...': return { color: 'warning', icon: <HourglassEmptyIcon /> };
       case 'Potentially Degraded': return { color: 'info', icon: <SyncProblemIcon /> };
       case 'Unknown':
       default: return { color: 'default', icon: <HelpOutlineIcon /> };
-
     }
   };
 
@@ -170,9 +168,7 @@ const DiagnosticsPage = () => {
                     variant="contained"
                     onClick={() => handleTestService(service.id)}
                     disabled={service.status === 'Checking...'}
-
                     sx={{ width: '100px' }}
-
                   >
                     {service.status === 'Checking...' ? <CircularProgress size={24} /> : 'Test'}
                   </Button>
