@@ -53,7 +53,24 @@ def lambda_handler(event, context):
         updates = {}
         for field in updatable_fields:
             if field in body:
+                # Validate types for specific fields
+                if field == 'price' and not isinstance(body[field], (int, float)):
+                    logger.warning("Invalid type for 'price' field in update.")
+                    return generate_response(400, {'message': 'price must be a number.'})
+                if field == 'active' and not isinstance(body[field], bool):
+                    logger.warning("Invalid type for 'active' field in update.")
+                    return generate_response(400, {'message': 'active must be a boolean.'})
+                if field == 'duration' and not isinstance(body[field], (int, float)):
+                    logger.warning("Invalid type for 'duration' field in update.")
+                    return generate_response(400, {'message': 'duration must be a number.'})
+                
                 updates[field] = body[field]
+        
+        if not updates:
+            logger.info(f"No valid or updatable fields provided for service {service_id}.")
+            # Return current service state if no valid updates are made
+            return generate_response(200, existing_service)
+
         updated_service = update_item(table_name, service_id, updates)
         logger.info(f"Service {service_id} updated successfully.")
         return generate_response(200, updated_service)

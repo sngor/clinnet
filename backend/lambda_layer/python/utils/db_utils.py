@@ -3,6 +3,7 @@ Database utility functions for DynamoDB operations
 """
 import os
 import json
+import logging
 import boto3
 import uuid
 import decimal
@@ -12,6 +13,10 @@ from botocore.exceptions import ClientError
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
+
+# Initialize Logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # Helper class to convert a DynamoDB item to JSON
 class DecimalEncoder(json.JSONEncoder):
@@ -42,13 +47,13 @@ def query_table(table_name, **kwargs):
         # Handle potential pagination if the table is large
         items = response.get('Items', [])
         while 'LastEvaluatedKey' in response:
-            print(f"Scanning {table_name} again for pagination...")
+            logger.info(f"Scanning {table_name} again for pagination...")
             kwargs['ExclusiveStartKey'] = response['LastEvaluatedKey']
             response = table.scan(**kwargs)
             items.extend(response.get('Items', []))
         return items
     except ClientError as e:
-        print(f"Error scanning table {table_name}: {e}")
+        logger.error(f"Error scanning table {table_name}: {e}", exc_info=True)
         raise
 
 def get_item_by_id(table_name, item_id):
@@ -72,7 +77,7 @@ def get_item_by_id(table_name, item_id):
         )
         return response.get('Item')
     except ClientError as e:
-        print(f"Error getting item {item_id} from table {table_name}: {e}")
+        logger.error(f"Error getting item {item_id} from table {table_name}: {e}", exc_info=True)
         raise
 
 def put_item(table_name, item):
@@ -94,7 +99,7 @@ def put_item(table_name, item):
         table.put_item(Item=item_decimal)
         return item # Return original item before decimal conversion for consistency
     except ClientError as e:
-        print(f"Error putting item in table {table_name}: {e}")
+        logger.error(f"Error putting item in table {table_name}: {e}", exc_info=True)
         raise
 
 def create_item(table_name, item):
@@ -135,7 +140,7 @@ def update_item(table_name, item_id, updates):
     table = dynamodb.Table(table_name)
 
     if not updates:
-        print(f"No updates provided for item {item_id} in table {table_name}")
+        logger.warning(f"No updates provided for item {item_id} in table {table_name}. Returning current item.")
         return get_item_by_id(table_name, item_id) # Return current item if no updates
 
     # Add updatedAt timestamp automatically
@@ -155,7 +160,7 @@ def update_item(table_name, item_id, updates):
             expression_attribute_values[attr_val_placeholder] = value
 
     if not update_expression_parts:
-         print(f"No valid fields to update for item {item_id} in table {table_name}")
+         logger.warning(f"No valid fields to update for item {item_id} in table {table_name}. Returning current item.")
          return get_item_by_id(table_name, item_id)
 
     update_expression = "SET " + ", ".join(update_expression_parts)
@@ -175,10 +180,10 @@ def update_item(table_name, item_id, updates):
         )
         return response.get('Attributes')
     except ClientError as e:
-        print(f"Error updating item {item_id} in table {table_name}: {e}")
+        logger.error(f"Error updating item {item_id} in table {table_name}: {e}", exc_info=True)
         raise
     except Exception as e:
-        print(f"Non-ClientError updating item {item_id} in table {table_name}: {e}")
+        logger.error(f"Non-ClientError updating item {item_id} in table {table_name}: {e}", exc_info=True)
         raise
 
 
@@ -199,10 +204,10 @@ def delete_item(table_name, item_id):
             },
             ReturnValues='ALL_OLD' # Optionally return the deleted item
         )
-        print(f"Successfully deleted item {item_id} from table {table_name}")
+        logger.info(f"Successfully deleted item {item_id} from table {table_name}")
         return response.get('Attributes') # Return the deleted item data if needed
     except ClientError as e:
-        print(f"Error deleting item {item_id} from table {table_name}: {e}")
+        logger.error(f"Error deleting item {item_id} from table {table_name}: {e}", exc_info=True)
         raise
 
 def generate_response(status_code, body):
@@ -244,7 +249,7 @@ def get_patient_by_pk_sk(table_name, pk, sk):
         response = table.get_item(Key={'PK': pk, 'SK': sk})
         return response.get('Item')
     except ClientError as e:
-        print(f"Error getting item PK={pk}, SK={sk} from table {table_name}: {e}")
+        logger.error(f"Error getting item PK={pk}, SK={sk} from table {table_name}: {e}", exc_info=True)
         raise
 
 def update_item_by_pk_sk(table_name, pk, sk, updates):
@@ -301,7 +306,7 @@ def update_item_by_pk_sk(table_name, pk, sk, updates):
         )
         return response.get('Attributes')
     except ClientError as e:
-        print(f"Error updating item PK={pk}, SK={sk} in table {table_name}: {e}")
+        logger.error(f"Error updating item PK={pk}, SK={sk} in table {table_name}: {e}", exc_info=True)
         raise
 
 def query_by_type(table_name, type_value, last_evaluated_key=None):
@@ -338,5 +343,5 @@ def query_by_type(table_name, type_value, last_evaluated_key=None):
             'LastEvaluatedKey': response.get('LastEvaluatedKey')
         }
     except ClientError as e:
-        print(f"Error querying items by type {type_value} from table {table_name}: {e}")
+        logger.error(f"Error querying items by type {type_value} from table {table_name}: {e}", exc_info=True)
         raise
