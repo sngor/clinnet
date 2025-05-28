@@ -43,14 +43,6 @@ function FrontdeskSidebar({ collapsed = false }) {
         primary="Checkout"
         collapsed={collapsed}
       />
-      <Box sx={{ flexGrow: 1 }} />{" "}
-      {/* This spacer pushes the next item to the bottom */}
-      <ActiveNavLink
-        to="/admin/settings" // Points to the shared settings page
-        icon={<SettingsIcon />}
-        primary="Settings"
-        collapsed={collapsed}
-      />
     </List>
   );
 }
