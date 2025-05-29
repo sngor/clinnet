@@ -245,8 +245,11 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
       try {
         result = await uploadFileDirectly(file);
       } catch (directUploadError) {
-        console.log('Direct upload failed, falling back to base64 method', directUploadError);
-        
+        console.log(
+          "Direct upload failed, falling back to base64 method",
+          directUploadError
+        );
+
         // Fallback to base64 method
         const base64 = await convertFileToBase64(file);
         // Do NOT strip the data:image/...;base64, prefix. Send the full data URI string.
@@ -254,7 +257,7 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
         // Upload image with proper formatting
         result = await userService.uploadProfileImage(imageData);
       }
-      
+
       if (result && (result.success || result.imageUrl)) {
         setProfileImage(result.imageUrl);
         // Also update in auth context
@@ -301,22 +304,243 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
       reader.onerror = (error) => reject(error);
     });
   };
-  
+
   // Alternative direct file upload using JSON
   const uploadFileDirectly = async (file) => {
     const idToken = await getAuthToken();
-    
+
     // Convert file to base64
     const base64 = await convertFileToBase64(file);
-    const base64Data = base64.includes('base64,') ? 
-      base64.split('base64,')[1] : base64;
-    
-    // Create JSON payload
+    // base64 is already the full data URI string (e.g., "data:image/png;base64,...")
     const jsonPayload = JSON.stringify({
-      image: base64Data,
-      contentType: file.type || 'image/jpeg'
+      image: base64, // send the full data URI string
     });
-    
-    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
-      method: 'POST',
-      headers:
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: idToken ? `Bearer ${idToken}` : undefined,
+        },
+        body: jsonPayload,
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to upload image");
+    }
+    return await response.json();
+  };
+
+  return (
+    <PageLayout>
+      <Box p={2} bgcolor="background.default">
+        <Typography variant="h4" gutterBottom>
+          Account Settings
+        </Typography>
+
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Profile
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="First Name"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="Last Name"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="Email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  disabled
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormField
+                  label="Phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+            </Grid>
+
+            <Box mt={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleProfileUpdate}
+                disabled={loading}
+                startIcon={loading ? <CircularProgress size={20} /> : null}
+              >
+                {loading ? "Updating..." : "Update Profile"}
+              </Button>
+            </Box>
+
+            {error && (
+              <Alert
+                severity="error"
+                onClose={() => setError(null)}
+                sx={{ mt: 2 }}
+              >
+                {error}
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card variant="outlined" sx={{ mt: 2 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Change Password
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <FormField
+                  label="Current Password"
+                  name="currentPassword"
+                  type="password"
+                  value={formData.currentPassword}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <FormField
+                  label="New Password"
+                  name="newPassword"
+                  type="password"
+                  value={formData.newPassword}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <FormField
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+            </Grid>
+
+            {passwordError && (
+              <FormHelperText error sx={{ mt: 1 }}>
+                {passwordError}
+              </FormHelperText>
+            )}
+
+            <Box mt={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handlePasswordChange}
+                disabled={passwordLoading}
+                startIcon={
+                  passwordLoading ? <CircularProgress size={20} /> : null
+                }
+              >
+                {passwordLoading ? "Changing..." : "Change Password"}
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+
+        <Card variant="outlined" sx={{ mt: 2 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Profile Image
+            </Typography>
+
+            <Box display="flex" alignItems="center">
+              <Avatar
+                src={profileImage}
+                alt="Profile Image"
+                sx={{ width: 100, height: 100, mr: 2 }}
+              >
+                {user && !user.profileImage && <PersonIcon fontSize="large" />}
+              </Avatar>
+
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                style={{ display: "none" }}
+              />
+
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleImageClick}
+                startIcon={<PhotoCameraIcon />}
+                disabled={imageLoading}
+              >
+                {imageLoading ? "Uploading..." : "Upload Image"}
+              </Button>
+
+              {profileImage && (
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={handleRemoveProfileImage}
+                  startIcon={<PhotoCameraIcon />}
+                  disabled={imageLoading}
+                  sx={{ ml: 2 }}
+                >
+                  {imageLoading ? "Removing..." : "Remove Image"}
+                </Button>
+              )}
+            </Box>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Supported formats: JPEG, PNG, GIF, WEBP. Max size: 5MB.
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </PageLayout>
+  );
+}
+
+export default AccountSettingsPage;
