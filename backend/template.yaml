@@ -31,16 +31,6 @@ Globals:
         USER_POOL_ID: !Ref UserPool
     Architectures:
       - x86_64
-    Environment: # Add Environment to Globals.Function if not already there or ensure it's correctly scoped
-      Variables:
-        PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
-        USERS_TABLE: !Ref UsersTable
-        SERVICES_TABLE: !Ref ServicesTable
-        APPOINTMENTS_TABLE: !Ref AppointmentsTable
-        DOCUMENTS_BUCKET: !Ref DocumentsBucket # This is the existing general documents bucket
-        ENVIRONMENT: !Ref Environment
-        USER_POOL_ID: !Ref UserPool
-        # MEDICAL_REPORTS_IMAGE_BUCKET_NAME will be added specifically to MedicalReportsFunction
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"

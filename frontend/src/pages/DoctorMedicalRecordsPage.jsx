@@ -31,8 +31,8 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MedicalInformationIcon from "@mui/icons-material/MedicalInformation";
-import BrokenImageIcon from '@mui/icons-material/BrokenImage';
-import CancelIcon from '@mui/icons-material/Cancel'; // For removing selected files
+import BrokenImageIcon from "@mui/icons-material/BrokenImage";
+import CancelIcon from "@mui/icons-material/Cancel"; // For removing selected files
 
 import PageContainer from "../components/ui/PageContainer";
 import PageHeading from "../components/ui/PageHeading";
@@ -40,7 +40,7 @@ import ContentCard from "../components/ui/ContentCard";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingIndicator from "../components/ui/LoadingIndicator";
 
-import medicalRecordService from "../../services/medicalRecordService";
+import medicalRecordService from "../services/medicalRecordService";
 
 const getCurrentDoctorId = () => "doctor-67890"; // Replace with actual auth logic
 
@@ -49,7 +49,7 @@ const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result.split(',')[1]); // Get only base64 part
+    reader.onload = () => resolve(reader.result.split(",")[1]); // Get only base64 part
     reader.onerror = (error) => reject(error);
   });
 };
@@ -71,7 +71,7 @@ function DoctorMedicalRecordsPage() {
   const [currentDoctorNotes, setCurrentDoctorNotes] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalError, setModalError] = useState(null);
 
@@ -87,11 +87,16 @@ function DoctorMedicalRecordsPage() {
     setError(null);
     try {
       const doctorId = getCurrentDoctorId();
-      const fetchedRecords = await medicalRecordService.getMedicalRecords("doctor", doctorId);
+      const fetchedRecords = await medicalRecordService.getMedicalRecords(
+        "doctor",
+        doctorId
+      );
       setRecords(Array.isArray(fetchedRecords) ? fetchedRecords : []);
     } catch (err) {
       console.error("Failed to fetch medical records:", err);
-      setError(err.message || "An unexpected error occurred while fetching records.");
+      setError(
+        err.message || "An unexpected error occurred while fetching records."
+      );
       setRecords([]);
     } finally {
       setLoading(false);
@@ -148,9 +153,14 @@ function DoctorMedicalRecordsPage() {
   };
 
   const removeSelectedFile = (indexToRemove) => {
-    setSelectedFiles(prevFiles => prevFiles.filter((_, index) => index !== indexToRemove));
-    setImagePreviews(prevPreviews => prevPreviews.filter((_, index) => index !== indexToRemove));
-     if (fileInputRef.current) { // Also reset the actual file input if all files are removed
+    setSelectedFiles((prevFiles) =>
+      prevFiles.filter((_, index) => index !== indexToRemove)
+    );
+    setImagePreviews((prevPreviews) =>
+      prevPreviews.filter((_, index) => index !== indexToRemove)
+    );
+    if (fileInputRef.current) {
+      // Also reset the actual file input if all files are removed
       if (selectedFiles.length === 1) fileInputRef.current.value = "";
     }
   };
@@ -165,21 +175,28 @@ function DoctorMedicalRecordsPage() {
         reportContent: currentReportContent,
         doctorNotes: currentDoctorNotes,
       };
-      const createdRecord = await medicalRecordService.createMedicalRecord(newRecordData);
+      const createdRecord = await medicalRecordService.createMedicalRecord(
+        newRecordData
+      );
 
       if (createdRecord && createdRecord.reportId && selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           try {
             const base64String = await fileToBase64(file);
-            await medicalRecordService.uploadImageToRecord(createdRecord.reportId, {
-              imageName: file.name,
-              imageData: base64String,
-              contentType: file.type,
-            });
+            await medicalRecordService.uploadImageToRecord(
+              createdRecord.reportId,
+              {
+                imageName: file.name,
+                imageData: base64String,
+                contentType: file.type,
+              }
+            );
           } catch (uploadError) {
             console.error(`Failed to upload image ${file.name}:`, uploadError);
             // Decide if you want to set a partial error message or continue
-            setModalError(`Record created, but failed to upload image ${file.name}.`);
+            setModalError(
+              `Record created, but failed to upload image ${file.name}.`
+            );
             // Potentially collect these errors and show them all
           }
         }
@@ -203,20 +220,31 @@ function DoctorMedicalRecordsPage() {
         reportContent: currentReportContent,
         doctorNotes: currentDoctorNotes,
       };
-      await medicalRecordService.updateMedicalRecord(selectedRecord.reportId, updatedRecordData);
+      await medicalRecordService.updateMedicalRecord(
+        selectedRecord.reportId,
+        updatedRecordData
+      );
 
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
-           try {
+          try {
             const base64String = await fileToBase64(file);
-            await medicalRecordService.uploadImageToRecord(selectedRecord.reportId, {
-              imageName: file.name,
-              imageData: base64String,
-              contentType: file.type,
-            });
+            await medicalRecordService.uploadImageToRecord(
+              selectedRecord.reportId,
+              {
+                imageName: file.name,
+                imageData: base64String,
+                contentType: file.type,
+              }
+            );
           } catch (uploadError) {
-            console.error(`Failed to upload new image ${file.name} during update:`, uploadError);
-            setModalError(`Record updated, but failed to upload new image ${file.name}.`);
+            console.error(
+              `Failed to upload new image ${file.name} during update:`,
+              uploadError
+            );
+            setModalError(
+              `Record updated, but failed to upload new image ${file.name}.`
+            );
           }
         }
       }
@@ -254,22 +282,28 @@ function DoctorMedicalRecordsPage() {
       console.error("Failed to delete medical record:", err);
       // Optionally: show an error toast/notification here
       // Set error for the main page or a specific delete error state if preferred
-      setError(`Failed to delete record ${recordToDelete.reportId}: ${err.message}`);
+      setError(
+        `Failed to delete record ${recordToDelete.reportId}: ${err.message}`
+      );
     } finally {
       setIsDeleting(false);
     }
   };
-  
+
   const handleSearchChange = (event) => setSearchTerm(event.target.value);
   const handleFilterChange = (event) => setFilterType(event.target.value);
 
   const filteredRecords = records.filter((record) => {
     const searchTermLower = searchTerm.toLowerCase();
     return (
-      (record.patientId && record.patientId.toLowerCase().includes(searchTermLower)) ||
-      (record.reportId && record.reportId.toLowerCase().includes(searchTermLower)) ||
-      (record.reportContent && record.reportContent.toLowerCase().includes(searchTermLower)) ||
-      (record.doctorNotes && record.doctorNotes.toLowerCase().includes(searchTermLower))
+      (record.patientId &&
+        record.patientId.toLowerCase().includes(searchTermLower)) ||
+      (record.reportId &&
+        record.reportId.toLowerCase().includes(searchTermLower)) ||
+      (record.reportContent &&
+        record.reportContent.toLowerCase().includes(searchTermLower)) ||
+      (record.doctorNotes &&
+        record.doctorNotes.toLowerCase().includes(searchTermLower))
     );
     // Add filterType logic if applicable
   });
@@ -280,11 +314,15 @@ function DoctorMedicalRecordsPage() {
     {
       field: "reportContent",
       headerName: "Report Content",
-      flex: 1, minWidth: 250,
+      flex: 1,
+      minWidth: 250,
       renderCell: (params) => (
         <Tooltip title={params.value || ""} placement="top-start">
           <Typography variant="body2" noWrap>
-            {params.value ? params.value.substring(0, 100) + (params.value.length > 100 ? "..." : "") : "N/A"}
+            {params.value
+              ? params.value.substring(0, 100) +
+                (params.value.length > 100 ? "..." : "")
+              : "N/A"}
           </Typography>
         </Tooltip>
       ),
@@ -292,11 +330,15 @@ function DoctorMedicalRecordsPage() {
     {
       field: "doctorNotes",
       headerName: "Doctor Notes",
-      flex: 1, minWidth: 200,
+      flex: 1,
+      minWidth: 200,
       renderCell: (params) => (
         <Tooltip title={params.value || ""} placement="top-start">
           <Typography variant="body2" noWrap>
-            {params.value ? params.value.substring(0, 100) + (params.value.length > 100 ? "..." : "") : "N/A"}
+            {params.value
+              ? params.value.substring(0, 100) +
+                (params.value.length > 100 ? "..." : "")
+              : "N/A"}
           </Typography>
         </Tooltip>
       ),
@@ -304,36 +346,82 @@ function DoctorMedicalRecordsPage() {
     {
       field: "imagePresignedUrls",
       headerName: "Images",
-      width: 150, sortable: false,
+      width: 150,
+      sortable: false,
       renderCell: (params) => {
-        if (!params.value || params.value.length === 0) return <Typography variant="caption">N/A</Typography>;
+        if (!params.value || params.value.length === 0)
+          return <Typography variant="caption">N/A</Typography>;
         return (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, overflowX: 'auto' }}>
-            {params.value.map((url, index) => (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              overflowX: "auto",
+            }}
+          >
+            {params.value.map((url, index) =>
               url ? (
-                <a key={index} href={url} target="_blank" rel="noopener noreferrer">
-                  <img src={url} alt={`Record ${params.row.reportId} Image ${index + 1}`} style={{ width: 40, height: 40, objectFit: "cover", borderRadius: "4px" }} />
+                <a
+                  key={index}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src={url}
+                    alt={`Record ${params.row.reportId} Image ${index + 1}`}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      objectFit: "cover",
+                      borderRadius: "4px",
+                    }}
+                  />
                 </a>
               ) : (
-                <Tooltip key={index} title="Image not available"><BrokenImageIcon sx={{ width: 40, height: 40, color: 'grey.400' }} /></Tooltip>
+                <Tooltip key={index} title="Image not available">
+                  <BrokenImageIcon
+                    sx={{ width: 40, height: 40, color: "grey.400" }}
+                  />
+                </Tooltip>
               )
-            ))}
+            )}
           </Box>
         );
       },
     },
-    { field: "createdAt", headerName: "Created At", width: 180, renderCell: (params) => new Date(params.value).toLocaleString() },
-    { field: "updatedAt", headerName: "Last Updated", width: 180, renderCell: (params) => new Date(params.value).toLocaleString() },
+    {
+      field: "createdAt",
+      headerName: "Created At",
+      width: 180,
+      renderCell: (params) => new Date(params.value).toLocaleString(),
+    },
+    {
+      field: "updatedAt",
+      headerName: "Last Updated",
+      width: 180,
+      renderCell: (params) => new Date(params.value).toLocaleString(),
+    },
     {
       field: "actions",
       headerName: "Actions",
-      width: 120, sortable: false,
+      width: 120,
+      sortable: false,
       renderCell: (params) => (
         <Box>
-          <IconButton size="small" onClick={() => handleOpenEditModal(params.row)} aria-label="edit">
+          <IconButton
+            size="small"
+            onClick={() => handleOpenEditModal(params.row)}
+            aria-label="edit"
+          >
             <EditIcon fontSize="small" />
           </IconButton>
-          <IconButton size="small" onClick={() => handleOpenDeleteConfirmDialog(params.row)} aria-label="delete">
+          <IconButton
+            size="small"
+            onClick={() => handleOpenDeleteConfirmDialog(params.row)}
+            aria-label="delete"
+          >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -343,55 +431,193 @@ function DoctorMedicalRecordsPage() {
 
   return (
     <PageContainer>
-      <PageHeading title="My Medical Records" subtitle="View and manage patient medical records" />
+      <PageHeading
+        title="My Medical Records"
+        subtitle="View and manage patient medical records"
+      />
       <ContentCard>
-        <Box sx={{ mb: 3, display: "flex", flexDirection: { xs: "column", sm: "row" }, justifyContent: "space-between", alignItems: { sm: "center" }, gap: 2 }}>
-          <Box sx={{ display: 'flex', gap: 2, flexGrow: { xs: 1, sm: 0.5 } }}>
-            <TextField placeholder="Search..." variant="outlined" fullWidth size="small" value={searchTerm} onChange={handleSearchChange} InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon /></InputAdornment>) }} />
+        <Box
+          sx={{
+            mb: 3,
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: "space-between",
+            alignItems: { sm: "center" },
+            gap: 2,
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 2, flexGrow: { xs: 1, sm: 0.5 } }}>
+            <TextField
+              placeholder="Search..."
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
             <FormControl size="small" sx={{ minWidth: 150 }}>
               <InputLabel>Filter</InputLabel>
-              <Select value={filterType} label="Filter" onChange={handleFilterChange} startAdornment={<InputAdornment position="start"><FilterListIcon /></InputAdornment>}>
+              <Select
+                value={filterType}
+                label="Filter"
+                onChange={handleFilterChange}
+                startAdornment={
+                  <InputAdornment position="start">
+                    <FilterListIcon />
+                  </InputAdornment>
+                }
+              >
                 <MenuItem value="all">All</MenuItem>
               </Select>
             </FormControl>
           </Box>
-          <Button variant="contained" startIcon={<AddCircleOutlineIcon />} onClick={handleOpenCreateModal} sx={{ mt: { xs: 2, sm: 0 } }}>
+          <Button
+            variant="contained"
+            startIcon={<AddCircleOutlineIcon />}
+            onClick={handleOpenCreateModal}
+            sx={{ mt: { xs: 2, sm: 0 } }}
+          >
             Create New Record
           </Button>
         </Box>
 
-        {loading ? <LoadingIndicator message="Loading medical records..." />
-         : error ? <Alert severity="error" sx={{ my: 2 }}><Typography>Error: {error}</Typography></Alert>
-         : filteredRecords.length > 0 ? (
+        {loading ? (
+          <LoadingIndicator message="Loading medical records..." />
+        ) : error ? (
+          <Alert severity="error" sx={{ my: 2 }}>
+            <Typography>Error: {error}</Typography>
+          </Alert>
+        ) : filteredRecords.length > 0 ? (
           <Box sx={{ height: 500, width: "100%" }}>
-            <DataGrid rows={filteredRecords} columns={columns} pageSize={10} rowsPerPageOptions={[5, 10, 20, 50]} getRowId={(row) => row.reportId} disableSelectionOnClick density="standard" sx={{ "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": { outline: "none" }, "& .MuiDataGrid-row:hover": { backgroundColor: (theme) => theme.palette.action.hover }}} />
+            <DataGrid
+              rows={filteredRecords}
+              columns={columns}
+              pageSize={10}
+              rowsPerPageOptions={[5, 10, 20, 50]}
+              getRowId={(row) => row.reportId}
+              disableSelectionOnClick
+              density="standard"
+              sx={{
+                "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within":
+                  { outline: "none" },
+                "& .MuiDataGrid-row:hover": {
+                  backgroundColor: (theme) => theme.palette.action.hover,
+                },
+              }}
+            />
           </Box>
         ) : (
-          <EmptyState icon={<MedicalInformationIcon />} title="No Medical Records Found" description={searchTerm || filterType !== "all" ? "No records match your current search or filter criteria." : "You have not created or been associated with any medical records yet."} />
+          <EmptyState
+            icon={<MedicalInformationIcon />}
+            title="No Medical Records Found"
+            description={
+              searchTerm || filterType !== "all"
+                ? "No records match your current search or filter criteria."
+                : "You have not created or been associated with any medical records yet."
+            }
+          />
         )}
       </ContentCard>
 
       {/* Create Record Modal */}
-      <Dialog open={openCreateModal} onClose={handleCloseCreateModal} maxWidth="sm" fullWidth>
+      <Dialog
+        open={openCreateModal}
+        onClose={handleCloseCreateModal}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Create New Medical Record</DialogTitle>
         <DialogContent>
-          {modalError && <Alert severity="error" sx={{ mb: 2 }}>{modalError}</Alert>}
-          <TextField autoFocus margin="dense" label="Patient ID" type="text" fullWidth variant="outlined" value={currentPatientId} onChange={(e) => setCurrentPatientId(e.target.value)} sx={{ mb: 2 }} />
-          <TextField margin="dense" label="Report Content" type="text" fullWidth multiline rows={4} variant="outlined" value={currentReportContent} onChange={(e) => setCurrentReportContent(e.target.value)} sx={{ mb: 2 }} />
-          <TextField margin="dense" label="Doctor Notes" type="text" fullWidth multiline rows={3} variant="outlined" value={currentDoctorNotes} onChange={(e) => setCurrentDoctorNotes(e.target.value)} sx={{ mb: 2 }} />
-          <Typography variant="subtitle2" gutterBottom sx={{mt: 1}}>Upload Images (Optional)</Typography>
-          <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleFileChange} style={{ display: 'block', marginBottom: '10px' }} />
+          {modalError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {modalError}
+            </Alert>
+          )}
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Patient ID"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={currentPatientId}
+            onChange={(e) => setCurrentPatientId(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Report Content"
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            variant="outlined"
+            value={currentReportContent}
+            onChange={(e) => setCurrentReportContent(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Doctor Notes"
+            type="text"
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            value={currentDoctorNotes}
+            onChange={(e) => setCurrentDoctorNotes(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
+            Upload Images (Optional)
+          </Typography>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleFileChange}
+            style={{ display: "block", marginBottom: "10px" }}
+          />
           {imagePreviews.length > 0 && (
-            <ImageList sx={{ width: '100%', height: 'auto', maxHeight: 300 }} cols={3} rowHeight={100} gap={8}>
+            <ImageList
+              sx={{ width: "100%", height: "auto", maxHeight: 300 }}
+              cols={3}
+              rowHeight={100}
+              gap={8}
+            >
               {imagePreviews.map((preview, index) => (
-                <ImageListItem key={index} sx={{border: '1px solid #ddd', borderRadius: '4px'}}>
-                  <img src={preview} alt={`Preview ${index + 1}`} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <ImageListItem
+                  key={index}
+                  sx={{ border: "1px solid #ddd", borderRadius: "4px" }}
+                >
+                  <img
+                    src={preview}
+                    alt={`Preview ${index + 1}`}
+                    loading="lazy"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
                   <ImageListItemBar
-                    sx={{ background: 'rgba(0, 0, 0, 0.7)'}}
+                    sx={{ background: "rgba(0, 0, 0, 0.7)" }}
                     position="top"
                     actionIcon={
-                      <IconButton sx={{ color: 'white' }} onClick={() => removeSelectedFile(index)} size="small">
-                        <CancelIcon fontSize="small"/>
+                      <IconButton
+                        sx={{ color: "white" }}
+                        onClick={() => removeSelectedFile(index)}
+                        size="small"
+                      >
+                        <CancelIcon fontSize="small" />
                       </IconButton>
                     }
                     actionPosition="right"
@@ -401,62 +627,198 @@ function DoctorMedicalRecordsPage() {
             </ImageList>
           )}
         </DialogContent>
-        <DialogActions sx={{p: 2}}>
-          <Button onClick={handleCloseCreateModal} color="secondary" disabled={isSubmitting}>Cancel</Button>
-          <Button onClick={handleCreateRecord} variant="contained" color="primary" disabled={isSubmitting || !currentPatientId || !currentReportContent}>
-            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : "Create Record"}
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={handleCloseCreateModal}
+            color="secondary"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreateRecord}
+            variant="contained"
+            color="primary"
+            disabled={
+              isSubmitting || !currentPatientId || !currentReportContent
+            }
+          >
+            {isSubmitting ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Create Record"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit Record Modal */}
       {selectedRecord && (
-        <Dialog open={openEditModal} onClose={handleCloseEditModal} maxWidth="sm" fullWidth>
-          <DialogTitle>Edit Medical Record (ID: {selectedRecord.reportId})</DialogTitle>
+        <Dialog
+          open={openEditModal}
+          onClose={handleCloseEditModal}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            Edit Medical Record (ID: {selectedRecord.reportId})
+          </DialogTitle>
           <DialogContent>
-            {modalError && <Alert severity="error" sx={{ mb: 2 }}>{modalError}</Alert>}
-            <TextField margin="dense" label="Patient ID" type="text" fullWidth variant="outlined" value={currentPatientId} disabled sx={{ mb: 2 }} />
-            <TextField margin="dense" label="Report Content" type="text" fullWidth multiline rows={4} variant="outlined" value={currentReportContent} onChange={(e) => setCurrentReportContent(e.target.value)} sx={{ mb: 2 }} />
-            <TextField margin="dense" label="Doctor Notes" type="text" fullWidth multiline rows={3} variant="outlined" value={currentDoctorNotes} onChange={(e) => setCurrentDoctorNotes(e.target.value)} sx={{ mb: 2 }} />
-            
-            <Typography variant="subtitle2" gutterBottom sx={{mt: 1}}>Existing Images</Typography>
-            {selectedRecord.imagePresignedUrls && selectedRecord.imagePresignedUrls.length > 0 ? (
-                 <ImageList sx={{ width: '100%', height: 'auto', maxHeight: 150, mb:2 }} cols={4} rowHeight={80} gap={8}>
-                    {selectedRecord.imagePresignedUrls.map((url, index) => (
-                        url ? <ImageListItem key={`existing-${index}`}><img src={url} alt={`Existing ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} /></ImageListItem>
-                            : <ImageListItem key={`existing-broken-${index}`}><BrokenImageIcon sx={{width: '100%', height: '100%', color: 'grey.300'}}/></ImageListItem>
-                    ))}
-                </ImageList>
+            {modalError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {modalError}
+              </Alert>
+            )}
+            <TextField
+              margin="dense"
+              label="Patient ID"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={currentPatientId}
+              disabled
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              label="Report Content"
+              type="text"
+              fullWidth
+              multiline
+              rows={4}
+              variant="outlined"
+              value={currentReportContent}
+              onChange={(e) => setCurrentReportContent(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              label="Doctor Notes"
+              type="text"
+              fullWidth
+              multiline
+              rows={3}
+              variant="outlined"
+              value={currentDoctorNotes}
+              onChange={(e) => setCurrentDoctorNotes(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+
+            <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
+              Existing Images
+            </Typography>
+            {selectedRecord.imagePresignedUrls &&
+            selectedRecord.imagePresignedUrls.length > 0 ? (
+              <ImageList
+                sx={{ width: "100%", height: "auto", maxHeight: 150, mb: 2 }}
+                cols={4}
+                rowHeight={80}
+                gap={8}
+              >
+                {selectedRecord.imagePresignedUrls.map((url, index) =>
+                  url ? (
+                    <ImageListItem key={`existing-${index}`}>
+                      <img
+                        src={url}
+                        alt={`Existing ${index + 1}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: "4px",
+                        }}
+                      />
+                    </ImageListItem>
+                  ) : (
+                    <ImageListItem key={`existing-broken-${index}`}>
+                      <BrokenImageIcon
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          color: "grey.300",
+                        }}
+                      />
+                    </ImageListItem>
+                  )
+                )}
+              </ImageList>
             ) : (
-                <Typography variant="body2" color="textSecondary" sx={{mb:2}}>No existing images.</Typography>
+              <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                No existing images.
+              </Typography>
             )}
 
-            <Typography variant="subtitle2" gutterBottom sx={{mt: 1}}>Upload New Images (Optional)</Typography>
-            <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleFileChange} style={{ display: 'block', marginBottom: '10px' }} />
-             {imagePreviews.length > 0 && (
-                <ImageList sx={{ width: '100%', height: 'auto', maxHeight: 300 }} cols={3} rowHeight={100} gap={8}>
+            <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
+              Upload New Images (Optional)
+            </Typography>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ display: "block", marginBottom: "10px" }}
+            />
+            {imagePreviews.length > 0 && (
+              <ImageList
+                sx={{ width: "100%", height: "auto", maxHeight: 300 }}
+                cols={3}
+                rowHeight={100}
+                gap={8}
+              >
                 {imagePreviews.map((preview, index) => (
-                    <ImageListItem key={index} sx={{border: '1px solid #ddd', borderRadius: '4px'}}>
-                    <img src={preview} alt={`Preview ${index + 1}`} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                     <ImageListItemBar
-                        sx={{ background: 'rgba(0, 0, 0, 0.7)'}}
-                        position="top"
-                        actionIcon={
-                        <IconButton sx={{ color: 'white' }} onClick={() => removeSelectedFile(index)} size="small">
-                            <CancelIcon fontSize="small"/>
-                        </IconButton>
-                        }
-                        actionPosition="right"
+                  <ImageListItem
+                    key={index}
+                    sx={{ border: "1px solid #ddd", borderRadius: "4px" }}
+                  >
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      loading="lazy"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
                     />
-                    </ImageListItem>
+                    <ImageListItemBar
+                      sx={{ background: "rgba(0, 0, 0, 0.7)" }}
+                      position="top"
+                      actionIcon={
+                        <IconButton
+                          sx={{ color: "white" }}
+                          onClick={() => removeSelectedFile(index)}
+                          size="small"
+                        >
+                          <CancelIcon fontSize="small" />
+                        </IconButton>
+                      }
+                      actionPosition="right"
+                    />
+                  </ImageListItem>
                 ))}
-                </ImageList>
+              </ImageList>
             )}
           </DialogContent>
-          <DialogActions sx={{p: 2}}>
-            <Button onClick={handleCloseEditModal} color="secondary" disabled={isSubmitting}>Cancel</Button>
-            <Button onClick={handleUpdateRecord} variant="contained" color="primary" disabled={isSubmitting || !currentReportContent}>
-              {isSubmitting ? <CircularProgress size={24} color="inherit" /> : "Update Record"}
+          <DialogActions sx={{ p: 2 }}>
+            <Button
+              onClick={handleCloseEditModal}
+              color="secondary"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateRecord}
+              variant="contained"
+              color="primary"
+              disabled={isSubmitting || !currentReportContent}
+            >
+              {isSubmitting ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Update Record"
+              )}
             </Button>
           </DialogActions>
         </Dialog>
@@ -469,21 +831,37 @@ function DoctorMedicalRecordsPage() {
         aria-labelledby="delete-confirm-dialog-title"
         aria-describedby="delete-confirm-dialog-description"
       >
-        <DialogTitle id="delete-confirm-dialog-title">Confirm Deletion</DialogTitle>
+        <DialogTitle id="delete-confirm-dialog-title">
+          Confirm Deletion
+        </DialogTitle>
         <DialogContent>
           <Typography id="delete-confirm-dialog-description">
             Are you sure you want to delete this medical record?
-            {recordToDelete && ` (ID: ${recordToDelete.reportId}, Patient: ${recordToDelete.patientId})`}
+            {recordToDelete &&
+              ` (ID: ${recordToDelete.reportId}, Patient: ${recordToDelete.patientId})`}
             <br />
             This action cannot be undone.
           </Typography>
         </DialogContent>
-        <DialogActions sx={{p:2}}>
-          <Button onClick={handleCloseDeleteConfirmDialog} color="secondary" disabled={isDeleting}>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={handleCloseDeleteConfirmDialog}
+            color="secondary"
+            disabled={isDeleting}
+          >
             Cancel
           </Button>
-          <Button onClick={handleConfirmDelete} variant="contained" color="error" disabled={isDeleting}>
-            {isDeleting ? <CircularProgress size={24} color="inherit" /> : "Delete"}
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Delete"
+            )}
           </Button>
         </DialogActions>
       </Dialog>

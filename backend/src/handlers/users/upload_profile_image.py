@@ -1,4 +1,16 @@
-"""
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+vite v6.3.5 building for production...
+transforming...
+✓ 95 modules transformed.
+✗ Build failed in 768ms
+error during build:
+Could not resolve "../../services/medicalRecordService" from "src/pages/DoctorMedicalRecordsPage.jsx"
+file: /home/runner/work/Clinnet-EMR/Clinnet-EMR/frontend/src/pages/DoctorMedicalRecordsPage.jsx
+    at getRollupError (file:///home/runner/work/Clinnet-EMR/Clinnet-EMR/frontend/node_modules/rollup/dist/es/shared/parseAst.js:400:41)
+    at error (file:///home/runner/work/Clinnet-EMR/Clinnet-EMR/frontend/node_modules/rollup/dist/es/shared/parseAst.js:396:42)
+    at ModuleLoader.handleInvalidResolvedId (file:///home/runner/work/Clinnet-EMR/Clinnet-EMR/frontend/node_modules/rollup/dist/es/shared/node-entry.js:21379:24)
+    at file:///home/runner/work/Clinnet-EMR/Clinnet-EMR/frontend/node_modules/rollup/dist/es/shared/node-entry.js:21339:26
+Error: Process completed with exit code 1."""
 Lambda function to upload a user profile image to S3 and update the user's profile.
 """
 import os
