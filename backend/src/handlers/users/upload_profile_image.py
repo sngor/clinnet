@@ -9,7 +9,36 @@ import base64
 import uuid
 import logging
 from botocore.exceptions import ClientError
-from utils.cors import add_cors_headers, build_cors_preflight_response
+
+# Try to import CORS utilities, fallback to inline implementation if not available
+try:
+    from utils.cors import add_cors_headers, build_cors_preflight_response
+except ImportError:
+    print("Warning: Could not import CORS utilities, using fallback implementation")
+    
+    def add_cors_headers(response, request_origin=None):
+        """Fallback CORS headers implementation"""
+        if 'headers' not in response:
+            response['headers'] = {}
+        
+        response['headers']['Access-Control-Allow-Origin'] = '*'
+        response['headers']['Access-Control-Allow-Headers'] = 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'
+        response['headers']['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+        response['headers']['Access-Control-Max-Age'] = '7200'
+        return response
+    
+    def build_cors_preflight_response(request_origin=None):
+        """Fallback CORS preflight implementation"""
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept',
+                'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+                'Access-Control-Max-Age': '7200'
+            },
+            'body': json.dumps({'message': 'CORS preflight successful'})
+        }
 
 # Setup logging
 logger = logging.getLogger()
