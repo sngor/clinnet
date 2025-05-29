@@ -31,6 +31,16 @@ Globals:
         USER_POOL_ID: !Ref UserPool
     Architectures:
       - x86_64
+    Environment: # Add Environment to Globals.Function if not already there or ensure it's correctly scoped
+      Variables:
+        PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
+        USERS_TABLE: !Ref UsersTable
+        SERVICES_TABLE: !Ref ServicesTable
+        APPOINTMENTS_TABLE: !Ref AppointmentsTable
+        DOCUMENTS_BUCKET: !Ref DocumentsBucket # This is the existing general documents bucket
+        ENVIRONMENT: !Ref Environment
+        USER_POOL_ID: !Ref UserPool
+        # MEDICAL_REPORTS_IMAGE_BUCKET_NAME will be added specifically to MedicalReportsFunction
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
@@ -136,7 +146,12 @@ Resources:
   DocumentsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub clinnet-documents-${Environment}-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}
+      BucketName: !Sub clinnet-documents-${Environment}-${AWS::AccountId}-${AWS::Region}-${AWS::StackName} # Existing bucket
+      PublicAccessBlockConfiguration: # Ensure public access is blocked
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
@@ -155,6 +170,33 @@ Resources:
           - Id: ExpireTemporaryFiles
             Status: Enabled
             ExpirationInDays: 30 # Automatically delete objects after 30 days
+
+  MedicalReportImagesBucket: # New S3 bucket for medical report images
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub clinnet-emr-report-images-${AWS::AccountId}-${AWS::Region}-${Environment} # Unique bucket name
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration: # Basic CORS for potential direct browser uploads in future, adjust as needed
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - PUT
+              - GET
+              - DELETE
+            AllowedOrigins: # Restrict this if frontend origin is fixed
+              - '*'
+            MaxAge: 3000
+      LifecycleConfiguration: # Optional: Add lifecycle rules if needed, e.g., for non-current versions
+        Rules:
+          - Id: ExpireOldVersions
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 90
+
 
   # API Gateway
   ClinicAPI:
@@ -989,10 +1031,30 @@ Resources:
       CodeUri: src/handlers/medical_reports/
       Handler: index.handler # Assuming index.js as the entry point
       Runtime: nodejs18.x
-      # Environment variables are inherited from Globals
+      Environment: # Add specific environment variables here
+        Variables:
+          MEDICAL_REPORTS_TABLE_NAME: !Ref MedicalReportsTable # Already available via Globals, but being explicit
+          MEDICAL_REPORTS_IMAGE_BUCKET_NAME: !Ref MedicalReportImagesBucket # New S3 bucket
+          # Inherit other global vars if not redefining Environment here completely
+          PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
+          USERS_TABLE: !Ref UsersTable
+          SERVICES_TABLE: !Ref ServicesTable
+          APPOINTMENTS_TABLE: !Ref AppointmentsTable
+          DOCUMENTS_BUCKET: !Ref DocumentsBucket
+          ENVIRONMENT: !Ref Environment
+          USER_POOL_ID: !Ref UserPool
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref MedicalReportsTable
+        - Statement: # IAM policy for S3 access
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:GetObject
+                - s3:DeleteObject
+              Resource: 
+                - !GetAtt MedicalReportImagesBucket.Arn # Bucket level permissions if needed for ListBucket etc.
+                - !Sub "${MedicalReportImagesBucket.Arn}/*" # Object level permissions
       Events:
         CreateReport:
           Type: Api
@@ -1042,6 +1104,14 @@ Resources:
             Method: delete
             Auth:
               Authorizer: CognitoAuthorizer
+        UploadReportImage: # New endpoint for uploading images to a report
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports/{reportId}/images
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer # Assuming image uploads should be authenticated
         # OPTIONS for CORS preflight
         OptionsReportsBase:
           Type: Api
@@ -1075,6 +1145,14 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
+        OptionsReportImageUpload: # OPTIONS for the new image upload endpoint
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports/{reportId}/images # Matches the new POST endpoint
+            Method: options
+            Auth:
+              Authorizer: NONE # OPTIONS should not be auth-protected
 
   # --- Frontend (S3 + CloudFront) ---
   FrontendBucket:
@@ -1198,6 +1276,12 @@ Outputs:
     Value: !Ref DocumentsBucket
     Export:
       Name: !Sub "${AWS::StackName}-DocumentsBucket"
+
+  MedicalReportImagesBucketName:
+    Description: "S3 bucket for medical report images"
+    Value: !Ref MedicalReportImagesBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-MedicalReportImagesBucket"
 
   Region:
     Description: "AWS Region"

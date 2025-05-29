@@ -50,6 +50,14 @@ The following sections detail the available API endpoints for managing medical r
           "doctorId": "doctor-67890",
           "reportContent": "Patient reports feeling better. Vitals are stable. Continue current medication.",
           "doctorNotes": "",
+          "imageReferences": [],
+          "imagePresignedUrls": [],
+          "imageReferences": [
+            "reports/a1b2c3d4-e5f6-7890-1234-567890abcdef/uuid1-scan.jpg"
+          ],
+          "imagePresignedUrls": [
+            "https://<bucket-name>.s3.<region>.amazonaws.com/reports/a1b2c3d4-e5f6-7890-1234-567890abcdef/uuid1-scan.jpg?AWSAccessKeyId=..."
+          ],
           "createdAt": "2023-10-27T10:00:00.000Z",
           "updatedAt": "2023-10-27T10:00:00.000Z"
         }
@@ -97,6 +105,8 @@ The following sections detail the available API endpoints for managing medical r
             "doctorId": "doctor-67890",
             "reportContent": "Patient reports feeling better. Vitals are stable. Continue current medication.",
             "doctorNotes": "",
+            "imageReferences": [],
+            "imagePresignedUrls": [],
             "createdAt": "2023-10-27T10:00:00.000Z",
             "updatedAt": "2023-10-27T10:00:00.000Z"
           },
@@ -106,6 +116,12 @@ The following sections detail the available API endpoints for managing medical r
             "doctorId": "doctor-11223",
             "reportContent": "Follow-up consultation. Patient shows significant improvement.",
             "doctorNotes": "Reduced medication dosage.",
+            "imageReferences": [
+              "reports/x1y2z3w4-v5u6-7890-1234-567890uvwxyz/uuid-mri.png"
+            ],
+            "imagePresignedUrls": [
+              "https://<bucket-name>.s3.<region>.amazonaws.com/reports/x1y2z3w4-v5u6-7890-1234-567890uvwxyz/uuid-mri.png?AWSAccessKeyId=..."
+            ],
             "createdAt": "2023-11-05T14:30:00.000Z",
             "updatedAt": "2023-11-05T14:35:00.000Z"
           }
@@ -131,6 +147,8 @@ The following sections detail the available API endpoints for managing medical r
             "doctorId": "doctor-67890",
             "reportContent": "Patient reports feeling better. Vitals are stable. Continue current medication.",
             "doctorNotes": "",
+            "imageReferences": [],
+            "imagePresignedUrls": [],
             "createdAt": "2023-10-27T10:00:00.000Z",
             "updatedAt": "2023-10-27T10:00:00.000Z"
           }
@@ -165,10 +183,65 @@ The following sections detail the available API endpoints for managing medical r
           "doctorId": "doctor-67890",
           "reportContent": "Patient condition has improved. Vitals are normal. Discontinue medication after 3 days.",
           "doctorNotes": "Patient advised for a follow-up after 1 month for routine check-up.",
+          "imageReferences": [
+            "reports/a1b2c3d4-e5f6-7890-1234-567890abcdef/uuid1-scan.jpg"
+          ],
+          "imagePresignedUrls": [
+            "https://<bucket-name>.s3.<region>.amazonaws.com/reports/a1b2c3d4-e5f6-7890-1234-567890abcdef/uuid1-scan.jpg?AWSAccessKeyId=..."
+          ],
           "createdAt": "2023-10-27T10:00:00.000Z",
-          "updatedAt": "2023-10-27T10:15:00.000Z" 
+          "updatedAt": "2023-10-27T10:15:00.000Z"
         }
         ```
+---
+
+### Upload Image to Report
+
+*   **HTTP Method and Path**: `POST /reports/{reportId}/images`
+*   **Description**: Uploads an image and associates it with an existing medical report. The image is stored in S3, and a reference is added to the report.
+*   **Path Parameters**:
+    *   `reportId` (String, Required): The unique identifier of the medical report.
+*   **Request Body**:
+    *   `imageName` (String, Required): The name of the image file (e.g., "scan.jpg", "xray.png").
+    *   `imageData` (String, Required): The base64 encoded image data. It's recommended to not include the data URI prefix (e.g., `data:image/png;base64,`) in the actual string sent, just the pure base64 content.
+    *   `contentType` (String, Required): The MIME type of the image (e.g., "image/jpeg", "image/png").
+    *   **Example Request Body**:
+        ```json
+        {
+          "imageName": "patient-x-ray.png",
+          "imageData": "iVBORw0KGgoAAAANSUhEUgAAAAUA...",
+          "contentType": "image/png"
+        }
+        ```
+*   **Successful Response**:
+    *   **Status Code**: `200 OK`
+    *   **Example Response Body**: (Contains the complete updated report, including the new image reference and all presigned URLs for associated images)
+        ```json
+        {
+          "message": "Image uploaded and report updated successfully",
+          "s3ObjectKey": "reports/a1b2c3d4-e5f6-7890-1234-567890abcdef/some-uuid-patient-x-ray.png",
+          "updatedReport": {
+            "reportId": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+            "patientId": "patient-12345",
+            "doctorId": "doctor-67890",
+            "reportContent": "Follow-up consultation.",
+            "doctorNotes": "Patient recovering well.",
+            "createdAt": "2023-11-05T14:30:00.000Z",
+            "updatedAt": "2023-11-05T14:35:00.000Z",
+            "imageReferences": [
+              "reports/a1b2c3d4-e5f6-7890-1234-567890abcdef/some-uuid-patient-x-ray.png"
+            ],
+            "imagePresignedUrls": [
+              "https://<bucket-name>.s3.<region>.amazonaws.com/reports/a1b2c3d4-e5f6-7890-1234-567890abcdef/some-uuid-patient-x-ray.png?AWSAccessKeyId=..."
+            ]
+          }
+        }
+        ```
+*   **Error Responses**:
+    *   `400 Bad Request`: If `reportId` is missing, or if `imageName`, `imageData`, or `contentType` are missing from the request body.
+    *   `404 Not Found`: If the specified `reportId` does not exist.
+    *   `500 Internal Server Error`: For issues like S3 upload failure or DynamoDB update failure.
+
 ---
 
 ### Delete Medical Report
@@ -215,9 +288,22 @@ A medical report has the following main attributes:
     *   Example: `"Patient reports feeling better. Vitals are stable."`
 *   **`doctorNotes`** (String, Optional): Additional notes or commentary from the doctor. Can be empty.
     *   Example: `"Advised patient to continue medication for 3 more days."`
+*   **`imageReferences`** (Array of Strings, Optional): An array storing the S3 object keys for any images associated with the report. These keys are primarily for internal reference and are used by the backend to generate presigned URLs.
+    *   Example: `["reports/a1b2c3d4-e5f6-7890-1234-567890abcdef/uuid1-scan.jpg", "reports/a1b2c3d4-e5f6-7890-1234-567890abcdef/uuid2-xray.png"]`
+*   **`imagePresignedUrls`** (Array of Strings, Optional): An array containing temporary, presigned URLs for accessing the images listed in `imageReferences`. These URLs are generated on-the-fly by the API when a report is retrieved or updated. They are intended for client-side rendering of images and typically expire after a set period (e.g., 1 hour).
+    *   Example: `["https://your-bucket.s3.your-region.amazonaws.com/reports/reportId/uuid1-scan.jpg?AWSAccessKeyId=...", "https://your-bucket.s3.your-region.amazonaws.com/reports/reportId/uuid2-xray.png?AWSAccessKeyId=..."]`
 *   **`createdAt`** (String): An ISO 8601 timestamp indicating when the report was created.
     *   Example: `"2023-10-27T10:00:00.000Z"`
 *   **`updatedAt`** (String): An ISO 8601 timestamp indicating when the report was last updated. Upon creation, this is the same as `createdAt`.
     *   Example: `"2023-10-27T10:15:00.000Z"`
 
-The data is stored in an Amazon DynamoDB table.
+**Note on Image Fields**:
+The `imageReferences` and `imagePresignedUrls` fields are included in the responses of the following endpoints:
+*   `GET /reports/{reportId}`
+*   `GET /reports/patient/{patientId}`
+*   `GET /reports/doctor/{doctorId}`
+*   `POST /reports` (these fields will be present but empty, e.g., `[]`)
+*   `PUT /reports/{reportId}`
+*   `POST /reports/{reportId}/images` (within the `updatedReport` object in the response)
+
+The data is stored in an Amazon DynamoDB table, with images stored in Amazon S3.
