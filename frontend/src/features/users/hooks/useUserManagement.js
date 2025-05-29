@@ -77,23 +77,22 @@ export const useUserManagement = () => {
 
   /**
    * Update an existing user
-   * @param {string} username - Username to update
+   * @param {string} userId - User ID to update
    * @param {Object} userData - User data
    */
-  const updateUser = async (username, userData) => {
+  const updateUser = async (userId, userData) => {
     setLoading(true);
     setError(null);
     
     try {
-      const updatedUser = await adminService.updateUser(username, userData);
+      const updatedUser = await adminService.updateUser(userId, userData);
       setUsers(prev => 
         prev.map(user => 
-          user.username === username ? updatedUser : user
+          (user.id === userId || user.sub === userId || user.uniqueId === userId) ? updatedUser : user
         )
       );
       return updatedUser;
     } catch (err) {
-      console.error("Error updating user:", err);
       setError(err.message || "Failed to update user");
       throw err;
     } finally {
@@ -103,18 +102,17 @@ export const useUserManagement = () => {
 
   /**
    * Delete a user
-   * @param {string} username - Username to delete
+   * @param {string} userId - User ID to delete
    */
-  const deleteUser = async (username) => {
+  const deleteUser = async (userId) => {
     setLoading(true);
     setError(null);
     
     try {
-      await adminService.deleteUser(username);
-      setUsers(prev => prev.filter(user => user.username !== username));
+      await adminService.deleteUser(userId);
+      setUsers(prev => prev.filter(user => user.id !== userId && user.sub !== userId && user.uniqueId !== userId));
       return { success: true };
     } catch (err) {
-      console.error("Error deleting user:", err);
       setError(err.message || "Failed to delete user");
       throw err;
     } finally {
@@ -124,22 +122,21 @@ export const useUserManagement = () => {
 
   /**
    * Enable a user
-   * @param {string} username - Username to enable
+   * @param {string} userId - User ID to enable
    */
-  const enableUser = async (username) => {
+  const enableUser = async (userId) => {
     setLoading(true);
     setError(null);
     
     try {
-      await adminService.enableUser(username);
+      await adminService.enableUser(userId);
       setUsers(prev => 
         prev.map(user => 
-          user.username === username ? { ...user, enabled: true } : user
+          (user.id === userId || user.sub === userId || user.uniqueId === userId) ? { ...user, enabled: true } : user
         )
       );
       return { success: true };
     } catch (err) {
-      console.error("Error enabling user:", err);
       setError(err.message || "Failed to enable user");
       throw err;
     } finally {
@@ -149,22 +146,21 @@ export const useUserManagement = () => {
 
   /**
    * Disable a user
-   * @param {string} username - Username to disable
+   * @param {string} userId - User ID to disable
    */
-  const disableUser = async (username) => {
+  const disableUser = async (userId) => {
     setLoading(true);
     setError(null);
     
     try {
-      await adminService.disableUser(username);
+      await adminService.disableUser(userId);
       setUsers(prev => 
         prev.map(user => 
-          user.username === username ? { ...user, enabled: false } : user
+          (user.id === userId || user.sub === userId || user.uniqueId === userId) ? { ...user, enabled: false } : user
         )
       );
       return { success: true };
     } catch (err) {
-      console.error("Error disabling user:", err);
       setError(err.message || "Failed to disable user");
       throw err;
     } finally {

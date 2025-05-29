@@ -122,24 +122,20 @@ const useUserManagement = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Validate userId
       if (!userId) {
         throw new Error('User ID is required to toggle user status');
       }
-      
-      const result = await adminService.toggleUserStatus(userId, enabled);
-      
-      // Update users list
+      if (enabled) {
+        await adminService.enableUser(userId);
+      } else {
+        await adminService.disableUser(userId);
+      }
       setUsers(prevUsers => 
         prevUsers.map(user => 
-          (user.id === userId || user.sub === userId) 
-            ? { ...user, enabled: enabled } 
-            : user
+          (user.id === userId || user.sub === userId || user.uniqueId === userId) ? { ...user, enabled } : user
         )
       );
-      
-      return result;
+      return { success: true };
     } catch (err) {
       setError(err.message);
       throw err;

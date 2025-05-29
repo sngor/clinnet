@@ -571,7 +571,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{username}
+            Path: /users/{userId}
             Method: put
             Auth:
               Authorizer: CognitoAuthorizer
@@ -595,7 +595,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{username}
+            Path: /users/{userId}
             Method: delete
             Auth:
               Authorizer: CognitoAuthorizer
@@ -619,7 +619,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{username}/enable
+            Path: /users/{userId}/enable
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
@@ -643,7 +643,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{username}/disable
+            Path: /users/{userId}/disable
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer

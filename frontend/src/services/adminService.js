@@ -126,17 +126,17 @@ export const adminService = {
   
   /**
    * Update an existing user in Cognito
-   * @param {string} username - Username to update
+   * @param {string} userId - User ID to update
    * @param {Object} userData - User data
    * @returns {Promise<Object>} - Updated user
    */
-  async updateUser(username, userData) {
+  async updateUser(userId, userData) {
     try {
-      console.log(`Updating user ${username} with data:`, userData);
+      console.log(`Updating user ${userId} with data:`, userData);
       
-      // Validate username is provided
-      if (!username) {
-        throw new Error('Username is required for updating a user');
+      // Validate userId is provided
+      if (!userId) {
+        throw new Error('User ID is required for updating a user');
       }
       
       // Format phone number if provided
@@ -149,7 +149,7 @@ export const adminService = {
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
       // Call the API Gateway endpoint with proper authorization
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Authorization': idToken,
@@ -185,17 +185,17 @@ export const adminService = {
   
   /**
    * Delete a user from Cognito
-   * @param {string} username - Username to delete
+   * @param {string} userId - User ID to delete
    * @returns {Promise<Object>} - Success response
    */
-  async deleteUser(username) {
+  async deleteUser(userId) {
     try {
-      console.log(`Deleting user ${username}`);
+      console.log(`Deleting user ${userId}`);
       // Get the current auth token using Cognito helpers
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
       // Call the API Gateway endpoint with proper authorization
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': idToken,
@@ -230,19 +230,19 @@ export const adminService = {
   
   /**
    * Enable a user in Cognito
-   * @param {string} username - Username to enable
+   * @param {string} userId - User ID to enable
    * @returns {Promise<Object>} - Success response
    */
-  async enableUser(username) {
+  async enableUser(userId) {
     try {
-      console.log(`Enabling user ${username}`);
+      console.log(`Enabling user ${userId}`);
       
       // Get the current auth token using Cognito helpers
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
       
       // Call the API Gateway endpoint with proper authorization
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}/enable`, {
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}/enable`, {
         method: 'POST',
         headers: {
           'Authorization': idToken,
@@ -277,19 +277,19 @@ export const adminService = {
   
   /**
    * Disable a user in Cognito
-   * @param {string} username - Username to disable
+   * @param {string} userId - User ID to disable
    * @returns {Promise<Object>} - Success response
    */
-  async disableUser(username) {
+  async disableUser(userId) {
     try {
-      console.log(`Disabling user ${username}`);
+      console.log(`Disabling user ${userId}`);
       
       // Get the current auth token using Cognito helpers
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
       
       // Call the API Gateway endpoint with proper authorization
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}/disable`, {
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}/disable`, {
         method: 'POST',
         headers: {
           'Authorization': idToken,
