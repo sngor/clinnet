@@ -12,7 +12,7 @@ from utils.cors import add_cors_headers, build_cors_preflight_response
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def build_error_response(status_code, error_type, message, exception=None):
+def build_error_response(status_code, error_type, message, exception=None, request_origin=None):
     """
     Build a standardized error response
     
@@ -20,6 +20,8 @@ def build_error_response(status_code, error_type, message, exception=None):
         status_code (int): HTTP status code
         error_type (str): Type of error
         message (str): Error message
+        exception: Optional exception object
+        request_origin (str): Origin header from the request
         
     Returns:
         dict: API Gateway response with error details
@@ -35,14 +37,15 @@ def build_error_response(status_code, error_type, message, exception=None):
             'Content-Type': 'application/json'
         }
     }
-    return add_cors_headers(response)
+    return add_cors_headers(response, request_origin)
 
-def handle_exception(exception):
+def handle_exception(exception, request_origin=None):
     """
     Handle exceptions and return appropriate responses
     
     Args:
         exception: The exception to handle
+        request_origin (str): Origin header from the request
         
     Returns:
         dict: API Gateway response with error details
@@ -51,19 +54,19 @@ def handle_exception(exception):
         error_code = exception.response.get('Error', {}).get('Code', 'UnknownError')
         
         if error_code == 'ResourceNotFoundException':
-            return build_error_response(404, 'Not Found', str(exception), exception)
+            return build_error_response(404, 'Not Found', str(exception), exception, request_origin)
         elif error_code == 'ValidationException':
-            return build_error_response(400, 'Validation Error', str(exception), exception)
+            return build_error_response(400, 'Validation Error', str(exception), exception, request_origin)
         elif error_code == 'AccessDeniedException':
-            return build_error_response(403, 'Access Denied', str(exception), exception)
+            return build_error_response(403, 'Access Denied', str(exception), exception, request_origin)
         elif error_code == 'NoSuchKey':
-            return build_error_response(404, 'Not Found', 'Profile image not found', exception)
+            return build_error_response(404, 'Not Found', 'Profile image not found', exception, request_origin)
         else:
             logger.error(f"AWS ClientError: {error_code} - {str(exception)}")
-            return build_error_response(500, 'AWS Error', str(exception), exception)
+            return build_error_response(500, 'AWS Error', str(exception), exception, request_origin)
     else:
         logger.error(f"Unexpected error: {str(exception)}")
-        return build_error_response(500, 'Internal Server Error', str(exception), exception)
+        return build_error_response(500, 'Internal Server Error', str(exception), exception, request_origin)
 
 def lambda_handler(event, context):
     """
@@ -78,9 +81,12 @@ def lambda_handler(event, context):
     """
     logger.info(f"Received event: {json.dumps(event)}")
     
+    # Extract the Origin header for CORS handling
+    request_origin = event.get('headers', {}).get('Origin') or event.get('headers', {}).get('origin')
+    
     # Check if this is an OPTIONS request and return early with just the headers
     if event.get('httpMethod') == 'OPTIONS':
-        return build_cors_preflight_response()
+        return build_cors_preflight_response(request_origin)
     
     try:
         # Extract username from request context (from Cognito authorizer)
@@ -94,13 +100,13 @@ def lambda_handler(event, context):
                 logger.info(f"Getting profile image for user (admin access): {username}")
             else:
                 logger.error("Could not extract username from request context or path parameters")
-                return build_error_response(401, 'Unauthorized', 'User identity not found in request')
+                return build_error_response(401, 'Unauthorized', 'User identity not found in request', None, request_origin)
         
         # Get user pool ID from environment variable
         user_pool_id = os.environ.get('USER_POOL_ID')
         if not user_pool_id:
             logger.error("Environment variable USER_POOL_ID not set")
-            return build_error_response(500, 'Configuration Error', 'User pool ID not configured')
+            return build_error_response(500, 'Configuration Error', 'User pool ID not configured', None, request_origin)
         
         # Initialize Cognito client
         cognito = boto3.client('cognito-idp')
@@ -132,13 +138,13 @@ def lambda_handler(event, context):
                     'Content-Type': 'application/json'
                 }
             }
-            return add_cors_headers(response)
+            return add_cors_headers(response, request_origin)
         
         # Get S3 bucket name from environment variable
         bucket_name = os.environ.get('DOCUMENTS_BUCKET')
         if not bucket_name:
             logger.error("Environment variable DOCUMENTS_BUCKET not set")
-            return build_error_response(500, 'Configuration Error', 'Document storage not configured')
+            return build_error_response(500, 'Configuration Error', 'Document storage not configured', None, request_origin)
         
         # Initialize S3 client
         s3 = boto3.client('s3')
@@ -160,7 +166,7 @@ def lambda_handler(event, context):
                         'Content-Type': 'application/json'
                     }
                 }
-                return add_cors_headers(response)
+                return add_cors_headers(response, request_origin)
             else:
                 raise
         
@@ -186,11 +192,11 @@ def lambda_handler(event, context):
         }
         
         logger.info(f"Profile image URL generated successfully for user: {username}")
-        return add_cors_headers(response)
+        return add_cors_headers(response, request_origin)
     
     except ClientError as ce:
         logger.error(f"AWS ClientError getting profile image: {ce}")
-        return handle_exception(ce)
+        return handle_exception(ce, request_origin)
     except Exception as e:
         logger.error(f"Unexpected error getting profile image: {e}", exc_info=True)
-        return handle_exception(e)
+        return handle_exception(e, request_origin)

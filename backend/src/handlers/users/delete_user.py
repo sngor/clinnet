@@ -9,6 +9,13 @@ import boto3
 import logging
 from botocore.exceptions import ClientError
 
+# Attempt to import CORS utilities from utils.cors, fallback to lambda_layer.python.utils.cors for local testing
+try:
+    from utils.cors import add_cors_headers, build_cors_preflight_response
+except ImportError:
+    # For local testing if Lambda layer is not in path
+    from lambda_layer.python.utils.cors import add_cors_headers, build_cors_preflight_response
+
 # Setup logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

@@ -8,6 +8,19 @@ from botocore.exceptions import ClientError
 # Import utility functions
 from utils.db_utils import query_table, generate_response
 from utils.responser_helper import handle_exception
+from utils.cors import build_cors_preflight_response, add_cors_headers
+
+def build_error_response(status_code, error_type, message, request_origin=None):
+    """Build standardized error response with CORS headers"""
+    response = {
+        'statusCode': status_code,
+        'body': json.dumps({
+            'error': error_type,
+            'message': message
+        })
+    }
+    add_cors_headers(response, request_origin)
+    return response
 
 def lambda_handler(event, context):
     """
@@ -22,21 +35,17 @@ def lambda_handler(event, context):
     """
     print(f"Received event: {json.dumps(event)}")
     
+    # Extract origin from request headers
+    headers = event.get('headers', {})
+    request_origin = headers.get('Origin') or headers.get('origin')
+    
     # --- Handle CORS preflight (OPTIONS) requests ---
     if event.get('httpMethod', '').upper() == 'OPTIONS':
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-            },
-            'body': json.dumps({'message': 'CORS preflight OK'})
-        }
+        return build_cors_preflight_response(request_origin)
 
     table_name = os.environ.get('APPOINTMENTS_TABLE')
     if not table_name:
-        return generate_response(500, {'message': 'Appointments table name not configured'})
+        return build_error_response(500, 'Configuration Error', 'Appointments table name not configured', request_origin)
     
     try:
         # Get query parameters
@@ -75,13 +84,12 @@ def lambda_handler(event, context):
         # Query appointments
         appointments = query_table(table_name, **kwargs)
         
-        return generate_response(200, appointments)
+        response = generate_response(200, appointments)
+        add_cors_headers(response, request_origin)
+        return response
     
     except ClientError as e:
-        return handle_exception(e)
+        return handle_exception(e, request_origin)
     except Exception as e:
         print(f"Error fetching appointments: {e}")
-        return generate_response(500, {
-            'message': 'Error fetching appointments',
-            'error': str(e)
-        })
+        return build_error_response(500, 'Internal Server Error', 'Error fetching appointments', request_origin)
