@@ -168,10 +168,20 @@ function UserList() {
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      // If adding a new user and email changes, update username too
+      if (name === "email" && !currentUser) {
+        return {
+          ...prev,
+          email: value,
+          username: getUsernameFromEmail(value),
+        };
+      }
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
 
     // Clear specific field error
     if (formErrors[name]) {

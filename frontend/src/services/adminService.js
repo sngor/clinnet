@@ -174,7 +174,9 @@ export const adminService = {
       if (Object.keys(requestBody).length === 0) {
         throw new Error('No valid fields to update');
       }
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}`, {
+      // Use username as the path parameter (not sub/UUID)
+      const username = userData.username;
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${idToken}`,
@@ -378,7 +380,9 @@ export const adminService = {
       if (Object.keys(requestBody).length === 0) {
         throw new Error('No valid fields to update');
       }
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}`, {
+      // Use username as the path parameter (not sub/UUID)
+      const username = userData.username;
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${idToken}`,
