@@ -273,3 +273,5 @@ def lambda_handler(event, context):
         except Exception as e:
             logger.error(f"Unexpected error uploading profile image: {e}", exc_info=True)
             return handle_exception(e, request_origin)
+    
+    return handler(event, context)
