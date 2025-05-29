@@ -85,7 +85,18 @@ export const adminService = {
    */
   async createUser(userData) {
     try {
-      console.log('Creating user with data:', userData);
+      // Always derive username from email if not present
+      if (!userData.username && userData.email) {
+        userData.username = userData.email.split('@')[0];
+      }
+      // Remove empty password (should always be required for new users)
+      if (!userData.password || userData.password.trim() === "") {
+        throw new Error("Password is required for new users");
+      }
+      // Remove undefined/null fields
+      Object.keys(userData).forEach(
+        (key) => (userData[key] === undefined || userData[key] === null) && delete userData[key]
+      );
       // Get the current auth token using Cognito helpers
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
@@ -98,17 +109,12 @@ export const adminService = {
         },
         body: JSON.stringify(userData)
       });
-      
       console.log('API response status:', response.status);
-      
       const responseText = await response.text();
       console.log('API response text:', responseText);
-      
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}: ${responseText}`);
       }
-      
-      // Parse the response text as JSON
       let data;
       try {
         data = JSON.parse(responseText);
@@ -132,51 +138,57 @@ export const adminService = {
    */
   async updateUser(userId, userData) {
     try {
-      console.log(`Updating user ${userId} with data:`, userData);
-      
-      // Validate userId is provided
+      console.log('Updating user', userId, 'with data:', userData);
       if (!userId) {
         throw new Error('User ID is required for updating a user');
       }
-      
-      // Format phone number if provided
       if (userData.phone) {
         const { formatPhoneNumber } = await import('../utils/cognito-helpers');
         userData.phone = formatPhoneNumber(userData.phone);
       }
-      
-      // Get the current auth token using Cognito helpers
       const idToken = await getAuthToken();
-      if (!idToken) throw new Error('No authentication token available');
-      // Call the API Gateway endpoint with proper authorization
+      const displayUsername = userData.email ? extractUsernameFromEmail(userData.email) : userData.username;
+      // Build request body, omitting empty fields
+      const requestBody = {
+        username: userData.username,
+        displayUsername: displayUsername,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone || '',
+        role: userData.role,
+        enabled: userData.enabled,
+      };
+      // Only include password if non-empty
+      if (userData.password && userData.password.trim() !== '') {
+        requestBody.password = userData.password;
+      }
+      if (userData.profileImage) {
+        requestBody.profileImage = userData.profileImage;
+      }
+      // Remove any undefined/null fields
+      Object.keys(requestBody).forEach(
+        (key) => (requestBody[key] === undefined || requestBody[key] === null) && delete requestBody[key]
+      );
+      // Prevent sending an empty body
+      if (Object.keys(requestBody).length === 0) {
+        throw new Error('No valid fields to update');
+      }
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': idToken,
+          'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(userData)
+        body: JSON.stringify(requestBody)
       });
-      
       console.log('API response status:', response.status);
-      
-      const responseText = await response.text();
-      console.log('API response text:', responseText);
-      
       if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+        const errorText = await response.text();
+        console.log('API response text:', errorText);
+        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
       }
-      
-      // Parse the response text as JSON
-      let data;
-      try {
-        data = JSON.parse(responseText);
-        console.log('Parsed response data:', data);
-        return data;
-      } catch (parseError) {
-        console.error('Error parsing response as JSON:', parseError);
-        throw new Error(`Failed to parse response as JSON: ${responseText}`);
-      }
+      return await response.json();
     } catch (error) {
       console.error('Error updating user:', error);
       throw error;
@@ -331,27 +343,19 @@ export const adminService = {
   async updateUser(userId, userData) {
     try {
       console.log('Updating user', userId, 'with data:', userData);
-      
-      // Validate userId is provided
       if (!userId) {
         throw new Error('User ID is required for updating a user');
       }
-      
-      // Format phone number if provided
       if (userData.phone) {
         const { formatPhoneNumber } = await import('../utils/cognito-helpers');
         userData.phone = formatPhoneNumber(userData.phone);
       }
-      
       const idToken = await getAuthToken();
-      
-      // Extract username from email for consistent display
       const displayUsername = userData.email ? extractUsernameFromEmail(userData.email) : userData.username;
-      
-      // Include profile image if provided
+      // Build request body, omitting empty fields
       const requestBody = {
         username: userData.username,
-        displayUsername: displayUsername, // Add display username explicitly
+        displayUsername: displayUsername,
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
@@ -359,12 +363,21 @@ export const adminService = {
         role: userData.role,
         enabled: userData.enabled,
       };
-      
-      // Add profile image if it exists
+      // Only include password if non-empty
+      if (userData.password && userData.password.trim() !== '') {
+        requestBody.password = userData.password;
+      }
       if (userData.profileImage) {
         requestBody.profileImage = userData.profileImage;
       }
-      
+      // Remove any undefined/null fields
+      Object.keys(requestBody).forEach(
+        (key) => (requestBody[key] === undefined || requestBody[key] === null) && delete requestBody[key]
+      );
+      // Prevent sending an empty body
+      if (Object.keys(requestBody).length === 0) {
+        throw new Error('No valid fields to update');
+      }
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}`, {
         method: 'PUT',
         headers: {
@@ -373,15 +386,12 @@ export const adminService = {
         },
         body: JSON.stringify(requestBody)
       });
-      
       console.log('API response status:', response.status);
-      
       if (!response.ok) {
         const errorText = await response.text();
         console.log('API response text:', errorText);
         throw new Error(`API request failed with status ${response.status}: ${errorText}`);
       }
-      
       return await response.json();
     } catch (error) {
       console.error('Error updating user:', error);
