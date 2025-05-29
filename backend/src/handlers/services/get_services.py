@@ -68,18 +68,15 @@ def lambda_handler(event, context):
         
         response = generate_response(200, services)
         
-        # Add CORS headers to response
-        return add_cors_headers(response)
+        return response
     
     except ClientError as e:
         logger.error(f"ClientError: {e}", exc_info=True)
         return handle_exception(e)
     except Exception as e:
         logger.error(f"Error fetching services: {e}", exc_info=True)
-        print(f"Error fetching services: {e}")
         error_response = generate_response(500, {
             'message': 'Error fetching services',
             'error': str(e)
         })
-        # Add CORS headers even to error responses
-        return add_cors_headers(error_response)
+        return error_response

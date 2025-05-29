@@ -3,64 +3,13 @@ Lambda function to get all patients
 """
 import os
 import json
-import boto3
-import decimal
 import logging
 from botocore.exceptions import ClientError
+from utils.responser_helper import handle_exception # Added for consistency
 
-# Initialize DynamoDB client
-dynamodb = boto3.resource('dynamodb')
-
-# Helper class to convert a DynamoDB item to JSON
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, decimal.Decimal):
-            if o % 1 > 0:
-                return float(o)
-            else:
-                return int(o)
-        return super(DecimalEncoder, self).default(o)
-
-def query_table(table_name, **kwargs):
-    """
-    Query DynamoDB table with optional parameters
-    
-    Args:
-        table_name (str): DynamoDB table name
-        **kwargs: Additional query parameters
-        
-    Returns:
-        list: Query results
-    """
-    table = dynamodb.Table(table_name)
-    
-    try:
-        response = table.scan(**kwargs)
-        return response.get('Items', [])
-    except ClientError as e:
-        print(f"Error querying table {table_name}: {e}")
-        raise
-
-def generate_response(status_code, body):
-    """
-    Generate standardized API response
-    
-    Args:
-        status_code (int): HTTP status code
-        body (dict): Response body
-        
-    Returns:
-        dict: API Gateway response object
-    """
-    return {
-        'statusCode': status_code,
-        'headers': {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Credentials': True,
-            'Content-Type': 'application/json'
-        },
-        'body': json.dumps(body, cls=DecimalEncoder)
-    }
+# Import utility functions
+from utils.db_utils import query_by_type, generate_response # Changed query_table to query_by_type
+# DecimalEncoder is used by generate_response in db_utils
 
 def lambda_handler(event, context=None):
     """
@@ -76,17 +25,30 @@ def lambda_handler(event, context=None):
         return generate_response(500, {'message': 'PatientRecords table name not configured'})
 
     try:
-        from boto3.dynamodb.conditions import Attr, Or
-        # Robust filter: match both 'patient' and 'PATIENT' for type
-        patients = query_table(
-            table_name,
-            FilterExpression=Or(
-                Attr('type').eq('patient'),
-                Attr('type').eq('PATIENT')
+        all_patients = []
+        last_evaluated_key = None
+        
+        while True:
+            logger.info(f"Querying for patients. LastEvaluatedKey: {last_evaluated_key}")
+            response_data = query_by_type(
+                table_name,
+                type_value='patient', # Querying for 'patient' type
+                last_evaluated_key=last_evaluated_key
             )
-        )
-        logger.info(f"Fetched {len(patients)} patients from DynamoDB")
-        return generate_response(200, patients)
+            
+            items = response_data.get('Items', [])
+            all_patients.extend(items)
+            
+            last_evaluated_key = response_data.get('LastEvaluatedKey')
+            if not last_evaluated_key:
+                break # Exit loop if no more items to fetch
+                
+        logger.info(f"Fetched {len(all_patients)} patients from DynamoDB using type-index GSI")
+        return generate_response(200, all_patients)
+        
+    except ClientError as ce:
+        logger.error(f"ClientError fetching patients: {ce}", exc_info=True)
+        return handle_exception(ce) # Use imported helper
     except Exception as e:
         logger.error(f"Error fetching patients: {e}", exc_info=True)
         return generate_response(500, {

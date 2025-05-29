@@ -3,6 +3,7 @@ Lambda function to delete a service
 """
 import os
 import json
+import logging
 from botocore.exceptions import ClientError
 
 # Import utility functions
@@ -20,10 +21,13 @@ def lambda_handler(event, context):
     Returns:
         dict: API Gateway response
     """
-    print(f"Received event: {json.dumps(event)}")
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.info(f"Received event: {json.dumps(event)}")
     
     table_name = os.environ.get('SERVICES_TABLE')
     if not table_name:
+        logger.error('Services table name not configured')
         return generate_response(500, {'message': 'Services table name not configured'})
     
     # Get service ID from path parameters
@@ -44,9 +48,10 @@ def lambda_handler(event, context):
         return generate_response(200, {'message': f'Service with ID {service_id} deleted successfully'})
     
     except ClientError as e:
+        logger.error(f"ClientError: {e}", exc_info=True)
         return handle_exception(e)
     except Exception as e:
-        print(f"Error deleting service: {e}")
+        logger.error(f"Error deleting service: {e}", exc_info=True)
         return generate_response(500, {
             'message': 'Error deleting service',
             'error': str(e)
