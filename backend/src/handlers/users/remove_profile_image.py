@@ -6,32 +6,81 @@ import json
 import boto3
 import logging
 from botocore.exceptions import ClientError
+from utils.cors import add_cors_headers, build_cors_preflight_response
 
-def build_error_response(status_code, error_type, message):
-    return {
+# Setup logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+def build_error_response(status_code, error_type, message, exception=None):
+    """
+    Build a standardized error response
+    
+    Args:
+        status_code (int): HTTP status code
+        error_type (str): Type of error
+        message (str): Error message
+        exception (Exception): Optional exception object
+        
+    Returns:
+        dict: API Gateway response with error details
+    """
+    response = {
         'statusCode': status_code,
-        'headers': {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-        },
         'body': json.dumps({
             'error': error_type,
-            'message': message
-        })
+            'message': message,
+            'exception': str(exception) if exception else None
+        }),
+        'headers': {
+            'Content-Type': 'application/json'
+        }
     }
+    return add_cors_headers(response)
 
 def handle_exception(exception):
+    """
+    Handle exceptions and return appropriate responses
+    
+    Args:
+        exception: The exception to handle
+        
+    Returns:
+        dict: API Gateway response with error details
+    """
     if isinstance(exception, ClientError):
         error_code = exception.response.get('Error', {}).get('Code', 'UnknownError')
-        return build_error_response(500, 'AWS Error', str(exception))
+        
+        if error_code == 'ResourceNotFoundException':
+            return build_error_response(404, 'Not Found', str(exception), exception)
+        elif error_code == 'ValidationException':
+            return build_error_response(400, 'Validation Error', str(exception), exception)
+        elif error_code == 'AccessDeniedException':
+            return build_error_response(403, 'Access Denied', str(exception), exception)
+        else:
+            logger.error(f"AWS ClientError: {error_code} - {str(exception)}")
+            return build_error_response(500, 'AWS Error', str(exception), exception)
     else:
-        return build_error_response(500, 'Internal Server Error', str(exception))
+        logger.error(f"Unexpected error: {str(exception)}")
+        return build_error_response(500, 'Internal Server Error', str(exception), exception)
 
 def lambda_handler(event, context):
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    """
+    Handle Lambda event for DELETE /users/profile-image (Removes a user's profile image)
+    
+    Args:
+        event (dict): Lambda event
+        context (LambdaContext): Lambda context
+        
+    Returns:
+        dict: API Gateway response
+    """
     logger.info(f"Received event: {json.dumps(event)}")
+    
+    # Check if this is an OPTIONS request and return early with just the headers
+    if event.get('httpMethod') == 'OPTIONS':
+        return build_cors_preflight_response()
+    
     try:
         # Extract username from request context (from Cognito authorizer)
         try:
@@ -73,18 +122,17 @@ def lambda_handler(event, context):
                     {'Name': 'custom:profile_image', 'Value': ''}
                 ]
             )
-            return {
+            response = {
                 'statusCode': 200,
-                'headers': {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-                    'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-                },
                 'body': json.dumps({
                     'success': True,
                     'message': 'Profile image attribute cleared (no image to remove)'
-                })
+                }),
+                'headers': {
+                    'Content-Type': 'application/json'
+                }
             }
+            return add_cors_headers(response)
 
         # Remove the image from S3
         try:
@@ -100,19 +148,24 @@ def lambda_handler(event, context):
                 {'Name': 'custom:profile_image', 'Value': ''}
             ]
         )
-        return {
+        
+        response = {
             'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-            },
             'body': json.dumps({
                 'success': True,
                 'message': 'Profile image removed successfully'
-            })
+            }),
+            'headers': {
+                'Content-Type': 'application/json'
+            }
         }
+        
+        logger.info(f"Profile image removed successfully for user: {username}")
+        return add_cors_headers(response)
+    
     except ClientError as ce:
+        logger.error(f"AWS ClientError removing profile image: {ce}")
         return handle_exception(ce)
     except Exception as e:
+        logger.error(f"Unexpected error removing profile image: {e}", exc_info=True)
         return handle_exception(e)

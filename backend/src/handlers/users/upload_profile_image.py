@@ -8,12 +8,13 @@ import base64
 import uuid
 import logging
 from botocore.exceptions import ClientError
+from utils.cors import add_cors_headers, build_cors_preflight_response
 
 # Setup logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def build_error_response(status_code, error_type, message):
+def build_error_response(status_code, error_type, message, exception=None):
     """
     Build a standardized error response
     
@@ -21,22 +22,23 @@ def build_error_response(status_code, error_type, message):
         status_code (int): HTTP status code
         error_type (str): Type of error
         message (str): Error message
+        exception (Exception): Optional exception object
         
     Returns:
         dict: API Gateway response with error details
     """
-    return {
+    response = {
         'statusCode': status_code,
-        'headers': {
-            'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-        },
         'body': json.dumps({
             'error': error_type,
-            'message': message
-        })
+            'message': message,
+            'exception': str(exception) if exception else None
+        }),
+        'headers': {
+            'Content-Type': 'application/json'
+        }
     }
+    return add_cors_headers(response)
 
 def handle_exception(exception):
     """
@@ -52,17 +54,17 @@ def handle_exception(exception):
         error_code = exception.response.get('Error', {}).get('Code', 'UnknownError')
         
         if error_code == 'ResourceNotFoundException':
-            return build_error_response(404, 'Not Found', str(exception))
+            return build_error_response(404, 'Not Found', str(exception), exception)
         elif error_code == 'ValidationException':
-            return build_error_response(400, 'Validation Error', str(exception))
+            return build_error_response(400, 'Validation Error', str(exception), exception)
         elif error_code == 'AccessDeniedException':
-            return build_error_response(403, 'Access Denied', str(exception))
+            return build_error_response(403, 'Access Denied', str(exception), exception)
         else:
             logger.error(f"AWS ClientError: {error_code} - {str(exception)}")
-            return build_error_response(500, 'AWS Error', str(exception))
+            return build_error_response(500, 'AWS Error', str(exception), exception)
     else:
         logger.error(f"Unexpected error: {str(exception)}")
-        return build_error_response(500, 'Internal Server Error', str(exception))
+        return build_error_response(500, 'Internal Server Error', str(exception), exception)
 
 def lambda_handler(event, context):
     """
@@ -77,6 +79,10 @@ def lambda_handler(event, context):
     """
     logger.info(f"Received event: {json.dumps(event)}")
     logger.info(f"Event body: {event.get('body')}")
+    
+    # Check if this is an OPTIONS request and return early with just the headers
+    if event.get('httpMethod') == 'OPTIONS':
+        return build_cors_preflight_response()
     
     try:
         # Parse request body
@@ -179,21 +185,19 @@ def lambda_handler(event, context):
         # Return success response with the image URL
         response = {
             'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net',
-                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-            },
             'body': json.dumps({
                 'success': True,
                 'message': 'Profile image uploaded successfully',
                 'imageUrl': image_url,
                 'imageKey': filename
-            })
+            }),
+            'headers': {
+                'Content-Type': 'application/json'
+            }
         }
         
         logger.info(f"Profile image uploaded successfully for user: {username}")
-        return response
+        return add_cors_headers(response)
     
     except ClientError as ce:
         logger.error(f"AWS ClientError uploading profile image: {ce}")

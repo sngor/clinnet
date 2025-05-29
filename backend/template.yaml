@@ -676,6 +676,7 @@ Resources:
               Action:
                 - s3:PutObject
                 - s3:GetObject
+                - s3:HeadObject
               Resource: !Sub "${DocumentsBucket.Arn}/profile-images/*"
       Layers:
         - !Ref UtilsLayer
@@ -708,6 +709,7 @@ Resources:
             - Effect: Allow
               Action:
                 - s3:GetObject
+                - s3:HeadObject
               Resource: !Sub "${DocumentsBucket.Arn}/profile-images/*"
       Layers:
         - !Ref UtilsLayer
@@ -738,6 +740,7 @@ Resources:
               Action:
                 - s3:DeleteObject
                 - s3:GetObject
+                - s3:HeadObject
               Resource: !Sub "${DocumentsBucket.Arn}/profile-images/*"
       Layers:
         - !Ref UtilsLayer

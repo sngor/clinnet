@@ -103,14 +103,19 @@ export const userService = {
       
       // If imageData is a base64 string, use it directly
       if (typeof imageData === 'string') {
-        // Check if it's already a clean base64 string or has the data URL prefix
-        const base64Data = imageData.includes('base64,') ? 
-          imageData.split('base64,')[1] : imageData;
+        // Check if it's already a full data URI or just base64
+        let fullDataUri;
+        if (imageData.startsWith('data:image/')) {
+          // Already a full data URI
+          fullDataUri = imageData;
+        } else {
+          // Just base64 data, create full data URI
+          fullDataUri = `data:image/jpeg;base64,${imageData}`;
+        }
           
-        // Use the base64 string directly in JSON
+        // Use the full data URI as expected by backend
         jsonPayload = JSON.stringify({
-          image: base64Data,
-          contentType: 'image/jpeg'
+          image: fullDataUri
         });
       } else {
         // If it's a File or Blob, convert to base64 first
@@ -120,12 +125,9 @@ export const userService = {
           reader.readAsDataURL(imageData);
         });
         
-        const base64Data = base64.includes('base64,') ? 
-          base64.split('base64,')[1] : base64;
-          
+        // The FileReader result is already a full data URI
         jsonPayload = JSON.stringify({
-          image: base64Data,
-          contentType: imageData.type || 'image/jpeg'
+          image: base64
         });
       }
       
@@ -142,10 +144,18 @@ export const userService = {
         let errorText;
         try {
           errorText = await response.text();
+          // Try to parse as JSON to extract error details
+          try {
+            const errorData = JSON.parse(errorText);
+            const message = errorData.message || errorData.error || errorText;
+            throw new Error(`Failed to upload profile image: ${message}`);
+          } catch (parseErr) {
+            // If not JSON, use the text directly
+            throw new Error(`Failed to upload profile image: ${errorText}`);
+          }
         } catch (e) {
-          errorText = `HTTP status ${response.status}`;
+          throw new Error(`Failed to upload profile image: HTTP status ${response.status}`);
         }
-        throw new Error(`Failed to upload profile image: ${errorText}`);
       }
       
       let result;
@@ -208,8 +218,21 @@ export const userService = {
         }
       });
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to get profile image: ${errorText}`);
+        let errorText;
+        try {
+          errorText = await response.text();
+          // Try to parse as JSON to extract error details
+          try {
+            const errorData = JSON.parse(errorText);
+            const message = errorData.message || errorData.error || errorText;
+            throw new Error(`Failed to get profile image: ${message}`);
+          } catch (parseErr) {
+            // If not JSON, use the text directly
+            throw new Error(`Failed to get profile image: ${errorText}`);
+          }
+        } catch (e) {
+          throw new Error(`Failed to get profile image: HTTP status ${response.status}`);
+        }
       }
       const result = await response.json();
       console.log('Profile image retrieved successfully:', result);
@@ -255,8 +278,21 @@ export const userService = {
         }
       });
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to remove profile image: ${errorText}`);
+        let errorText;
+        try {
+          errorText = await response.text();
+          // Try to parse as JSON to extract error details
+          try {
+            const errorData = JSON.parse(errorText);
+            const message = errorData.message || errorData.error || errorText;
+            throw new Error(`Failed to remove profile image: ${message}`);
+          } catch (parseErr) {
+            // If not JSON, use the text directly
+            throw new Error(`Failed to remove profile image: ${errorText}`);
+          }
+        } catch (e) {
+          throw new Error(`Failed to remove profile image: HTTP status ${response.status}`);
+        }
       }
       const result = await response.json();
       console.log('Profile image removed successfully:', result);
