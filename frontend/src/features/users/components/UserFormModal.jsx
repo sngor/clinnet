@@ -86,35 +86,37 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
     // eslint-disable-next-line
   }, [formData.email, isEditing]);
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    // Basic validation clear on change
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+  // Ensure username is always derived from email before validation/submission for new users
+  const getFormDataWithUsername = () => {
+    if (!isEditing) {
+      return {
+        ...formData,
+        username: extractUsernameFromEmail(formData.email),
+      };
     }
+    return formData;
   };
 
   const validateForm = () => {
+    const data = getFormDataWithUsername();
     const newErrors = {};
-    if (!formData.username.trim()) newErrors.username = "Username is required";
-    if (!formData.firstName.trim())
-      newErrors.firstName = "First name is required";
-    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
-    if (!formData.email.trim()) {
+    if (!data.username.trim()) newErrors.username = "Username is required";
+    if (!data.firstName.trim()) newErrors.firstName = "First name is required";
+    if (!data.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!data.email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
       newErrors.email = "Email is invalid";
     }
-    if (!formData.phone.trim()) {
+    if (!data.phone.trim()) {
       newErrors.phone = "Phone number is required";
     }
-    if (!formData.gender) newErrors.gender = "Gender is required";
-    if (!formData.role) newErrors.role = "Role is required";
-    if (!isEditing && !formData.password) {
+    if (!data.gender) newErrors.gender = "Gender is required";
+    if (!data.role) newErrors.role = "Role is required";
+    if (!isEditing && !data.password) {
       // Password required only when adding
       newErrors.password = "Password is required for new users";
-    } else if (isEditing && formData.password && formData.password.length < 6) {
+    } else if (isEditing && data.password && data.password.length < 6) {
       // Optional password change validation
       newErrors.password = "Password must be at least 6 characters";
     }
@@ -124,11 +126,10 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    const data = getFormDataWithUsername();
     if (validateForm()) {
       // Include ID if editing
-      const submissionData = isEditing
-        ? { ...formData, id: initialData.id }
-        : formData;
+      const submissionData = isEditing ? { ...data, id: initialData.id } : data;
       onSubmit(submissionData); // Pass data up to parent
     }
   };
@@ -182,6 +183,7 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
                 helperText={errors.username}
                 size={isMobile ? "small" : "medium"}
                 required
+                disabled={!isEditing} // Make username read-only for new users
               />
             </Grid>
 
