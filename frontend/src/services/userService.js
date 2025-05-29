@@ -88,7 +88,7 @@ export const userService = {
 
   /**
    * Upload a profile image
-   * @param {string} imageData - Base64 encoded image data
+   * @param {File|string} imageData - File object or base64 data URI string
    * @returns {Promise<Object>} - Upload result with image URL
    */
   async uploadProfileImage(imageData) {
@@ -96,18 +96,27 @@ export const userService = {
       console.log('Uploading profile image');
       // Get the current auth token
       const idToken = await getAuthToken();
-      
       let jsonPayload;
-      
-      // imageData is expected to be a base64 data URI string
-      if (typeof imageData === 'string') {
-        // The backend Lambda expects the full data URI.
+      // Accept either a File or a string (data URI)
+      if (imageData instanceof File) {
+        // Convert File to base64 data URI
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(imageData);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(error);
+        });
+        jsonPayload = JSON.stringify({ image: base64 });
+      } else if (typeof imageData === 'string') {
+        // Ensure the string is a full data URI
+        if (!imageData.startsWith('data:image/')) {
+          throw new Error('Image data must be a base64 data URI string (data:image/...)');
+        }
         jsonPayload = JSON.stringify({ image: imageData });
       } else {
-        console.error('Error: imageData is not a string. Profile image upload expects a base64 data URI string.');
-        throw new Error('Invalid image data format for upload. Expected a base64 data URI string.');
+        console.error('Error: imageData is not a File or string.');
+        throw new Error('Invalid image data format for upload. Expected a File or base64 data URI string.');
       }
-      
       // Call the API Gateway endpoint with proper authorization
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/profile-image`, {
         method: 'POST',
@@ -134,7 +143,6 @@ export const userService = {
           throw new Error(`Failed to upload profile image: HTTP status ${response.status}`);
         }
       }
-      
       let result;
       try {
         result = await response.json();
@@ -147,15 +155,10 @@ export const userService = {
         };
       }
       console.log('Profile image uploaded successfully:', result);
-      
       // Store pre-signed URL in local storage for immediate display
       if (result && result.imageUrl) {
         localStorage.setItem('userProfileImage', result.imageUrl);
-        // The backend (upload_profile_image.py) is responsible for updating 
-        // the 'custom:profile_image' attribute in Cognito with the S3 object key (result.imageKey).
-        // The frontend should not attempt to update it here, especially not with the pre-signed imageUrl.
       }
-      
       return result;
     } catch (error) {
       console.error('Error uploading profile image:', error);
