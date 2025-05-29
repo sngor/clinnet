@@ -89,10 +89,10 @@ def lambda_handler(event, context):
             body = base64.b64decode(body).decode('utf-8')
         request_body = json.loads(body)
         
-        if not event.get('pathParameters') or not event['pathParameters'].get('username'):
-            return build_error_response(400, 'Bad Request', 'Username path parameter is required')
-        
-        username = event['pathParameters']['username']
+        # Accept 'userId' as the path parameter (not 'username')
+        if not event.get('pathParameters') or not event['pathParameters'].get('userId'):
+            return build_error_response(400, 'Bad Request', 'UserId path parameter is required')
+        username = event['pathParameters']['userId']
         
         # Extract user pool ID from environment variable
         user_pool_id = os.environ.get('USER_POOL_ID')

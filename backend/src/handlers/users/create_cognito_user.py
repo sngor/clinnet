@@ -7,6 +7,7 @@ import os
 import json
 import boto3
 import logging
+import base64
 from botocore.exceptions import ClientError
 
 # Setup logging
@@ -82,7 +83,11 @@ def lambda_handler(event, context):
         if not event.get('body'):
             return build_error_response(400, 'Bad Request', 'Request body is required')
         
-        request_body = json.loads(event['body'])
+        # Handle base64-encoded body
+        body = event['body']
+        if event.get('isBase64Encoded'):
+            body = base64.b64decode(body).decode('utf-8')
+        request_body = json.loads(body)
         
         # Validate required fields
         required_fields = ['username', 'password', 'firstName', 'lastName', 'role']
