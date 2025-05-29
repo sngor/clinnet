@@ -211,6 +211,7 @@ def lambda_handler(event, context):
             'body': json.dumps(user)
         }
         logger.info(f"Returning response with status code {response['statusCode']}")
+        logger.info(f"User successfully updated in Cognito: username={username}, updated_fields={list(request_body.keys())}")
         return response
     
     except ClientError as ce:

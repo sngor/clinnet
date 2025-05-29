@@ -147,6 +147,8 @@ def lambda_handler(event, context):
         create_result = cognito.admin_create_user(**create_params)
         logger.info(f"User created: {json.dumps(create_result, default=str)}")
         
+        logger.info(f"User successfully created in Cognito: username={request_body['username']}, email={request_body.get('email', '')}")
+        
         # If a permanent password is provided, set it
         if request_body.get('password'):
             password_params = {

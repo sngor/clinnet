@@ -19,8 +19,8 @@ const genders = ["Male", "Female", "Other"]; // Define available genders
 
 function UserFormModal({ open, onClose, onSubmit, initialData }) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [formData, setFormData] = useState({
     username: "",
     firstName: "",
@@ -66,6 +66,26 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
     }
   }, [open, initialData, isEditing]);
 
+  // Helper to extract username from email
+  const extractUsernameFromEmail = (email) => {
+    if (!email || typeof email !== "string" || !email.includes("@")) {
+      return email || "";
+    }
+    return email.split("@")[0];
+  };
+
+  // Update username automatically when email changes (for new users)
+  useEffect(() => {
+    if (!isEditing && formData.email) {
+      setFormData((prev) => ({
+        ...prev,
+        username: extractUsernameFromEmail(formData.email),
+      }));
+    }
+    // Only update username for new users, not when editing
+    // eslint-disable-next-line
+  }, [formData.email, isEditing]);
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -78,7 +98,8 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.username.trim()) newErrors.username = "Username is required";
-    if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
+    if (!formData.firstName.trim())
+      newErrors.firstName = "First name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -113,25 +134,27 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="sm" 
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
       fullWidth
       fullScreen={isMobile}
       PaperProps={{
         sx: {
           borderRadius: isMobile ? 0 : 2,
-          m: isMobile ? 0 : 2
-        }
+          m: isMobile ? 0 : 2,
+        },
       }}
     >
-      <DialogTitle sx={{ 
-        pb: 1,
-        pt: { xs: 2, sm: 2 },
-        fontSize: { xs: '1.25rem', sm: '1.5rem' },
-        textAlign: { xs: 'center', sm: 'left' }
-      }}>
+      <DialogTitle
+        sx={{
+          pb: 1,
+          pt: { xs: 2, sm: 2 },
+          fontSize: { xs: "1.25rem", sm: "1.5rem" },
+          textAlign: { xs: "center", sm: "left" },
+        }}
+      >
         {isEditing ? "Edit User" : "Add New User"}
       </DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
@@ -139,11 +162,15 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
           <Grid container spacing={2}>
             {/* Basic Information */}
             <Grid item xs={12}>
-              <Typography variant="subtitle1" color="primary" sx={{ mb: 1, fontWeight: 'medium' }}>
+              <Typography
+                variant="subtitle1"
+                color="primary"
+                sx={{ mb: 1, fontWeight: "medium" }}
+              >
                 Basic Information
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormField
                 type="text"
@@ -157,7 +184,7 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
                 required
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormField
                 type="password"
@@ -171,7 +198,7 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
                 required={!isEditing}
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormField
                 type="text"
@@ -185,7 +212,7 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
                 required
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormField
                 type="text"
@@ -199,14 +226,18 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
                 required
               />
             </Grid>
-            
+
             {/* Contact Information */}
             <Grid item xs={12} sx={{ mt: 1 }}>
-              <Typography variant="subtitle1" color="primary" sx={{ mb: 1, fontWeight: 'medium' }}>
+              <Typography
+                variant="subtitle1"
+                color="primary"
+                sx={{ mb: 1, fontWeight: "medium" }}
+              >
                 Contact Information
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormField
                 type="email"
@@ -220,7 +251,7 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
                 required
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormField
                 type="tel"
@@ -234,14 +265,18 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
                 required
               />
             </Grid>
-            
+
             {/* Additional Information */}
             <Grid item xs={12} sx={{ mt: 1 }}>
-              <Typography variant="subtitle1" color="primary" sx={{ mb: 1, fontWeight: 'medium' }}>
+              <Typography
+                variant="subtitle1"
+                color="primary"
+                sx={{ mb: 1, fontWeight: "medium" }}
+              >
                 Additional Information
               </Typography>
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormField
                 type="select"
@@ -251,12 +286,15 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
                 onChange={handleChange}
                 error={!!errors.gender}
                 helperText={errors.gender}
-                options={genders.map(gender => ({ value: gender, label: gender }))}
+                options={genders.map((gender) => ({
+                  value: gender,
+                  label: gender,
+                }))}
                 size={isMobile ? "small" : "medium"}
                 required
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <FormField
                 type="select"
@@ -266,9 +304,9 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
                 onChange={handleChange}
                 error={!!errors.role}
                 helperText={errors.role}
-                options={roles.map(role => ({ 
-                  value: role, 
-                  label: role.charAt(0).toUpperCase() + role.slice(1)
+                options={roles.map((role) => ({
+                  value: role,
+                  label: role.charAt(0).toUpperCase() + role.slice(1),
                 }))}
                 size={isMobile ? "small" : "medium"}
                 required
@@ -276,13 +314,15 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ 
-          px: { xs: 3, sm: 3 },
-          pb: { xs: 3, sm: 2 },
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: { xs: 1, sm: 1 }
-        }}>
-          <Button 
+        <DialogActions
+          sx={{
+            px: { xs: 3, sm: 3 },
+            pb: { xs: 3, sm: 2 },
+            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: 1, sm: 1 },
+          }}
+        >
+          <Button
             onClick={onClose}
             fullWidth={isMobile}
             variant={isMobile ? "outlined" : "text"}
@@ -290,8 +330,8 @@ function UserFormModal({ open, onClose, onSubmit, initialData }) {
           >
             Cancel
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             variant="contained"
             fullWidth={isMobile}
             size={isMobile ? "medium" : "medium"}

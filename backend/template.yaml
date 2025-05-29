@@ -814,6 +814,21 @@ Resources:
             Auth:
               Authorizer: NONE
 
+  UserByIdOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/cors/
+      Handler: cors_options.lambda_handler
+      Events:
+        UserByIdOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /users/{userId}
+            Method: options
+            Auth:
+              Authorizer: NONE
+
   DiagnosticsOptions:
     Type: AWS::Serverless::Function
     Properties:
