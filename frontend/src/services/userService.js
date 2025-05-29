@@ -148,23 +148,12 @@ export const userService = {
       }
       console.log('Profile image uploaded successfully:', result);
       
-      // Store in local storage for immediate access
+      // Store pre-signed URL in local storage for immediate display
       if (result && result.imageUrl) {
         localStorage.setItem('userProfileImage', result.imageUrl);
-        
-        // Try to store in Cognito as well
-        try {
-          const { updateUserAttributes } = await import('../utils/cognito-helpers');
-          const user = userPool.getCurrentUser();
-          if (user) {
-            await updateUserAttributes(user.getUsername(), {
-              'custom:profile_image': result.imageUrl
-            });
-          }
-        } catch (attributeError) {
-          // Just log the error - we're storing the image URL in the AuthProvider state too
-          console.warn('Note: Could not store profile image URL in Cognito:', attributeError.message);
-        }
+        // The backend (upload_profile_image.py) is responsible for updating 
+        // the 'custom:profile_image' attribute in Cognito with the S3 object key (result.imageKey).
+        // The frontend should not attempt to update it here, especially not with the pre-signed imageUrl.
       }
       
       return result;
