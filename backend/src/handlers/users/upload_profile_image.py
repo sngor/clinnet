@@ -122,9 +122,22 @@ def lambda_handler(event, context):
     try:
         # Parse request body
         if not event.get('body'):
+            logger.error("Request body is missing")
             return build_error_response(400, 'Bad Request', 'Request body is required', None, request_origin)
         
-        request_body = json.loads(event['body'])
+        raw_body = event['body']
+        logger.info(f"Raw request body type: {type(raw_body)}")
+        logger.info(f"Raw request body content: {raw_body[:500]}") # Log first 500 chars
+
+        try:
+            # If the body is already a dict (e.g., if API Gateway is configured to parse JSON)
+            if isinstance(raw_body, dict):
+                request_body = raw_body
+            else:
+                request_body = json.loads(raw_body)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSONDecodeError: {str(e)} while parsing body: {raw_body[:500]}")
+            return build_error_response(400, 'Bad Request', f'Invalid JSON format: {str(e)}', e, request_origin)
         
         # Extract username from request context (from Cognito authorizer)
         try:

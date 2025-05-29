@@ -54,7 +54,7 @@ export const userService = {
    * Change user password in Cognito
    * @param {string} oldPassword - Current password
    * @param {string} newPassword - New password
-   * @returns {Promise<Object>} - Result of the operation
+   * @returns {Promise<Object} - Result of the operation
    */
   async changePassword(oldPassword, newPassword) {
     return new Promise((resolve, reject) => {
@@ -97,38 +97,15 @@ export const userService = {
       // Get the current auth token
       const idToken = await getAuthToken();
       
-      // Create a simple JSON payload instead of FormData
-      // This avoids CORS issues with multipart/form-data
       let jsonPayload;
       
-      // If imageData is a base64 string, use it directly
+      // imageData is expected to be a base64 data URI string
       if (typeof imageData === 'string') {
-        // Check if it's already a full data URI or just base64
-        let fullDataUri;
-        if (imageData.startsWith('data:image/')) {
-          // Already a full data URI
-          fullDataUri = imageData;
-        } else {
-          // Just base64 data, create full data URI
-          fullDataUri = `data:image/jpeg;base64,${imageData}`;
-        }
-          
-        // Use the full data URI as expected by backend
-        jsonPayload = JSON.stringify({
-          image: fullDataUri
-        });
+        // The backend Lambda expects the full data URI.
+        jsonPayload = JSON.stringify({ image: imageData });
       } else {
-        // If it's a File or Blob, convert to base64 first
-        const base64 = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(imageData);
-        });
-        
-        // The FileReader result is already a full data URI
-        jsonPayload = JSON.stringify({
-          image: base64
-        });
+        console.error('Error: imageData is not a string. Profile image upload expects a base64 data URI string.');
+        throw new Error('Invalid image data format for upload. Expected a base64 data URI string.');
       }
       
       // Call the API Gateway endpoint with proper authorization
