@@ -105,32 +105,16 @@ function PatientDetailPage() {
 
     const loadPatient = async () => {
       try {
-        // Optional: Attempt to load from context first as a quick cache
-        // This check is done outside the main fetch flow to avoid contextPatients dependency for the API call part
-        if (contextPatients && contextPatients.length > 0) {
-          const patientFromContext = contextPatients.find((p) => p.id === id);
-          if (patientFromContext) {
-            if (isMounted) {
-              loadPatientDataIntoState(patientFromContext);
-              // Decide if we still want to fetch for freshness. For now, let's assume context is good enough if found.
-              // If a fetch is still desired, this could set initial state then proceed to fetch.
-              // For this refactor, if found in context, we might skip the immediate fetch or make it conditional.
-              // Let's proceed to fetch to ensure data is up-to-date, context can be for initial render.
-              // setPageLoading(false); // If context is considered definitive initially
-              // return;
-            }
-          }
-        }
-
-        // Primary: Fetch directly
-        const fetchedPatient = await patientService.fetchPatientById(id);
+        // Always fetch directly from backend for latest info
+        const { data: fetchedPatient, error } =
+          await patientService.fetchPatientById(id);
         if (isMounted) {
-          if (fetchedPatient) {
-            loadPatientDataIntoState(fetchedPatient);
-          } else {
+          if (error || !fetchedPatient) {
             setPatient(null); // Patient not found
             setEditedPatient(null);
-            setPageError("Patient not found.");
+            setPageError(error ? error.message : "Patient not found.");
+          } else {
+            loadPatientDataIntoState(fetchedPatient);
           }
         }
       } catch (err) {
@@ -152,10 +136,7 @@ function PatientDetailPage() {
     return () => {
       isMounted = false;
     };
-  }, [id, contextPatients]); // Depend on id. contextPatients is included for the cache check.
-  // If contextPatients causes too many re-fetches, the cache check logic
-  // might need to be more sophisticated or removed from this effect's direct trigger.
-  // For now, this allows context to provide initial data if available.
+  }, [id]); // Only depend on id, not contextPatients
 
   // Tab change handler
   const handleTabChange = (_, newValue) => setTabValue(newValue);
@@ -399,19 +380,34 @@ function PatientDetailPage() {
         )}
       </Box>
 
-      {/* Personal Info always visible at the top */}
+      {/* Personal Info and Medical Info always visible at the top */}
       <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <PersonalInfoTab
-          patient={patient}
-          isEditing={isEditing}
-          editedPatient={editedPatient}
-          handleInputChange={handleInputChange}
-          imageUrlToDisplay={profileImagePreview || displayableProfileImageUrl}
-          onEditClick={handleEditClick}
-        />
+        <Grid container spacing={4}>
+          <Grid item xs={12} md={6}>
+            <PersonalInfoTab
+              patient={patient}
+              isEditing={isEditing}
+              editedPatient={editedPatient}
+              handleInputChange={handleInputChange}
+              imageUrlToDisplay={
+                profileImagePreview || displayableProfileImageUrl
+              }
+              onEditClick={handleEditClick}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <MedicalInfoTab
+              patient={patient}
+              isEditing={isEditing && getRole() === "doctor"}
+              editedPatient={editedPatient}
+              handleInputChange={handleInputChange}
+              // No edit button in container
+            />
+          </Grid>
+        </Grid>
       </Paper>
 
-      {/* Tabs for patient sections (remove Personal Info tab) */}
+      {/* Tabs for patient sections (remove Personal Info and Medical Info tabs) */}
       <Box sx={{ mb: 2 }}>
         <Tabs
           value={tabValue}
@@ -419,25 +415,15 @@ function PatientDetailPage() {
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label="Medical Info" />
           <Tab label="Appointments" />
           <Tab label="Medical Records" />
         </Tabs>
       </Box>
 
-      {/* Tab content (remove PersonalInfoTab from here) */}
+      {/* Tab content (remove PersonalInfoTab and MedicalInfoTab from here) */}
       <Paper sx={{ p: 3, borderRadius: 2 }}>
-        {tabValue === 0 && (
-          <MedicalInfoTab
-            patient={patient}
-            isEditing={isEditing && getRole() === "doctor"}
-            editedPatient={editedPatient}
-            handleInputChange={handleInputChange}
-            onEditClick={() => setIsEditing(true)}
-          />
-        )}
-        {tabValue === 1 && <AppointmentsTab patientId={patient?.id} />}
-        {tabValue === 2 && <MedicalRecordsTab patientId={patient?.id} />}
+        {tabValue === 0 && <AppointmentsTab patientId={patient?.id} />}
+        {tabValue === 1 && <MedicalRecordsTab patientId={patient?.id} />}
       </Paper>
 
       {/* Snackbar for notifications */}

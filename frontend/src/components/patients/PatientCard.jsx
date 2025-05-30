@@ -66,7 +66,7 @@ function PatientCard({ patient, onClick }) {
             {patient.firstName || ""} {patient.lastName || ""}
           </Typography>
         </Box>
-        
+
         <Box sx={{ display: "flex", gap: 1, mt: 1, mb: 2 }}>
           <Chip
             label={`${calculateAge(patient.dateOfBirth || patient.dob)} years`}
@@ -83,44 +83,26 @@ function PatientCard({ patient, onClick }) {
             />
           )}
         </Box>
-        
+
         <Divider sx={{ my: 1.5 }} />
-        
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          gutterBottom
-        >
-          Email: {patient.email || "N/A"}
-        </Typography>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          gutterBottom
-        >
+
+        <Typography variant="body2" color="text.secondary" gutterBottom>
           Phone: {patient.phone || patient.contactNumber || "N/A"}
         </Typography>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          gutterBottom
-        >
+        <Typography variant="body2" color="text.secondary" gutterBottom>
           DOB:{" "}
           {patient.dateOfBirth || patient.dob
-            ? new Date(
-                patient.dateOfBirth || patient.dob
-              ).toLocaleDateString()
+            ? new Date(patient.dateOfBirth || patient.dob).toLocaleDateString()
             : "N/A"}
         </Typography>
-        
+
         <Divider sx={{ my: 1.5 }} />
-        
+
         {patient.status && (
           <Box sx={{ mt: 1.5 }}>
             <Chip
               label={
-                patient.status.charAt(0).toUpperCase() +
-                patient.status.slice(1)
+                patient.status.charAt(0).toUpperCase() + patient.status.slice(1)
               }
               color={
                 String(patient.status).toLowerCase() === "active"
