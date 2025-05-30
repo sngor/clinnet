@@ -8,8 +8,6 @@ import {
   Chip,
   Divider,
   Grid,
-  Switch,
-  FormControlLabel,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import LanguageIcon from "@mui/icons-material/Language";
@@ -382,15 +380,14 @@ const DiagnosticsPage = () => {
     [services, determineOverallStatus]
   );
 
-  // useEffect for initial auto-testing on mount
-  useEffect(() => {
-    const servicesToAutoTest = initialServicesData.filter((s) => s.testable);
-    servicesToAutoTest.forEach((service) => {
+  // Remove all auto-checks on mount
+  // Add a handler for 'Test All'
+  const handleTestAll = useCallback(() => {
+    const testable = services.filter((s) => s.testable);
+    testable.forEach((service) => {
       handleTestService(service.id);
     });
-    // handleTestService is a dependency, auto-testing runs when it's stable (after initial `services` state set)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleTestService]);
+  }, [services, handleTestService]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -405,6 +402,14 @@ const DiagnosticsPage = () => {
         <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 0 }}>
           System Diagnostics
         </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleTestAll}
+          data-testid="test-all-btn"
+        >
+          Test All
+        </Button>
       </Box>
 
       <Grid container spacing={3}>
