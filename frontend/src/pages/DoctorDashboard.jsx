@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
 import { Grid, useMediaQuery, useTheme } from "@mui/material";
 import { getAppointmentsByDoctor } from "../services/appointmentService";
-import patientService from "../services/patientService";
+import patientService from "../services/patients";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -79,8 +79,8 @@ function DoctorDashboard() {
         if (isMounted) setTodaysAppointmentsCount(0);
       }
       try {
-        patientsData = await patientService.getPatients();
-        if (!Array.isArray(patientsData)) patientsData = [];
+        const result = await patientService.fetchPatients();
+        const patientsData = Array.isArray(result.data) ? result.data : [];
         let count = 0;
         patientsData.forEach((patient) => {
           if (

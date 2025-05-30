@@ -47,11 +47,11 @@ function AdminDashboard() {
       let usersData = [];
       try {
         usersData = await adminService.listUsers();
-        if (!Array.isArray(usersData)) usersData = [];
+        if (!Array.isArray(usersData.users)) usersData.users = [];
         if (isMounted) {
-          setUsersCount(usersData.length);
+          setUsersCount(usersData.users.length);
           setDoctorsCount(
-            usersData.filter((user) => user.role === "doctor").length
+            usersData.users.filter((user) => user.role === "doctor").length
           );
         }
       } catch (err) {
