@@ -31,7 +31,6 @@ import {
 import { useAppData } from "../app/providers/DataProvider";
 
 // Tab components
-import PersonalInfoTab from "../components/patients/PersonalInfoTab";
 import MedicalInfoTab from "../components/patients/MedicalInfoTab";
 import AppointmentsTab from "../components/patients/AppointmentsTab";
 import MedicalRecordsTab from "../components/patients/MedicalRecordsTab";
@@ -51,6 +50,7 @@ function PatientDetailPage() {
     loading: contextLoading,
     error: contextError,
     updatePatient,
+    refreshPatients, // <-- Add this
   } = useAppData();
   // const { getDisplayableS3Url } = require('../../utils/s3Utils'); // Removed require, using ES6 import now
 
@@ -184,14 +184,37 @@ function PatientDetailPage() {
       return;
     }
     try {
-      // Prepare data for update (DynamoDB structure if needed)
-      const updated = await updatePatient(editedPatient.id, editedPatient);
+      // Prepare data for backend (DynamoDB)
+      const patientData = {
+        ...editedPatient,
+        dateOfBirth: editedPatient.dateOfBirth || editedPatient.dob,
+        updatedAt: new Date().toISOString(),
+        type: "PATIENT",
+      };
+      // Remove fields not needed by backend
+      delete patientData.profileImagePreview;
+      // Save to backend and update context
+      const { data: updated, error } = await updatePatient(
+        editedPatient.id,
+        patientData
+      );
+      if (error) throw error;
       setPatient(updated);
       setEditedPatient({ ...updated });
       setIsEditing(false);
       setSnackbarMessage("Patient details updated successfully!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
+      // Refresh all patients in context to ensure lists are up-to-date
+      if (refreshPatients) await refreshPatients();
+      // Refetch from backend to ensure sync with DynamoDB
+      const freshPatient = await patientService.fetchPatientById(
+        editedPatient.id
+      );
+      if (freshPatient) {
+        setPatient(freshPatient);
+        setEditedPatient({ ...freshPatient });
+      }
     } catch (err) {
       setSnackbarMessage(
         `Error updating patient: ${err.message || "Unknown error"}`
@@ -375,207 +398,18 @@ function PatientDetailPage() {
         )}
       </Box>
 
-      {/* Patient summary card */}
+      {/* Personal Info always visible at the top */}
       <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Grid container spacing={2}>
-              {/* Date of Birth */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Date of Birth
-                </Typography>
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    name="dateOfBirth"
-                    type="date"
-                    value={editedPatient.dateOfBirth || editedPatient.dob || ""}
-                    onChange={handleInputChange}
-                    InputLabelProps={{ shrink: true }}
-                    size="small"
-                    margin="dense"
-                  />
-                ) : (
-                  <Typography variant="body1">
-                    {patient.dateOfBirth || patient.dob || "N/A"}
-                    {patient.dateOfBirth || patient.dob
-                      ? ` (${calculateAge(
-                          patient.dateOfBirth || patient.dob
-                        )} years)`
-                      : ""}
-                  </Typography>
-                )}
-              </Grid>
-              {/* Gender */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Gender
-                </Typography>
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    name="gender"
-                    value={editedPatient.gender || ""}
-                    onChange={handleInputChange}
-                    size="small"
-                    margin="dense"
-                  />
-                ) : (
-                  <Typography variant="body1">
-                    {patient.gender || "N/A"}
-                  </Typography>
-                )}
-              </Grid>
-              {/* Phone */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Phone
-                </Typography>
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    name="phone"
-                    value={editedPatient.phone || ""}
-                    onChange={handleInputChange}
-                    size="small"
-                    margin="dense"
-                  />
-                ) : (
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <PhoneIcon
-                      fontSize="small"
-                      sx={{ mr: 1, color: "primary.main" }}
-                    />
-                    <Typography variant="body1">
-                      {patient.phone || "N/A"}
-                    </Typography>
-                  </Box>
-                )}
-              </Grid>
-              {/* Email */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Email
-                </Typography>
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    name="email"
-                    value={editedPatient.email || ""}
-                    onChange={handleInputChange}
-                    size="small"
-                    margin="dense"
-                  />
-                ) : (
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <EmailIcon
-                      fontSize="small"
-                      sx={{ mr: 1, color: "primary.main" }}
-                    />
-                    <Typography variant="body1">
-                      {patient.email || "N/A"}
-                    </Typography>
-                  </Box>
-                )}
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Grid container spacing={2}>
-              {/* Address */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Address
-                </Typography>
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    name="address"
-                    value={editedPatient.address || ""}
-                    onChange={handleInputChange}
-                    size="small"
-                    margin="dense"
-                  />
-                ) : (
-                  <Typography variant="body1">
-                    {patient.address || "N/A"}
-                  </Typography>
-                )}
-              </Grid>
-              {/* Insurance Provider */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Insurance Provider
-                </Typography>
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    name="insuranceProvider"
-                    value={editedPatient.insuranceProvider || ""}
-                    onChange={handleInputChange}
-                    size="small"
-                    margin="dense"
-                  />
-                ) : (
-                  <Typography variant="body1">
-                    {patient.insuranceProvider || "N/A"}
-                  </Typography>
-                )}
-              </Grid>
-              {/* Insurance Number */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Insurance Number
-                </Typography>
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    name="insuranceNumber"
-                    value={editedPatient.insuranceNumber || ""}
-                    onChange={handleInputChange}
-                    size="small"
-                    margin="dense"
-                  />
-                ) : (
-                  <Typography variant="body1">
-                    {patient.insuranceNumber || "N/A"}
-                  </Typography>
-                )}
-              </Grid>
-              {/* Status */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Status
-                </Typography>
-                {isEditing ? (
-                  <TextField
-                    select
-                    fullWidth
-                    name="status"
-                    value={editedPatient.status || "Active"}
-                    onChange={handleInputChange}
-                    size="small"
-                    margin="dense"
-                    SelectProps={{ native: true }}
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </TextField>
-                ) : (
-                  <Chip
-                    label={patient.status || "Active"}
-                    color={patient.status === "Active" ? "success" : "default"}
-                    size="small"
-                  />
-                )}
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
+        <MedicalInfoTab
+          patient={patient}
+          isEditing={isEditing}
+          editedPatient={editedPatient}
+          handleInputChange={handleInputChange}
+          imageUrlToDisplay={profileImagePreview || displayableProfileImageUrl}
+        />
       </Paper>
 
-      {/* Tabs for patient sections */}
+      {/* Tabs for patient sections (remove Personal Info tab) */}
       <Box sx={{ mb: 2 }}>
         <Tabs
           value={tabValue}
@@ -583,32 +417,24 @@ function PatientDetailPage() {
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label="Personal Info" />
           <Tab label="Medical Info" />
           <Tab label="Appointments" />
           <Tab label="Medical Records" />
         </Tabs>
       </Box>
 
-      {/* Tab content */}
+      {/* Tab content (remove PersonalInfoTab from here) */}
       <Paper sx={{ p: 3, borderRadius: 2 }}>
         {tabValue === 0 && (
-          <PersonalInfoTab
+          <MedicalInfoTab
             patient={patient}
-            isEditing={isEditing}
-            editedPatient={editedPatient} // Contains other fields, and profileImage (base64 of new file)
+            isEditing={isEditing && getRole() === "doctor"}
+            editedPatient={editedPatient}
             handleInputChange={handleInputChange}
-            // Determine the correct image URL to display in PersonalInfoTab
-            imageUrlToDisplay={
-              profileImagePreview || displayableProfileImageUrl
-            }
           />
         )}
-        {tabValue === 1 && (
-          <MedicalInfoTab patient={patient} isEditing={isEditing} />
-        )}
-        {tabValue === 2 && <AppointmentsTab patientId={patient?.id} />}
-        {tabValue === 3 && <MedicalRecordsTab patientId={patient?.id} />}
+        {tabValue === 1 && <AppointmentsTab patientId={patient?.id} />}
+        {tabValue === 2 && <MedicalRecordsTab patientId={patient?.id} />}
       </Paper>
 
       {/* Snackbar for notifications */}
