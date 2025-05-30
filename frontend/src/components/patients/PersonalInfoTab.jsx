@@ -1,12 +1,13 @@
 // src/components/patients/PersonalInfoTab.jsx
 import React from "react";
-import { Grid, Typography, TextField, Box } from "@mui/material";
+import { Grid, Typography, TextField, Box, Avatar } from "@mui/material";
 
 function PersonalInfoTab({
   patient,
   isEditing,
   editedPatient,
   handleInputChange,
+  imageUrlToDisplay, // New prop for the image URL
 }) {
   // Safety check for null/undefined patient or editedPatient
   if (!patient) {
@@ -20,10 +21,36 @@ function PersonalInfoTab({
   }
 
   // Ensure editedPatient exists to prevent null reference errors
-  const safeEditedPatient = editedPatient || patient;
+  // const safeEditedPatient = editedPatient || patient; // No longer solely relying on this for image
+  // const profileImageSrc = safeEditedPatient.profileImage || patient.profileImage; // Replaced by imageUrlToDisplay
 
   return (
     <Grid container spacing={3}>
+      {/* Profile Image Section */}
+      <Grid item xs={12} sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 2 }}>
+        <Avatar
+          src={imageUrlToDisplay || ""} // Use the new prop, ensure empty string if null/undefined
+          alt="Profile Image"
+          sx={{ width: 120, height: 120, mb: 2, border: "2px solid lightgray" }}
+        />
+        {isEditing && (
+          <TextField
+            type="file"
+            name="profileImageFile"
+            onChange={handleInputChange}
+            accept="image/*"
+            size="small"
+            fullWidth
+            sx={{ maxWidth: 300 }}
+          />
+        )}
+        {!isEditing && !imageUrlToDisplay && (
+          <Typography variant="body2" color="text.secondary">
+            No profile image uploaded.
+          </Typography>
+        )}
+      </Grid>
+
       <Grid sx={{ width: { xs: "100%", md: "50%" }, p: 1.5 }}>
         <Grid container spacing={2}>
           <Grid sx={{ width: "100%" }}>
