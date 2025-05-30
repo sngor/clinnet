@@ -38,17 +38,24 @@ export const DataProvider = ({ children }) => {
           setServices([]);
         }
 
-        // Fetch real patients data from the API (with isolated error handling)
-        let patientsData = [];
-        try {
-          patientsData = await patientService.fetchPatients();
-          console.log("[DataProvider] setPatients (API):", patientsData);
-          setPatients(patientsData || []);
-        } catch (err) {
-          console.warn("Falling back to mock data due to patients API error");
-          const { mockPatients } = await import("../../mock/mockPatients");
-          console.log("[DataProvider] setPatients (mock):", mockPatients);
-          setPatients(mockPatients);
+        // Fetch real patients data from the API
+        const patientResult = await patientService.fetchPatients();
+        if (patientResult.error) {
+          console.warn("API error fetching patients:", patientResult.error);
+          if (process.env.NODE_ENV === 'production') {
+            const errorMsg = patientResult.error.message || 'Failed to load patient data. Please try again later.';
+            console.error("Production: Failed to load patients, setting error state:", errorMsg);
+            setError(errorMsg);
+            setPatients([]); // Set to empty array in production on error
+          } else {
+            // Development fallback
+            console.log("[DataProvider] Development mode: Falling back to mock data for patients.");
+            const { mockPatients } = await import("../../mock/mockPatients");
+            setPatients(mockPatients || []);
+          }
+        } else {
+          console.log("[DataProvider] setPatients (API):", patientResult.data);
+          setPatients(patientResult.data || []);
         }
 
         // Fetch appointments from API (do not affect patients state)
@@ -95,43 +102,59 @@ export const DataProvider = ({ children }) => {
 
   // Patient operations with real API calls
   const addPatient = async (patientData) => {
-    try {
-      const newPatient = await patientService.createPatient(patientData);
-      setPatients([...patients, newPatient]);
-      return newPatient;
-    } catch (error) {
-      console.error("Error adding patient:", error);
-      throw error;
+    setLoading(true);
+    setError(null);
+    const result = await patientService.createPatient(patientData);
+    setLoading(false);
+
+    if (result.error) {
+      const errorMsg = result.error.message || "Failed to add patient";
+      console.error("Error adding patient in DataProvider:", errorMsg, result.error);
+      setError(errorMsg);
+      throw result.error; // Re-throw for the component to catch
     }
+
+    setPatients(prevPatients => [...prevPatients, result.data]);
+    return result.data; // Return data directly on success
   };
 
   const updatePatient = async (id, patientData) => {
-    try {
-      const updatedPatient = await patientService.updatePatient(
-        id,
-        patientData
-      );
-      setPatients(
-        patients.map((patient) =>
-          patient.id === id ? updatedPatient : patient
-        )
-      );
-      return updatedPatient;
-    } catch (error) {
-      console.error("Error updating patient:", error);
-      throw error;
+    setLoading(true);
+    setError(null);
+    const result = await patientService.updatePatient(id, patientData);
+    setLoading(false);
+
+    if (result.error) {
+      const errorMsg = result.error.message || `Failed to update patient ${id}`;
+      console.error("Error updating patient in DataProvider:", errorMsg, result.error);
+      setError(errorMsg);
+      throw result.error;
     }
+
+    setPatients(prevPatients =>
+      prevPatients.map((patient) =>
+        patient.id === id ? result.data : patient
+      )
+    );
+    return result.data;
   };
 
   const deletePatient = async (id) => {
-    try {
-      await patientService.deletePatient(id);
-      setPatients(patients.filter((patient) => patient.id !== id));
-      return true;
-    } catch (error) {
-      console.error("Error deleting patient:", error);
-      throw error;
+    setLoading(true);
+    setError(null);
+    const result = await patientService.deletePatient(id);
+    setLoading(false);
+
+    if (result.error) {
+      const errorMsg = result.error.message || `Failed to delete patient ${id}`;
+      console.error("Error deleting patient in DataProvider:", errorMsg, result.error);
+      setError(errorMsg);
+      throw result.error;
     }
+
+    setPatients(prevPatients => prevPatients.filter((patient) => patient.id !== id));
+    // result.data might contain a success message, e.g., { message: "Patient deleted" }
+    return result.data || true; // Return data or true for generic success
   };
 
   // Appointment CRUD operations
@@ -181,20 +204,25 @@ export const DataProvider = ({ children }) => {
     deleteAppointment,
     // Refresh function
     refreshPatients: async () => {
-      try {
-        setLoading(true);
-        const patientsData = await patientService.fetchPatients();
-        if (patientsData && patientsData.length > 0) {
-          console.log("Patients refreshed from API:", patientsData);
-          setPatients(patientsData);
-        }
-        return patientsData;
-      } catch (err) {
-        console.error("Error refreshing patients:", err);
-        throw err;
-      } finally {
-        setLoading(false);
+      setLoading(true);
+      setError(null);
+      const result = await patientService.fetchPatients();
+      setLoading(false);
+
+      if (result.error) {
+        const errorMsg = result.error.message || "Failed to refresh patients";
+        console.error("Error refreshing patients in DataProvider:", errorMsg, result.error);
+        setError(errorMsg);
+        // Optionally re-throw or return an error indicator if components need to react
+        // For now, just setting context error and returning null or empty array for data part
+        return { data: null, error: result.error }; // Or just return null/undefined
       }
+
+      if (result.data) {
+        console.log("Patients refreshed from API:", result.data);
+        setPatients(result.data);
+      }
+      return { data: result.data, error: null }; // Consistent return
     },
   };
 
