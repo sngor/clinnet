@@ -1,6 +1,7 @@
 // src/components/patients/MedicalRecordsTab.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
+import { useAuth } from "../../app/providers/AuthProvider";
 import {
   Box,
   TextField,
@@ -17,6 +18,7 @@ import {
   ImageList,
   ImageListItem,
   ImageListItemBar,
+  Snackbar, // Added for error notifications
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
@@ -25,6 +27,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import MedicalInformationIcon from "@mui/icons-material/MedicalInformation"; // For EmptyState
 import BrokenImageIcon from '@mui/icons-material/BrokenImage';
 import CancelIcon from '@mui/icons-material/Cancel';
+import SaveIcon from '@mui/icons-material/Save'; // For Quick Save Note
 
 import medicalRecordService from "../../services/medicalRecordService";
 import EmptyState from "../ui/EmptyState"; // Assuming EmptyState component exists
@@ -41,9 +44,12 @@ const fileToBase64 = (file) => {
 };
 
 // Placeholder for Doctor ID - In a real app, this might come from auth context or be selectable
-const PLACEHOLDER_DOCTOR_ID = "doc-from-patient-tab-placeholder";
+// const PLACEHOLDER_DOCTOR_ID = "doc-from-patient-tab-placeholder"; // No longer needed
 
 function MedicalRecordsTab({ patientId }) {
+  const { user } = useAuth();
+  const isDoctor = user?.role === 'doctor';
+
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -64,7 +70,45 @@ function MedicalRecordsTab({ patientId }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [modalError, setModalError] = useState(null);
 
+  // State for inline note editing
+  const [editingNoteRecordId, setEditingNoteRecordId] = useState(null);
+  const [currentEditingNote, setCurrentEditingNote] = useState("");
+
+  // Snackbar state for notifications
+  const [snackbarState, setSnackbarState] = useState({ open: false, message: '', severity: 'info' });
+
   const fileInputRef = useRef(null);
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarState(prev => ({ ...prev, open: false }));
+  };
+
+  const handleCancelQuickNote = () => {
+    setEditingNoteRecordId(null);
+    setCurrentEditingNote("");
+  };
+
+  const handleSaveQuickNote = async (reportIdToSave, noteContent) => {
+    setIsSubmitting(true); // Using existing isSubmitting state
+    setModalError(null); // Clear previous errors
+    try {
+      await medicalRecordService.updateMedicalRecord(reportIdToSave, { doctorNotes: noteContent });
+      await fetchRecords(); // Refresh data
+      setEditingNoteRecordId(null);
+      setCurrentEditingNote("");
+      // TODO: Consider adding a success snackbar here
+      // Example: setSnackbarState({ open: true, message: "Note saved successfully!", severity: 'success' });
+    } catch (err) {
+      console.error(`Failed to quick save note for record ${reportIdToSave}:`, err);
+      setSnackbarState({ open: true, message: err.message || "Failed to save note. Please try again.", severity: 'error' });
+      // Potentially leave the editing state active so user can retry or copy text (current behavior)
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const fetchRecords = useCallback(async () => {
     if (!patientId) {
@@ -153,7 +197,7 @@ function MedicalRecordsTab({ patientId }) {
     try {
       const newRecordData = {
         patientId: patientId, // From props
-        doctorId: PLACEHOLDER_DOCTOR_ID, 
+        doctorId: user?.id, 
         reportContent: currentReportContent,
         doctorNotes: currentDoctorNotes,
       };
@@ -248,11 +292,36 @@ function MedicalRecordsTab({ patientId }) {
     },
     {
       field: "doctorNotes", headerName: "Doctor Notes", flex: 1, minWidth: 150,
-      renderCell: (params) => (
-        <Tooltip title={params.value || ""} placement="top-start">
-          <Typography variant="body2" noWrap>{params.value ? params.value.substring(0, 50) + (params.value.length > 50 ? "..." : "") : "N/A"}</Typography>
-        </Tooltip>
-      ),
+      renderCell: (params) => {
+        if (isDoctor && editingNoteRecordId === params.row.reportId) {
+          return (
+            <TextField
+              value={currentEditingNote}
+              onChange={(e) => setCurrentEditingNote(e.target.value)}
+              multiline
+              fullWidth
+              variant="outlined"
+              size="small"
+              autoFocus
+              onClick={(e) => e.stopPropagation()} // Prevent DataGrid click events
+              sx={{ backgroundColor: 'white', my: 1 }} // Ensure it's visible and has some padding
+            />
+          );
+        }
+        if (isDoctor) {
+          return (
+            <Box sx={{ whiteSpace: 'pre-wrap', maxHeight: '100px', overflowY: 'auto', width: '100%', py: 1 }} onClick={(e) => e.stopPropagation()}>
+              <Typography variant="body2">{params.value || "N/A"}</Typography>
+            </Box>
+          );
+        }
+        // Default view for non-doctors (truncated with tooltip)
+        return (
+          <Tooltip title={params.value || ""} placement="top-start">
+            <Typography variant="body2" noWrap>{params.value ? params.value.substring(0, 50) + (params.value.length > 50 ? "..." : "") : "N/A"}</Typography>
+          </Tooltip>
+        );
+      },
     },
     {
       field: "imagePresignedUrls", headerName: "Images", width: 120, sortable: false,
@@ -276,13 +345,79 @@ function MedicalRecordsTab({ patientId }) {
     { field: "createdAt", headerName: "Created", width: 150, renderCell: (params) => new Date(params.value).toLocaleDateString() },
     { field: "updatedAt", headerName: "Updated", width: 150, renderCell: (params) => new Date(params.value).toLocaleDateString() },
     {
-      field: "actions", headerName: "Actions", width: 100, sortable: false,
-      renderCell: (params) => (
-        <Box>
-          <IconButton size="small" onClick={() => handleOpenEditModal(params.row)}><EditIcon fontSize="small" /></IconButton>
-          <IconButton size="small" onClick={() => handleOpenDeleteConfirmDialog(params.row)}><DeleteIcon fontSize="small" /></IconButton>
-        </Box>
-      ),
+      field: "actions", headerName: "Actions", width: 120, sortable: false, // Increased width for more icons
+      renderCell: (params) => {
+        const isCurrentlyEditingThisNote = editingNoteRecordId === params.row.reportId;
+
+        if (isDoctor && isCurrentlyEditingThisNote) {
+          // Show Save & Cancel for inline note edit
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+              <Tooltip title="Save Note">
+                <span> {/* Span needed for disabled tooltip to work */}
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSaveQuickNote(params.row.reportId, currentEditingNote);
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    <SaveIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Tooltip title="Cancel Edit">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancelQuickNote();
+                  }}
+                  disabled={isSubmitting}
+                >
+                  <CancelIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          );
+        }
+
+        return (
+          // Make sure this Box also stops propagation if it's not handled by inner elements
+          <Box onClick={(e) => e.stopPropagation()}> 
+            {isDoctor && !editingNoteRecordId && ( // Only show Quick Edit Note if NO note is being edited anywhere
+              <Tooltip title="Quick Edit Note">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingNoteRecordId(params.row.reportId);
+                    setCurrentEditingNote(params.row.doctorNotes || "");
+                  }}
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            {/* Regular Edit (modal) and Delete buttons - hide if ANY note is being quick-edited */}
+            {!editingNoteRecordId && (
+              <>
+                <Tooltip title="Edit Full Record">
+                  <IconButton size="small" onClick={() => handleOpenEditModal(params.row)}>
+                    <MedicalInformationIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete Record">
+                  <IconButton size="small" onClick={() => handleOpenDeleteConfirmDialog(params.row)}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
+          </Box>
+        );
+      },
     },
   ];
 
@@ -292,6 +427,13 @@ function MedicalRecordsTab({ patientId }) {
 
   return (
     <Box sx={{ mt: 2 }}>
+      {/* Snackbar for notifications */}
+      <Snackbar open={snackbarState.open} autoHideDuration={6000} onClose={handleSnackbarClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarState.severity} sx={{ width: '100%' }} variant="filled">
+          {snackbarState.message}
+        </Alert>
+      </Snackbar>
+
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6">Medical Records for Patient: {patientId}</Typography>
         <Button variant="contained" startIcon={<AddCircleOutlineIcon />} onClick={handleOpenCreateModal}>
