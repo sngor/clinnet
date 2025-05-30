@@ -31,9 +31,9 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import LocalAtmIcon from "@mui/icons-material/LocalAtm";
-import serviceApi from "../../services/serviceApi";
-import patientService from "../../services/patientService"; // Added patientService import
-import { apiPost } from "../../utils/api-helper"; // Import for API calls
+import serviceApi from "../services/serviceApi";
+import patientService from "../services/patientService"; // Added patientService import
+import { apiPost } from "../utils/api-helper"; // Import for API calls
 import PercentIcon from "@mui/icons-material/Percent";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import PrintIcon from "@mui/icons-material/Print";

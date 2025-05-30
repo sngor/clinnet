@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
 import { useMediaQuery, useTheme } from "@mui/material";
-import adminService from "../../services/adminService";
-import patientService from "../../services/patientService";
-import { getTodaysAppointments } from "../../services/appointmentService";
+import adminService from "../services/adminService";
+import patientService from "../services/patientService";
+import { getTodaysAppointments } from "../services/appointmentService";
 import Grid from "@mui/material/Grid"; // Updated Grid import
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";

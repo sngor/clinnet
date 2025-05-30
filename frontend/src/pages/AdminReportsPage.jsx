@@ -1,6 +1,6 @@
 // src/pages/AdminReportsPage.jsx
 import React, { useState, useEffect } from "react";
-import adminService from "../../services/adminService";
+import adminService from "../services/adminService";
 import {
   Box,
   Grid,

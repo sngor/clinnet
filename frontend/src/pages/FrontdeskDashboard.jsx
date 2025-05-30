@@ -1,8 +1,8 @@
 // src/pages/FrontdeskDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
-import { getTodaysAppointments, getAppointments } from "../../services/appointmentService";
-import patientService from "../../services/patientService";
+import { getTodaysAppointments, getAppointments } from "../services/appointmentService";
+import patientService from "../services/patientService";
 import {
   Grid,
   Typography,

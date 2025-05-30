@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
 import { Grid, useMediaQuery, useTheme } from "@mui/material";
-import { getAppointmentsByDoctor } from "../../services/appointmentService";
-import patientService from "../../services/patientService";
+import { getAppointmentsByDoctor } from "../services/appointmentService";
+import patientService from "../services/patientService";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -73,20 +73,28 @@ function DoctorDashboard() {
         // If no such field exists, set patient count to 0 and note this limitation.
         // This is a placeholder, actual field name might differ.
         // console.log("All patients data:", patientsData); // For debugging
-        patientsData.forEach(patient => {
-          if (patient.primaryDoctorId === doctorId || patient.doctorId === doctorId) {
+        patientsData.forEach((patient) => {
+          if (
+            patient.primaryDoctorId === doctorId ||
+            patient.doctorId === doctorId
+          ) {
             count++;
           }
         });
         setAssignedPatientsCount(count);
         if (count === 0 && patientsData.length > 0) {
-            // Check if any patient has doctorId or primaryDoctorId field
-            const hasDoctorIdField = patientsData.some(p => p.hasOwnProperty('doctorId') || p.hasOwnProperty('primaryDoctorId'));
-            if (!hasDoctorIdField) {
-                 console.warn("Patient data does not seem to have 'doctorId' or 'primaryDoctorId' field for filtering.");
-            }
+          // Check if any patient has doctorId or primaryDoctorId field
+          const hasDoctorIdField = patientsData.some(
+            (p) =>
+              p.hasOwnProperty("doctorId") ||
+              p.hasOwnProperty("primaryDoctorId")
+          );
+          if (!hasDoctorIdField) {
+            console.warn(
+              "Patient data does not seem to have 'doctorId' or 'primaryDoctorId' field for filtering."
+            );
+          }
         }
-
 
         setLoading(false);
       } catch (err) {
@@ -172,7 +180,11 @@ function DoctorDashboard() {
         }}
       >
         <AppointmentList
-          appointments={doctorAppointments.filter(appt => new Date(appt.appointmentDate).toISOString().split("T")[0] === new Date().toISOString().split("T")[0])} // Display only today's appointments
+          appointments={doctorAppointments.filter(
+            (appt) =>
+              new Date(appt.appointmentDate).toISOString().split("T")[0] ===
+              new Date().toISOString().split("T")[0]
+          )} // Display only today's appointments
           // loading={loading} // Removed, as PageLayout handles main loading
           showAction={false}
         />
