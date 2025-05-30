@@ -144,8 +144,10 @@ export const adminService = {
   async updateUser(userId, userData) {
     try {
       console.log('Updating user', userId, 'with data:', userData);
-      if (!userId) {
-        throw new Error('User ID is required for updating a user');
+      // Always use email as the Cognito username for the API path
+      const cognitoUsername = userData.email || userData.username || userId;
+      if (!cognitoUsername || !cognitoUsername.includes('@')) {
+        throw new Error('A valid email is required for updating a user');
       }
       if (userData.phone) {
         const { formatPhoneNumber } = await import('../utils/cognito-helpers');
@@ -155,7 +157,7 @@ export const adminService = {
       const displayUsername = userData.email ? extractUsernameFromEmail(userData.email) : userData.username;
       // Build request body, omitting empty fields
       const requestBody = {
-        username: userData.username,
+        username: cognitoUsername,
         displayUsername: displayUsername,
         firstName: userData.firstName,
         lastName: userData.lastName,
@@ -179,9 +181,7 @@ export const adminService = {
       if (Object.keys(requestBody).length === 0) {
         throw new Error('No valid fields to update');
       }
-      // Use username as the path parameter (not sub/UUID)
-      const username = userData.username;
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${idToken}`,
@@ -207,31 +207,28 @@ export const adminService = {
    * @param {string} userId - User ID to delete
    * @returns {Promise<Object>} - Success response
    */
-  async deleteUser(userId) {
+  async deleteUser(userId, userData = {}) {
     try {
-      console.log(`Deleting user ${userId}`);
-      // Get the current auth token using Cognito helpers
+      // Always use email as the Cognito username for the API path
+      const cognitoUsername = userData.email || userData.username || userId;
+      if (!cognitoUsername || !cognitoUsername.includes('@')) {
+        throw new Error('A valid email is required for deleting a user');
+      }
+      console.log(`Deleting user ${cognitoUsername}`);
       const idToken = await getAuthToken();
-      if (!idToken) throw new Error('No authentication token available');
-      // Call the API Gateway endpoint with proper authorization
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}`, {
         method: 'DELETE',
         headers: {
           'Authorization': idToken,
           'Content-Type': 'application/json'
         }
       });
-      
       console.log('API response status:', response.status);
-      
       const responseText = await response.text();
       console.log('API response text:', responseText);
-      
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}: ${responseText}`);
       }
-      
-      // Parse the response text as JSON
       let data;
       try {
         data = JSON.parse(responseText);
@@ -252,33 +249,28 @@ export const adminService = {
    * @param {string} userId - User ID to enable
    * @returns {Promise<Object>} - Success response
    */
-  async enableUser(userId) {
+  async enableUser(userId, userData = {}) {
     try {
-      console.log(`Enabling user ${userId}`);
-      
-      // Get the current auth token using Cognito helpers
+      // Always use email as the Cognito username for the API path
+      const cognitoUsername = userData.email || userData.username || userId;
+      if (!cognitoUsername || !cognitoUsername.includes('@')) {
+        throw new Error('A valid email is required for enabling a user');
+      }
+      console.log(`Enabling user ${cognitoUsername}`);
       const idToken = await getAuthToken();
-      if (!idToken) throw new Error('No authentication token available');
-      
-      // Call the API Gateway endpoint with proper authorization
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}/enable`, {
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}/enable`, {
         method: 'POST',
         headers: {
           'Authorization': idToken,
           'Content-Type': 'application/json'
         }
       });
-      
       console.log('API response status:', response.status);
-      
       const responseText = await response.text();
       console.log('API response text:', responseText);
-      
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}: ${responseText}`);
       }
-      
-      // Parse the response text as JSON
       let data;
       try {
         data = JSON.parse(responseText);
@@ -299,33 +291,28 @@ export const adminService = {
    * @param {string} userId - User ID to disable
    * @returns {Promise<Object>} - Success response
    */
-  async disableUser(userId) {
+  async disableUser(userId, userData = {}) {
     try {
-      console.log(`Disabling user ${userId}`);
-      
-      // Get the current auth token using Cognito helpers
+      // Always use email as the Cognito username for the API path
+      const cognitoUsername = userData.email || userData.username || userId;
+      if (!cognitoUsername || !cognitoUsername.includes('@')) {
+        throw new Error('A valid email is required for disabling a user');
+      }
+      console.log(`Disabling user ${cognitoUsername}`);
       const idToken = await getAuthToken();
-      if (!idToken) throw new Error('No authentication token available');
-      
-      // Call the API Gateway endpoint with proper authorization
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}/disable`, {
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}/disable`, {
         method: 'POST',
         headers: {
           'Authorization': idToken,
           'Content-Type': 'application/json'
         }
       });
-      
       console.log('API response status:', response.status);
-      
       const responseText = await response.text();
       console.log('API response text:', responseText);
-      
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}: ${responseText}`);
       }
-      
-      // Parse the response text as JSON
       let data;
       try {
         data = JSON.parse(responseText);
@@ -350,8 +337,10 @@ export const adminService = {
   async updateUser(userId, userData) {
     try {
       console.log('Updating user', userId, 'with data:', userData);
-      if (!userId) {
-        throw new Error('User ID is required for updating a user');
+      // Always use email as the Cognito username for the API path
+      const cognitoUsername = userData.email || userData.username || userId;
+      if (!cognitoUsername || !cognitoUsername.includes('@')) {
+        throw new Error('A valid email is required for updating a user');
       }
       if (userData.phone) {
         const { formatPhoneNumber } = await import('../utils/cognito-helpers');
@@ -361,7 +350,7 @@ export const adminService = {
       const displayUsername = userData.email ? extractUsernameFromEmail(userData.email) : userData.username;
       // Build request body, omitting empty fields
       const requestBody = {
-        username: userData.username,
+        username: cognitoUsername,
         displayUsername: displayUsername,
         firstName: userData.firstName,
         lastName: userData.lastName,
@@ -385,9 +374,7 @@ export const adminService = {
       if (Object.keys(requestBody).length === 0) {
         throw new Error('No valid fields to update');
       }
-      // Use username as the path parameter (not sub/UUID)
-      const username = userData.username;
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${username}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${idToken}`,

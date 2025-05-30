@@ -8,6 +8,7 @@ import json
 import boto3
 import logging
 import base64
+import re
 from botocore.exceptions import ClientError
 
 # Setup logging
@@ -65,6 +66,9 @@ def handle_exception(exception):
         logger.error(f"Unexpected error: {str(exception)}")
         return build_error_response(500, 'Internal Server Error', str(exception))
 
+def is_email(value):
+    return bool(re.match(r"[^@]+@[^@]+\.[^@]+", value))
+
 def lambda_handler(event, context):
     """
     Handle Lambda event for PUT /users/{username} (Updates a user in Cognito)
@@ -93,6 +97,22 @@ def lambda_handler(event, context):
         if not event.get('pathParameters') or not event['pathParameters'].get('userId'):
             return build_error_response(400, 'Bad Request', 'UserId path parameter is required')
         username = event['pathParameters']['userId']
+        # If username is not an email, look up the user in DynamoDB to get the email
+        if not is_email(username):
+            import boto3
+            dynamodb = boto3.resource('dynamodb')
+            users_table_name = os.environ.get('USERS_TABLE_NAME', 'UsersTable')
+            users_table = dynamodb.Table(users_table_name)
+            # Try to get user by id (assume id is username)
+            db_resp = users_table.get_item(Key={'id': username})
+            user_item = db_resp.get('Item')
+            if not user_item or not user_item.get('email'):
+                logger.error(f"Could not find user or email for username: {username}")
+                return build_error_response(404, 'Not Found', 'User not found or missing email in database')
+            cognito_username = user_item['email']
+            logger.info(f"Mapped username '{username}' to email '{cognito_username}' for Cognito operations.")
+        else:
+            cognito_username = username
         
         # Extract user pool ID from environment variable
         user_pool_id = os.environ.get('USER_POOL_ID')
@@ -135,7 +155,7 @@ def lambda_handler(event, context):
         if user_attributes:
             update_params = {
                 'UserPoolId': user_pool_id,
-                'Username': username,
+                'Username': cognito_username,
                 'UserAttributes': user_attributes
             }
             
@@ -146,33 +166,33 @@ def lambda_handler(event, context):
         if request_body.get('password'):
             password_params = {
                 'UserPoolId': user_pool_id,
-                'Username': username,
+                'Username': cognito_username,
                 'Password': request_body['password'],
                 'Permanent': True
             }
             
-            logger.info(f"Setting new password for user: {username}")
+            logger.info(f"Setting new password for user: {cognito_username}")
             cognito.admin_set_user_password(**password_params)
         
         # Update user status if needed
         if request_body.get('enabled') is not None:
             if request_body['enabled']:
-                logger.info(f"Enabling user: {username}")
+                logger.info(f"Enabling user: {cognito_username}")
                 cognito.admin_enable_user(
                     UserPoolId=user_pool_id,
-                    Username=username
+                    Username=cognito_username
                 )
             else:
-                logger.info(f"Disabling user: {username}")
+                logger.info(f"Disabling user: {cognito_username}")
                 cognito.admin_disable_user(
                     UserPoolId=user_pool_id,
-                    Username=username
+                    Username=cognito_username
                 )
         
         # Get the updated user
         get_user_params = {
             'UserPoolId': user_pool_id,
-            'Username': username
+            'Username': cognito_username
         }
         
         user_result = cognito.admin_get_user(**get_user_params)
