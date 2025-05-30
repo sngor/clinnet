@@ -1,8 +1,4 @@
-<!-- filepath: /Users/sengngor/Desktop/App/Clinnet-EMR/README.md -->
-
-# 🏥 Clinnet EMR – Serverless Healthcare Management System
-
-Welcome to **Clinnet-EMR**, a modern, full-stack serverless Electronic Medical Records (EMR) platform for healthcare providers. Built with a React frontend, AWS Lambda backend (Python), API Gateway, DynamoDB, and Cognito authentication, Clinnet-EMR is designed for scalability, security, and ease of use.
+# Clinnet-EMR
 
 ---
 
@@ -25,121 +21,35 @@ See [docs/project-structure.md](./docs/project-structure.md) for a detailed dire
 
 ## 🛠️ Prerequisites
 
-| Tool        | Version      | Notes                                                                                                                |
-| ----------- | ------------ | -------------------------------------------------------------------------------------------------------------------- |
-| Node.js     | 18.x         | [Download](https://nodejs.org/)                                                                                      |
-| npm         | 8.x or later | Usually comes with Node.js                                                                                           |
-| Python      | 3.9+         | [Download](https://python.org/)                                                                                      |
-| AWS CLI     | Latest       | [Install Guide](https://aws.amazon.com/cli/)                                                                         |
-| SAM CLI     | Latest       | [Install Guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) |
-| AWS Account |              | Permissions for Lambda, API Gateway, DynamoDB, Cognito                                                               |
-
-### Troubleshooting npm Dependency Issues
-
-If you encounter npm deprecated package warnings:
-
-1. Use the provided helper script to update dependencies:
-
-   ```bash
-   cd frontend
-   chmod +x ./scripts/update-dependencies.sh
-   ./scripts/update-dependencies.sh
-   ```
-
-2. For manual dependency cleanup:
-
-   ```bash
-   cd frontend
-   npm install -g npm-check-updates
-   ncu -u
-   rm -rf node_modules package-lock.json
-   npm install
-   ```
-
-3. Make sure you're using Node.js 18:
-   ```bash
-   nvm use 18
-   # Or install it if you don't have it
-   nvm install 18
-   ```
+| Tool    | Version | Notes                                                   |
+| ------- | ------- | ------------------------------------------------------- |
+| Node.js | 18.x    | Use `nvm` or see `frontend/scripts/fix-node-version.sh` |
+| Python  | 3.10+   | For backend Lambda and tests                            |
+| AWS CLI | latest  | For deployment and management                           |
+| SAM CLI | latest  | For backend deployment                                  |
 
 ---
 
-## ⚡ Quickstart
+## 📚 Documentation Index
 
-### 1. Clone the Repository
-
-```bash
-git clone <your-repo-url>
-cd Clinnet-EMR
-```
-
-### 2. Backend Setup
-
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-- **Deploy backend (Lambda/API Gateway/DynamoDB):**
-
-  ```bash
-  npm run deploy
-  # or
-  sam build && sam deploy --guided
-  ```
-
-- See [docs/deployment.md](./docs/deployment.md) for more details.
-
-### 3. Frontend Setup
-
-```bash
-cd frontend
-npm install
-```
-
-- **Configure Amplify (if needed):**
-
-  ```bash
-  amplify pull # or amplify init
-  ```
-
-- **Start the frontend:**
-
-  ```bash
-  npm run dev
-  ```
-
-### 4. Local Development
-
-See [docs/local-development.md](./docs/local-development.md) for local dev instructions.
-
-### 5. Seeding Data (Optional)
-
-```bash
-cd backend/scripts
-./seed_data.sh
-```
+- [Project Structure](./docs/project-structure.md)
+- [Deployment Guide](./docs/deployment.md)
+- [Profile Image System](./docs/profile-image-system.md)
+- [Troubleshooting](./docs/troubleshooting.md)
+- [Architecture](./docs/architecture.md)
+- [Local Development](./docs/local-development.md)
+- [Cognito Custom Attributes](./docs/cognito-custom-attributes-guide.md)
+- [DynamoDB Guide](./docs/dynamodb-guide.md)
+- [Medical Reports API](./docs/medical-reports-api.md)
 
 ---
 
-## 📚 Documentation
+## 🏗️ Deployment Overview
 
-- [🗂️ Architecture](./docs/architecture.md)
-- [📦 Project Structure](./docs/project-structure.md)
-- [🚀 Backend Deployment](./docs/deployment.md)
-- [💻 Local Development](./docs/local-development.md)
-- [📝 Frontend Guide](./frontend/README.md)
-- [🗄️ DynamoDB Guide](./frontend/docs/dynamodb-guide.md)
+- **Backend**: See [deployment.md](./docs/deployment.md#backend-deployment-aws-lambdasam) for full instructions. Use `deploy_validation.py` for automated deployment, or `sam build && sam deploy` for manual.
+- **Frontend**: See [deployment.md](./docs/deployment.md#frontend-deployment-reactvite). Build with `npm run build` and deploy `dist/` to S3, Vercel, or Netlify. Use `scripts/deploy-frontend.sh` for S3 automation.
+- **Environment**: Set API URLs in `frontend/.env` and update Amplify config as needed.
 
 ---
 
-## 💡 Tips
-
-- For AWS setup, ensure your credentials are configured (`aws configure`).
-- Use the provided scripts in `backend/scripts/` for common tasks.
-- For troubleshooting, see the [FAQ](./docs/faq.md) (create if needed) or open an issue.
-
----
-
-> **Need help?** Check the docs above or open an issue in this repository.
+For more details, see the guides in the `docs/` folder.

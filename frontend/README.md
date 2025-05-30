@@ -1,57 +1,57 @@
 # Clinnet-EMR Frontend
 
-This is the frontend application for the Clinnet-EMR healthcare management system.
+This guide covers frontend-specific setup, scripts, and troubleshooting. For full-stack deployment, see `../docs/deployment.md`.
 
-## Prerequisites
+---
 
-- Node.js 18.x (recommended: 18.18.0)
-- npm 8.x or later
+## Quickstart
 
-## Setup Instructions
-
-1. **Install dependencies:**
-
+1. **Node Version**: Use Node.js 18 (see `scripts/fix-node-version.sh` or use `nvm`)
+2. **Install/Update Dependencies**
    ```bash
-   npm install
+   ./scripts/update-dependencies.sh
    ```
-
-2. **Environment Configuration:**
-
-   - By default, the app is configured for S3 + CloudFront static hosting and API Gateway backend.
-   - To use Amplify (optional), set `VITE_USE_AMPLIFY=true` in your `.env.local` file.
-   - All Amplify-related files are now in `amplify-optional/`.
-
-3. **Start the development server:**
-
+3. **Run Dev Server**
    ```bash
    npm run dev
    ```
-
-4. **Build for production:**
-
+4. **Build for Production**
    ```bash
    npm run build
    ```
 
-5. **Deploy:**
+---
 
-   - Upload the `dist/` folder to S3/CloudFront using the provided deployment script:
-     ```bash
-     ./scripts/deploy-frontend.sh dev
-     ```
-   - Or use Amplify Console (optional, see `amplify-optional/`).
+## Environment Setup
 
-## Backend/API Integration
-
-- The frontend communicates with the backend via API Gateway endpoints (see backend deployment docs).
-- Authentication is handled via AWS Cognito (see your environment variables or Amplify config).
-
-## More Information
-
-- [Project README](../README.md)
-- [Backend Setup](../backend/README.md)
-- [Amplify Documentation (optional)](https://docs.amplify.aws)
+- Create a `.env` file in `frontend/`:
+  ```env
+  VITE_API_URL=<your-api-url>
+  ```
+- This URL should point to your deployed API Gateway or local backend.
 
 ---
 
-For UI component details, see [src/components/README.md](./src/components/README.md).
+## Key Scripts
+
+- `scripts/update-dependencies.sh` — Update all dependencies
+- `scripts/deploy-frontend.sh` — Deploy to static hosting (edit for your S3 bucket/region)
+
+---
+
+## Profile Image System Test
+
+- See `test_profile_images.js` for end-to-end profile image tests
+- Run in browser console, update `apiBaseUrl` as needed
+
+---
+
+## Troubleshooting
+
+- See `../docs/troubleshooting.md` for common issues
+- For CORS, S3, or build errors, check browser console and logs
+- For dependency issues, run `./scripts/update-dependencies.sh`
+
+---
+
+For full project documentation, see the `../docs/` folder.

@@ -1,16 +1,17 @@
 # 🧑‍💻 Local Development Guide
 
-How to set up and run Clinnet-EMR locally for rapid development and testing.
+How to set up and run Clinnet-EMR locally for rapid development and testing. For deployment, see [deployment.md](./deployment.md).
 
 ---
 
 ## 🛠️ Prerequisites
 
-- Node.js 18.x
-- npm 8.x or later
-- Python 3.9+
-- AWS CLI & SAM CLI
-- AWS credentials configured (`aws configure`)
+- **Node.js 18.x** (use `nvm` or `frontend/scripts/fix-node-version.sh`)
+- **npm 8.x or later**
+- **Python 3.10+**
+- **AWS CLI & SAM CLI** (install via Homebrew: `brew install awscli aws-sam-cli`)
+- **AWS credentials configured** (`aws configure`)
+- **IAM permissions** for Lambda, S3, DynamoDB
 
 ---
 
@@ -18,24 +19,31 @@ How to set up and run Clinnet-EMR locally for rapid development and testing.
 
 1. **Install dependencies:**
 
-   ```bash
+   ```zsh
    cd backend
    pip install -r requirements.txt
    ```
 
 2. **Run/test Lambda functions locally**:
 
-   ```bash
+   ```zsh
    sam local start-api
    # or test individual functions:
    sam local invoke <FunctionName>
    ```
 
-3. **Seed DynamoDB (optional)**:
+3. **Seed DynamoDB (optional):**
 
-   ```bash
+   ```zsh
    cd scripts
    ./seed_data.sh
+   ```
+
+4. **Run backend tests:**
+
+   ```zsh
+   source test_env/bin/activate
+   python test_end_to_end.py
    ```
 
 ---
@@ -44,7 +52,7 @@ How to set up and run Clinnet-EMR locally for rapid development and testing.
 
 1. **Install dependencies**:
 
-   ```bash
+   ```zsh
    cd frontend
    npm install
    ```
@@ -57,9 +65,11 @@ How to set up and run Clinnet-EMR locally for rapid development and testing.
    VITE_API_URL=http://localhost:3001
    ```
 
+   - Set this to your local or deployed API Gateway URL as needed.
+
 3. **Start the frontend**:
 
-   ```bash
+   ```zsh
    npm run dev
    ```
 
@@ -69,7 +79,7 @@ How to set up and run Clinnet-EMR locally for rapid development and testing.
 
    If you need to use the JSON server for API mocking:
 
-   ```bash
+   ```zsh
    npm run server
    ```
 
@@ -134,7 +144,6 @@ function MyPage() {
   return (
     <Container maxWidth="xl" disableGutters>
       <PageHeading title="My Page" subtitle="Page description" />
-
       <ContentCard title="Section Title">{/* Content goes here */}</ContentCard>
     </Container>
   );
@@ -171,7 +180,7 @@ If you encounter issues:
 
 1. **Node.js Version**: Make sure you're using Node.js version 18.x
 2. **Clean Install**: Try reinstalling dependencies:
-   ```bash
+   ```zsh
    rm -rf node_modules
    npm install
    ```
