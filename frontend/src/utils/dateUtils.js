@@ -68,3 +68,81 @@ export const getWeekDays = (currentDate) => {
 export const createDateWithTime = (daysToAdd, hours, minutes) => {
   return addDays(new Date(new Date().setHours(hours, minutes, 0, 0)), daysToAdd);
 };
+
+/**
+ * Calculate age from date of birth string.
+ * @param {string} dobString - The date of birth string (e.g., "YYYY-MM-DD").
+ * @returns {string|number} The calculated age or "N/A" if dobString is invalid or not provided.
+ */
+export const calculateAge = (dobString) => {
+  if (!dobString) return "N/A"; // Return "N/A" if no dobString is provided
+  const birthDate = new Date(dobString);
+  const today = new Date();
+
+  // Check if birthDate is valid
+  if (isNaN(birthDate.getTime())) {
+    return "N/A"; // Invalid date format
+  }
+
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+
+  return age >= 0 ? age : "N/A"; // Ensure age is not negative, though unlikely with valid birthDate
+};
+
+/**
+ * Formats a date string to YYYY-MM-DD for input fields.
+ * Handles various input date formats if possible.
+ * @param {string} dateString - The date string to format.
+ * @returns {string} Formatted date string (YYYY-MM-DD) or empty string if invalid.
+ */
+export const formatDateForInput = (dateString) => {
+  try {
+    if (!dateString) return "";
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      // Check if this YYYY-MM-DD string is a valid date
+      const testDate = new Date(dateString);
+      if (isNaN(testDate.getTime())) {
+        return ""; // Invalid date like "2023-02-30"
+      }
+      return dateString;
+    }
+
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return ""; // Invalid date
+    }
+
+    return date.toISOString().split("T")[0];
+  } catch (error) {
+    console.error("Error formatting date for input:", error);
+    return "";
+  }
+};
+
+/**
+ * Validates if a string is a valid date and in YYYY-MM-DD format.
+ * @param {string} dateString - The date string to validate.
+ * @returns {boolean} True if valid, false otherwise.
+ */
+export const isValidDateFormat = (dateString) => {
+  if (!dateString) return false; // Or true if empty string is considered valid in some contexts
+
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!regex.test(dateString)) return false;
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) { // Check for invalid dates like "2023-02-30"
+    return false;
+  }
+  // Additionally, ensure the date parts match what was parsed, to catch invalid dates
+  // that Date() might interpret loosely (e.g. month overflow).
+  // For YYYY-MM-DD, this check is implicitly handled by isNaN if the date is fundamentally invalid.
+  // More specific checks can be added if Date parsing is too lenient for certain edge cases.
+  return true;
+};

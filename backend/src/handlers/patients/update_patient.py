@@ -3,14 +3,12 @@ Lambda function to update a patient
 """
 import os
 import json
-import logging # Added
+import logging
+import base64 # Added for profile image processing
+import uuid # Added for generating unique file names
+import boto3 # Added for S3 interaction
 from datetime import datetime
-from botocore.exceptions import ClientError
-# import sys # Removed
-# import os # Removed
-
-# Add the parent directory to sys.path
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) # Removed
+from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
 
 from utils.db_utils import get_patient_by_pk_sk, update_item_by_pk_sk, generate_response
 from utils.responser_helper import handle_exception # Added
@@ -148,32 +146,90 @@ def lambda_handler(event, context):
                 updates['insuranceNumber'] = in_val
 
         # Check for other fields in request_body not explicitly validated/allowed for update
-        allowed_update_fields = [
+        # Note: 'profileImage' is handled separately for S3 upload and is not a direct DB field from request_body.
+        # The S3 URL or key will be added to 'updates' dictionary later.
+        allowed_direct_update_fields = [
             'firstName', 'lastName', 'dateOfBirth', 'phone', 'email', 
-            'address', 'insuranceProvider', 'insuranceNumber', 'status', 'gender' # gender is allowed but not validated here
+            'address', 'insuranceProvider', 'insuranceNumber', 'status', 'gender',
+            'profileImage' # Added: This is the base64 string from frontend
         ]
-        extra_fields = [k for k in request_body.keys() if k not in allowed_update_fields]
+        # We will remove 'profileImage' from request_body after processing it for S3 to avoid it being treated as a direct DB field.
+        
+        extra_fields = [k for k in request_body.keys() if k not in allowed_direct_update_fields and k != 'profileImageFile'] # profileImageFile is the input name
         if extra_fields:
-            logger.info(f"Extra/unexpected fields in update payload not processed: {extra_fields}")
+            logger.info(f"Extra/unexpected fields in update payload not processed directly: {extra_fields}")
 
-        if validation_errors:
+        if validation_errors: # This validation is for non-image fields
             logger.warning(f"Validation errors in update request body: {validation_errors}")
             return generate_response(400, {
                 'message': 'Update validation failed',
                 'errors': validation_errors
             })
 
-        if not updates:
-            logger.info(f"No valid fields to update for patient {patient_id}. Returning existing data.")
+        # S3 Profile Image Upload Logic
+        profile_image_data = request_body.pop('profileImage', None) # Use pop to remove it from request_body
+        
+        if profile_image_data:
+            logger.info(f"Profile image data found for patient {patient_id}. Attempting S3 upload.")
+            s3_bucket_name = os.environ.get('PROFILE_IMAGE_BUCKET')
+            if not s3_bucket_name:
+                logger.error("S3 bucket name for profile images not configured (PROFILE_IMAGE_BUCKET env var missing).")
+                return generate_response(500, {'message': 'Server configuration error: S3 bucket not specified.'})
+
+            try:
+                # Decode base64 string. It might contain a prefix like 'data:image/png;base64,'
+                if ',' in profile_image_data:
+                    header, encoded_data = profile_image_data.split(',', 1)
+                    # Infer image extension from header
+                    image_type_part = header.split(';')[0].split('/')[1]
+                    image_extension = image_type_part if image_type_part else 'png' # default to png
+                else: # No header, assume raw base64 data
+                    encoded_data = profile_image_data
+                    image_extension = 'png' # default if no header
+
+                image_data_decoded = base64.b64decode(encoded_data)
+                
+                # Generate a unique file key
+                # Format: patients/{patient_id}/profile/{uuid}.{extension}
+                file_key = f"patients/{patient_id}/profile/{uuid.uuid4()}.{image_extension}"
+                
+                s3_client = boto3.client('s3')
+                s3_client.put_object(
+                    Bucket=s3_bucket_name,
+                    Key=file_key,
+                    Body=image_data_decoded,
+                    ContentType=f'image/{image_extension}', # Set content type for browser rendering
+                    ACL='public-read' # Or use bucket policy for access control
+                )
+                
+                # Store S3 URL or key in updates. Using S3 URI format.
+                s3_image_uri = f"s3://{s3_bucket_name}/{file_key}"
+                # Or, if you want the HTTPS URL:
+                # s3_image_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{file_key}"
+                updates['profileImage'] = s3_image_uri # This will be saved to DynamoDB
+                logger.info(f"Successfully uploaded profile image to {s3_image_uri} for patient {patient_id}")
+
+            except (base64.binascii.Error, ValueError) as b64_error:
+                logger.error(f"Base64 decoding error for profile image: {b64_error}", exc_info=True)
+                return generate_response(400, {'message': 'Invalid profile image data format.'})
+            except (ClientError, NoCredentialsError, PartialCredentialsError) as s3_error:
+                logger.error(f"S3 upload failed for patient {patient_id}: {s3_error}", exc_info=True)
+                return generate_response(500, {'message': 'Failed to upload profile image.'})
+            except Exception as e:
+                logger.error(f"An unexpected error occurred during profile image processing for patient {patient_id}: {e}", exc_info=True)
+                return generate_response(500, {'message': 'Error processing profile image.'})
+
+        if not updates and not profile_image_data: # if no other updates and no image was processed
+            logger.info(f"No valid fields to update or profile image provided for patient {patient_id}. Returning existing data.")
             return generate_response(200, existing_patient) # Or 400 if no updatable fields is an error
         
         # Ensure 'type' is preserved for the PK/SK structure, if it's not part of the updates.
         # This is important for single-table design queries.
-        if 'type' not in updates:
+        if 'type' not in updates and existing_patient: # Check existing_patient is not None
             updates['type'] = existing_patient.get('type', 'patient')
 
 
-        logger.info(f"Updating patient {patient_id} with validated data: {json.dumps(updates)}")
+        logger.info(f"Updating patient {patient_id} with validated data (including S3 image URL if any): {json.dumps(updates)}")
         updated_patient = update_item_by_pk_sk(table_name, pk, sk, updates)
         
         logger.info(f"Successfully updated patient {patient_id}")

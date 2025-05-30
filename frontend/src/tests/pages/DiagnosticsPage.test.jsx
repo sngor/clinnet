@@ -68,6 +68,7 @@ describe('DiagnosticsPage', () => {
     expect(rtlWithin(siteFrontendCard).getByText('Online')).toBeInTheDocument(); // Chips are identified by their label text
   });
 
+
   describe('Automatic Checks on Page Load', () => {
     test('calls test functions for all testable services on initial render', async () => {
       renderWithTheme(<DiagnosticsPage />);
@@ -123,6 +124,7 @@ describe('DiagnosticsPage', () => {
 
       // Now, set up a new mock for the manual test
       adminService.checkS3Connectivity.mockResolvedValueOnce({ success: true, message: 'S3 Manual Re-test OK' });
+
       
       const testButton = rtlWithin(s3Card).getByRole('button', { name: /Test/i });
       fireEvent.click(testButton);
@@ -131,10 +133,12 @@ describe('DiagnosticsPage', () => {
       expect(await rtlWithin(s3Card).findByRole('progressbar')).toBeInTheDocument();
       expect(rtlWithin(s3Card).getByText('Checking...')).toBeInTheDocument();
 
+
       // Wait for the status to update to Online again
       expect(await rtlWithin(s3Card).findByText('Online')).toBeInTheDocument();
       // Called once by auto-check, and once by manual click
       expect(adminService.checkS3Connectivity).toHaveBeenCalledTimes(2); 
+
       
       // Expand details
       const expandButton = rtlWithin(s3Card).getByRole('button', { name: /expand/i }); // MUI uses aria-label "Show more" or "Show less" or similar, or check icon
@@ -143,6 +147,7 @@ describe('DiagnosticsPage', () => {
     });
 
     test('handles S3 connection failure and updates status to Error', async () => {
+
       adminService.checkS3Connectivity.mockResolvedValueOnce({ success: false, message: 'S3 Manual Re-test Failed' });
       renderWithTheme(<DiagnosticsPage />);
       
@@ -151,11 +156,13 @@ describe('DiagnosticsPage', () => {
       expect(await rtlWithin(s3Card).findByText('Online')).toBeInTheDocument(); 
       expect(adminService.checkS3Connectivity).toHaveBeenCalledTimes(1); // From auto-check
 
+
       const testButton = rtlWithin(s3Card).getByRole('button', { name: /Test/i });
       fireEvent.click(testButton);
 
       expect(await rtlWithin(s3Card).findByRole('progressbar')).toBeInTheDocument();
       expect(await rtlWithin(s3Card).findByText('Error')).toBeInTheDocument();
+
       expect(adminService.checkS3Connectivity).toHaveBeenCalledTimes(2); // auto-check + manual
       
       const expandButton = rtlWithin(s3Card).getByRole('button', { name: /expand/i });
@@ -186,14 +193,17 @@ describe('DiagnosticsPage', () => {
         return { create: 'Error', read: 'Error', update: 'Error', delete: 'Error' }; // Default for other calls if any
       });
 
+
       const testButton = rtlWithin(serviceCard).getByRole('button', { name: /Test/i });
       fireEvent.click(testButton);
 
       expect(await rtlWithin(serviceCard).findByText('Online')).toBeInTheDocument();
+
       // Check if it's called one more time for this specific apiId
       expect(adminService.checkDynamoDBCrud.mock.calls.filter(call => call[0] === apiId).length).toBe(initialCallCountForPatientData + 1);
       
       // API Gateway and Lambdas should remain Online or update based on this specific test
+
       const apiGatewayCard = screen.getByText('API Gateway').closest('div[class*="MuiCard-root"]');
       expect(await rtlWithin(apiGatewayCard).findByText('Online')).toBeInTheDocument();
       const lambdaCard = screen.getByText('Lambda Functions').closest('div[class*="MuiCard-root"]');
@@ -210,6 +220,7 @@ describe('DiagnosticsPage', () => {
     });
 
     test('handles all CRUD operations failing and updates status to Offline', async () => {
+
       const apiGatewayCard = screen.getByText('API Gateway').closest('div[class*="MuiCard-root"]');
       expect(await rtlWithin(apiGatewayCard).findByText('Online')).toBeInTheDocument();
       
@@ -345,5 +356,6 @@ describe('DiagnosticsPage', () => {
       // Call count should remain the same as before unmount
       expect(adminService.checkS3Connectivity).toHaveBeenCalledTimes(s3InitialCalls + 1);
     });
+
   });
 });

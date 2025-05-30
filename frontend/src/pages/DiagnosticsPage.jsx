@@ -7,9 +7,11 @@ import {
   CircularProgress,
   Chip,
   Divider,
+
   Grid,
   Switch,
   FormControlLabel,
+
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import LanguageIcon from '@mui/icons-material/Language';
@@ -27,6 +29,7 @@ import EventNoteIcon from '@mui/icons-material/EventNote';
 import SyncProblemIcon from '@mui/icons-material/SyncProblem';
 import adminService from '../services/adminService';
 import ServiceCard from '../components/ServiceCard';
+
 
 const initialServicesData = [
   { id: 'site', name: 'Site Frontend', apiId: 'site', testFunction: null, status: 'Online', details: 'Page loaded successfully.', testable: false, icon: <LanguageIcon />, isCrudService: false, crudStatus: null },
@@ -46,8 +49,8 @@ const DiagnosticsPage = () => {
   const [services, setServices] = useState(initialServicesData);
   const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(false);
   const [autoRefreshIntervalId, setAutoRefreshIntervalId] = useState(null);
-
   const determineOverallStatus = useCallback((crudSt) => {
+
     if (!crudSt || typeof crudSt !== 'object') return 'Unknown';
     const ops = ['create', 'read', 'update', 'delete'];
     const currentStatuses = ops.map(op => crudSt[op]).filter(s => s !== undefined);
@@ -62,6 +65,7 @@ const DiagnosticsPage = () => {
     if (errorOps > 0) return 'Error';
     if (successfulOps > 0 && successfulOps < ops.length) return 'Potentially Degraded';
     if (currentStatuses.length < ops.length && currentStatuses.every(s => ['Unknown', 'PENDING', 'SKIPPED - User not created by this test.', 'Checking...'].includes(s))) return 'Potentially Degraded';
+
     return 'Unknown';
   }, []);
 
@@ -102,6 +106,7 @@ const DiagnosticsPage = () => {
               else if (newOverallStatus === 'Potentially Degraded') detailsMessage = 'Some operations have issues or are in an unknown state.';
               if(response.cleanup_error) detailsMessage += ` Cleanup: ${response.cleanup_error}`;
               return { ...s, status: newOverallStatus, crudStatus: crudStatusObject, details: detailsMessage };
+
             } else {
               if (response && response.success) {
                 return { ...s, status: 'Online', details: response.message };
@@ -112,6 +117,7 @@ const DiagnosticsPage = () => {
           }
           return s;
         });
+
 
         const testableServices = servicesAfterTestUpdate.filter(s => s.testable && s.id !== 'apiGateway' && s.id !== 'lambdas');
         const anyOnline = testableServices.some(s => s.status === 'Online');
@@ -129,9 +135,11 @@ const DiagnosticsPage = () => {
           }
           return s;
         });
+
       });
 
     } catch (error) {
+
       setServices(prevServices => {
         const serviceFailedId = serviceId;
         let afterCatchServices = prevServices.map(s =>
@@ -148,11 +156,13 @@ const DiagnosticsPage = () => {
               }
             }
             return s_;
+
           });
         }
         return afterCatchServices;
       });
     }
+
   }, [services, determineOverallStatus]);
 
   // useEffect for initial auto-testing on mount
@@ -212,6 +222,7 @@ const DiagnosticsPage = () => {
           label={`Enable Auto-Refresh (${AUTO_REFRESH_INTERVAL / 1000}s)`}
         />
       </Box>
+
 
       <Grid container spacing={3}>
         {services.map((service) => (
