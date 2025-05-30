@@ -1,5 +1,6 @@
 // src/pages/AdminReportsPage.jsx
 import React, { useState, useEffect } from "react";
+import { adminService } from "../../services/adminService"; // Import adminService
 import {
   Box,
   Grid,
@@ -49,50 +50,100 @@ function AdminReportsPage() {
     patients: [],
   });
 
-  // Mock data - in a real app, this would come from an API
   useEffect(() => {
-    // Simulate API call
-    const timer = setTimeout(() => {
-      const mockAppointmentsData = [
-        { name: "Jan", completed: 65, cancelled: 12, total: 77 },
-        { name: "Feb", completed: 59, cancelled: 15, total: 74 },
-        { name: "Mar", completed: 80, cancelled: 8, total: 88 },
-        { name: "Apr", completed: 81, cancelled: 10, total: 91 },
-        { name: "May", completed: 56, cancelled: 14, total: 70 },
-        { name: "Jun", completed: 55, cancelled: 9, total: 64 },
-        { name: "Jul", completed: 40, cancelled: 5, total: 45 },
-      ];
-
-      const mockRevenueData = [
-        { name: "Jan", revenue: 4500 },
-        { name: "Feb", revenue: 5200 },
-        { name: "Mar", revenue: 6800 },
-        { name: "Apr", revenue: 7100 },
-        { name: "May", revenue: 5400 },
-        { name: "Jun", revenue: 4900 },
-        { name: "Jul", revenue: 3800 },
-      ];
-
-      const mockPatientsData = [
-        { name: "New", value: 45 },
-        { name: "Returning", value: 120 },
-        { name: "Referred", value: 25 },
-      ];
-
-      setReportData({
-        appointments: mockAppointmentsData,
-        revenue: mockRevenueData,
-        patients: mockPatientsData,
+    setLoading(true);
+    adminService.getReportData(reportType, timeRange)
+      .then(data => {
+        // Assuming API returns data in the correct structure for now
+        // If API structure is { appointments: [], revenue: [], patients: [] }
+        // then this should work. Otherwise, transformation is needed.
+        setReportData(data); 
+      })
+      .catch(error => {
+        console.error("Error fetching report data:", error);
+        // Optionally set an error state here to show a message in the UI
+        // For now, let's clear data or set to a default error state
+        setReportData({ appointments: [], revenue: [], patients: [] }); 
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  }, [reportType, timeRange]); // Re-fetch when reportType or timeRange changes
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  const handleExportReport = () => {
+    if (!reportData || loading) {
+      alert("Report data is not available or still loading.");
+      return;
+    }
+
+    let csvContent = "";
+    let fileName = `${reportType}_report_${timeRange}.csv`;
+    let dataToExport = [];
+    let headers = [];
+
+    if (reportType === "appointments" && reportData.appointments) {
+      headers = ["Name", "Completed", "Cancelled", "Total"];
+      dataToExport = reportData.appointments;
+      csvContent += headers.join(",") + "\n";
+      dataToExport.forEach(row => {
+        // Ensure row properties exist to avoid 'undefined' in CSV
+        const name = row.name || "";
+        const completed = row.completed || 0;
+        const cancelled = row.cancelled || 0;
+        const total = row.total || 0;
+        csvContent += `${name},${completed},${cancelled},${total}\n`;
+      });
+    } else if (reportType === "revenue" && reportData.revenue) {
+      headers = ["Name", "Revenue"];
+      dataToExport = reportData.revenue;
+      csvContent += headers.join(",") + "\n";
+      dataToExport.forEach(row => {
+        const name = row.name || "";
+        const revenue = row.revenue || 0;
+        csvContent += `${name},${revenue}\n`;
+      });
+    } else if (reportType === "patients" && reportData.patients) {
+      headers = ["Category", "Value"];
+      dataToExport = reportData.patients;
+      csvContent += headers.join(",") + "\n";
+      dataToExport.forEach(row => {
+        const name = row.name || "";
+        const value = row.value || 0;
+        csvContent += `${name},${value}\n`;
+      });
+    } else {
+      alert("No data available for the selected report type or the report data structure is unexpected.");
+      return;
+    }
+
+    if (dataToExport.length === 0 && headers.length === 0) {
+        // This case is already handled by the specific report type checks not finding data.
+        // If headers were set but dataToExport is empty, it means the specific reportData array was empty.
+        alert("No data to export for the selected report type.");
+        return;
+    }
+    
+    // If headers are present but no data, still allow exporting the headers.
+    // Or, if preferred, check dataToExport.length === 0 here again and alert.
+    if (dataToExport.length === 0) {
+        console.log("No data rows to export, only headers will be present.");
+    }
+
+
+    const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link); // Required for FF
+
+    link.click(); // This will download the data file named "filename.csv".
+
+    document.body.removeChild(link); // Clean up
   };
 
   // Colors for charts
@@ -234,9 +285,7 @@ function AdminReportsPage() {
             color="primary"
             startIcon={<DownloadIcon />}
             sx={{ boxShadow: 2, borderRadius: 2, fontWeight: 600 }}
-            onClick={() =>
-              alert("Download report functionality would be implemented here")
-            }
+            onClick={handleExportReport} // Updated onClick handler
           >
             Export Report
           </Button>

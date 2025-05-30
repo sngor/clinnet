@@ -569,6 +569,44 @@ export const adminService = {
       console.error('Error checking Cognito Users CRUD:', error);
       throw error;
     }
+  },
+
+  // Add this new function
+  async getReportData(reportType, timeRange) {
+    try {
+      console.log(`Fetching report data for type: ${reportType}, range: ${timeRange}`);
+      const idToken = await getAuthToken();
+      if (!idToken) throw new Error('No authentication token available');
+
+      // Adjust API endpoint as necessary based on actual backend implementation
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/reports?type=${reportType}&range=${timeRange}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': idToken, // Send raw token
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const responseText = await response.text();
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}: ${responseText}`);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Error parsing report data response as JSON:', parseError);
+        throw new Error(`Failed to parse response as JSON: ${responseText}`);
+      }
+      
+      console.log('Report data received:', data);
+      return data;
+
+    } catch (error) {
+      console.error('Error fetching report data:', error);
+      throw error;
+    }
   }
 };
 
