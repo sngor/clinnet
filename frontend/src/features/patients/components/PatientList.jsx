@@ -4,6 +4,7 @@ import {
   Typography,
   CircularProgress,
   Alert,
+  // TextField, // No longer needed here if dateUtils are imported where used
   TextField,
   InputAdornment,
   Dialog,
@@ -20,10 +21,12 @@ import {
   TablePagination,
   TableSortLabel,
   Tooltip,
+  Table, // Add Table import
 } from "@mui/material";
+import { FixedSizeList } from "react-window"; // Add react-window import
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import AddIcon from "@mui/icons-material/Add";
+// import AddIcon from "@mui/icons-material/Add"; // remove unused import
 import SearchIcon from "@mui/icons-material/Search";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -37,8 +40,9 @@ import {
   DangerButton,
   AppIconButton,
   FlexBox,
-  TextButton, // Add TextButton import
+  TextButton,
 } from "../../../components/ui";
+import { formatDateForInput, isValidDateFormat } from '../../../utils/dateUtils'; // Import date utils
 
 // Add missing tableHeaderStyle
 const tableHeaderStyle = {
@@ -49,11 +53,12 @@ const tableHeaderStyle = {
 
 // Table column definitions
 const columns = [
-  { id: "name", label: "Name", numeric: false },
-  { id: "contact", label: "Contact", numeric: false },
-  { id: "insurance", label: "Insurance", numeric: false },
-  { id: "lastVisit", label: "Last Visit", numeric: false },
-  { id: "status", label: "Status", numeric: false },
+  { id: "name", label: "Name", numeric: false, width: "20%" }, // Added width
+  { id: "contact", label: "Contact", numeric: false, width: "20%" }, // Added width
+  { id: "insurance", label: "Insurance", numeric: false, width: "20%" }, // Added width
+  { id: "lastVisit", label: "Last Visit", numeric: false, width: "10%" }, // Added width
+  { id: "status", label: "Status", numeric: false, width: "10%" }, // Added width
+  // Note: Actions column width will be handled separately or will take remaining space
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -101,14 +106,9 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
     deletePatient,
   } = useAppData();
 
-  // Always use propPatients if provided, otherwise use context
-  const patients = (propPatients || apiPatients || []).map((p) => ({
-    ...p,
-    dateOfBirth: p.dateOfBirth || p.dob || "",
-    gender: p.gender || "N/A",
-  }));
-  const loading = apiLoading;
-  const error = apiError;
+  // apiLoading and apiError from useAppData will be used directly.
+  // Local 'patients' state or re-assignments are removed.
+  // Data processing and selection logic will be in 'processedPatients' useMemo.
 
   // Pagination state
   const [page, setPage] = useState(0);
@@ -137,90 +137,12 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
   // State for delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" }); // Initialize snackbar state
 
-  // Helper function to format dates
-  const formatDateForInput = (dateString) => {
-    try {
-      // Handle different date formats
-      if (!dateString) return "";
+  // formatDateForInput and isValidDateFormat are now imported from ../../../utils/dateUtils
 
-      // If it's already in YYYY-MM-DD format
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-        return dateString;
-      }
-
-      // Try to parse the date
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return ""; // Invalid date
-      }
-
-      // Format as YYYY-MM-DD
-      return date.toISOString().split("T")[0];
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "";
-    }
-  };
-
-  // Date validation function
-  const isValidDateFormat = (dateString) => {
-    // Check if the string matches YYYY-MM-DD format
-    const regex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!regex.test(dateString)) return false;
-
-    // Check if it's a valid date
-    const date = new Date(dateString);
-    const timestamp = date.getTime();
-    if (isNaN(timestamp)) return false;
-
-    return true;
-  };
-
-  // Use data from API when available
-  useEffect(() => {
-    if (propPatients) {
-      setPatients(propPatients);
-      setLoading(false);
-    } else if (apiPatients && apiPatients.length > 0) {
-      console.log("Using patients data from API:", apiPatients);
-
-      // Transform API data to match the expected format for display
-      const formattedPatients = apiPatients.map((patient) => ({
-        // Preserve DynamoDB structure
-        id: patient.id,
-        PK: patient.PK,
-        SK: patient.SK,
-        GSI1PK: patient.GSI1PK,
-        GSI1SK: patient.GSI1SK,
-        GSI2PK: patient.GSI2PK,
-        GSI2SK: patient.GSI2SK,
-        type: patient.type,
-        // Patient display fields
-        firstName: patient.firstName,
-        lastName: patient.lastName,
-        dob: formatDateForInput(patient.dob || ""),
-        phone: patient.phone || "",
-        email: patient.email || "",
-        address: patient.address || "",
-        insuranceProvider: patient.insuranceProvider || "",
-        insuranceNumber: patient.insuranceNumber || "",
-        lastVisit: patient.lastVisit || null,
-        upcomingAppointment: patient.upcomingAppointment || null,
-        status: patient.status || "Active",
-        createdAt: patient.createdAt,
-        updatedAt: patient.updatedAt,
-      }));
-
-      setPatients(formattedPatients);
-      setLoading(false);
-    } else if (apiLoading) {
-      setLoading(true);
-    } else if (apiError) {
-      setError(apiError);
-      setLoading(false);
-    }
-  }, [propPatients, apiPatients, apiLoading, apiError]);
+  // useEffect for syncing propPatients or apiPatients to local state is removed.
+  // Data transformation and selection will be handled in useMemo.
 
   // Get stable sorted array for the table
   function stableSortArray(array, comparator) {
@@ -252,23 +174,45 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
     setOrderBy(property);
   };
 
-  // Safely compute current patients with pagination and sorting
-  const currentPatients = React.useMemo(() => {
-    // Safety check
-    if (!patients || !Array.isArray(patients)) return [];
+  const processedPatients = React.useMemo(() => {
+    const sourceData = propPatients || apiPatients || [];
+    return sourceData.map((p) => ({
+      ...p, // Spread all original fields first
+      id: p.id, // Ensure id is present
+      firstName: p.firstName,
+      lastName: p.lastName,
+      // Ensure formatDateForInput is called here if it's still needed for processedPatients
+      // If formatDateForInput from dateUtils is intended for use here, ensure it's correctly scoped or passed if not directly accessible
+      dateOfBirth: formatDateForInput(p.dateOfBirth || p.dob || ""), 
+      dob: formatDateForInput(p.dateOfBirth || p.dob || ""), 
+      gender: p.gender || "N/A",
+      phone: p.phone || "N/A",
+      email: p.email || "N/A",
+      address: p.address || "",
+      insuranceProvider: p.insuranceProvider || "",
+      insuranceNumber: p.insuranceNumber || "",
+      lastVisit: p.lastVisit || null,
+      upcomingAppointment: p.upcomingAppointment || null,
+      status: p.status || "Active",
+      // Explicitly list other fields from the original patient object if they are needed and might not be in 'p'
+      // For example, if the original object has PK, SK, etc. ensure they are carried over.
+      // The initial spread `...p` should cover this, but being explicit can be safer depending on object structures.
+    }));
+  }, [propPatients, apiPatients]); // Removed formatDateForInput from deps, as it's stable if defined outside or memoized
 
-    // Apply sorting
+  const currentPatients = React.useMemo(() => {
+    if (!processedPatients || !Array.isArray(processedPatients)) return [];
+
     const sortedPatients = stableSortArray(
-      patients,
+      processedPatients,
       getComparator(order, orderBy)
     );
 
-    // Apply pagination
     return sortedPatients.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage
     );
-  }, [patients, order, orderBy, page, rowsPerPage]);
+  }, [processedPatients, order, orderBy, page, rowsPerPage]);
 
   // Handle opening the patient form dialog for adding/editing
   const handleOpenDialog = (patient = null) => {
@@ -338,57 +282,48 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
         alert("Please enter a valid date in YYYY-MM-DD format");
         return;
       }
-
-      setLoading(true);
+      // setLoading(true) is removed, rely on useAppData's apiLoading
 
       if (currentPatient) {
-        // Update existing patient in DynamoDB
+        // Update existing patient
         const patientData = {
-          ...currentPatient,
-          ...formData,
+          ...currentPatient, // Base with existing data (like PK, SK, id)
+          ...formData, // Overlay with form data
+          dateOfBirth: formatDateForInput(formData.dateOfBirth || ""), // Ensure consistent format
           updatedAt: new Date().toISOString(),
         };
+        // It's good practice to remove the old 'dob' if 'dateOfBirth' is canonical
+        // delete patientData.dob; 
 
         await updatePatient(currentPatient.id, patientData);
-
-        setSnackbar({
-          open: true,
-          message: "Patient updated successfully",
-          severity: "success",
-        });
+        setSnackbar({ open: true, message: "Patient updated successfully", severity: "success" });
       } else {
-        // Add new patient to DynamoDB
-        const id = `${Date.now()}`; // Simple ID generation
+        // Add new patient
+        const id = `${Date.now()}`;
         const patientData = {
           id,
           ...formData,
+          dateOfBirth: formatDateForInput(formData.dateOfBirth || ""), // Ensure consistent format
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
+        // delete patientData.dob;
 
         await addPatient(patientData);
-
-        setSnackbar({
-          open: true,
-          message: "Patient added successfully",
-          severity: "success",
-        });
+        setSnackbar({ open: true, message: "Patient added successfully", severity: "success" });
       }
 
       handleCloseDialog();
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      setError(
-        "Error saving patient data. Please check all fields and try again."
-      );
+    } catch (formError) { // Renamed to avoid conflict with apiError from context
+      console.error("Error submitting form:", formError);
+      // setError is removed, snackbar provides user feedback
       setSnackbar({
         open: true,
-        message: "Error saving patient data",
+        message: "Error saving patient data. Please check all fields and try again.",
         severity: "error",
       });
-    } finally {
-      setLoading(false);
-    }
+    } 
+    // finally { setLoading(false) } is removed
   };
 
   // Handle delete button click
@@ -401,26 +336,14 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
   const handleConfirmDelete = async () => {
     if (patientToDelete) {
       try {
-        setLoading(true);
-
-        // Delete from DynamoDB using the patient ID
-        // Note: The DataProvider deletePatient method should handle the DynamoDB key structure
+        // setLoading(true) is removed
         await deletePatient(patientToDelete.id);
-
-        setSnackbar({
-          open: true,
-          message: "Patient deleted successfully",
-          severity: "success",
-        });
-      } catch (error) {
-        console.error("Error deleting patient:", error);
-        setSnackbar({
-          open: true,
-          message: "Error deleting patient",
-          severity: "error",
-        });
+        setSnackbar({ open: true, message: "Patient deleted successfully", severity: "success" });
+      } catch (deleteError) { // Renamed to avoid conflict
+        console.error("Error deleting patient:", deleteError);
+        setSnackbar({ open: true, message: "Error deleting patient", severity: "error" });
       } finally {
-        setLoading(false);
+        // setLoading(false) is removed
         setDeleteDialogOpen(false);
         setPatientToDelete(null);
       }
@@ -444,76 +367,103 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
       <SectionContainer>
         {/* Removed duplicate search bar and Add Patient button for clean UI */}
         {/* Error message */}
-        {error && (
+        {apiError && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
+            {apiError} 
           </Alert>
         )}
         {/* Loading indicator or table */}
-        {loading ? (
+        {apiLoading ? (
           <FlexBox justify="center" sx={{ mt: 4 }}>
             <CircularProgress />
           </FlexBox>
         ) : (
           <CardContainer>
-            <TableHead sx={tableHeaderStyle}>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell
-                    key={column.id}
-                    sortDirection={orderBy === column.id ? order : false}
-                  >
-                    <TableSortLabel
-                      active={orderBy === column.id}
-                      direction={orderBy === column.id ? order : "asc"}
-                      onClick={createSortHandler(column.id)}
-                    >
-                      {column.label}
-                    </TableSortLabel>
-                  </TableCell>
-                ))}
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {!patients || patients.length === 0 ? (
+            {/* Wrap TableHead and FixedSizeList in a MUI Table component for structure */}
+            <Table sx={{ tableLayout: "fixed" }}> {/* Ensure tableLayout is fixed for virtualization */}
+              <TableHead sx={tableHeaderStyle}>
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    No patients found
-                  </TableCell>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      sortDirection={orderBy === column.id ? order : false}
+                      style={{ width: column.width }} // Use defined width
+                    >
+                      <TableSortLabel
+                        active={orderBy === column.id}
+                        direction={orderBy === column.id ? order : "asc"}
+                        onClick={createSortHandler(column.id)}
+                      >
+                        {column.label}
+                      </TableSortLabel>
+                    </TableCell>
+                  ))}
+                  <TableCell align="center" style={{ flex: 1 }}>Actions</TableCell> {/* Use flex: 1 for actions header */}
                 </TableRow>
-              ) : (
-                currentPatients.map((patient) =>
-                  patient ? (
-                    <TableRow key={patient.id || "unknown"}>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="medium">
-                          {patient.firstName || ""} {patient.lastName || ""}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          DOB: {patient.dob || "N/A"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {patient.phone || "N/A"}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {patient.email || "N/A"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {patient.insuranceProvider || "None"}
-                        </Typography>
-                        {patient.insuranceNumber && (
-                          <Typography variant="caption" color="text.secondary">
-                            #{patient.insuranceNumber}
+              </TableHead>
+            </Table>
+            {/* Virtualized Table Body */}
+            {!processedPatients || processedPatients.length === 0 ? (
+              <Table>
+                <TableBody>
+                  <TableRow>
+                    <TableCell colSpan={columns.length + 1} align="center"> {/* Adjusted colSpan */}
+                      No patients found
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            ) : (
+              <FixedSizeList
+                height={400} // Adjust height as needed
+                itemCount={currentPatients.length}
+                itemSize={65} // Adjust itemSize (row height) as needed
+                width="100%"
+                outerElementType={React.forwardRef((props, ref) => (
+                  <TableBody component="div" {...props} ref={ref} />
+                ))}
+                innerElementType={React.forwardRef((props, ref) => <div role="rowgroup" {...props} ref={ref} />)}
+              >
+                {({ index, style }) => {
+                  const patient = currentPatients[index];
+                  // Important: Wrap the row content in a TableRow and pass the style from react-window
+                  // Using component="div" for TableRow and TableCell to work with react-window styling
+                  return patient ? (
+                    <TableRow component="div" style={style} key={patient.id || index} sx={{ display: "flex", width: "100%", boxSizing: 'border-box' }} role="row">
+                      <TableCell component="div" style={{ width: columns[0].width, display: "flex", alignItems: "center", boxSizing: 'border-box' }} role="cell">
+                        <div>
+                          <Typography variant="body2" fontWeight="medium">
+                            {patient.firstName || ""} {patient.lastName || ""}
                           </Typography>
-                        )}
+                          <Typography variant="caption" color="text.secondary">
+                            DOB: {patient.dob || "N/A"}
+                          </Typography>
+                        </div>
                       </TableCell>
-                      <TableCell>{patient.lastVisit || "Never"}</TableCell>
-                      <TableCell>
+                      <TableCell component="div" style={{ width: columns[1].width, display: "flex", alignItems: "center", boxSizing: 'border-box' }} role="cell">
+                        <div>
+                          <Typography variant="body2">
+                            {patient.phone || "N/A"}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {patient.email || "N/A"}
+                          </Typography>
+                        </div>
+                      </TableCell>
+                      <TableCell component="div" style={{ width: columns[2].width, display: "flex", alignItems: "center", boxSizing: 'border-box' }} role="cell">
+                        <div>
+                          <Typography variant="body2">
+                            {patient.insuranceProvider || "None"}
+                          </Typography>
+                          {patient.insuranceNumber && (
+                            <Typography variant="caption" color="text.secondary">
+                              #{patient.insuranceNumber}
+                            </Typography>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell component="div" style={{ width: columns[3].width, display: "flex", alignItems: "center", boxSizing: 'border-box' }} role="cell">{patient.lastVisit || "Never"}</TableCell>
+                      <TableCell component="div" style={{ width: columns[4].width, display: "flex", alignItems: "center", boxSizing: 'border-box' }} role="cell">
                         <Chip
                           label={patient.status || "Active"}
                           color={
@@ -524,7 +474,7 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell component="div" align="center" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", boxSizing: 'border-box' }} role="cell"> {/* Use flex: 1 for actions column */}
                         <Tooltip title="Edit Patient">
                           <AppIconButton
                             size="small"
@@ -567,14 +517,14 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
                         </PrimaryButton>
                       </TableCell>
                     </TableRow>
-                  ) : null
-                )
-              )}
-            </TableBody>
+                  ) : null;
+                }}
+              </FixedSizeList>
+            )}
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
+              rowsPerPageOptions={[5, 10, 25, { label: 'All', value: processedPatients.length }]} // Use processedPatients.length
               component="div"
-              count={patients.length}
+              count={processedPatients.length} // Use processedPatients.length
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}

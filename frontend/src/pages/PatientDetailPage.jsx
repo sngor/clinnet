@@ -1,6 +1,8 @@
 // src/pages/PatientDetailPage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { getDisplayableS3Url } from '../../utils/s3Utils';
+import { calculateAge } from '../../utils/dateUtils'; // Import calculateAge
 import {
   Container,
   Box,
@@ -43,10 +45,14 @@ import patientService from "../services/patients";
 function PatientDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { patients, loading, error, updatePatient } = useAppData();
+  // Alias patients from context to avoid confusion with local patient state
+  const { patients: contextPatients, loading: contextLoading, error: contextError, updatePatient } = useAppData();
+  // const { getDisplayableS3Url } = require('../../utils/s3Utils'); // Removed require, using ES6 import now
 
   // State for patient data and UI
   const [patient, setPatient] = useState(null);
+  const [pageLoading, setPageLoading] = useState(true); // Local loading state for this page
+  const [pageError, setPageError] = useState(null); // Local error state for this page
   const [editedPatient, setEditedPatient] = useState(null); // Will include profileImage (base64 for new upload)
   const [profileImagePreview, setProfileImagePreview] = useState(null); // For new image base64 preview
   const [displayableProfileImageUrl, setDisplayableProfileImageUrl] = useState(null); // For existing S3 image URL
@@ -56,98 +62,92 @@ function PatientDetailPage() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  // Helper to convert S3 URI to HTTPS URL - Exported for testing
-  export const getDisplayableS3Url = (s3UriOrHttpsUrl) => {
-    if (!s3UriOrHttpsUrl) return null;
-    if (s3UriOrHttpsUrl.startsWith('https://')) {
-      return s3UriOrHttpsUrl;
-    }
-    if (s3UriOrHttpsUrl.startsWith('s3://')) {
-      const parts = s3UriOrHttpsUrl.replace('s3://', '').split('/');
-      const bucket = parts.shift();
-      const key = parts.join('/');
-      // Assuming region us-east-1 as per requirement if not otherwise specified
-      // TODO: Make region configurable if necessary, e.g., via environment variable
-      const region = process.env.REACT_APP_AWS_REGION || 'us-east-1';
-      return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
-    }
-    // If it's just a key (though the backend is saving URI)
-    // const bucket = process.env.REACT_APP_PROFILE_IMAGE_BUCKET; 
-    // const region = process.env.REACT_APP_AWS_REGION || 'us-east-1';
-    // if (bucket && key) return `https://${bucket}.s3.${region}.amazonaws.com/${s3UriOrHttpsUrl}`;
-    
-    console.warn("Invalid S3 URI or URL:", s3UriOrHttpsUrl);
-    return null; // Or return the original string if it's an unrecognized format
-  };
+  // getDisplayableS3Url is now imported from ../../utils/s3Utils
   
   // Effect to update displayableProfileImageUrl when patient data changes
   useEffect(() => {
     if (patient && patient.profileImage) {
       setDisplayableProfileImageUrl(getDisplayableS3Url(patient.profileImage));
-    } else {
+    } else if (!patient) { // Clear image if patient is null (e.g. not found or error)
       setDisplayableProfileImageUrl(null);
     }
   }, [patient]);
+  
+  // Helper function to load patient data into state (used by fetch and context)
+  const loadPatientDataIntoState = (patientSource) => {
+    setPatient(patientSource);
+    // Initialize editedPatient. profileImage here is for *new* uploads.
+    setEditedPatient({ ...patientSource, profileImage: null }); 
+    setProfileImagePreview(null); // Clear any previous preview
+    // displayableProfileImageUrl will be updated by the useEffect above
+  };
 
-  // Fetch patient by ID from context or API
+  // Primary data loading effect
   useEffect(() => {
-    if (!id) return;
-    if (loading) return; // Wait for initial loading to complete
-    if (error) {
+    if (!id) {
+      setPageLoading(false);
+      setPageError("No patient ID provided.");
       setPatient(null);
-      setEditedPatient(null);
-      setDisplayableProfileImageUrl(null);
-      setProfileImagePreview(null);
       return;
     }
-  
-    const loadPatientData = (patientSource) => {
-      setPatient(patientSource);
-      // Initialize editedPatient. profileImage here is for *new* uploads.
-      // Existing S3 image URL is handled by displayableProfileImageUrl.
-      setEditedPatient({ ...patientSource, profileImage: null }); 
-      setProfileImagePreview(null); // Clear any previous preview
-      if (patientSource.profileImage) {
-        setDisplayableProfileImageUrl(getDisplayableS3Url(patientSource.profileImage));
-      } else {
-        setDisplayableProfileImageUrl(null);
-      }
-    };
-  
-    // Try to find patient in context first
-    if (patients && Array.isArray(patients) && patients.length > 0) {
-      const found = patients.find((p) => p.id === id);
-      if (found) {
-        // Check if patient data or its string representation has changed to avoid infinite loops
-        if (!patient || patient.id !== found.id || JSON.stringify(patient) !== JSON.stringify(found)) {
-          loadPatientData(found);
+
+    let isMounted = true;
+    setPageLoading(true);
+    setPageError(null);
+
+    const loadPatient = async () => {
+      try {
+        // Optional: Attempt to load from context first as a quick cache
+        // This check is done outside the main fetch flow to avoid contextPatients dependency for the API call part
+        if (contextPatients && contextPatients.length > 0) {
+          const patientFromContext = contextPatients.find(p => p.id === id);
+          if (patientFromContext) {
+            if (isMounted) {
+              loadPatientDataIntoState(patientFromContext);
+              // Decide if we still want to fetch for freshness. For now, let's assume context is good enough if found.
+              // If a fetch is still desired, this could set initial state then proceed to fetch.
+              // For this refactor, if found in context, we might skip the immediate fetch or make it conditional.
+              // Let's proceed to fetch to ensure data is up-to-date, context can be for initial render.
+              // setPageLoading(false); // If context is considered definitive initially
+              // return; 
+            }
+          }
         }
-        return; // Found in context, no need to fetch
-      }
-    }
-  
-    // If not found in context or context is empty, fetch directly
-    // This also handles the case where `patients` might be initially empty then populated
-    patientService
-      .fetchPatientById(id)
-      .then((fetchedPatient) => {
-        if (fetchedPatient) {
-          loadPatientData(fetchedPatient);
-        } else {
+
+        // Primary: Fetch directly
+        const fetchedPatient = await patientService.fetchPatientById(id);
+        if (isMounted) {
+          if (fetchedPatient) {
+            loadPatientDataIntoState(fetchedPatient);
+          } else {
+            setPatient(null); // Patient not found
+            setEditedPatient(null);
+            setPageError("Patient not found.");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching patient by ID:", err);
+        if (isMounted) {
           setPatient(null);
           setEditedPatient(null);
-          setDisplayableProfileImageUrl(null);
-          setProfileImagePreview(null);
+          setPageError(err.message || "Failed to fetch patient data.");
         }
-      })
-      .catch((err) => {
-        console.error("Error fetching patient by ID:", err);
-        setPatient(null);
-        setEditedPatient(null);
-        setDisplayableProfileImageUrl(null);
-        setProfileImagePreview(null);
-      });
-  }, [id, patients, loading, error]); // Removed 'patient' from deps to avoid loop, manage updates carefully
+      } finally {
+        if (isMounted) {
+          setPageLoading(false);
+        }
+      }
+    };
+
+    loadPatient();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, contextPatients]); // Depend on id. contextPatients is included for the cache check.
+                           // If contextPatients causes too many re-fetches, the cache check logic
+                           // might need to be more sophisticated or removed from this effect's direct trigger.
+                           // For now, this allows context to provide initial data if available.
 
   // Tab change handler
   const handleTabChange = (_, newValue) => setTabValue(newValue);
@@ -212,22 +212,7 @@ function PatientDetailPage() {
     }
   };
 
-  // Calculate age from date of birth
-  const calculateAge = (dobString) => {
-    if (!dobString) return "";
-    const birthDate = new Date(dobString);
-    const today = new Date();
-    if (isNaN(birthDate.getTime())) return "N/A";
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age >= 0 ? age : "N/A";
-  };
+  // Calculate age from date of birth is now imported from dateUtils
 
   // Refresh patient data from API
   const refreshPatientData = async () => {
@@ -270,64 +255,42 @@ function PatientDetailPage() {
   // Navigation and snackbar handlers
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  // Loading, error, and not-found states
-  if (loading && !patient) {
+  // Loading, error, and not-found states using local pageLoading/pageError
+  if (pageLoading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            py: 4,
-          }}
-        >
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 4 }}>
           <CircularProgress sx={{ mb: 2 }} />
           <Typography>Loading patient information...</Typography>
         </Box>
       </Container>
     );
   }
-  if (error && !patient) {
+
+  if (pageError) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error || "Failed to load patient data"}
+          {pageError}
         </Alert>
-        <Button
-          variant="contained"
-          startIcon={<ArrowBackIcon />}
-          onClick={handleBackClick}
-        >
+        <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={handleBackClick}>
           Return to Patients
         </Button>
       </Container>
     );
   }
-  if (!loading && !error && !patient) {
+
+  if (!patient) { // This covers patient not found after loading completed without error, or if patient becomes null
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Paper sx={{ p: 4, borderRadius: 2 }}>
-          <Box sx={{ textAlign: "center" }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Patient information not found
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<ArrowBackIcon />}
-              onClick={handleBackClick}
-            >
-              Return to Patients
-            </Button>
-          </Box>
+        <Paper sx={{ p: 4, borderRadius: 2, textAlign: "center" }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Patient information not found or an error occurred.
+          </Typography>
+          <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={handleBackClick}>
+            Return to Patients
+          </Button>
         </Paper>
-      </Container>
-    );
-  }
-  if (!patient) {
-    return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Alert severity="info">Loading patient information...</Alert>
       </Container>
     );
   }
