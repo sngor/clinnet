@@ -20,14 +20,19 @@ function PersonalInfoTab({
     );
   }
 
-  // Ensure editedPatient exists to prevent null reference errors
-  // const safeEditedPatient = editedPatient || patient; // No longer solely relying on this for image
-  // const profileImageSrc = safeEditedPatient.profileImage || patient.profileImage; // Replaced by imageUrlToDisplay
-
   return (
     <Grid container spacing={3}>
       {/* Profile Image Section */}
-      <Grid item xs={12} sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 2 }}>
+      <Grid
+        item
+        xs={12}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
         <Avatar
           src={imageUrlToDisplay || ""} // Use the new prop, ensure empty string if null/undefined
           alt="Profile Image"
@@ -67,7 +72,7 @@ function PersonalInfoTab({
               <TextField
                 fullWidth
                 name="firstName"
-                value={safeEditedPatient.firstName || ""}
+                value={editedPatient.firstName || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
@@ -87,7 +92,7 @@ function PersonalInfoTab({
               <TextField
                 fullWidth
                 name="lastName"
-                value={safeEditedPatient.lastName || ""}
+                value={editedPatient.lastName || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
@@ -107,7 +112,7 @@ function PersonalInfoTab({
               <TextField
                 fullWidth
                 name="address"
-                value={safeEditedPatient.address || ""}
+                value={editedPatient.address || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
@@ -129,7 +134,7 @@ function PersonalInfoTab({
               <TextField
                 fullWidth
                 name="city"
-                value={safeEditedPatient.city || ""}
+                value={editedPatient.city || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
@@ -147,7 +152,7 @@ function PersonalInfoTab({
               <TextField
                 fullWidth
                 name="state"
-                value={safeEditedPatient.state || ""}
+                value={editedPatient.state || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
@@ -165,7 +170,7 @@ function PersonalInfoTab({
               <TextField
                 fullWidth
                 name="zipCode"
-                value={safeEditedPatient.zipCode || ""}
+                value={editedPatient.zipCode || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
@@ -195,7 +200,7 @@ function PersonalInfoTab({
               <TextField
                 fullWidth
                 name="emergencyContactName"
-                value={safeEditedPatient.emergencyContactName || ""}
+                value={editedPatient.emergencyContactName || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
@@ -215,7 +220,7 @@ function PersonalInfoTab({
               <TextField
                 fullWidth
                 name="emergencyContactPhone"
-                value={safeEditedPatient.emergencyContactPhone || ""}
+                value={editedPatient.emergencyContactPhone || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
@@ -235,7 +240,7 @@ function PersonalInfoTab({
               <TextField
                 fullWidth
                 name="emergencyContactRelationship"
-                value={safeEditedPatient.emergencyContactRelationship || ""}
+                value={editedPatient.emergencyContactRelationship || ""}
                 onChange={handleInputChange}
                 size="small"
                 margin="dense"
