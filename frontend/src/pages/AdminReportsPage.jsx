@@ -1,6 +1,6 @@
 // src/pages/AdminReportsPage.jsx
 import React, { useState, useEffect } from "react";
-import { adminService } from "../../services/adminService"; // Import adminService
+import adminService from "../../services/adminService";
 import {
   Box,
   Grid,
@@ -52,18 +52,19 @@ function AdminReportsPage() {
 
   useEffect(() => {
     setLoading(true);
-    adminService.getReportData(reportType, timeRange)
-      .then(data => {
+    adminService
+      .getReportData(reportType, timeRange)
+      .then((data) => {
         // Assuming API returns data in the correct structure for now
         // If API structure is { appointments: [], revenue: [], patients: [] }
         // then this should work. Otherwise, transformation is needed.
-        setReportData(data); 
+        setReportData(data);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching report data:", error);
         // Optionally set an error state here to show a message in the UI
         // For now, let's clear data or set to a default error state
-        setReportData({ appointments: [], revenue: [], patients: [] }); 
+        setReportData({ appointments: [], revenue: [], patients: [] });
       })
       .finally(() => {
         setLoading(false);
@@ -90,7 +91,7 @@ function AdminReportsPage() {
       headers = ["Name", "Completed", "Cancelled", "Total"];
       dataToExport = reportData.appointments;
       csvContent += headers.join(",") + "\n";
-      dataToExport.forEach(row => {
+      dataToExport.forEach((row) => {
         // Ensure row properties exist to avoid 'undefined' in CSV
         const name = row.name || "";
         const completed = row.completed || 0;
@@ -102,7 +103,7 @@ function AdminReportsPage() {
       headers = ["Name", "Revenue"];
       dataToExport = reportData.revenue;
       csvContent += headers.join(",") + "\n";
-      dataToExport.forEach(row => {
+      dataToExport.forEach((row) => {
         const name = row.name || "";
         const revenue = row.revenue || 0;
         csvContent += `${name},${revenue}\n`;
@@ -111,31 +112,32 @@ function AdminReportsPage() {
       headers = ["Category", "Value"];
       dataToExport = reportData.patients;
       csvContent += headers.join(",") + "\n";
-      dataToExport.forEach(row => {
+      dataToExport.forEach((row) => {
         const name = row.name || "";
         const value = row.value || 0;
         csvContent += `${name},${value}\n`;
       });
     } else {
-      alert("No data available for the selected report type or the report data structure is unexpected.");
+      alert(
+        "No data available for the selected report type or the report data structure is unexpected."
+      );
       return;
     }
 
     if (dataToExport.length === 0 && headers.length === 0) {
-        // This case is already handled by the specific report type checks not finding data.
-        // If headers were set but dataToExport is empty, it means the specific reportData array was empty.
-        alert("No data to export for the selected report type.");
-        return;
+      // This case is already handled by the specific report type checks not finding data.
+      // If headers were set but dataToExport is empty, it means the specific reportData array was empty.
+      alert("No data to export for the selected report type.");
+      return;
     }
-    
+
     // If headers are present but no data, still allow exporting the headers.
     // Or, if preferred, check dataToExport.length === 0 here again and alert.
     if (dataToExport.length === 0) {
-        console.log("No data rows to export, only headers will be present.");
+      console.log("No data rows to export, only headers will be present.");
     }
 
-
-    const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
+    const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", fileName);

@@ -44,7 +44,9 @@ function AdminDashboard() {
         setLoading(true);
         const usersData = await adminService.listUsers();
         setUsersCount(usersData.length);
-        setDoctorsCount(usersData.filter(user => user.role === 'doctor').length);
+        setDoctorsCount(
+          usersData.filter((user) => user.role === "doctor").length
+        );
 
         const patientsData = await patientService.getPatients();
         setPatientsCount(patientsData.length);
