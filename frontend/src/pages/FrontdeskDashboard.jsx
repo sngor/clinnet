@@ -1,7 +1,10 @@
 // src/pages/FrontdeskDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
-import { getTodaysAppointments, getAppointments } from "../services/appointmentService";
+import {
+  getTodaysAppointments,
+  getAppointments,
+} from "../services/appointmentService";
 import patientService from "../services/patientService";
 import {
   Grid,
@@ -95,10 +98,13 @@ function FrontdeskDashboard() {
     try {
       // API call would go here
       // Assuming the status update is handled by a dedicated service call in a real app
-      setTodaysAppointments((prevAppointments) => // Update today's appointments list
-        prevAppointments.map((appt) =>
-          appt.id === appointmentId ? { ...appt, status: "Checked-in" } : appt
-        )
+      setTodaysAppointments(
+        (
+          prevAppointments // Update today's appointments list
+        ) =>
+          prevAppointments.map((appt) =>
+            appt.id === appointmentId ? { ...appt, status: "Checked-in" } : appt
+          )
       );
       console.log(
         `Patient with appointment ID ${appointmentId} checked in successfully`
@@ -135,7 +141,8 @@ function FrontdeskDashboard() {
       ...walkInForm,
       id: `walkin-${Date.now()}`, // Ensure unique ID for walk-ins
       appointmentDate: new Date().toISOString().split("T")[0], // Set current date
-      appointmentTime: new Date().toLocaleTimeString([], { // Set current time
+      appointmentTime: new Date().toLocaleTimeString([], {
+        // Set current time
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
@@ -146,9 +153,9 @@ function FrontdeskDashboard() {
     };
     // Add to today's appointments list for immediate UI update
     setTodaysAppointments((prev) => [newWalkInAppointment, ...prev]);
-    setTodaysAppointmentsCount(prevCount => prevCount + 1); // Increment today's appointment count
+    setTodaysAppointmentsCount((prevCount) => prevCount + 1); // Increment today's appointment count
     // Potentially increment total appointments count as well if walk-ins are added to the main schedule
-    setTotalAppointmentsCount(prevCount => prevCount + 1); 
+    setTotalAppointmentsCount((prevCount) => prevCount + 1);
     handleCloseWalkInModal(); // Close modal on success
 
     // Reset form
@@ -305,7 +312,7 @@ function FrontdeskDashboard() {
                         {doctor.name} ({doctor.specialty})
                       </MenuItem>
                     ))} */}
-                     <MenuItem value="">
+                    <MenuItem value="">
                       <em>Select Doctor (Feature pending)</em>
                     </MenuItem>
                   </Select>

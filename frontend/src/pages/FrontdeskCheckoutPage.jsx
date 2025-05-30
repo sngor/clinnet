@@ -64,26 +64,23 @@ function FrontdeskCheckoutPage() {
   useEffect(() => {
     setLoading(true); // Ensure loading is true at the start
 
-    Promise.all([
-      patientService.getPatients(),
-      serviceApi.getAllServices()
-    ])
-    .then(([patientsResponse, servicesResponse]) => {
-      const transformedPatients = patientsResponse.data.map(patient => ({
-        ...patient,
-        name: `${patient.firstName} ${patient.lastName}`
-      }));
-      setPatients(transformedPatients);
-      setServices(servicesResponse.data); // Assuming API returns { data: [...] }
-    })
-    .catch(error => {
-      console.error("Error fetching initial data:", error);
-      // Optionally, set an error state here to display a more user-friendly message
-      // For example, set an error message in state and display it in the UI
-    })
-    .finally(() => {
-      setLoading(false); // Set loading to false after all API calls complete
-    });
+    Promise.all([patientService.getPatients(), serviceApi.getAllServices()])
+      .then(([patientsResponse, servicesResponse]) => {
+        const transformedPatients = patientsResponse.data.map((patient) => ({
+          ...patient,
+          name: `${patient.firstName} ${patient.lastName}`,
+        }));
+        setPatients(transformedPatients);
+        setServices(servicesResponse.data); // Assuming API returns { data: [...] }
+      })
+      .catch((error) => {
+        console.error("Error fetching initial data:", error);
+        // Optionally, set an error state here to display a more user-friendly message
+        // For example, set an error message in state and display it in the UI
+      })
+      .finally(() => {
+        setLoading(false); // Set loading to false after all API calls complete
+      });
 
     // No cleanup needed for Promise.all like this,
     // but if individual calls had cancellation tokens, they'd be handled here.
@@ -151,7 +148,7 @@ function FrontdeskCheckoutPage() {
 
     const payload = {
       patientId: selectedPatient.id,
-      items: selectedServices.map(service => ({
+      items: selectedServices.map((service) => ({
         serviceId: service.id,
         quantity: 1, // Assuming quantity is always 1 for now
       })),
@@ -164,15 +161,15 @@ function FrontdeskCheckoutPage() {
 
     // console.log("Checkout payload:", payload); // For debugging
 
-    apiPost('/billing', payload)
-      .then(response => {
+    apiPost("/billing", payload)
+      .then((response) => {
         console.log("Checkout successful:", response);
         // Optionally, pass data from response to receipt dialog if needed
         // For example, if the backend returns a transaction ID:
         // setTransactionId(response.data.transactionId);
         setReceiptDialogOpen(true); // Open receipt dialog on success
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Checkout error:", error);
         alert(`Checkout failed: ${error.message || "Please try again."}`);
         // Do not open receipt dialog on error

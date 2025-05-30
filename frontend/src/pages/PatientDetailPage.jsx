@@ -1,8 +1,8 @@
 // src/pages/PatientDetailPage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getDisplayableS3Url } from '../utils/s3Utils';
-import { calculateAge } from '../utils/dateUtils'; // Import calculateAge
+import { getDisplayableS3Url } from "../utils/s3Utils";
+import { calculateAge } from "../utils/dateUtils"; // Import calculateAge
 import {
   Container,
   Box,
@@ -46,7 +46,12 @@ function PatientDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   // Alias patients from context to avoid confusion with local patient state
-  const { patients: contextPatients, loading: contextLoading, error: contextError, updatePatient } = useAppData();
+  const {
+    patients: contextPatients,
+    loading: contextLoading,
+    error: contextError,
+    updatePatient,
+  } = useAppData();
   // const { getDisplayableS3Url } = require('../../utils/s3Utils'); // Removed require, using ES6 import now
 
   // State for patient data and UI
@@ -55,7 +60,8 @@ function PatientDetailPage() {
   const [pageError, setPageError] = useState(null); // Local error state for this page
   const [editedPatient, setEditedPatient] = useState(null); // Will include profileImage (base64 for new upload)
   const [profileImagePreview, setProfileImagePreview] = useState(null); // For new image base64 preview
-  const [displayableProfileImageUrl, setDisplayableProfileImageUrl] = useState(null); // For existing S3 image URL
+  const [displayableProfileImageUrl, setDisplayableProfileImageUrl] =
+    useState(null); // For existing S3 image URL
   const [isEditing, setIsEditing] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -63,21 +69,22 @@ function PatientDetailPage() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   // getDisplayableS3Url is now imported from ../../utils/s3Utils
-  
+
   // Effect to update displayableProfileImageUrl when patient data changes
   useEffect(() => {
     if (patient && patient.profileImage) {
       setDisplayableProfileImageUrl(getDisplayableS3Url(patient.profileImage));
-    } else if (!patient) { // Clear image if patient is null (e.g. not found or error)
+    } else if (!patient) {
+      // Clear image if patient is null (e.g. not found or error)
       setDisplayableProfileImageUrl(null);
     }
   }, [patient]);
-  
+
   // Helper function to load patient data into state (used by fetch and context)
   const loadPatientDataIntoState = (patientSource) => {
     setPatient(patientSource);
     // Initialize editedPatient. profileImage here is for *new* uploads.
-    setEditedPatient({ ...patientSource, profileImage: null }); 
+    setEditedPatient({ ...patientSource, profileImage: null });
     setProfileImagePreview(null); // Clear any previous preview
     // displayableProfileImageUrl will be updated by the useEffect above
   };
@@ -100,7 +107,7 @@ function PatientDetailPage() {
         // Optional: Attempt to load from context first as a quick cache
         // This check is done outside the main fetch flow to avoid contextPatients dependency for the API call part
         if (contextPatients && contextPatients.length > 0) {
-          const patientFromContext = contextPatients.find(p => p.id === id);
+          const patientFromContext = contextPatients.find((p) => p.id === id);
           if (patientFromContext) {
             if (isMounted) {
               loadPatientDataIntoState(patientFromContext);
@@ -109,7 +116,7 @@ function PatientDetailPage() {
               // For this refactor, if found in context, we might skip the immediate fetch or make it conditional.
               // Let's proceed to fetch to ensure data is up-to-date, context can be for initial render.
               // setPageLoading(false); // If context is considered definitive initially
-              // return; 
+              // return;
             }
           }
         }
@@ -145,9 +152,9 @@ function PatientDetailPage() {
       isMounted = false;
     };
   }, [id, contextPatients]); // Depend on id. contextPatients is included for the cache check.
-                           // If contextPatients causes too many re-fetches, the cache check logic
-                           // might need to be more sophisticated or removed from this effect's direct trigger.
-                           // For now, this allows context to provide initial data if available.
+  // If contextPatients causes too many re-fetches, the cache check logic
+  // might need to be more sophisticated or removed from this effect's direct trigger.
+  // For now, this allows context to provide initial data if available.
 
   // Tab change handler
   const handleTabChange = (_, newValue) => setTabValue(newValue);
@@ -160,7 +167,7 @@ function PatientDetailPage() {
     // Reset editedPatient to current patient state.
     // profileImage for editedPatient should be null (for new uploads) or original if needed for some logic,
     // but generally, we rely on `displayableProfileImageUrl` for existing S3 image.
-    setEditedPatient({ ...patient, profileImage: null }); 
+    setEditedPatient({ ...patient, profileImage: null });
     if (patient && patient.profileImage) {
       setDisplayableProfileImageUrl(getDisplayableS3Url(patient.profileImage));
     } else {
@@ -222,7 +229,7 @@ function PatientDetailPage() {
       if (refreshedPatient) {
         setPatient(refreshedPatient); // This will trigger the useEffect for displayableProfileImageUrl
         // Reset profileImage in editedPatient (for new uploads) and preview
-        setEditedPatient({ ...refreshedPatient, profileImage: null }); 
+        setEditedPatient({ ...refreshedPatient, profileImage: null });
         setProfileImagePreview(null);
         setSnackbarMessage("Patient data refreshed.");
         setSnackbarSeverity("info");
@@ -259,7 +266,14 @@ function PatientDetailPage() {
   if (pageLoading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", py: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            py: 4,
+          }}
+        >
           <CircularProgress sx={{ mb: 2 }} />
           <Typography>Loading patient information...</Typography>
         </Box>
@@ -273,21 +287,30 @@ function PatientDetailPage() {
         <Alert severity="error" sx={{ mb: 2 }}>
           {pageError}
         </Alert>
-        <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={handleBackClick}>
+        <Button
+          variant="contained"
+          startIcon={<ArrowBackIcon />}
+          onClick={handleBackClick}
+        >
           Return to Patients
         </Button>
       </Container>
     );
   }
 
-  if (!patient) { // This covers patient not found after loading completed without error, or if patient becomes null
+  if (!patient) {
+    // This covers patient not found after loading completed without error, or if patient becomes null
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Paper sx={{ p: 4, borderRadius: 2, textAlign: "center" }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
             Patient information not found or an error occurred.
           </Typography>
-          <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={handleBackClick}>
+          <Button
+            variant="contained"
+            startIcon={<ArrowBackIcon />}
+            onClick={handleBackClick}
+          >
             Return to Patients
           </Button>
         </Paper>
@@ -576,7 +599,9 @@ function PatientDetailPage() {
             editedPatient={editedPatient} // Contains other fields, and profileImage (base64 of new file)
             handleInputChange={handleInputChange}
             // Determine the correct image URL to display in PersonalInfoTab
-            imageUrlToDisplay={profileImagePreview || displayableProfileImageUrl}
+            imageUrlToDisplay={
+              profileImagePreview || displayableProfileImageUrl
+            }
           />
         )}
         {tabValue === 1 && (
