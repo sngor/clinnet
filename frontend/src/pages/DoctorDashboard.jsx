@@ -41,6 +41,7 @@ function DoctorDashboard() {
   const [doctorAppointments, setDoctorAppointments] = useState([]); // To store all appointments for the list
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [partialErrors, setPartialErrors] = useState([]);
 
   // Fetch data
   useEffect(() => {
@@ -49,41 +50,48 @@ function DoctorDashboard() {
       setError("User details not available.");
       return;
     }
-
+    let isMounted = true;
     const fetchData = async () => {
+      setLoading(true);
+      const errors = [];
+      let appointmentsData = [];
+      let patientsData = [];
       try {
-        setLoading(true);
-        const doctorId = user.username;
-
-        // Fetch appointments
-        const appointmentsData = await getAppointmentsByDoctor(doctorId);
-        setDoctorAppointments(appointmentsData); // Store all appointments for the list
-
+        appointmentsData = await getAppointmentsByDoctor(user.username);
+        if (!Array.isArray(appointmentsData)) appointmentsData = [];
+        if (isMounted) setDoctorAppointments(appointmentsData);
+      } catch (err) {
+        errors.push("Appointments: " + (err?.message || err));
+        if (isMounted) setDoctorAppointments([]);
+      }
+      try {
         const today = new Date().toISOString().split("T")[0];
-        const todayAppointments = appointmentsData.filter(
-          (appt) => appt.appointmentDate.split("T")[0] === today
-        );
-        setTodaysAppointmentsCount(todayAppointments.length);
-
-        // Fetch patients
-        const patientsData = await patientService.getPatients();
+        const todayAppointments = Array.isArray(appointmentsData)
+          ? appointmentsData.filter(
+              (appt) =>
+                appt.appointmentDate &&
+                appt.appointmentDate.split("T")[0] === today
+            )
+          : [];
+        if (isMounted) setTodaysAppointmentsCount(todayAppointments.length);
+      } catch (err) {
+        errors.push("Today's Appointments: " + (err?.message || err));
+        if (isMounted) setTodaysAppointmentsCount(0);
+      }
+      try {
+        patientsData = await patientService.getPatients();
+        if (!Array.isArray(patientsData)) patientsData = [];
         let count = 0;
-        // Attempt to filter patients: Iterate through the fetched patients.
-        // If a patient object has a field like `doctorId` or `primaryDoctorId` that matches `user.username`, count it.
-        // If no such field exists, set patient count to 0 and note this limitation.
-        // This is a placeholder, actual field name might differ.
-        // console.log("All patients data:", patientsData); // For debugging
         patientsData.forEach((patient) => {
           if (
-            patient.primaryDoctorId === doctorId ||
-            patient.doctorId === doctorId
+            patient.primaryDoctorId === user.username ||
+            patient.doctorId === user.username
           ) {
             count++;
           }
         });
-        setAssignedPatientsCount(count);
+        if (isMounted) setAssignedPatientsCount(count);
         if (count === 0 && patientsData.length > 0) {
-          // Check if any patient has doctorId or primaryDoctorId field
           const hasDoctorIdField = patientsData.some(
             (p) =>
               p.hasOwnProperty("doctorId") ||
@@ -95,15 +103,24 @@ function DoctorDashboard() {
             );
           }
         }
-
-        setLoading(false);
       } catch (err) {
-        setError(`Failed to load dashboard data: ${err.message}`);
+        errors.push("Patients: " + (err?.message || err));
+        if (isMounted) setAssignedPatientsCount(0);
+      }
+      if (isMounted) {
+        setPartialErrors(errors);
         setLoading(false);
+        setError(
+          errors.length > 0
+            ? `Some data failed to load: ${errors.join("; ")}`
+            : null
+        );
       }
     };
-
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   return (
@@ -113,8 +130,14 @@ function DoctorDashboard() {
       }!`}
       subtitle={`${todaysAppointmentsCount} appointments scheduled for today`}
       loading={loading}
-      error={error}
+      error={null} // Don't block UI with error
     >
+      {/* Show error as a warning if partialErrors exist */}
+      {partialErrors.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ color: "#b71c1c", fontWeight: 500 }}>{error}</div>
+        </div>
+      )}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid
@@ -180,12 +203,17 @@ function DoctorDashboard() {
         }}
       >
         <AppointmentList
-          appointments={doctorAppointments.filter(
-            (appt) =>
-              new Date(appt.appointmentDate).toISOString().split("T")[0] ===
-              new Date().toISOString().split("T")[0]
-          )} // Display only today's appointments
-          // loading={loading} // Removed, as PageLayout handles main loading
+          appointments={
+            Array.isArray(doctorAppointments)
+              ? doctorAppointments.filter(
+                  (appt) =>
+                    appt.appointmentDate &&
+                    new Date(appt.appointmentDate)
+                      .toISOString()
+                      .split("T")[0] === new Date().toISOString().split("T")[0]
+                )
+              : []
+          }
           showAction={false}
         />
       </ContentCard>

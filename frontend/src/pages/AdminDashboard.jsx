@@ -17,8 +17,6 @@ import {
   PageLayout, // Added PageLayout
   ContentCard,
   AppointmentList,
-  // PageContainer, // Removed PageContainer
-  // PageHeading, // Removed PageHeading
 } from "../components/ui";
 import DashboardCard from "../components/DashboardCard";
 
@@ -37,31 +35,65 @@ function AdminDashboard() {
   const [patientsCount, setPatientsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [partialErrors, setPartialErrors] = useState([]);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchData = async () => {
+      setLoading(true);
+      const errors = [];
+      // Users
+      let usersData = [];
       try {
-        setLoading(true);
-        const usersData = await adminService.listUsers();
-        setUsersCount(usersData.length);
-        setDoctorsCount(
-          usersData.filter((user) => user.role === "doctor").length
-        );
-
-        const patientsData = await patientService.getPatients();
-        setPatientsCount(patientsData.length);
-
-        const appointmentsData = await getTodaysAppointments();
-        setAppointmentsCount(appointmentsData.length);
-
-        setLoading(false);
+        usersData = await adminService.listUsers();
+        if (!Array.isArray(usersData)) usersData = [];
+        if (isMounted) {
+          setUsersCount(usersData.length);
+          setDoctorsCount(
+            usersData.filter((user) => user.role === "doctor").length
+          );
+        }
       } catch (err) {
-        setError(`Failed to load dashboard data: ${err.message}`);
+        errors.push("Users: " + (err?.message || err));
+        if (isMounted) {
+          setUsersCount(0);
+          setDoctorsCount(0);
+        }
+      }
+      // Patients
+      let patientsData = [];
+      try {
+        patientsData = await patientService.getPatients();
+        if (!Array.isArray(patientsData)) patientsData = [];
+        if (isMounted) setPatientsCount(patientsData.length);
+      } catch (err) {
+        errors.push("Patients: " + (err?.message || err));
+        if (isMounted) setPatientsCount(0);
+      }
+      // Appointments
+      let appointmentsData = [];
+      try {
+        appointmentsData = await getTodaysAppointments();
+        if (!Array.isArray(appointmentsData)) appointmentsData = [];
+        if (isMounted) setAppointmentsCount(appointmentsData.length);
+      } catch (err) {
+        errors.push("Appointments: " + (err?.message || err));
+        if (isMounted) setAppointmentsCount(0);
+      }
+      if (isMounted) {
+        setPartialErrors(errors);
         setLoading(false);
+        setError(
+          errors.length > 0
+            ? `Some data failed to load: ${errors.join("; ")}`
+            : null
+        );
       }
     };
-
     fetchData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -71,15 +103,16 @@ function AdminDashboard() {
       }!`}
       subtitle="Here's what's happening in your clinic today"
       loading={loading}
-      error={error}
-      // maxWidth="lg" // Default is lg, so this is optional unless a different size is needed
+      error={null} // Don't block UI with error
     >
+      {/* Show error as a warning if partialErrors exist */}
+      {partialErrors.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ color: "#b71c1c", fontWeight: 500 }}>{error}</div>
+        </div>
+      )}
       {/* Dashboard Summary Cards */}
-      <Grid
-        container
-        spacing={0} // Set to 0 as we're handling spacing with the child Grid sx props
-        sx={{ mb: 4 }}
-      >
+      <Grid container spacing={0} sx={{ mb: 4 }}>
         <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
           <DashboardCard
             icon={<PeopleIcon fontSize="large" />}
@@ -89,7 +122,6 @@ function AdminDashboard() {
             linkTo="/admin/users"
           />
         </Grid>
-
         <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
           <DashboardCard
             icon={<EventIcon fontSize="large" />}
@@ -99,7 +131,6 @@ function AdminDashboard() {
             linkTo="/admin/appointments"
           />
         </Grid>
-
         <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
           <DashboardCard
             icon={<PersonIcon fontSize="large" />}
@@ -109,7 +140,6 @@ function AdminDashboard() {
             linkTo="/admin/patients"
           />
         </Grid>
-
         <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
           <DashboardCard
             icon={<LocalHospitalIcon fontSize="large" />}
@@ -120,7 +150,6 @@ function AdminDashboard() {
           />
         </Grid>
       </Grid>
-
       {/* Appointments List */}
       <ContentCard
         title="Recent Appointments"
@@ -131,8 +160,7 @@ function AdminDashboard() {
         }}
       >
         <AppointmentList
-          appointments={[]} // Replace with actual appointments if fetched
-          // loading={loading} // PageLayout now handles top-level loading state
+          appointments={Array.isArray(appointmentsData) ? appointmentsData : []}
           showAction={false}
         />
       </ContentCard>

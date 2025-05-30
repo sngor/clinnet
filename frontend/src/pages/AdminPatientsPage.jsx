@@ -64,12 +64,17 @@ function AdminPatientsPage() {
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
   const handlePatientSelect = (patient) => {
     // Navigate to patient detail page for editing
+    const patientId =
+      typeof patient === "object" && patient !== null
+        ? patient.id || patient.PK
+        : patient;
+    if (!patientId) return;
     if (window.location.pathname.startsWith("/doctor")) {
-      navigate(`/doctor/patients/${patient.id || patient.PK}`);
+      navigate(`/doctor/patients/${patientId}`);
     } else if (window.location.pathname.startsWith("/frontdesk")) {
-      navigate(`/frontdesk/patients/${patient.id || patient.PK}`);
+      navigate(`/frontdesk/patients/${patientId}`);
     } else {
-      navigate(`/admin/patients/${patient.id || patient.PK}`);
+      navigate(`/admin/patients/${patientId}`);
     }
   };
   const handleCloseDetailView = () => setDetailViewOpen(false);

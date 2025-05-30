@@ -62,31 +62,49 @@ function FrontdeskDashboard() {
     type: "Walk-in",
     notes: "",
   });
+  const [partialErrors, setPartialErrors] = useState([]);
 
   // Fetch dashboard data
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      const errors = [];
+      let todayApptsData = [];
+      let patientsData = [];
+      let allApptsData = [];
       try {
-        setLoading(true);
-
-        // Fetch today's appointments
-        const todayApptsData = await getTodaysAppointments();
+        todayApptsData = await getTodaysAppointments();
+        if (!Array.isArray(todayApptsData)) todayApptsData = [];
         setTodaysAppointments(todayApptsData);
         setTodaysAppointmentsCount(todayApptsData.length);
-
-        // Fetch all patients
-        const patientsData = await patientService.getPatients();
-        setTotalPatientsCount(patientsData.length);
-
-        // Fetch all appointments
-        const allApptsData = await getAppointments();
-        setTotalAppointmentsCount(allApptsData.length);
-
-        setLoading(false);
       } catch (err) {
-        setError(`Failed to load dashboard data: ${err.message}`);
-        setLoading(false);
+        errors.push("Today's Appointments: " + (err?.message || err));
+        setTodaysAppointments([]);
+        setTodaysAppointmentsCount(0);
       }
+      try {
+        patientsData = await patientService.getPatients();
+        if (!Array.isArray(patientsData)) patientsData = [];
+        setTotalPatientsCount(patientsData.length);
+      } catch (err) {
+        errors.push("Patients: " + (err?.message || err));
+        setTotalPatientsCount(0);
+      }
+      try {
+        allApptsData = await getAppointments();
+        if (!Array.isArray(allApptsData)) allApptsData = [];
+        setTotalAppointmentsCount(allApptsData.length);
+      } catch (err) {
+        errors.push("All Appointments: " + (err?.message || err));
+        setTotalAppointmentsCount(0);
+      }
+      setPartialErrors(errors);
+      setLoading(false);
+      setError(
+        errors.length > 0
+          ? `Some data failed to load: ${errors.join("; ")}`
+          : null
+      );
     };
 
     fetchData();
@@ -174,8 +192,14 @@ function FrontdeskDashboard() {
       }!`}
       subtitle={`${todaysAppointmentsCount} appointments scheduled for today`}
       loading={loading}
-      error={error}
+      error={null} // Don't block UI with error
     >
+      {/* Show error as a warning if partialErrors exist */}
+      {partialErrors.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ color: "#b71c1c", fontWeight: 500 }}>{error}</div>
+        </div>
+      )}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid
