@@ -1,6 +1,8 @@
 // src/pages/FrontdeskDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
+import { getTodaysAppointments, getAppointments } from "../../services/appointmentService";
+import patientService from "../../services/patientService";
 import {
   Grid,
   Typography,
@@ -35,8 +37,8 @@ import {
 import DashboardCard from "../components/DashboardCard";
 
 // Import mock data from centralized location
-import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments";
-import { mockDoctors } from "../mock/mockDoctors";
+// import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments"; // Removed
+// import { mockDoctors } from "../mock/mockDoctors"; // Removed
 import { getTimeBasedGreeting } from "../utils/dateUtils";
 
 function FrontdeskDashboard() {
@@ -44,7 +46,10 @@ function FrontdeskDashboard() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState([]);
+  const [todaysAppointments, setTodaysAppointments] = useState([]);
+  const [todaysAppointmentsCount, setTodaysAppointmentsCount] = useState(0);
+  const [totalPatientsCount, setTotalPatientsCount] = useState(0);
+  const [totalAppointmentsCount, setTotalAppointmentsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
@@ -55,18 +60,33 @@ function FrontdeskDashboard() {
     notes: "",
   });
 
-  // Fetch today's appointments (using mock data)
+  // Fetch dashboard data
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
+    const fetchData = async () => {
       try {
-        setAppointments(mockAppointments);
+        setLoading(true);
+
+        // Fetch today's appointments
+        const todayApptsData = await getTodaysAppointments();
+        setTodaysAppointments(todayApptsData);
+        setTodaysAppointmentsCount(todayApptsData.length);
+
+        // Fetch all patients
+        const patientsData = await patientService.getPatients();
+        setTotalPatientsCount(patientsData.length);
+
+        // Fetch all appointments
+        const allApptsData = await getAppointments();
+        setTotalAppointmentsCount(allApptsData.length);
+
         setLoading(false);
       } catch (err) {
-        setError(`Failed to load appointments: ${err.message}`);
+        setError(`Failed to load dashboard data: ${err.message}`);
         setLoading(false);
       }
-    }, 500); // Simulate network delay
+    };
+
+    fetchData();
   }, []);
 
   // Handle Check-in Action
@@ -74,7 +94,8 @@ function FrontdeskDashboard() {
     setError(null);
     try {
       // API call would go here
-      setAppointments((prevAppointments) =>
+      // Assuming the status update is handled by a dedicated service call in a real app
+      setTodaysAppointments((prevAppointments) => // Update today's appointments list
         prevAppointments.map((appt) =>
           appt.id === appointmentId ? { ...appt, status: "Checked-in" } : appt
         )
@@ -112,15 +133,22 @@ function FrontdeskDashboard() {
     // Simulate adding to the list for now:
     const newWalkInAppointment = {
       ...walkInForm,
-      id: Date.now(),
-      time: new Date().toLocaleTimeString([], {
+      id: `walkin-${Date.now()}`, // Ensure unique ID for walk-ins
+      appointmentDate: new Date().toISOString().split("T")[0], // Set current date
+      appointmentTime: new Date().toLocaleTimeString([], { // Set current time
         hour: "2-digit",
         minute: "2-digit",
+        hour12: false,
       }),
-      doctorName: walkInForm.doctorName || "Unassigned",
-      status: "Checked-in",
-    }; // Mock data
-    setAppointments((prev) => [newWalkInAppointment, ...prev]); // Add to top of list
+      doctorName: walkInForm.doctorName || "Unassigned", // Use selected doctor or default
+      status: "Checked-in", // Walk-ins are typically checked-in immediately
+      // patientId: "new-patient-" + Date.now(), // Placeholder for actual patient ID generation
+    };
+    // Add to today's appointments list for immediate UI update
+    setTodaysAppointments((prev) => [newWalkInAppointment, ...prev]);
+    setTodaysAppointmentsCount(prevCount => prevCount + 1); // Increment today's appointment count
+    // Potentially increment total appointments count as well if walk-ins are added to the main schedule
+    setTotalAppointmentsCount(prevCount => prevCount + 1); 
     handleCloseWalkInModal(); // Close modal on success
 
     // Reset form
@@ -137,7 +165,7 @@ function FrontdeskDashboard() {
       title={`${getTimeBasedGreeting()}, ${
         user?.firstName || user?.username || "Front Desk"
       }!`}
-      subtitle={`${appointments.length} appointments scheduled for today`}
+      subtitle={`${todaysAppointmentsCount} appointments scheduled for today`}
       loading={loading}
       error={error}
     >
@@ -154,7 +182,7 @@ function FrontdeskDashboard() {
           <DashboardCard
             icon={<EventIcon fontSize="large" />}
             title="Appointments"
-            value={appointments.length}
+            value={todaysAppointmentsCount}
             linkText="View All"
             linkTo="/frontdesk/appointments"
           />
@@ -171,7 +199,7 @@ function FrontdeskDashboard() {
           <DashboardCard
             icon={<PeopleIcon fontSize="large" />}
             title="Patients"
-            value={42} // Mock value
+            value={totalPatientsCount}
             linkText="View All"
             linkTo="/frontdesk/patients"
           />
@@ -188,7 +216,7 @@ function FrontdeskDashboard() {
           <DashboardCard
             icon={<CalendarMonthIcon fontSize="large" />}
             title="Schedule"
-            value={7} // Mock value
+            value={totalAppointmentsCount}
             linkText="View All"
             linkTo="/frontdesk/appointments"
           />
@@ -229,7 +257,7 @@ function FrontdeskDashboard() {
         }}
       >
         <AppointmentList
-          appointments={appointments}
+          appointments={todaysAppointments} // Use fetched today's appointments
           // loading={loading} // Removed, as PageLayout handles main loading
           onAction={handleCheckIn}
           actionText="Check In"
@@ -267,11 +295,19 @@ function FrontdeskDashboard() {
                     onChange={handleWalkInFormChange}
                     label="Doctor"
                   >
-                    {mockDoctors.map((doctor) => (
+                    {/* 
+                      TODO: Replace mockDoctors with actual fetched doctor list
+                      For now, this will be empty or show a placeholder if mockDoctors is removed.
+                      It's recommended to fetch doctors similar to other data.
+                    */}
+                    {/* {mockDoctors.map((doctor) => (
                       <MenuItem key={doctor.id} value={doctor.name}>
                         {doctor.name} ({doctor.specialty})
                       </MenuItem>
-                    ))}
+                    ))} */}
+                     <MenuItem value="">
+                      <em>Select Doctor (Feature pending)</em>
+                    </MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
