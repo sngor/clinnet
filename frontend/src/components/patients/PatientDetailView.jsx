@@ -50,7 +50,8 @@ function PatientDetailView({ patient, onClose, mode = "doctor" }) {
   }
 
   const [editedPatient, setEditedPatient] = useState(patient);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingPersonal, setIsEditingPersonal] = useState(false);
+  const [isEditingMedical, setIsEditingMedical] = useState(false);
   const [tabValue, setTabValue] = useState(0);
 
   // Handle tab change
@@ -58,97 +59,46 @@ function PatientDetailView({ patient, onClose, mode = "doctor" }) {
     setTabValue(newValue);
   };
 
-  // Start editing patient
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
-
-  // Cancel editing
-  const handleCancelEdit = () => {
-    setIsEditing(false);
+  // Personal Info edit handlers
+  const handleEditPersonal = () => setIsEditingPersonal(true);
+  const handleCancelEditPersonal = () => {
+    setIsEditingPersonal(false);
     setEditedPatient(patient);
   };
-
-  // Save patient changes
-  const handleSaveChanges = async () => {
+  const handleSavePersonal = async () => {
     try {
-      // Safety check
-      if (!patient || !patient.id) {
-        console.error(
-          "Cannot save changes: patient or patient ID is undefined"
-        );
-        return;
-      }
-
-      // Format data for API following DynamoDB structure
+      if (!patient || !patient.id) return;
       const patientData = {
-        firstName: editedPatient.firstName,
-        lastName: editedPatient.lastName,
-        dateOfBirth: editedPatient.dateOfBirth || editedPatient.dob,
-        phone: editedPatient.phone,
-        email: editedPatient.email,
-        address: editedPatient.address,
-        insuranceProvider: editedPatient.insuranceProvider,
-        insuranceNumber: editedPatient.insuranceNumber,
-        status: editedPatient.status || "Active",
+        ...editedPatient,
         updatedAt: new Date().toISOString(),
+        type: "PATIENT",
       };
+      await updatePatient(patient.id, patientData);
+      setIsEditingPersonal(false);
+      if (refreshPatients) refreshPatients();
+    } catch (error) {
+      console.error("Error updating patient:", error);
+      alert("An error occurred while saving patient information.");
+    }
+  };
 
-      // Only include DynamoDB-specific fields if they exist in the original patient
-      if (patient.PK) patientData.PK = patient.PK;
-      if (patient.SK) patientData.SK = patient.SK;
-      if (patient.GSI1PK) patientData.GSI1PK = patient.GSI1PK;
-      if (patient.GSI1SK) patientData.GSI1SK = patient.GSI1SK;
-      if (patient.GSI2PK) patientData.GSI2PK = patient.GSI2PK;
-      if (patient.GSI2SK) patientData.GSI2SK = patient.GSI2SK;
-      patientData.id = patient.id;
-      patientData.type = "PATIENT";
-
-      console.log("Updating patient with data:", patientData);
-      
-      try {
-        await updatePatient(patient.id, patientData);
-        
-        // Update local state
-        setIsEditing(false);
-        
-        // Refresh patients list
-        if (refreshPatients) {
-          refreshPatients();
-        }
-        
-        // Close the dialog if needed
-        if (onClose) {
-          onClose();
-        }
-      } catch (updateError) {
-        console.error("Error during updatePatient:", updateError);
-        
-        // Fallback: Try to update using a direct API call if the service method fails
-        try {
-          const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
-          const response = await fetch(`${API_ENDPOINT}/patients/${patient.id}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-HTTP-Method-Override': 'PUT'
-            },
-            body: JSON.stringify(patientData)
-          });
-          
-          if (response.ok) {
-            console.log("Patient updated successfully via fallback method");
-            setIsEditing(false);
-            if (refreshPatients) refreshPatients();
-            if (onClose) onClose();
-          } else {
-            throw new Error(`API responded with status: ${response.status}`);
-          }
-        } catch (fallbackError) {
-          console.error("Fallback update method also failed:", fallbackError);
-          alert("Could not update patient information. Please try again later.");
-        }
-      }
+  // Medical Info edit handlers
+  const handleEditMedical = () => setIsEditingMedical(true);
+  const handleCancelEditMedical = () => {
+    setIsEditingMedical(false);
+    setEditedPatient(patient);
+  };
+  const handleSaveMedical = async () => {
+    try {
+      if (!patient || !patient.id) return;
+      const patientData = {
+        ...editedPatient,
+        updatedAt: new Date().toISOString(),
+        type: "PATIENT",
+      };
+      await updatePatient(patient.id, patientData);
+      setIsEditingMedical(false);
+      if (refreshPatients) refreshPatients();
     } catch (error) {
       console.error("Error updating patient:", error);
       alert("An error occurred while saving patient information.");
@@ -158,10 +108,7 @@ function PatientDetailView({ patient, onClose, mode = "doctor" }) {
   // Handle form field changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditedPatient((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setEditedPatient((prev) => ({ ...prev, [name]: value }));
   };
 
   // Calculate age from date of birth
@@ -185,174 +132,54 @@ function PatientDetailView({ patient, onClose, mode = "doctor" }) {
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      {/* Header */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          p: 2,
-          borderBottom: 1,
-          borderColor: "divider",
-          bgcolor: "primary.main",
-          color: "primary.contrastText",
-        }}
-      >
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          {patient.firstName} {patient.lastName}
-        </Typography>
-
-        {isEditing ? (
-          <Box>
+      {/* Personal Info always visible at the top */}
+      <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <Typography variant="h6">Personal Information</Typography>
+          {isEditingPersonal ? (
+            <Box>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleSavePersonal}
+                sx={{ mr: 1 }}
+              >
+                Save
+              </Button>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={handleCancelEditPersonal}
+              >
+                Cancel
+              </Button>
+            </Box>
+          ) : (
             <Button
-              startIcon={<SaveIcon />}
               variant="contained"
               color="secondary"
-              onClick={handleSaveChanges}
-              sx={{ mr: 1 }}
+              onClick={handleEditPersonal}
             >
-              Save
+              Edit
             </Button>
-            <Button
-              startIcon={<CancelIcon />}
-              variant="outlined"
-              color="inherit"
-              onClick={handleCancelEdit}
-              sx={{ mr: 1 }}
-            >
-              Cancel
-            </Button>
-          </Box>
-        ) : (
-          <Button
-            startIcon={<EditIcon />}
-            variant="contained"
-            color="secondary"
-            onClick={handleEditClick}
-            sx={{ mr: 1 }}
-          >
-            Edit
-          </Button>
-        )}
+          )}
+        </Box>
+        <PersonalInfoTab
+          patient={patient}
+          isEditing={isEditingPersonal}
+          editedPatient={editedPatient}
+          handleInputChange={handleInputChange}
+        />
+      </Paper>
 
-        <IconButton color="inherit" onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      {/* Patient summary */}
-      <Box sx={{ p: 2, bgcolor: "background.default" }}>
-        <Grid container spacing={2}>
-          <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Date of Birth
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="dateOfBirth"
-                type="date"
-                value={editedPatient.dateOfBirth || editedPatient.dob || ""}
-                onChange={handleInputChange}
-                InputLabelProps={{ shrink: true }}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Typography variant="body1">
-                {patient.dateOfBirth || patient.dob || "N/A"}
-                {patient.dateOfBirth || patient.dob
-                  ? ` (${calculateAge(
-                      patient.dateOfBirth || patient.dob
-                    )} years)`
-                  : ""}
-              </Typography>
-            )}
-          </Grid>
-
-          <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Phone
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="phone"
-                value={editedPatient.phone || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <PhoneIcon
-                  fontSize="small"
-                  sx={{ mr: 1, color: "primary.main" }}
-                />
-                <Typography variant="body1">
-                  {patient.phone || "N/A"}
-                </Typography>
-              </Box>
-            )}
-          </Grid>
-
-          <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Email
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="email"
-                value={editedPatient.email || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <EmailIcon
-                  fontSize="small"
-                  sx={{ mr: 1, color: "primary.main" }}
-                />
-                <Typography variant="body1">
-                  {patient.email || "N/A"}
-                </Typography>
-              </Box>
-            )}
-          </Grid>
-
-          <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Status
-            </Typography>
-            {isEditing ? (
-              <TextField
-                select
-                fullWidth
-                name="status"
-                value={editedPatient.status || "Active"}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-                SelectProps={{
-                  native: true,
-                }}
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </TextField>
-            ) : (
-              <Chip
-                label={patient.status || "Active"}
-                color={patient.status === "Active" ? "success" : "default"}
-                size="small"
-              />
-            )}
-          </Grid>
-        </Grid>
-      </Box>
-
-      {/* Tabs */}
+      {/* Tabs for patient sections (Medical Info, Appointments, Medical Records) */}
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs
           value={tabValue}
@@ -360,7 +187,6 @@ function PatientDetailView({ patient, onClose, mode = "doctor" }) {
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label="Personal Info" />
           <Tab label="Medical Info" />
           <Tab label="Appointments" />
           {(mode === "doctor" || mode === "admin") && (
@@ -368,22 +194,60 @@ function PatientDetailView({ patient, onClose, mode = "doctor" }) {
           )}
         </Tabs>
       </Box>
-
-      {/* Tab content */}
       <Box sx={{ p: 2, flexGrow: 1, overflow: "auto" }}>
         {tabValue === 0 && (
-          <PersonalInfoTab
-            patient={patient}
-            isEditing={isEditing}
-            editedPatient={editedPatient}
-            handleInputChange={handleInputChange}
-          />
+          <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="h6">Medical Information</Typography>
+              {mode === "doctor" && (
+                <>
+                  {isEditingMedical ? (
+                    <Box>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={handleSaveMedical}
+                        sx={{ mr: 1 }}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="inherit"
+                        onClick={handleCancelEditMedical}
+                      >
+                        Cancel
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={handleEditMedical}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                </>
+              )}
+            </Box>
+            <MedicalInfoTab
+              patient={patient}
+              isEditing={isEditingMedical}
+              editedPatient={editedPatient}
+              handleInputChange={handleInputChange}
+            />
+          </Paper>
         )}
-        {tabValue === 1 && (
-          <MedicalInfoTab patient={patient} isEditing={isEditing} />
-        )}
-        {tabValue === 2 && <AppointmentsTab patientId={patient.id} />}
-        {tabValue === 3 && (mode === "doctor" || mode === "admin") && (
+        {tabValue === 1 && <AppointmentsTab patientId={patient.id} />}
+        {tabValue === 2 && (mode === "doctor" || mode === "admin") && (
           <MedicalRecordsTab patientId={patient.id} />
         )}
       </Box>

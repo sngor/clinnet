@@ -34,6 +34,7 @@ import { useAppData } from "../app/providers/DataProvider";
 import MedicalInfoTab from "../components/patients/MedicalInfoTab";
 import AppointmentsTab from "../components/patients/AppointmentsTab";
 import MedicalRecordsTab from "../components/patients/MedicalRecordsTab";
+import PersonalInfoTab from "../components/patients/PersonalInfoTab";
 
 import patientService from "../services/patients";
 
@@ -400,12 +401,13 @@ function PatientDetailPage() {
 
       {/* Personal Info always visible at the top */}
       <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <MedicalInfoTab
+        <PersonalInfoTab
           patient={patient}
           isEditing={isEditing}
           editedPatient={editedPatient}
           handleInputChange={handleInputChange}
           imageUrlToDisplay={profileImagePreview || displayableProfileImageUrl}
+          onEditClick={handleEditClick}
         />
       </Paper>
 
@@ -431,6 +433,7 @@ function PatientDetailPage() {
             isEditing={isEditing && getRole() === "doctor"}
             editedPatient={editedPatient}
             handleInputChange={handleInputChange}
+            onEditClick={() => setIsEditing(true)}
           />
         )}
         {tabValue === 1 && <AppointmentsTab patientId={patient?.id} />}

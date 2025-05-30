@@ -1,6 +1,13 @@
 // src/components/patients/PersonalInfoTab.jsx
 import React from "react";
-import { Grid, Typography, TextField, Box, Avatar } from "@mui/material";
+import {
+  Grid,
+  Typography,
+  TextField,
+  Box,
+  Avatar,
+  Button,
+} from "@mui/material";
 
 function PersonalInfoTab({
   patient,
@@ -8,6 +15,7 @@ function PersonalInfoTab({
   editedPatient,
   handleInputChange,
   imageUrlToDisplay, // New prop for the image URL
+  onEditClick, // New prop for edit button click handler
 }) {
   // Safety check for null/undefined patient or editedPatient
   if (!patient) {
@@ -21,239 +29,270 @@ function PersonalInfoTab({
   }
 
   return (
-    <Grid container spacing={3}>
-      {/* Profile Image Section */}
-      <Grid
-        item
-        xs={12}
+    <Box>
+      {/* Header with Edit button */}
+      <Box
         sx={{
           display: "flex",
-          flexDirection: "column",
+          justifyContent: "space-between",
           alignItems: "center",
           mb: 2,
         }}
       >
-        <Avatar
-          src={imageUrlToDisplay || ""} // Use the new prop, ensure empty string if null/undefined
-          alt="Profile Image"
-          sx={{ width: 120, height: 120, mb: 2, border: "2px solid lightgray" }}
-        />
-        {isEditing && (
-          <TextField
-            type="file"
-            name="profileImageFile"
-            onChange={handleInputChange}
-            accept="image/*"
+        <Typography variant="h6">Personal Information</Typography>
+        {!isEditing && typeof onEditClick === "function" && (
+          <Button
+            variant="outlined"
             size="small"
-            fullWidth
-            sx={{ maxWidth: 300 }}
+            onClick={onEditClick}
+            sx={{ ml: 2 }}
+          >
+            Edit
+          </Button>
+        )}
+      </Box>
+
+      <Grid container spacing={3}>
+        {/* Profile Image Section */}
+        <Grid
+          item
+          xs={12}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <Avatar
+            src={imageUrlToDisplay || ""} // Use the new prop, ensure empty string if null/undefined
+            alt="Profile Image"
+            sx={{
+              width: 120,
+              height: 120,
+              mb: 2,
+              border: "2px solid lightgray",
+            }}
           />
-        )}
-        {!isEditing && !imageUrlToDisplay && (
-          <Typography variant="body2" color="text.secondary">
-            No profile image uploaded.
-          </Typography>
-        )}
-      </Grid>
-
-      <Grid sx={{ width: { xs: "100%", md: "50%" }, p: 1.5 }}>
-        <Grid container spacing={2}>
-          <Grid sx={{ width: "100%" }}>
-            <Typography variant="subtitle1" fontWeight={500} gutterBottom>
-              Contact Information
+          {isEditing && (
+            <TextField
+              type="file"
+              name="profileImageFile"
+              onChange={handleInputChange}
+              accept="image/*"
+              size="small"
+              fullWidth
+              sx={{ maxWidth: 300 }}
+            />
+          )}
+          {!isEditing && !imageUrlToDisplay && (
+            <Typography variant="body2" color="text.secondary">
+              No profile image uploaded.
             </Typography>
-          </Grid>
+          )}
+        </Grid>
 
-          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              First Name
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="firstName"
-                value={editedPatient.firstName || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Typography variant="body1">
-                {patient.firstName || "N/A"}
+        <Grid sx={{ width: { xs: "100%", md: "50%" }, p: 1.5 }}>
+          <Grid container spacing={2}>
+            <Grid sx={{ width: "100%" }}>
+              <Typography variant="subtitle1" fontWeight={500} gutterBottom>
+                Contact Information
               </Typography>
-            )}
-          </Grid>
+            </Grid>
 
-          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Last Name
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="lastName"
-                value={editedPatient.lastName || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Typography variant="body1">
-                {patient.lastName || "N/A"}
+            <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                First Name
               </Typography>
-            )}
-          </Grid>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="firstName"
+                  value={editedPatient.firstName || ""}
+                  onChange={handleInputChange}
+                  size="small"
+                  margin="dense"
+                />
+              ) : (
+                <Typography variant="body1">
+                  {patient.firstName || "N/A"}
+                </Typography>
+              )}
+            </Grid>
 
-          <Grid sx={{ width: "100%", p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Address
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="address"
-                value={editedPatient.address || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-                multiline
-                rows={2}
-              />
-            ) : (
-              <Typography variant="body1">
-                {patient.address || "N/A"}
+            <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Last Name
               </Typography>
-            )}
-          </Grid>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="lastName"
+                  value={editedPatient.lastName || ""}
+                  onChange={handleInputChange}
+                  size="small"
+                  margin="dense"
+                />
+              ) : (
+                <Typography variant="body1">
+                  {patient.lastName || "N/A"}
+                </Typography>
+              )}
+            </Grid>
 
-          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              City
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="city"
-                value={editedPatient.city || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Typography variant="body1">{patient.city || "N/A"}</Typography>
-            )}
-          </Grid>
-
-          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              State
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="state"
-                value={editedPatient.state || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Typography variant="body1">{patient.state || "N/A"}</Typography>
-            )}
-          </Grid>
-
-          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Zip Code
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="zipCode"
-                value={editedPatient.zipCode || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Typography variant="body1">
-                {patient.zipCode || "N/A"}
+            <Grid sx={{ width: "100%", p: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Address
               </Typography>
-            )}
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="address"
+                  value={editedPatient.address || ""}
+                  onChange={handleInputChange}
+                  size="small"
+                  margin="dense"
+                  multiline
+                  rows={2}
+                />
+              ) : (
+                <Typography variant="body1">
+                  {patient.address || "N/A"}
+                </Typography>
+              )}
+            </Grid>
+
+            <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                City
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="city"
+                  value={editedPatient.city || ""}
+                  onChange={handleInputChange}
+                  size="small"
+                  margin="dense"
+                />
+              ) : (
+                <Typography variant="body1">{patient.city || "N/A"}</Typography>
+              )}
+            </Grid>
+
+            <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                State
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="state"
+                  value={editedPatient.state || ""}
+                  onChange={handleInputChange}
+                  size="small"
+                  margin="dense"
+                />
+              ) : (
+                <Typography variant="body1">
+                  {patient.state || "N/A"}
+                </Typography>
+              )}
+            </Grid>
+
+            <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Zip Code
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="zipCode"
+                  value={editedPatient.zipCode || ""}
+                  onChange={handleInputChange}
+                  size="small"
+                  margin="dense"
+                />
+              ) : (
+                <Typography variant="body1">
+                  {patient.zipCode || "N/A"}
+                </Typography>
+              )}
+            </Grid>
+          </Grid>
+        </Grid>
+
+        <Grid sx={{ width: { xs: "100%", md: "50%" }, p: 1.5 }}>
+          <Grid container spacing={2}>
+            <Grid sx={{ width: "100%" }}>
+              <Typography variant="subtitle1" fontWeight={500} gutterBottom>
+                Emergency Contact
+              </Typography>
+            </Grid>
+
+            <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Emergency Contact Name
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="emergencyContactName"
+                  value={editedPatient.emergencyContactName || ""}
+                  onChange={handleInputChange}
+                  size="small"
+                  margin="dense"
+                />
+              ) : (
+                <Typography variant="body1">
+                  {patient.emergencyContactName || "N/A"}
+                </Typography>
+              )}
+            </Grid>
+
+            <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Emergency Contact Phone
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="emergencyContactPhone"
+                  value={editedPatient.emergencyContactPhone || ""}
+                  onChange={handleInputChange}
+                  size="small"
+                  margin="dense"
+                />
+              ) : (
+                <Typography variant="body1">
+                  {patient.emergencyContactPhone || "N/A"}
+                </Typography>
+              )}
+            </Grid>
+
+            <Grid sx={{ width: "100%", p: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                Relationship
+              </Typography>
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  name="emergencyContactRelationship"
+                  value={editedPatient.emergencyContactRelationship || ""}
+                  onChange={handleInputChange}
+                  size="small"
+                  margin="dense"
+                />
+              ) : (
+                <Typography variant="body1">
+                  {patient.emergencyContactRelationship || "N/A"}
+                </Typography>
+              )}
+            </Grid>
           </Grid>
         </Grid>
       </Grid>
-
-      <Grid sx={{ width: { xs: "100%", md: "50%" }, p: 1.5 }}>
-        <Grid container spacing={2}>
-          <Grid sx={{ width: "100%" }}>
-            <Typography variant="subtitle1" fontWeight={500} gutterBottom>
-              Emergency Contact
-            </Typography>
-          </Grid>
-
-          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Emergency Contact Name
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="emergencyContactName"
-                value={editedPatient.emergencyContactName || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Typography variant="body1">
-                {patient.emergencyContactName || "N/A"}
-              </Typography>
-            )}
-          </Grid>
-
-          <Grid sx={{ width: { xs: "100%", sm: "50%" }, p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Emergency Contact Phone
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="emergencyContactPhone"
-                value={editedPatient.emergencyContactPhone || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Typography variant="body1">
-                {patient.emergencyContactPhone || "N/A"}
-              </Typography>
-            )}
-          </Grid>
-
-          <Grid sx={{ width: "100%", p: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Relationship
-            </Typography>
-            {isEditing ? (
-              <TextField
-                fullWidth
-                name="emergencyContactRelationship"
-                value={editedPatient.emergencyContactRelationship || ""}
-                onChange={handleInputChange}
-                size="small"
-                margin="dense"
-              />
-            ) : (
-              <Typography variant="body1">
-                {patient.emergencyContactRelationship || "N/A"}
-              </Typography>
-            )}
-          </Grid>
-        </Grid>
-      </Grid>
-    </Grid>
+    </Box>
   );
 }
 
