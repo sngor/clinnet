@@ -97,6 +97,11 @@ export const adminService = {
       Object.keys(userData).forEach(
         (key) => (userData[key] === undefined || userData[key] === null) && delete userData[key]
       );
+      // Prevent sending an empty body
+      if (Object.keys(userData).length === 0) {
+        throw new Error('No valid fields to create user');
+      }
+      console.log('Creating user with payload:', userData);
       // Get the current auth token using Cognito helpers
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
@@ -119,11 +124,11 @@ export const adminService = {
       try {
         data = JSON.parse(responseText);
         console.log('Parsed response data:', data);
-        return data;
       } catch (parseError) {
         console.error('Error parsing response as JSON:', parseError);
         throw new Error(`Failed to parse response as JSON: ${responseText}`);
       }
+      return data;
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;

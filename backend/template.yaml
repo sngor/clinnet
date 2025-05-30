@@ -643,8 +643,8 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{userId}/disable
-            Method: post
+            Path: /users/{userId}
+            Method: delete
             Auth:
               Authorizer: CognitoAuthorizer
 

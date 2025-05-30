@@ -87,6 +87,7 @@ def lambda_handler(event, context):
         body = event['body']
         if event.get('isBase64Encoded'):
             body = base64.b64decode(body).decode('utf-8')
+        logger.info(f"Decoded request body: {body}")  # Debug log
         request_body = json.loads(body)
         
         # Validate required fields
