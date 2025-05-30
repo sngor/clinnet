@@ -47,54 +47,107 @@ function PatientDetailPage() {
 
   // State for patient data and UI
   const [patient, setPatient] = useState(null);
-  const [editedPatient, setEditedPatient] = useState(null);
+  const [editedPatient, setEditedPatient] = useState(null); // Will include profileImage (base64 for new upload)
+  const [profileImagePreview, setProfileImagePreview] = useState(null); // For new image base64 preview
+  const [displayableProfileImageUrl, setDisplayableProfileImageUrl] = useState(null); // For existing S3 image URL
   const [isEditing, setIsEditing] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
+  // Helper to convert S3 URI to HTTPS URL - Exported for testing
+  export const getDisplayableS3Url = (s3UriOrHttpsUrl) => {
+    if (!s3UriOrHttpsUrl) return null;
+    if (s3UriOrHttpsUrl.startsWith('https://')) {
+      return s3UriOrHttpsUrl;
+    }
+    if (s3UriOrHttpsUrl.startsWith('s3://')) {
+      const parts = s3UriOrHttpsUrl.replace('s3://', '').split('/');
+      const bucket = parts.shift();
+      const key = parts.join('/');
+      // Assuming region us-east-1 as per requirement if not otherwise specified
+      // TODO: Make region configurable if necessary, e.g., via environment variable
+      const region = process.env.REACT_APP_AWS_REGION || 'us-east-1';
+      return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+    }
+    // If it's just a key (though the backend is saving URI)
+    // const bucket = process.env.REACT_APP_PROFILE_IMAGE_BUCKET; 
+    // const region = process.env.REACT_APP_AWS_REGION || 'us-east-1';
+    // if (bucket && key) return `https://${bucket}.s3.${region}.amazonaws.com/${s3UriOrHttpsUrl}`;
+    
+    console.warn("Invalid S3 URI or URL:", s3UriOrHttpsUrl);
+    return null; // Or return the original string if it's an unrecognized format
+  };
+  
+  // Effect to update displayableProfileImageUrl when patient data changes
+  useEffect(() => {
+    if (patient && patient.profileImage) {
+      setDisplayableProfileImageUrl(getDisplayableS3Url(patient.profileImage));
+    } else {
+      setDisplayableProfileImageUrl(null);
+    }
+  }, [patient]);
+
   // Fetch patient by ID from context or API
   useEffect(() => {
     if (!id) return;
-    if (loading) return;
+    if (loading) return; // Wait for initial loading to complete
     if (error) {
       setPatient(null);
       setEditedPatient(null);
+      setDisplayableProfileImageUrl(null);
+      setProfileImagePreview(null);
       return;
     }
-    // Try to find patient in context
+  
+    const loadPatientData = (patientSource) => {
+      setPatient(patientSource);
+      // Initialize editedPatient. profileImage here is for *new* uploads.
+      // Existing S3 image URL is handled by displayableProfileImageUrl.
+      setEditedPatient({ ...patientSource, profileImage: null }); 
+      setProfileImagePreview(null); // Clear any previous preview
+      if (patientSource.profileImage) {
+        setDisplayableProfileImageUrl(getDisplayableS3Url(patientSource.profileImage));
+      } else {
+        setDisplayableProfileImageUrl(null);
+      }
+    };
+  
+    // Try to find patient in context first
     if (patients && Array.isArray(patients) && patients.length > 0) {
       const found = patients.find((p) => p.id === id);
       if (found) {
-        if (
-          !patient ||
-          patient.id !== found.id ||
-          JSON.stringify(patient) !== JSON.stringify(found)
-        ) {
-          setPatient(found);
-          setEditedPatient({ ...found });
+        // Check if patient data or its string representation has changed to avoid infinite loops
+        if (!patient || patient.id !== found.id || JSON.stringify(patient) !== JSON.stringify(found)) {
+          loadPatientData(found);
         }
-        return;
+        return; // Found in context, no need to fetch
       }
     }
-    // If not found, fetch directly
+  
+    // If not found in context or context is empty, fetch directly
+    // This also handles the case where `patients` might be initially empty then populated
     patientService
       .fetchPatientById(id)
       .then((fetchedPatient) => {
         if (fetchedPatient) {
-          setPatient(fetchedPatient);
-          setEditedPatient({ ...fetchedPatient });
+          loadPatientData(fetchedPatient);
         } else {
           setPatient(null);
           setEditedPatient(null);
+          setDisplayableProfileImageUrl(null);
+          setProfileImagePreview(null);
         }
       })
       .catch((err) => {
+        console.error("Error fetching patient by ID:", err);
         setPatient(null);
         setEditedPatient(null);
+        setDisplayableProfileImageUrl(null);
+        setProfileImagePreview(null);
       });
-  }, [id, patients, loading, error]);
+  }, [id, patients, loading, error]); // Removed 'patient' from deps to avoid loop, manage updates carefully
 
   // Tab change handler
   const handleTabChange = (_, newValue) => setTabValue(newValue);
@@ -103,7 +156,16 @@ function PatientDetailPage() {
   const handleEditClick = () => setIsEditing(true);
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setEditedPatient(patient);
+    setProfileImagePreview(null); // Clear any new image preview
+    // Reset editedPatient to current patient state.
+    // profileImage for editedPatient should be null (for new uploads) or original if needed for some logic,
+    // but generally, we rely on `displayableProfileImageUrl` for existing S3 image.
+    setEditedPatient({ ...patient, profileImage: null }); 
+    if (patient && patient.profileImage) {
+      setDisplayableProfileImageUrl(getDisplayableS3Url(patient.profileImage));
+    } else {
+      setDisplayableProfileImageUrl(null);
+    }
   };
 
   // Save changes to patient
@@ -134,8 +196,20 @@ function PatientDetailPage() {
 
   // Handle form field changes
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditedPatient((prev) => ({ ...prev, [name]: value }));
+    const { name, value, files } = e.target;
+
+    if (name === "profileImageFile" && files && files[0]) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result); // Set preview for the new image
+        setEditedPatient((prev) => ({ ...prev, profileImage: reader.result })); // Store base64 for upload
+        setDisplayableProfileImageUrl(null); // Hide existing S3 image when new one is chosen
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setEditedPatient((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   // Calculate age from date of birth
@@ -161,8 +235,10 @@ function PatientDetailPage() {
     try {
       const refreshedPatient = await patientService.fetchPatientById(id);
       if (refreshedPatient) {
-        setPatient(refreshedPatient);
-        setEditedPatient({ ...refreshedPatient });
+        setPatient(refreshedPatient); // This will trigger the useEffect for displayableProfileImageUrl
+        // Reset profileImage in editedPatient (for new uploads) and preview
+        setEditedPatient({ ...refreshedPatient, profileImage: null }); 
+        setProfileImagePreview(null);
         setSnackbarMessage("Patient data refreshed.");
         setSnackbarSeverity("info");
       } else {
@@ -534,8 +610,10 @@ function PatientDetailPage() {
           <PersonalInfoTab
             patient={patient}
             isEditing={isEditing}
-            editedPatient={editedPatient}
+            editedPatient={editedPatient} // Contains other fields, and profileImage (base64 of new file)
             handleInputChange={handleInputChange}
+            // Determine the correct image URL to display in PersonalInfoTab
+            imageUrlToDisplay={profileImagePreview || displayableProfileImageUrl}
           />
         )}
         {tabValue === 1 && (

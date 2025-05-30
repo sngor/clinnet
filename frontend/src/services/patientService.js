@@ -65,9 +65,12 @@ export const updatePatient = async (patientId, patientData) => {
       address: patientData.address,
       insuranceProvider: patientData.insuranceProvider,
       insuranceNumber: patientData.insuranceNumber,
-      status: patientData.status
+      status: patientData.status,
+      // Include profileImage if it exists in patientData
+      ...(patientData.profileImage && { profileImage: patientData.profileImage })
     };
     
+    console.log('Updating patient with data:', transformedData); // For debugging
     return await apiPut(`/patients/${patientId}`, transformedData);
   } catch (error) {
     console.error(`Error updating patient ${patientId}:`, error);
