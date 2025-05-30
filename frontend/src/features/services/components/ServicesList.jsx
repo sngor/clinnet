@@ -50,6 +50,7 @@ import {
   FlexBox,
   SecondaryButton,
 } from "../../../components/ui";
+import LoadingIndicator from "../../../components/LoadingIndicator";
 
 // Table column definitions
 const columns = [
@@ -336,7 +337,8 @@ function ServicesList() {
 
           {loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-              <CircularProgress />
+              {/* Use the shared LoadingIndicator for consistency */}
+              <LoadingIndicator size="large" message="Loading services..." />
             </Box>
           ) : (
             <StyledTableContainer>

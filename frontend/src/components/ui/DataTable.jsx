@@ -25,11 +25,11 @@ import {
   TablePagination,
   Box,
   Typography,
-  CircularProgress,
   useTheme,
   useMediaQuery,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import LoadingIndicator from "./LoadingIndicator";
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   borderRadius: theme.shape.borderRadius,
@@ -140,18 +140,7 @@ function DataTable({
                   align="center"
                   sx={{ py: 8 }}
                 >
-                  <CircularProgress
-                    size={45}
-                    thickness={4}
-                    sx={{ color: "primary.light" }}
-                  />
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mt: 2 }}
-                  >
-                    Loading data...
-                  </Typography>
+                  <LoadingIndicator size="medium" message="Loading data..." />
                 </TableCell>
               </TableRow>
             ) : displayedRows.length > 0 ? (

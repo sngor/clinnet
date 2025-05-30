@@ -25,6 +25,7 @@ import { format } from "date-fns";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
 import { useAppData } from "../app/providers/DataProvider";
+import LoadingIndicator from "../components/ui/LoadingIndicator";
 
 function NewPatientPage() {
   const navigate = useNavigate();
@@ -145,7 +146,22 @@ function NewPatientPage() {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4, position: "relative" }}>
+      {(submitting || loading) && (
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 20,
+            background: "rgba(255,255,255,0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <LoadingIndicator size="large" message="Saving patient..." />
+        </Box>
+      )}
       {/* Header with back button */}
       <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
         <IconButton onClick={handleBackClick} sx={{ mr: 2 }} aria-label="back">

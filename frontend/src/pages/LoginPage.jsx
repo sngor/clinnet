@@ -24,6 +24,7 @@ import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutl
 import { demoCredentials } from "../config/auth-config";
 import { extractUsername } from "../services/userService";
 import { styled } from "@mui/material/styles";
+import LoadingIndicator from "../components/ui/LoadingIndicator";
 
 import {
   PageContainer,
@@ -38,22 +39,6 @@ const AnimatedAlert = styled(Alert)(({ theme }) => ({
   transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)",
   opacity: 1,
   marginBottom: theme.spacing(2),
-}));
-
-const LoadingOverlay = styled(Box)(({ theme }) => ({
-  position: "absolute",
-  top: 0,
-  left: 0,
-  width: "100%",
-  height: "100%",
-  background: "rgba(255,255,255,0.7)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 10,
-  opacity: 1,
-  pointerEvents: "all",
-  transition: "opacity 0.4s cubic-bezier(0.4,0,0.2,1)",
 }));
 
 function LoginPage() {
@@ -116,9 +101,25 @@ function LoginPage() {
       <Box maxWidth="md" sx={{ width: "100%", position: "relative" }}>
         {/* Loading overlay above the Paper */}
         {(isLoading || authLoading) && (
-          <LoadingOverlay>
-            <CircularProgress size={48} color="primary" thickness={4} />
-          </LoadingOverlay>
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              background: "rgba(255,255,255,0.7)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 10,
+              opacity: 1,
+              pointerEvents: "all",
+              transition: "opacity 0.4s cubic-bezier(0.4,0,0.2,1)",
+            }}
+          >
+            <LoadingIndicator size="large" message="Signing in..." />
+          </Box>
         )}
         <Paper
           elevation={4}

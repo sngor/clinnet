@@ -29,6 +29,7 @@ import {
   Sync as SyncIcon,
 } from "@mui/icons-material";
 import { useAppData } from "../app/providers/DataProvider";
+import LoadingIndicator from "../components/ui/LoadingIndicator";
 
 // Tab components
 import MedicalInfoTab from "../components/patients/MedicalInfoTab";
@@ -271,17 +272,7 @@ function PatientDetailPage() {
   if (pageLoading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            py: 4,
-          }}
-        >
-          <CircularProgress sx={{ mb: 2 }} />
-          <Typography>Loading patient information...</Typography>
-        </Box>
+        <LoadingIndicator size="large" message="Loading patient information..." />
       </Container>
     );
   }

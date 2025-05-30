@@ -12,6 +12,7 @@
 import React from "react";
 import { Box, Typography, Button, Paper } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import SearchIcon from "@mui/icons-material/Search";
 
 const StyledBox = styled(Paper)(({ theme }) => ({
   display: "flex",
@@ -40,9 +41,9 @@ const StyledBox = styled(Paper)(({ theme }) => ({
  * @param {Object} [props.sx] - Additional styles to apply
  */
 function EmptyState({
-  icon,
-  title,
-  description,
+  icon = <SearchIcon sx={{ fontSize: 48, color: "primary.main" }} />,
+  title = "No Data Found",
+  description = "No records match your search criteria.",
   actionText,
   onAction,
   action,

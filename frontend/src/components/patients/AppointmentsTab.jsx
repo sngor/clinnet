@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { format } from "date-fns";
+import EmptyState from "../ui/EmptyState";
 
 // Mock appointments data - in a real app, this would come from an API
 const mockAppointments = [
@@ -161,13 +162,10 @@ function AppointmentsTab({ patientId }) {
           </Table>
         </TableContainer>
       ) : (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ textAlign: "center", py: 4 }}
-        >
-          No appointments found for this patient
-        </Typography>
+        <EmptyState
+          title="No Appointments Found"
+          description="No appointments found for this patient."
+        />
       )}
     </Box>
   );

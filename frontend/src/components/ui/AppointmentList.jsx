@@ -21,6 +21,7 @@ import {
 } from "@mui/material";
 import StatusChip from "./StatusChip";
 import LoadingIndicator from "./LoadingIndicator";
+import EmptyState from "./EmptyState";
 
 /**
  * A consistent appointment list component for displaying appointments
@@ -49,11 +50,10 @@ function AppointmentList({
 
   if (!appointments || appointments.length === 0) {
     return (
-      <Box sx={{ py: 4, textAlign: "center" }}>
-        <Typography variant="body1" color="text.secondary">
-          No appointments found
-        </Typography>
-      </Box>
+      <EmptyState
+        title="No Appointments Found"
+        description="No appointments match your search criteria."
+      />
     );
   }
 

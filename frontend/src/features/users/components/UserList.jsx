@@ -54,6 +54,7 @@ import {
   FlexBox,
 } from "../../../components/ui";
 import Avatar from "@mui/material/Avatar";
+import LoadingIndicator from "../../../components/LoadingIndicator";
 
 // Table column definitions
 const columns = [
@@ -427,7 +428,8 @@ function UserList() {
 
           {loading && !openAddEdit && !openDelete ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-              <CircularProgress />
+              {/* Use the shared LoadingIndicator for consistency */}
+              <LoadingIndicator size="large" message="Loading users..." />
             </Box>
           ) : (
             <StyledTableContainer>

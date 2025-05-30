@@ -20,10 +20,11 @@
 // </PageLayout>
 
 import React from "react";
-import { Box, Alert, Button, CircularProgress } from "@mui/material";
+import { Box, Alert, Button } from "@mui/material";
 import PageContainer from "./PageContainer";
 import PageHeading from "./PageHeading";
 import { SectionContainer } from "./Container";
+import LoadingIndicator from "./LoadingIndicator";
 
 /**
  * A consistent layout component for all pages
@@ -43,14 +44,7 @@ const PageLayout = ({
   if (loading) {
     return (
       <PageContainer maxWidth={maxWidth}>
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          minHeight="200px"
-        >
-          <CircularProgress />
-        </Box>
+        <LoadingIndicator size="large" message="Loading page..." />
       </PageContainer>
     );
   }
