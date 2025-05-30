@@ -31,6 +31,9 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import LocalAtmIcon from "@mui/icons-material/LocalAtm";
+import serviceApi from "../../services/serviceApi";
+import patientService from "../../services/patientService"; // Added patientService import
+import { apiPost } from "../../utils/api-helper"; // Import for API calls
 import PercentIcon from "@mui/icons-material/Percent";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import PrintIcon from "@mui/icons-material/Print";
@@ -57,25 +60,33 @@ function FrontdeskCheckoutPage() {
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [finalAmount, setFinalAmount] = useState(0);
 
-  // Simulate API call for patients and services
+  // Fetch initial data for patients and services
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setPatients([
-        { id: "P001", name: "John Doe", status: "waiting" },
-        { id: "P002", name: "Jane Smith", status: "in-progress" },
-        { id: "P003", name: "Robert Johnson", status: "completed" },
-        { id: "P004", name: "Emily Davis", status: "waiting" },
-      ]);
-      setServices([
-        { id: "S001", name: "General Consultation", price: 50 },
-        { id: "S002", name: "Blood Test", price: 75 },
-        { id: "S003", name: "X-Ray", price: 120 },
-        { id: "S004", name: "Vaccination", price: 45 },
-        { id: "S005", name: "Physical Therapy", price: 90 },
-      ]);
-      setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    setLoading(true); // Ensure loading is true at the start
+
+    Promise.all([
+      patientService.getPatients(),
+      serviceApi.getAllServices()
+    ])
+    .then(([patientsResponse, servicesResponse]) => {
+      const transformedPatients = patientsResponse.data.map(patient => ({
+        ...patient,
+        name: `${patient.firstName} ${patient.lastName}`
+      }));
+      setPatients(transformedPatients);
+      setServices(servicesResponse.data); // Assuming API returns { data: [...] }
+    })
+    .catch(error => {
+      console.error("Error fetching initial data:", error);
+      // Optionally, set an error state here to display a more user-friendly message
+      // For example, set an error message in state and display it in the UI
+    })
+    .finally(() => {
+      setLoading(false); // Set loading to false after all API calls complete
+    });
+
+    // No cleanup needed for Promise.all like this,
+    // but if individual calls had cancellation tokens, they'd be handled here.
   }, []);
 
   // Calculate total when selected services change
@@ -123,13 +134,49 @@ function FrontdeskCheckoutPage() {
 
   // Handle checkout
   const handleCheckout = () => {
+    if (!selectedPatient) {
+      alert("Please select a patient.");
+      return;
+    }
+    if (selectedServices.length === 0) {
+      alert("Please select at least one service.");
+      return;
+    }
     if (!paymentMethod) {
-      alert("Please select a payment method");
+      alert("Please select a payment method.");
       return;
     }
 
-    // In a real app, this would call an API to process the payment
-    setReceiptDialogOpen(true);
+    const discountAmount = total - finalAmount;
+
+    const payload = {
+      patientId: selectedPatient.id,
+      items: selectedServices.map(service => ({
+        serviceId: service.id,
+        quantity: 1, // Assuming quantity is always 1 for now
+      })),
+      paymentMethod: paymentMethod,
+      discount: discountAmount, // Send the calculated discount amount
+      notes: notes,
+      subtotal: total,
+      total: finalAmount,
+    };
+
+    // console.log("Checkout payload:", payload); // For debugging
+
+    apiPost('/billing', payload)
+      .then(response => {
+        console.log("Checkout successful:", response);
+        // Optionally, pass data from response to receipt dialog if needed
+        // For example, if the backend returns a transaction ID:
+        // setTransactionId(response.data.transactionId);
+        setReceiptDialogOpen(true); // Open receipt dialog on success
+      })
+      .catch(error => {
+        console.error("Checkout error:", error);
+        alert(`Checkout failed: ${error.message || "Please try again."}`);
+        // Do not open receipt dialog on error
+      });
   };
 
   // Handle payment completion
