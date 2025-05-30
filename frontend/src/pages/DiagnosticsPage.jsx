@@ -147,13 +147,10 @@ const initialServicesData = [
   },
 ];
 
-const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
-
 const DiagnosticsPage = () => {
   const theme = useTheme();
   const [services, setServices] = useState(initialServicesData);
-  const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(false);
-  const [autoRefreshIntervalId, setAutoRefreshIntervalId] = useState(null);
+
   const determineOverallStatus = useCallback((crudSt) => {
     if (!crudSt || typeof crudSt !== "object") return "Unknown";
     const ops = ["create", "read", "update", "delete"];
@@ -395,43 +392,6 @@ const DiagnosticsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleTestService]);
 
-  // useEffect for managing the periodic refresh interval
-  useEffect(() => {
-    if (isAutoRefreshEnabled) {
-      const triggerAllTests = () => {
-        const servicesToAutoTest = initialServicesData.filter(
-          (s) => s.testable
-        );
-        servicesToAutoTest.forEach((service) => {
-          handleTestService(service.id);
-        });
-      };
-
-      const intervalId = setInterval(triggerAllTests, AUTO_REFRESH_INTERVAL);
-      setAutoRefreshIntervalId(intervalId); // Store the interval ID
-
-      // Cleanup function to clear the interval
-      return () => {
-        clearInterval(intervalId);
-        setAutoRefreshIntervalId(null);
-      };
-    } else {
-      // If auto-refresh is disabled and there's an interval ID, clear it
-      if (autoRefreshIntervalId) {
-        clearInterval(autoRefreshIntervalId);
-        setAutoRefreshIntervalId(null);
-      }
-    }
-    // Dependencies for this effect:
-    // isAutoRefreshEnabled: to start/stop the interval
-    // handleTestService: to ensure the interval uses the latest version of this function
-    // autoRefreshIntervalId: to ensure cleanup uses the correct ID if it were to change (though less likely here)
-  }, [isAutoRefreshEnabled, handleTestService, autoRefreshIntervalId]);
-
-  const handleAutoRefreshToggle = (event) => {
-    setIsAutoRefreshEnabled(event.target.checked);
-  };
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box
@@ -445,15 +405,6 @@ const DiagnosticsPage = () => {
         <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 0 }}>
           System Diagnostics
         </Typography>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={isAutoRefreshEnabled}
-              onChange={handleAutoRefreshToggle}
-            />
-          }
-          label={`Enable Auto-Refresh (${AUTO_REFRESH_INTERVAL / 1000}s)`}
-        />
       </Box>
 
       <Grid container spacing={3}>
