@@ -713,6 +713,46 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  GetAggregatedReportsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: GetAggregatedReports # Explicit name
+      Handler: handlers/reports/getAggregatedReports.handler # Corrected path based on CodeUri
+      Runtime: nodejs18.x
+      CodeUri: src/ # Assuming template.yaml is in backend/, so src/ refers to backend/src/
+      Description: Fetches aggregated report data for admin reporting
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBReadPolicy:
+            TableName: !Ref AppointmentsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref PatientRecordsTable # For patient counts and demographics
+        - DynamoDBReadPolicy:
+            TableName: !Ref ServicesTable # For revenue calculations based on services
+        # If there's a specific Billing/Invoices table in the future, add policy for it too.
+      Environment: # Inherits from Globals, but can be specific if needed
+        Variables:
+          # Example: REPORTS_CONFIG_TABLE: !Ref SomeOtherTable (if needed in future)
+          # For now, it will use global env vars like USER_POOL_ID if the handler needs it
+          # Ensure it gets necessary table names if it were to query them.
+          # Since it's mock data, no specific table names needed yet beyond globals.
+          PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
+          USERS_TABLE: !Ref UsersTable
+          SERVICES_TABLE: !Ref ServicesTable
+          APPOINTMENTS_TABLE: !Ref AppointmentsTable
+          DOCUMENTS_BUCKET: !Ref DocumentsBucket
+          ENVIRONMENT: !Ref Environment
+          USER_POOL_ID: !Ref UserPool
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /reports # Path for fetching aggregated reports
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer # Protected endpoint
+
   RemoveProfileImageFunction:
     Type: AWS::Serverless::Function
     Properties:
