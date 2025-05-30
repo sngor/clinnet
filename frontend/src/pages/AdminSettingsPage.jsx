@@ -1,33 +1,67 @@
-import React from 'react';
-import { Box, Typography, Container, Paper } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Container, Paper, Tabs, Tab } from '@mui/material';
 import DiagnosticsPage from './DiagnosticsPage'; // Assuming DiagnosticsPage is in the same directory
+import SystemPreferences from '../components/admin/SystemPreferences';
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`admin-tabpanel-${index}`}
+      aria-labelledby={`admin-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
+function a11yProps(index) {
+  return {
+    id: `admin-tab-${index}`,
+    'aria-controls': `admin-tabpanel-${index}`,
+  };
+}
 
 function AdminSettingsPage() {
+  const [selectedTab, setSelectedTab] = useState(0);
+
+  const handleChange = (event, newValue) => {
+    setSelectedTab(newValue);
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 3 }}>
         Admin Settings
       </Typography>
 
-      {/* System Diagnostics Section */}
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2 }}>
-          System Diagnostics
-        </Typography>
-        <DiagnosticsPage />
-      </Paper>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={selectedTab} onChange={handleChange} aria-label="admin settings tabs">
+          <Tab label="System Preferences" {...a11yProps(0)} />
+          <Tab label="System Diagnostics" {...a11yProps(1)} />
+        </Tabs>
+      </Box>
 
-      {/* Placeholder for future settings sections */}
-      {/* 
-      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h5" component="h2" gutterBottom>
-          Other Settings Section (Future)
-        </Typography>
-        <Typography>
-          Content for other settings will go here.
-        </Typography>
-      </Paper>
-      */}
+      <TabPanel value={selectedTab} index={0}>
+        <Paper elevation={2} sx={{ p: 3 }}>
+          <SystemPreferences />
+        </Paper>
+      </TabPanel>
+      <TabPanel value={selectedTab} index={1}>
+        <Paper elevation={2} sx={{ p: 3 }}>
+          <DiagnosticsPage />
+        </Paper>
+      </TabPanel>
+
+      {/* Placeholder for future settings sections can be added here if needed */}
     </Container>
   );
 }
