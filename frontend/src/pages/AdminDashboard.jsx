@@ -36,6 +36,7 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [partialErrors, setPartialErrors] = useState([]);
+  const [appointmentsData, setAppointmentsData] = useState([]); // <-- Add this line
 
   useEffect(() => {
     let isMounted = true;
@@ -75,10 +76,16 @@ function AdminDashboard() {
       try {
         appointmentsData = await getTodaysAppointments();
         if (!Array.isArray(appointmentsData)) appointmentsData = [];
-        if (isMounted) setAppointmentsCount(appointmentsData.length);
+        if (isMounted) {
+          setAppointmentsCount(appointmentsData.length);
+          setAppointmentsData(appointmentsData); // <-- Add this line
+        }
       } catch (err) {
         errors.push("Appointments: " + (err?.message || err));
-        if (isMounted) setAppointmentsCount(0);
+        if (isMounted) {
+          setAppointmentsCount(0);
+          setAppointmentsData([]); // <-- Add this line
+        }
       }
       if (isMounted) {
         setPartialErrors(errors);

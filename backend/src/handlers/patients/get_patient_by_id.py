@@ -13,6 +13,7 @@ from botocore.exceptions import ClientError
 
 from utils.db_utils import get_patient_by_pk_sk, generate_response
 from utils.responser_helper import handle_exception # Added for consistency
+from utils.cors import add_cors_headers # Added for CORS
 
 # Initialize Logger
 logger = logging.getLogger() # Added
@@ -57,10 +58,16 @@ def lambda_handler(event, context):
         return generate_response(200, patient)
     except ClientError as ce: # More specific exception handling
         logger.error(f"ClientError fetching patient {patient_id}: {ce}", exc_info=True)
-        return handle_exception(ce) # Use imported helper
+        return handle_exception(ce)
     except Exception as e:
         logger.error(f"Error fetching patient {patient_id}: {e}", exc_info=True) # Changed
-        return generate_response(500, {
-            'message': 'Error fetching patient',
-            'error': str(e)
-        })
+        # Ensure CORS headers on all error responses
+        response = {
+            'statusCode': 500,
+            'body': json.dumps({
+                'message': 'Error fetching patient',
+                'error': str(e)
+            }),
+            'headers': {'Content-Type': 'application/json'}
+        }
+        return add_cors_headers(response)

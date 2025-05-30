@@ -50,9 +50,21 @@ function DoctorPatientsPage() {
   // Handlers
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
   const handlePatientSelect = (patient) => {
-    // Navigate to patient detail page for editing
-    const patientId = typeof patient === 'object' && patient !== null ? patient.id || patient.PK : patient;
-    if (!patientId) return;
+    // Defensive: Ensure patient is an object and has an id or PK
+    let patientId = null;
+    if (typeof patient === "object" && patient !== null) {
+      patientId = patient.id || patient.PK;
+      if (!patientId) {
+        console.warn("Patient object missing id/PK:", patient);
+        return;
+      }
+    } else {
+      patientId = patient;
+      if (!patientId || typeof patientId !== "string") {
+        console.warn("Invalid patient identifier:", patientId);
+        return;
+      }
+    }
     if (window.location.pathname.startsWith("/doctor")) {
       navigate(`/doctor/patients/${patientId}`);
     } else if (window.location.pathname.startsWith("/frontdesk")) {
