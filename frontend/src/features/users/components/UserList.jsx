@@ -336,7 +336,8 @@ function UserList() {
       };
       if (currentUser) {
         // Edit existing user
-        const updatedUser = await updateUser(currentUser.uniqueId, userPayload);
+        // Use currentUser.email as the path parameter for updateUser
+        const updatedUser = await updateUser(currentUser.email, userPayload);
 
         showNotification(`User ${updatedUser.username} updated successfully`);
       } else {

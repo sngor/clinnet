@@ -85,9 +85,9 @@ export const adminService = {
    */
   async createUser(userData) {
     try {
-      // Always derive username from email if not present
-      if (!userData.username && userData.email) {
-        userData.username = userData.email.split('@')[0];
+      // Always set username to email for Cognito
+      if (userData.email) {
+        userData.username = userData.email;
       }
       // Remove empty password (should always be required for new users)
       if (!userData.password || userData.password.trim() === "") {
