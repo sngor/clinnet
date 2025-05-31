@@ -39,7 +39,6 @@ import {
 // Need to get StyledFormControl from the correct path
 import { StyledFormControl } from "../components/ui/FormStyles";
 
-
 function NewPatientPage() {
   const navigate = useNavigate();
   const { addPatient, loading } = useAppData();
@@ -165,29 +164,35 @@ function NewPatientPage() {
       showBackButton
       maxWidth="md" // Adjusted maxWidth for a form page
     >
-      { (submitting || loading) && (
-      <Box
-        sx={{
-          position: "fixed", // Use fixed to cover PageLayout as well
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: (theme) => theme.zIndex.drawer + 2, // Ensure it's above everything
-          background: "rgba(255,255,255,0.7)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <LoadingIndicator size="large" message="Saving patient..." />
-      </Box>
+      {(submitting || loading) && (
+        <Box
+          sx={{
+            position: "fixed", // Use fixed to cover PageLayout as well
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: (theme) => theme.zIndex.drawer + 2, // Ensure it's above everything
+            background: "rgba(255,255,255,0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <LoadingIndicator size="large" message="Saving patient..." />
+        </Box>
       )}
-      <SectionContainer> {/* Was Paper */}
+      <SectionContainer>
+        {" "}
+        {/* Was Paper */}
         <form onSubmit={handleSubmit}>
           {/* Personal Information Section */}
-          <CardContainer sx={{ mb: 4 }}> {/* Was Paper variant="outlined" */}
-            <SectionTitle sx={{ mb: 1 }}> {/* Was Typography h6 */}
+          <CardContainer sx={{ mb: 4 }}>
+            {" "}
+            {/* Was Paper variant="outlined" */}
+            <SectionTitle sx={{ mb: 1 }}>
+              {" "}
+              {/* Was Typography h6 */}
               Personal Information
             </SectionTitle>
             <Divider sx={{ mb: 3 }} />
@@ -235,8 +240,14 @@ function NewPatientPage() {
                 />
               </Grid>
               <Grid item xs={12} md={6} lg={4}>
-                <StyledFormControl fullWidth sx={{ minWidth: 180, maxWidth: 220 }}> {/* Was FormControl */}
-                  <InputLabel id="gender-label">Gender</InputLabel> {/* Added id */}
+                <StyledFormControl
+                  fullWidth
+                  sx={{ minWidth: 180, maxWidth: 220 }}
+                >
+                  {" "}
+                  {/* Was FormControl */}
+                  <InputLabel id="gender-label">Gender</InputLabel>{" "}
+                  {/* Added id */}
                   <Select
                     name="gender"
                     labelId="gender-label" /* Added labelId */
@@ -284,8 +295,12 @@ function NewPatientPage() {
           </CardContainer>
 
           {/* Contact Information Section */}
-          <CardContainer sx={{ mb: 4 }}> {/* Was Paper variant="outlined" */}
-            <SectionTitle sx={{ mb: 1 }}> {/* Was Typography h6 */}
+          <CardContainer sx={{ mb: 4 }}>
+            {" "}
+            {/* Was Paper variant="outlined" */}
+            <SectionTitle sx={{ mb: 1 }}>
+              {" "}
+              {/* Was Typography h6 */}
               Contact Information
             </SectionTitle>
             <Divider sx={{ mb: 3 }} />
@@ -338,8 +353,12 @@ function NewPatientPage() {
           </CardContainer>
 
           {/* Insurance Information Section */}
-          <CardContainer sx={{ mb: 4 }}> {/* Was Paper variant="outlined" */}
-            <SectionTitle sx={{ mb: 1 }}> {/* Was Typography h6 */}
+          <CardContainer sx={{ mb: 4 }}>
+            {" "}
+            {/* Was Paper variant="outlined" */}
+            <SectionTitle sx={{ mb: 1 }}>
+              {" "}
+              {/* Was Typography h6 */}
               Insurance Information
             </SectionTitle>
             <Divider sx={{ mb: 3 }} />
@@ -365,8 +384,11 @@ function NewPatientPage() {
                 />
               </Grid>
               <Grid item xs={12} md={4}>
-                <StyledFormControl fullWidth> {/* Was FormControl */}
-                  <InputLabel id="status-label">Status</InputLabel> {/* Added id */}
+                <StyledFormControl fullWidth>
+                  {" "}
+                  {/* Was FormControl */}
+                  <InputLabel id="status-label">Status</InputLabel>{" "}
+                  {/* Added id */}
                   <Select
                     name="status"
                     labelId="status-label" /* Added labelId */
@@ -394,7 +416,11 @@ function NewPatientPage() {
             <PrimaryButton /* Was Button variant="contained" */
               type="submit"
               startIcon={
-                submitting ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />
+                submitting ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  <SaveIcon />
+                )
               }
               disabled={submitting || loading}
               loading={submitting} // Use loading prop for PrimaryButton

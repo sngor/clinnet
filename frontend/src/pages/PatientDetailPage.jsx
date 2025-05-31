@@ -284,15 +284,28 @@ function PatientDetailPage() {
   if (pageLoading) {
     // Using PageLayout to provide consistent structure even for loading state
     return (
-      <PageLayout title="Loading Patient..." subtitle="Please wait." showBackButton onBack={handleBackClick}>
-        <LoadingIndicator size="large" message="Loading patient information..." />
+      <PageLayout
+        title="Loading Patient..."
+        subtitle="Please wait."
+        showBackButton
+        onBack={handleBackClick}
+      >
+        <LoadingIndicator
+          size="large"
+          message="Loading patient information..."
+        />
       </PageLayout>
     );
   }
 
   if (pageError) {
     return (
-      <PageLayout title="Error" subtitle="Could not load patient data." showBackButton onBack={handleBackClick}>
+      <PageLayout
+        title="Error"
+        subtitle="Could not load patient data."
+        showBackButton
+        onBack={handleBackClick}
+      >
         <Alert severity="error" sx={{ mb: 2 }}>
           {pageError}
         </Alert>
@@ -305,12 +318,20 @@ function PatientDetailPage() {
 
   if (!patient) {
     return (
-      <PageLayout title="Not Found" subtitle="Patient not found." showBackButton onBack={handleBackClick}>
+      <PageLayout
+        title="Not Found"
+        subtitle="Patient not found."
+        showBackButton
+        onBack={handleBackClick}
+      >
         <SectionContainer sx={{ textAlign: "center" }}>
           <BodyText sx={{ mb: 2 }}>
             Patient information not found or an error occurred.
           </BodyText>
-          <PrimaryButton startIcon={<ArrowBackIcon />} onClick={handleBackClick}>
+          <PrimaryButton
+            startIcon={<ArrowBackIcon />}
+            onClick={handleBackClick}
+          >
             Return to Patients
           </PrimaryButton>
         </SectionContainer>
@@ -321,7 +342,11 @@ function PatientDetailPage() {
   const pageTitle = `${patient.firstName} ${patient.lastName}`;
   const headerActions = isEditing ? (
     <Box>
-      <PrimaryButton startIcon={<SaveIcon />} onClick={handleSaveChanges} sx={{ mr: 1 }}>
+      <PrimaryButton
+        startIcon={<SaveIcon />}
+        onClick={handleSaveChanges}
+        sx={{ mr: 1 }}
+      >
         Save
       </PrimaryButton>
       <SecondaryButton startIcon={<CancelIcon />} onClick={handleCancelEdit}>
@@ -330,7 +355,11 @@ function PatientDetailPage() {
     </Box>
   ) : (
     <Box>
-      <PrimaryButton startIcon={<EditIcon />} onClick={handleEditClick} sx={{ mr: 1 }}>
+      <PrimaryButton
+        startIcon={<EditIcon />}
+        onClick={handleEditClick}
+        sx={{ mr: 1 }}
+      >
         Edit
       </PrimaryButton>
       <AppIconButton
@@ -345,9 +374,17 @@ function PatientDetailPage() {
 
   // Main render
   return (
-    <PageLayout title={pageTitle} action={headerActions} showBackButton onBack={handleBackClick} maxWidth="xl">
+    <PageLayout
+      title={pageTitle}
+      action={headerActions}
+      showBackButton
+      onBack={handleBackClick}
+      maxWidth="xl"
+    >
       {/* Personal Info and Medical Info always visible at the top */}
-      <SectionContainer sx={{ mb: 3 }}> {/* Was Paper */}
+      <SectionContainer sx={{ mb: 3 }}>
+        {" "}
+        {/* Was Paper */}
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
             <PersonalInfoTab
@@ -387,7 +424,9 @@ function PatientDetailPage() {
       </Box>
 
       {/* Tab content (remove PersonalInfoTab and MedicalInfoTab from here) */}
-      <SectionContainer> {/* Was Paper */}
+      <SectionContainer>
+        {" "}
+        {/* Was Paper */}
         {tabValue === 0 && <AppointmentsTab patientId={patient?.id} />}
         {tabValue === 1 && <MedicalRecordsTab patientId={patient?.id} />}
       </SectionContainer>

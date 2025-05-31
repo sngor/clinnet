@@ -169,14 +169,30 @@ function LoginPage() {
               <MedicalServicesOutlinedIcon sx={{ fontSize: 40 }} />
             </Box>
             {/* Using SectionTitle for main brand, though h3 might be more PageTitle like, style guide PageTitle is h4 */}
-            <SectionTitle sx={{ typography: {xs: 'h4', sm: 'h3'}, fontWeight: 700, mb: 2, color: "white" }}>
+            <SectionTitle
+              sx={{
+                typography: { xs: "h4", sm: "h3" },
+                fontWeight: 700,
+                mb: 2,
+                color: "white",
+              }}
+            >
               CLINNET
             </SectionTitle>
-            <SubsectionTitle sx={{ typography: 'h6', fontWeight: 400, mb: 3, color: "white" }}>
+            <SubsectionTitle
+              sx={{ typography: "h6", fontWeight: 400, mb: 3, color: "white" }}
+            >
               Healthcare Management System
             </SubsectionTitle>
             {/* Using SecondaryText as it's less emphasis, similar to body2 style */}
-            <SecondaryText sx={{ maxWidth: "80%", opacity: 0.9, color: "white", textAlign: 'center' }}>
+            <SecondaryText
+              sx={{
+                maxWidth: "80%",
+                opacity: 0.9,
+                color: "white",
+                textAlign: "center",
+              }}
+            >
               Streamline your clinic operations with our comprehensive EMR
               solution
             </SecondaryText>
@@ -193,7 +209,9 @@ function LoginPage() {
               backgroundColor: "white",
             }}
           >
-            <SectionTitle sx={{ mb: 1, fontWeight: 600 }}> {/* Was h5 */}
+            <SectionTitle sx={{ mb: 1, fontWeight: 600 }}>
+              {" "}
+              {/* Was h5 */}
               Sign In
             </SectionTitle>
             <SecondaryText sx={{ mb: 4 }}>
@@ -309,7 +327,9 @@ function LoginPage() {
 
               <Box sx={{ mb: 3 }}>
                 <Divider>
-                  <Caption sx={{ px: 1, color: "text.secondary" }}> {/* Was Typography body2 */}
+                  <Caption sx={{ px: 1, color: "text.secondary" }}>
+                    {" "}
+                    {/* Was Typography body2 */}
                     Demo Accounts
                   </Caption>
                 </Divider>

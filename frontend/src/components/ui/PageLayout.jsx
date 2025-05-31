@@ -57,11 +57,7 @@ const PageLayout = ({
           sx={{ mb: 2 }}
           action={
             onRetry && (
-              <Button
-                color="inherit"
-                onClick={onRetry}
-                variant="outlined"
-              >
+              <Button color="inherit" onClick={onRetry} variant="outlined">
                 Retry
               </Button>
             )
@@ -78,25 +74,24 @@ const PageLayout = ({
   return (
     <PageContainer maxWidth={maxWidth}>
       {showDebug && debugPanel}
-      
+
       {action ? (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <PageHeading
-            title={title}
-            subtitle={subtitle}
-          />
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <PageHeading title={title} subtitle={subtitle} />
           {action}
         </Box>
       ) : (
-        <PageHeading
-          title={title}
-          subtitle={subtitle}
-        />
+        <PageHeading title={title} subtitle={subtitle} />
       )}
-      
-      <SectionContainer>
-        {children}
-      </SectionContainer>
+
+      <SectionContainer>{children}</SectionContainer>
     </PageContainer>
   );
 };
