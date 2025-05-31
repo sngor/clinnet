@@ -22,6 +22,9 @@ def build_error_response(status_code, error_type, message, request_origin=None):
     """
     response = {
         'statusCode': status_code,
+        'headers': { # Add headers dictionary
+            'Content-Type': 'application/json' # Add Content-Type
+        },
         'body': json.dumps({
             'error': error_type,
             'message': message

@@ -2,25 +2,19 @@
 Lambda function to delete an appointment
 """
 import os
-import json
+import json # Ensured import
+import logging # Added
 from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import delete_item, get_item_by_id, generate_response
-from utils.responser_helper import handle_exception
+from utils.responser_helper import handle_exception, build_error_response # build_error_response imported
 from utils.cors import add_cors_headers
 
-def build_error_response(status_code, error_type, message, request_origin=None):
-    """Build standardized error response with CORS headers"""
-    response = {
-        'statusCode': status_code,
-        'body': json.dumps({
-            'error': error_type,
-            'message': message
-        })
-    }
-    add_cors_headers(response, request_origin)
-    return response
+logger = logging.getLogger(__name__) # Added
+logger.setLevel(logging.INFO) # Added
+
+# Local build_error_response function removed.
 
 def lambda_handler(event, context):
     """
@@ -33,7 +27,7 @@ def lambda_handler(event, context):
     Returns:
         dict: API Gateway response
     """
-    print(f"Received event: {json.dumps(event)}")
+    logger.info("Received event: %s", json.dumps(event)) # Changed from print
     
     # Extract origin from request headers
     headers = event.get('headers', {})
@@ -44,9 +38,12 @@ def lambda_handler(event, context):
         return build_error_response(500, 'Configuration Error', 'Appointments table name not configured', request_origin)
     
     # Get appointment ID from path parameters
-    appointment_id = event.get('pathParameters', {}).get('id')
-    if not appointment_id:
-        return build_error_response(400, 'Validation Error', 'Missing appointment ID', request_origin)
+    path_params = event.get('pathParameters', {})
+    if 'id' not in path_params: # Check if 'id' key itself is missing
+        return build_error_response(400, 'Validation Error', 'Missing appointment ID path parameter.', request_origin)
+    appointment_id = path_params.get('id')
+    if not appointment_id: # Check if id is None (already caught if key missing) or an empty string
+        return build_error_response(400, 'Validation Error', 'Appointment ID must be a non-empty string.', request_origin)
     
     try:
         # Check if appointment exists
@@ -65,5 +62,5 @@ def lambda_handler(event, context):
     except ClientError as e:
         return handle_exception(e, request_origin)
     except Exception as e:
-        print(f"Error deleting appointment: {e}")
+        logger.error("Error deleting appointment: %s", e, exc_info=True) # Changed from print
         return build_error_response(500, 'Internal Server Error', 'Error deleting appointment', request_origin)
