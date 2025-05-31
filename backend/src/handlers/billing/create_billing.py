@@ -9,7 +9,7 @@ from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import create_item, get_item_by_id, generate_response
-from utils.responser_helper import handle_exception
+from utils.responser_helper import handle_exception, build_error_response
 
 def lambda_handler(event, context):
     """
@@ -23,6 +23,9 @@ def lambda_handler(event, context):
         dict: API Gateway response
     """
     print(f"Received event: {json.dumps(event)}")
+
+    headers = event.get('headers', {})
+    request_origin = headers.get('Origin') or headers.get('origin')
     
     # Get table names from environment variables
     billing_table = os.environ.get('BILLING_TABLE')
@@ -30,7 +33,7 @@ def lambda_handler(event, context):
     services_table = os.environ.get('SERVICES_TABLE')
     
     if not billing_table:
-        return generate_response(500, {'message': 'Billing table name not configured'})
+        return build_error_response(500, 'Configuration Error', 'Billing table name not configured', request_origin)
     
     try:
         # Parse request body
@@ -40,16 +43,16 @@ def lambda_handler(event, context):
         required_fields = ['patientId', 'items', 'paymentMethod']
         for field in required_fields:
             if field not in body:
-                return generate_response(400, {'message': f'Missing required field: {field}'})
+                return build_error_response(400, 'Validation Error', f'Missing required field: {field}', request_origin)
         
         # Validate items structure
         items = body.get('items', [])
         if not isinstance(items, list) or len(items) == 0:
-            return generate_response(400, {'message': 'Items must be a non-empty array'})
+            return build_error_response(400, 'Validation Error', 'Items must be a non-empty array', request_origin)
         
         for item in items:
             if 'serviceId' not in item or 'quantity' not in item:
-                return generate_response(400, {'message': 'Each item must have serviceId and quantity'})
+                return build_error_response(400, 'Validation Error', 'Each item must have serviceId and quantity', request_origin)
         
         # Calculate total amount by fetching service prices
         total_amount = 0
@@ -75,7 +78,7 @@ def lambda_handler(event, context):
                         'total': item_total
                     })
                 else:
-                    return generate_response(400, {'message': f'Service with ID {service_id} not found'})
+                    return build_error_response(404, 'Not Found', f'Service with ID {service_id} not found', request_origin)
             else:
                 # If services table is not configured, use the price from the request
                 price = item.get('price', 0)
@@ -117,10 +120,7 @@ def lambda_handler(event, context):
         return generate_response(201, billing_item)
     
     except ClientError as e:
-        return handle_exception(e)
+        return handle_exception(e, request_origin)
     except Exception as e:
         print(f"Error creating billing record: {e}")
-        return generate_response(500, {
-            'message': 'Error creating billing record',
-            'error': str(e)
-        })
+        return build_error_response(500, 'Internal Server Error', f'Error creating billing record: {str(e)}', request_origin)

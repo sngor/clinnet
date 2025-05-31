@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import query_table, generate_response
-from utils.responser_helper import handle_exception
+from utils.responser_helper import handle_exception, build_error_response
 
 def lambda_handler(event, context):
     """
@@ -21,10 +21,13 @@ def lambda_handler(event, context):
         dict: API Gateway response
     """
     print(f"Received event: {json.dumps(event)}")
+
+    headers = event.get('headers', {})
+    request_origin = headers.get('Origin') or headers.get('origin')
     
     table_name = os.environ.get('BILLING_TABLE')
     if not table_name:
-        return generate_response(500, {'message': 'Billing table name not configured'})
+        return build_error_response(500, 'Configuration Error', 'Billing table name not configured', request_origin)
     
     try:
         # Get query parameters
@@ -61,10 +64,7 @@ def lambda_handler(event, context):
         return generate_response(200, billing_records)
     
     except ClientError as e:
-        return handle_exception(e)
+        return handle_exception(e, request_origin)
     except Exception as e:
         print(f"Error fetching billing records: {e}")
-        return generate_response(500, {
-            'message': 'Error fetching billing records',
-            'error': str(e)
-        })
+        return build_error_response(500, 'Internal Server Error', f'Error fetching billing records: {str(e)}', request_origin)

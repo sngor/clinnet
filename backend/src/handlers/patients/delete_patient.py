@@ -9,7 +9,7 @@ from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import get_patient_by_pk_sk, generate_response
-from utils.responser_helper import handle_exception
+from utils.responser_helper import handle_exception, build_error_response
 
 # Initialize Logger
 logger = logging.getLogger() # Added
@@ -27,17 +27,20 @@ def lambda_handler(event, context):
         dict: API Gateway response
     """
     logger.info(f"Received event: {json.dumps(event)}") # Changed
+
+    headers = event.get('headers', {})
+    request_origin = headers.get('Origin') or headers.get('origin')
     
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
         logger.error('PatientRecords table name not configured') # Changed
-        return generate_response(500, {'message': 'PatientRecords table name not configured'})
+        return build_error_response(500, 'Configuration Error', 'PatientRecords table name not configured', request_origin)
     
     # Get patient ID from path parameters
     patient_id = event.get('pathParameters', {}).get('id')
     if not patient_id:
         logger.warning('Patient ID missing from path parameters') # Changed
-        return generate_response(400, {'message': 'Missing patient ID'})
+        return build_error_response(400, 'Validation Error', 'Missing patient ID', request_origin)
     
     try:
         pk = f"PATIENT#{patient_id}"
@@ -48,7 +51,7 @@ def lambda_handler(event, context):
         
         if not existing_patient:
             logger.warning(f"Patient with ID {patient_id} not found for deletion.") # Changed
-            return generate_response(404, {'message': f'Patient with ID {patient_id} not found'})
+            return build_error_response(404, 'Not Found', f'Patient with ID {patient_id} not found', request_origin)
         
         # Initialize DynamoDB client
         dynamodb = boto3.resource('dynamodb')
@@ -70,10 +73,7 @@ def lambda_handler(event, context):
     
     except ClientError as ce: # More specific exception handling
         logger.error(f"ClientError deleting patient {patient_id}: {ce}", exc_info=True)
-        return handle_exception(ce) # Use imported helper
+        return handle_exception(ce, request_origin) # Use imported helper
     except Exception as e:
         logger.error(f"Error deleting patient {patient_id}: {e}", exc_info=True) # Changed
-        return generate_response(500, {
-            'message': 'Error deleting patient',
-            'error': str(e)
-        })
+        return build_error_response(500, 'Internal Server Error', f'Error deleting patient: {str(e)}', request_origin)
