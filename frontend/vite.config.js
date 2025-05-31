@@ -47,4 +47,10 @@ export default defineConfig({
       },
     },
   },
+  // Add vitest configuration
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    // setupFiles: './src/tests/setup.js', // if you have a setup file
+  },
 });
