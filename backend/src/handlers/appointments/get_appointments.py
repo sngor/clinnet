@@ -8,15 +8,9 @@ from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import query_table, generate_response
-from utils.responser_helper import handle_exception, build_error_response # build_error_response imported
+
+from utils.responser_helper import handle_exception, build_error_response
 from utils.cors import build_cors_preflight_response, add_cors_headers
-
-# from boto3.dynamodb.conditions import Attr # Already imported locally where needed
-
-logger = logging.getLogger(__name__) # Added
-logger.setLevel(logging.INFO) # Added
-
-# Local build_error_response function removed.
 
 
 def lambda_handler(event, context):
@@ -90,7 +84,6 @@ def lambda_handler(event, context):
     except ClientError as e:
         return handle_exception(e, request_origin)
     except Exception as e:
-
-        logger.error("Error fetching appointments: %s", e, exc_info=True) # Changed from print
-        return build_error_response(500, 'Internal Server Error', 'Error fetching appointments', request_origin)
+        print(f"Error fetching appointments: {e}")
+        return handle_exception(e, request_origin)
 

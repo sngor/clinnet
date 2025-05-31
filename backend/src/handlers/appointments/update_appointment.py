@@ -9,24 +9,8 @@ from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import get_item_by_id, update_item, generate_response
-
-from utils.responser_helper import handle_exception # Assuming this is used or build_error_response is self-contained
+from utils.responser_helper import handle_exception, build_error_response
 from utils.cors import add_cors_headers
-
-logger = logging.getLogger(__name__) # Added
-logger.setLevel(logging.INFO) # Added
-
-def build_error_response(status_code, error_type, message, request_origin=None):
-    """Build standardized error response with CORS headers"""
-    response = {
-        'statusCode': status_code,
-        'body': json.dumps({
-            'error': error_type,
-            'message': message
-        })
-    }
-    add_cors_headers(response, request_origin)
-    return response
 
 def lambda_handler(event, context):
     """
@@ -128,7 +112,6 @@ def lambda_handler(event, context):
     except ClientError as e:
         return handle_exception(e, request_origin)
     except Exception as e:
-
-        logger.error("Error updating appointment: %s", e, exc_info=True) # Changed from print to logger.error
-        return build_error_response(500, 'Internal Server Error', 'Error updating appointment', request_origin)
+        print(f"Error updating appointment: {e}")
+        return handle_exception(e, request_origin)
 

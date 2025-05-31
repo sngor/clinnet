@@ -15,21 +15,6 @@ from utils.responser_helper import handle_exception, build_error_response
 from utils.cors import add_cors_headers
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-def build_error_response(status_code, error_type, message, request_origin=None):
-    """Build standardized error response with CORS headers"""
-    response = {
-        'statusCode': status_code,
-        'body': json.dumps({
-            'error': error_type,
-            'message': message
-        })
-    }
-    add_cors_headers(response, request_origin)
-    return response
-
 def lambda_handler(event, context):
     """
     Handle Lambda event for POST /appointments
@@ -110,6 +95,7 @@ def lambda_handler(event, context):
         return handle_exception(e, request_origin)
     except Exception as e:
 
-        logger.error(f"Error creating appointment: %s", e, exc_info=True)
-        return build_error_response(500, 'Internal Server Error', 'Error creating appointment', request_origin)
+        print(f"Error creating appointment: {e}")
+        # Use handle_exception for generic exceptions as well
+        return handle_exception(e, request_origin)
 
