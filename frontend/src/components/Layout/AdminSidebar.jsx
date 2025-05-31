@@ -1,25 +1,27 @@
 // src/components/Layout/AdminSidebar.jsx
-import React from 'react';
-import { List } from '@mui/material'; // Removed Box
-import HomeIcon from '@mui/icons-material/Home';
-import PeopleIcon from '@mui/icons-material/People';
-import EventIcon from '@mui/icons-material/Event';
-import PersonIcon from '@mui/icons-material/Person';
-import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import SettingsIcon from '@mui/icons-material/Settings'; // Re-added SettingsIcon
-import BiotechIcon from '@mui/icons-material/Biotech'; // Added for Diagnostics
-import ActiveNavLink from '../ActiveNavLink';
+import React from "react";
+import { List } from "@mui/material"; // Removed Box
+import HomeIcon from "@mui/icons-material/Home";
+import PeopleIcon from "@mui/icons-material/People";
+import EventIcon from "@mui/icons-material/Event";
+import PersonIcon from "@mui/icons-material/Person";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+// import SettingsIcon from "@mui/icons-material/Settings"; // Re-added SettingsIcon
+// import BiotechIcon from '@mui/icons-material/Biotech'; // Removed for Diagnostics
+import ActiveNavLink from "../ActiveNavLink";
 
 function AdminSidebar({ collapsed = false }) {
   return (
-    <List sx={{ 
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      p: 0.5 // Reduced padding to give more space to buttons
-    }}>
+    <List
+      sx={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        p: 0.5, // Reduced padding to give more space to buttons
+      }}
+    >
       <ActiveNavLink
         to="/admin"
         icon={<HomeIcon />}
@@ -56,18 +58,8 @@ function AdminSidebar({ collapsed = false }) {
         primary="Reports"
         collapsed={collapsed}
       />
-      <ActiveNavLink
-        to="/admin/diagnostics"
-        icon={<BiotechIcon />}
-        primary="Diagnostics"
-        collapsed={collapsed}
-      />
-      <ActiveNavLink
-        to="/settings"
-        icon={<SettingsIcon />}
-        primary="Settings"
-        collapsed={collapsed}
-      />
+      {/* Diagnostics menu item removed */}
+      {/* Settings menu item removed */}
     </List>
   );
 }

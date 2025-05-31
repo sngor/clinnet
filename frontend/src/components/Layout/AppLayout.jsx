@@ -29,7 +29,7 @@ import { AppIconButton } from "../ui"; // Added AppIconButton import
 import AdminSidebar from "./AdminSidebar";
 import DoctorSidebar from "./DoctorSidebar";
 import FrontdeskSidebar from "./FrontdeskSidebar";
-import ActiveNavLink from '../ActiveNavLink'; // Ensure ActiveNavLink is imported
+import ActiveNavLink from "../ActiveNavLink"; // Ensure ActiveNavLink is imported
 
 const drawerWidth = 240;
 const collapsedDrawerWidth = 72;
@@ -98,13 +98,13 @@ function AppLayout() {
   const renderSidebar = () => {
     // Always render full sidebar on mobile
     if (isMobile) {
-      return user?.role === "admin"
-        ? <AdminSidebar collapsed={false} />
-        : user?.role === "doctor"
-        ? <DoctorSidebar collapsed={false} />
-        : user?.role === "frontdesk"
-        ? <FrontdeskSidebar collapsed={false} />
-        : null;
+      return user?.role === "admin" ? (
+        <AdminSidebar collapsed={false} />
+      ) : user?.role === "doctor" ? (
+        <DoctorSidebar collapsed={false} />
+      ) : user?.role === "frontdesk" ? (
+        <FrontdeskSidebar collapsed={false} />
+      ) : null;
     }
     switch (user?.role) {
       case "admin":
@@ -220,9 +220,10 @@ function AppLayout() {
         >
           {renderSidebar()}
         </Box>
-        
         {/* Inserted Settings Link Start */}
-        <Box sx={{ p: 0.5 }}> {/* Using similar padding as sidebar lists items for consistency */}
+        <Box sx={{ p: 0.5 }}>
+          {" "}
+          {/* Using similar padding as sidebar lists items for consistency */}
           <ActiveNavLink
             to="/settings" // Path to the shared settings page
             icon={<SettingsIcon />}
@@ -231,7 +232,6 @@ function AppLayout() {
           />
         </Box>
         {/* Inserted Settings Link End */}
-
         <Divider /> {/* Existing divider above collapse button */}
         {/* Collapse/Expand button - hidden on mobile */}
         {!isMobile && (
@@ -389,12 +389,14 @@ function AppLayout() {
                 <Avatar
                   alt={getUserDisplayName()}
                   src={user.profileImage}
+                  variant="rounded"
                   sx={{
                     width: { xs: 34, sm: 38 },
                     height: { xs: 34, sm: 38 },
                     border: "2px solid rgba(67, 97, 238, 0.2)",
                     boxShadow: "0 4px 8px rgba(67, 97, 238, 0.15)",
                     transition: "all 0.3s ease",
+                    borderRadius: 2,
                     "&:hover": {
                       transform: "scale(1.05)",
                       border: "2px solid rgba(67, 97, 238, 0.4)",
@@ -403,6 +405,7 @@ function AppLayout() {
                 />
               ) : (
                 <Avatar
+                  variant="rounded"
                   sx={{
                     width: { xs: 34, sm: 38 },
                     height: { xs: 34, sm: 38 },
@@ -414,6 +417,7 @@ function AppLayout() {
                     border: "2px solid rgba(114, 9, 183, 0.2)",
                     boxShadow: "0 4px 8px rgba(114, 9, 183, 0.15)",
                     transition: "all 0.3s ease",
+                    borderRadius: 2,
                     "&:hover": {
                       transform: "scale(1.05)",
                       border: "2px solid rgba(114, 9, 183, 0.4)",
@@ -438,7 +442,7 @@ function AppLayout() {
                   minWidth: 220,
                   mt: 1.5,
                   boxShadow: "0px 8px 30px rgba(0,0,0,0.08)",
-                  borderRadius: 3,
+                  borderRadius: 2, // Changed from 3 to 2 for less rounded
                   border: "1px solid rgba(231, 236, 248, 0.8)",
                   overflow: "hidden",
                   "& .MuiMenuItem-root": {
@@ -467,10 +471,12 @@ function AppLayout() {
                   <Avatar
                     alt={getUserDisplayName()}
                     src={user.profileImage}
-                    sx={{ width: 40, height: 40, mr: 1.5 }}
+                    variant="rounded"
+                    sx={{ width: 40, height: 40, mr: 1.5, borderRadius: 2 }}
                   />
                 ) : (
                   <Avatar
+                    variant="rounded"
                     sx={{
                       width: 40,
                       height: 40,
@@ -478,6 +484,7 @@ function AppLayout() {
                       bgcolor: "secondary.main",
                       fontSize: 18,
                       fontWeight: 500,
+                      borderRadius: 2,
                     }}
                   >
                     {getAvatarLetter()}
@@ -547,44 +554,46 @@ function AppLayout() {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: "block", sm: "none" },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
               width: drawerWidth,
-              boxShadow: 'none',
-              borderRight: '1px solid #e0e0e0',
-              pt: '56px',
-              alignItems: 'flex-start',
-              overflow: 'visible',
-              position: 'relative',
+              boxShadow: "none",
+              borderRight: "1px solid #e0e0e0",
+              pt: "56px",
+              alignItems: "flex-start",
+              overflow: "visible",
+              position: "relative",
             },
           }}
         >
           {/* Show logo above drawer content on mobile, no nested container */}
-          <Box sx={{
-            width: '100%',
-            display: { xs: 'flex', sm: 'none' },
-            justifyContent: 'center',
-            alignItems: 'center',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            height: '56px',
-            zIndex: 2,
-            background: 'white',
-            borderBottom: '1px solid #e0e0e0',
-            overflow: 'visible',
-          }}>
+          <Box
+            sx={{
+              width: "100%",
+              display: { xs: "flex", sm: "none" },
+              justifyContent: "center",
+              alignItems: "center",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              height: "56px",
+              zIndex: 2,
+              background: "white",
+              borderBottom: "1px solid #e0e0e0",
+              overflow: "visible",
+            }}
+          >
             <Box
               sx={{
                 width: 44,
                 height: 44,
-                bgcolor: 'primary.main',
-                background: 'linear-gradient(135deg, #4361ee 0%, #3a56d4 100%)',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
+                bgcolor: "primary.main",
+                background: "linear-gradient(135deg, #4361ee 0%, #3a56d4 100%)",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
                 mt: 0.5,
                 zIndex: 3,
               }}
@@ -599,7 +608,7 @@ function AppLayout() {
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ mt: '56px', width: '100%' }}>{drawer}</Box>
+          <Box sx={{ mt: "56px", width: "100%" }}>{drawer}</Box>
         </Drawer>
 
         {/* Permanent drawer for desktop */}

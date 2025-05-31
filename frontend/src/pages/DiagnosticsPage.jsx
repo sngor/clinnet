@@ -1,28 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  CircularProgress,
-  Chip,
-  Divider,
-  Grid,
-} from "@mui/material";
+import { Box, Typography, Button, Grid } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import LanguageIcon from "@mui/icons-material/Language";
 import CloudQueueIcon from "@mui/icons-material/CloudQueue";
 import FunctionsIcon from "@mui/icons-material/Functions";
 import StorageIcon from "@mui/icons-material/Storage";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import EventNoteIcon from "@mui/icons-material/EventNote";
-import SyncProblemIcon from "@mui/icons-material/SyncProblem";
 import adminService from "../services/adminService";
 import ServiceCard from "../components/ServiceCard";
 
@@ -390,7 +376,7 @@ const DiagnosticsPage = () => {
   }, [services, handleTestService]);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Box>
       <Box
         sx={{
           display: "flex",
@@ -419,7 +405,7 @@ const DiagnosticsPage = () => {
           </Grid>
         ))}
       </Grid>
-    </Container>
+    </Box>
   );
 };
 

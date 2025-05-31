@@ -481,7 +481,8 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
               <Avatar
                 src={profileImage}
                 alt="Profile Image"
-                sx={{ width: 100, height: 100, mr: 2 }}
+                variant="rounded"
+                sx={{ width: 100, height: 100, mr: 2, borderRadius: 2 }}
               >
                 {user && !user.profileImage && <PersonIcon fontSize="large" />}
               </Avatar>

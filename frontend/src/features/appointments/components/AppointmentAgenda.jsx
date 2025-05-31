@@ -198,12 +198,14 @@ function AppointmentAgenda() {
                   />
 
                   <Avatar
+                    variant="rounded"
                     sx={{
                       width: 32,
                       height: 32,
                       bgcolor:
                         timeStatus === "past" ? "grey.300" : "primary.main",
                       opacity: timeStatus === "past" ? 0.5 : 1,
+                      borderRadius: 2,
                     }}
                   >
                     {appointment.patientName.charAt(0)}

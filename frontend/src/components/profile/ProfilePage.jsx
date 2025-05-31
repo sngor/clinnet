@@ -27,9 +27,10 @@ function ProfilePage() {
   return (
     <div>
       <Avatar
-        sx={{ width: 100, height: 100, mb: 2 }}
+        sx={{ width: 100, height: 100, mb: 2, borderRadius: 2 }}
         src={user?.profileImage || ""}
         alt={user?.firstName}
+        variant="rounded"
       >
         {!user?.profileImage &&
           (user?.firstName?.[0] || "") + (user?.lastName?.[0] || "")}

@@ -54,7 +54,10 @@ function PatientCard({ patient, onClick }) {
             mb: 1.5,
           }}
         >
-          <Avatar sx={{ mr: 1.5, bgcolor: "primary.main" }}>
+          <Avatar
+            sx={{ mr: 1.5, bgcolor: "primary.main", borderRadius: 2 }}
+            variant="rounded"
+          >
             <PersonIcon />
           </Avatar>
           <Typography

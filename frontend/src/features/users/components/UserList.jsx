@@ -483,7 +483,13 @@ function UserList() {
                                 user.email?.split("@")[0] ||
                                 "User"
                               }
-                              sx={{ width: 32, height: 32, fontSize: 16 }}
+                              variant="rounded"
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                fontSize: 16,
+                                borderRadius: 2,
+                              }}
                             >
                               {user.firstName
                                 ? user.firstName[0]
@@ -607,7 +613,8 @@ function UserList() {
                     getUsernameFromEmail(currentUser.email) ||
                     "User"
                   }
-                  sx={{ width: 64, height: 64, fontSize: 32 }}
+                  variant="rounded"
+                  sx={{ width: 64, height: 64, fontSize: 32, borderRadius: 2 }}
                 >
                   {currentUser.firstName
                     ? currentUser.firstName[0]

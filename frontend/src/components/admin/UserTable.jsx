@@ -97,7 +97,8 @@ const UserTable = ({ users, onEditUser, onToggleUserStatus }) => {
                   <Avatar
                     src={getUserAvatarSrc(user)}
                     alt={getUserInitials(user)}
-                    sx={{ mr: 2 }}
+                    variant="rounded"
+                    sx={{ mr: 2, borderRadius: 2 }}
                   >
                     {getUserInitials(user)}
                   </Avatar>
