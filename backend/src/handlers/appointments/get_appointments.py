@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 from utils.db_utils import query_table, generate_response
 from utils.responser_helper import handle_exception, build_error_response
 from utils.cors import build_cors_preflight_response, add_cors_headers
+from boto3.dynamodb.conditions import Key, Attr # Ensure Key is imported
 
 def lambda_handler(event, context):
     """
@@ -38,38 +39,40 @@ def lambda_handler(event, context):
     try:
         # Get query parameters
         query_params = event.get('queryStringParameters', {}) or {}
-        
-        # Initialize filter expression
-        filter_expressions = []
-        expression_values = {}
-        
-        # Add filters based on query parameters
+        kwargs = {} # Initialize kwargs for query_table
+
+        # GSI usage
         if 'patientId' in query_params:
-            from boto3.dynamodb.conditions import Attr
-            filter_expressions.append(Attr('patientId').eq(query_params['patientId']))
+            kwargs['IndexName'] = 'PatientIdIndex'
+            kwargs['KeyConditionExpression'] = Key('patientId').eq(query_params['patientId'])
+        elif 'doctorId' in query_params:
+            kwargs['IndexName'] = 'DoctorIdIndex'
+            kwargs['KeyConditionExpression'] = Key('doctorId').eq(query_params['doctorId'])
+
+        # Building FilterExpression for remaining parameters
+        filter_expressions = []
         
-        if 'doctorId' in query_params:
-            from boto3.dynamodb.conditions import Attr
-            filter_expressions.append(Attr('doctorId').eq(query_params['doctorId']))
+        # Create a mutable copy of query_params to remove keys used in GSI
+        active_query_params = dict(query_params)
+
+        if 'patientId' in active_query_params and kwargs.get('IndexName') == 'PatientIdIndex':
+            del active_query_params['patientId']
+        if 'doctorId' in active_query_params and kwargs.get('IndexName') == 'DoctorIdIndex':
+            del active_query_params['doctorId']
+
+        # Now build filter_expressions from active_query_params
+        if 'date' in active_query_params:
+            filter_expressions.append(Attr('date').eq(active_query_params['date']))
+        if 'status' in active_query_params:
+            filter_expressions.append(Attr('status').eq(active_query_params['status']))
+        # Add other potential filterable fields here if needed
         
-        if 'date' in query_params:
-            from boto3.dynamodb.conditions import Attr
-            filter_expressions.append(Attr('date').eq(query_params['date']))
-        
-        if 'status' in query_params:
-            from boto3.dynamodb.conditions import Attr
-            filter_expressions.append(Attr('status').eq(query_params['status']))
-        
-        # Combine filter expressions if any
-        kwargs = {}
         if filter_expressions:
-            from boto3.dynamodb.conditions import Attr
-            filter_expr = filter_expressions[0]
+            combined_filter_expr = filter_expressions[0]
             for expr in filter_expressions[1:]:
-                filter_expr = filter_expr & expr
-            kwargs['FilterExpression'] = filter_expr
-        
-        # Query appointments
+                combined_filter_expr = combined_filter_expr & expr
+            kwargs['FilterExpression'] = combined_filter_expr
+
         appointments = query_table(table_name, **kwargs)
         
         response = generate_response(200, appointments)

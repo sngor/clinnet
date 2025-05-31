@@ -128,9 +128,26 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
+      - AttributeName: patientId # Added for GSI
+        AttributeType: S
+      - AttributeName: doctorId # Added for GSI
+        AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+    GlobalSecondaryIndexes:
+      - IndexName: PatientIdIndex
+        KeySchema:
+          - AttributeName: patientId
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+      - IndexName: DoctorIdIndex
+        KeySchema:
+          - AttributeName: doctorId
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
 
   # S3 Bucket for document storage
   DocumentsBucket:
