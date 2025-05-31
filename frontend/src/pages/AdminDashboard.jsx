@@ -18,7 +18,7 @@ import {
   ContentCard,
   AppointmentList,
 } from "../components/ui";
-import DashboardCard from "../components/DashboardCard";
+import DashboardCard from "../components/ui/DashboardCard"; // Updated path
 
 // Import mock data from centralized location
 // import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments";

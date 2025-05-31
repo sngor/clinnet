@@ -34,7 +34,7 @@ import {
   initialServiceFormData,
 } from "../models/serviceModel";
 import TableContainer from "../../../components/TableContainer";
-import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
+import ConfirmDeleteDialog from "../../../components/ui/ConfirmDeleteDialog"; // Updated path
 import { useAppData } from "../../../app/providers/DataProvider";
 import {
   StyledTableContainer,

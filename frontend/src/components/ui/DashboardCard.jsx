@@ -1,5 +1,6 @@
 // src/components/DashboardCard.jsx
 import React from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { 
   Paper, 
   Typography, 
@@ -102,5 +103,14 @@ function DashboardCard({ icon, title, value, linkText, linkTo, sx = {} }) {
     </Paper>
   );
 }
+
+DashboardCard.propTypes = {
+  icon: PropTypes.node.isRequired,
+  title: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  linkText: PropTypes.string.isRequired,
+  linkTo: PropTypes.string.isRequired,
+  sx: PropTypes.object,
+};
 
 export default DashboardCard;

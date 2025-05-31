@@ -5,12 +5,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   Typography,
-  Box,
-  CircularProgress
+  Box
+  // CircularProgress is no longer needed here as AppButton handles it
 } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
+import { SecondaryButton, DangerButton } from './ui/AppButton'; // Added AppButton imports
 
 /**
  * A reusable confirmation dialog for delete operations
@@ -50,24 +50,19 @@ function ConfirmDeleteDialog({
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button 
+        <SecondaryButton // Changed to SecondaryButton
           onClick={onClose} 
           disabled={loading}
         >
           Cancel
-        </Button>
-        <Button 
+        </SecondaryButton>
+        <DangerButton // Changed to DangerButton
           onClick={onConfirm} 
-          color="error" 
-          variant="contained"
           disabled={loading}
+          loading={loading} // Pass loading prop to DangerButton
         >
-          {loading ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : (
-            `Delete ${itemType}`
-          )}
-        </Button>
+          {`Delete ${itemType}`}
+        </DangerButton>
       </DialogActions>
     </Dialog>
   );
