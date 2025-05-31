@@ -172,9 +172,9 @@ def lambda_handler(event, context):
         
         if profile_image_data:
             logger.info(f"Profile image data found for patient {patient_id}. Attempting S3 upload.")
-            s3_bucket_name = os.environ.get('PROFILE_IMAGE_BUCKET')
+            s3_bucket_name = os.environ.get('DOCUMENTS_BUCKET') # Changed to use DOCUMENTS_BUCKET
             if not s3_bucket_name:
-                logger.error("S3 bucket name for profile images not configured (PROFILE_IMAGE_BUCKET env var missing).")
+                logger.error("S3 bucket name for profile images not configured (DOCUMENTS_BUCKET env var missing).") # Log message updated
                 return build_error_response(500, 'Configuration Error', 'Server configuration error: S3 bucket not specified.', request_origin)
 
             try:
