@@ -1,81 +1,53 @@
 // src/app/providers/AppProviders.jsx
-import React from "react";
-import { BrowserRouter } from "react-router-dom";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import { AuthProvider } from "./AuthProvider";
-import { DataProvider } from "./DataProvider";
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider, createTheme, responsiveFontSizes } from '@mui/material/styles'; // Added responsiveFontSizes
+import CssBaseline from '@mui/material/CssBaseline';
+import { AuthProvider } from './AuthProvider';
+import { DataProvider } from './DataProvider';
+import { FontSizeProvider, useFontSize } from '../../context/FontSizeContext.jsx'; // Import FontSize context items
+import baseThemeConfig from '../../app/theme.js'; // Import the main theme configuration
 
-// Create a theme instance directly in this file
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#1976d2",
-      light: "#42a5f5",
-      dark: "#1565c0",
-      contrastText: "#fff",
-    },
-    secondary: {
-      main: "#9c27b0",
-      light: "#ba68c8",
-      dark: "#7b1fa2",
-      contrastText: "#fff",
-    },
-    error: {
-      main: "#d32f2f",
-    },
-    warning: {
-      main: "#ed6c02",
-    },
-    info: {
-      main: "#0288d1",
-    },
-    success: {
-      main: "#2e7d32",
-    },
-    background: {
-      default: "#f5f5f5",
-      paper: "#ffffff",
-    },
-  },
-  typography: {
-    fontFamily: [
-      "-apple-system",
-      "BlinkMacSystemFont",
-      '"Segoe UI"',
-      "Roboto",
-      '"Helvetica Neue"',
-      "Arial",
-      "sans-serif",
-    ].join(","),
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: "none",
-        },
-      },
-    },
-  },
-});
+// Helper component to dynamically create and provide the theme
+const DynamicThemeProvider = ({ children }) => {
+  const { fontSize, fontSizes } = useFontSize(); // Get current font size and options
 
-/**
- * Combines all app providers into a single component
- */
+  // Create a new theme that merges the base theme with the dynamic font size
+  // We need to ensure baseThemeConfig is treated as a config object for createTheme
+  let dynamicTheme = createTheme({
+    ...baseThemeConfig, // Spread the imported base theme configuration
+    typography: {
+      ...baseThemeConfig.typography,
+      // Set the base html font size, which scales all rem units
+      // Or, more directly, adjust body1 and other specific elements if preferred
+      htmlFontSize: parseFloat(fontSizes[fontSize]) * 16, // Assuming 1rem = 16px for htmlFontSize scaling
+      // Example: Adjust body1 directly if htmlFontSize is not desired
+      // body1: {
+      //   ...baseThemeConfig.typography.body1,
+      //   fontSize: fontSizes[fontSize],
+      // },
+    },
+  });
+
+  // Optionally, make fonts responsive
+  dynamicTheme = responsiveFontSizes(dynamicTheme);
+
+  return <ThemeProvider theme={dynamicTheme}>{children}</ThemeProvider>;
+};
+
 function AppProviders({ children }) {
-  // Always include AmplifyProvider to ensure Amplify is configured
-  const Providers = (
+  return (
     <BrowserRouter>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AuthProvider>
-          <DataProvider>{children}</DataProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <AuthProvider> {/* AuthProvider can be outside FontSizeProvider if it doesn't need font context */}
+        <FontSizeProvider> {/* FontSizeProvider wraps components that need font context */}
+          <DynamicThemeProvider>
+            <CssBaseline />
+            <DataProvider>{children}</DataProvider>
+          </DynamicThemeProvider>
+        </FontSizeProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
-  return Providers;
 }
 
 export default AppProviders;

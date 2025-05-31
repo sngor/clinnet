@@ -140,6 +140,11 @@ const theme = createTheme({
       fontSize: '0.75rem',
     },
   },
+  fontSizes: { // New section
+    small: '0.5rem',
+    medium: '1rem',
+    large: '2rem',
+  },
   shape: {
     borderRadius: 16,  // Further increased border radius for an even softer look
   },
@@ -171,7 +176,7 @@ const theme = createTheme({
     },
     MuiButton: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           textTransform: 'none',
           fontWeight: 600,
           borderRadius: 50, // Pill-shaped buttons
@@ -214,7 +219,7 @@ const theme = createTheme({
               padding: '6px 16px',
             },
           },
-        },
+        }),
         containedPrimary: {
           background: 'linear-gradient(45deg, #4361ee, #3a56d4)',
           '&:hover': {
@@ -253,7 +258,7 @@ const theme = createTheme({
     },
     MuiCard: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.03)',
           borderRadius: 20,
           border: '1px solid rgba(231, 236, 248, 0.8)',
@@ -262,17 +267,17 @@ const theme = createTheme({
             borderRadius: 16, // Smaller radius on mobile
             boxShadow: '0 6px 16px rgba(0, 0, 0, 0.03)',
           },
-        },
+        }),
       },
     },
     MuiCardHeader: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           padding: '20px 24px 12px',
           [theme.breakpoints.down('sm')]: {
             padding: '16px 16px 10px', // Smaller padding on mobile
           },
-        },
+        }),
         title: {
           fontSize: '1.25rem',
           fontWeight: 600,
@@ -287,7 +292,7 @@ const theme = createTheme({
     },
     MuiCardContent: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           padding: '12px 24px 24px',
           '&:last-child': {
             paddingBottom: '24px',
@@ -298,12 +303,12 @@ const theme = createTheme({
               paddingBottom: '20px',
             },
           },
-        },
+        }),
       },
     },
     MuiContainer: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           paddingLeft: 16,
           paddingRight: 16,
           [theme.breakpoints.up('sm')]: {
@@ -314,30 +319,30 @@ const theme = createTheme({
             paddingLeft: 32,
             paddingRight: 32,
           },
-        },
-        maxWidthXs: {
+        }),
+        maxWidthXs: ({ theme }) => ({
           maxWidth: '100%',
           [theme.breakpoints.up('sm')]: {
             maxWidth: 444,
           },
-        },
-        maxWidthSm: {
+        }),
+        maxWidthSm: ({ theme }) => ({
           maxWidth: '100%',
           [theme.breakpoints.up('sm')]: {
             maxWidth: 600,
           },
-        },
-        maxWidthMd: {
+        }),
+        maxWidthMd: ({ theme }) => ({
           maxWidth: '100%',
           [theme.breakpoints.up('md')]: {
             maxWidth: 900,
           },
-        },
+        }),
       },
     },
     MuiContainer: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           paddingLeft: 16,
           paddingRight: 16,
           [theme.breakpoints.up('sm')]: {
@@ -348,25 +353,25 @@ const theme = createTheme({
             paddingLeft: 32,
             paddingRight: 32,
           },
-        },
-        maxWidthXs: {
+        }),
+        maxWidthXs: ({ theme }) => ({
           maxWidth: '100%',
           [theme.breakpoints.up('sm')]: {
             maxWidth: 444,
           },
-        },
-        maxWidthSm: {
+        }),
+        maxWidthSm: ({ theme }) => ({
           maxWidth: '100%',
           [theme.breakpoints.up('sm')]: {
             maxWidth: 600,
           },
-        },
-        maxWidthMd: {
+        }),
+        maxWidthMd: ({ theme }) => ({
           maxWidth: '100%',
           [theme.breakpoints.up('md')]: {
             maxWidth: 900,
           },
-        },
+        }),
       },
     },
     MuiBox: {

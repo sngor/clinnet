@@ -14,10 +14,11 @@ import {
   PageLayout, // Added PageLayout
   ContentCard,
   AppointmentList,
+  BodyText, // Added BodyText
   // PageContainer, // Removed PageContainer
   // PageHeading, // Removed PageHeading
 } from "../components/ui";
-import DashboardCard from "../components/DashboardCard";
+import DashboardCard from "../components/ui/DashboardCard"; // Updated path
 
 // Import mock data from centralized location
 // import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments"; // Removed
@@ -133,10 +134,17 @@ function DoctorDashboard() {
       error={null} // Don't block UI with error
     >
       {/* Show error as a warning if partialErrors exist */}
-      {partialErrors.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ color: "#b71c1c", fontWeight: 500 }}>{error}</div>
-        </div>
+      {partialErrors.length > 0 && error && (
+        <BodyText
+          sx={{
+            color: "error.main", // Using theme's error color
+            fontWeight: 500,
+            mb: 2, // Standard spacing
+            textAlign: "center", // Or 'left' based on desired alignment
+          }}
+        >
+          {error}
+        </BodyText>
       )}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

@@ -4,20 +4,20 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getDisplayableS3Url } from "../utils/s3Utils";
 import { calculateAge } from "../utils/dateUtils"; // Import calculateAge
 import {
-  Container,
+  // Container, // Replaced by PageLayout
   Box,
-  Typography,
-  Paper,
+  // Typography, // Replaced by UI kit components
+  // Paper, // Replaced by SectionContainer/CardContainer
   Grid,
-  Button,
-  Chip,
-  Tab,
-  Tabs,
-  IconButton,
-  Alert,
-  Snackbar,
-  TextField,
-  CircularProgress,
+  // Button, // Replaced by UI kit components
+  Chip, // Keep for now, style guide doesn't specify
+  Tab, // Keep for now
+  Tabs, // Keep for now
+  // IconButton, // Replaced by AppIconButton
+  Alert, // Keep for now
+  Snackbar, // Keep for now
+  // TextField, // Assuming handled by child components or not directly here
+  CircularProgress, // Keep for specific loading instances if any
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -29,7 +29,19 @@ import {
   Sync as SyncIcon,
 } from "@mui/icons-material";
 import { useAppData } from "../app/providers/DataProvider";
-import LoadingIndicator from "../components/ui/LoadingIndicator";
+import {
+  LoadingIndicator,
+  PageLayout,
+  PrimaryButton,
+  SecondaryButton,
+  TextButton,
+  AppIconButton,
+  SectionContainer, // Using SectionContainer for larger grouping
+  CardContainer, // Could use for smaller cards if needed
+  PageTitle,
+  BodyText,
+  SecondaryText,
+} from "../components/ui";
 
 // Tab components
 import MedicalInfoTab from "../components/patients/MedicalInfoTab";
@@ -270,109 +282,72 @@ function PatientDetailPage() {
 
   // Loading, error, and not-found states using local pageLoading/pageError
   if (pageLoading) {
+    // Using PageLayout to provide consistent structure even for loading state
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <PageLayout title="Loading Patient..." subtitle="Please wait." showBackButton onBack={handleBackClick}>
         <LoadingIndicator size="large" message="Loading patient information..." />
-      </Container>
+      </PageLayout>
     );
   }
 
   if (pageError) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <PageLayout title="Error" subtitle="Could not load patient data." showBackButton onBack={handleBackClick}>
         <Alert severity="error" sx={{ mb: 2 }}>
           {pageError}
         </Alert>
-        <Button
-          variant="contained"
-          startIcon={<ArrowBackIcon />}
-          onClick={handleBackClick}
-        >
+        <PrimaryButton startIcon={<ArrowBackIcon />} onClick={handleBackClick}>
           Return to Patients
-        </Button>
-      </Container>
+        </PrimaryButton>
+      </PageLayout>
     );
   }
 
   if (!patient) {
-    // This covers patient not found after loading completed without error, or if patient becomes null
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Paper sx={{ p: 4, borderRadius: 2, textAlign: "center" }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
+      <PageLayout title="Not Found" subtitle="Patient not found." showBackButton onBack={handleBackClick}>
+        <SectionContainer sx={{ textAlign: "center" }}>
+          <BodyText sx={{ mb: 2 }}>
             Patient information not found or an error occurred.
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<ArrowBackIcon />}
-            onClick={handleBackClick}
-          >
+          </BodyText>
+          <PrimaryButton startIcon={<ArrowBackIcon />} onClick={handleBackClick}>
             Return to Patients
-          </Button>
-        </Paper>
-      </Container>
+          </PrimaryButton>
+        </SectionContainer>
+      </PageLayout>
     );
   }
 
+  const pageTitle = `${patient.firstName} ${patient.lastName}`;
+  const headerActions = isEditing ? (
+    <Box>
+      <PrimaryButton startIcon={<SaveIcon />} onClick={handleSaveChanges} sx={{ mr: 1 }}>
+        Save
+      </PrimaryButton>
+      <SecondaryButton startIcon={<CancelIcon />} onClick={handleCancelEdit}>
+        Cancel
+      </SecondaryButton>
+    </Box>
+  ) : (
+    <Box>
+      <PrimaryButton startIcon={<EditIcon />} onClick={handleEditClick} sx={{ mr: 1 }}>
+        Edit
+      </PrimaryButton>
+      <AppIconButton
+        icon={SyncIcon}
+        color="primary"
+        onClick={refreshPatientData}
+        aria-label="refresh"
+        tooltip="Refresh patient data"
+      />
+    </Box>
+  );
+
   // Main render
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Header with back button and actions */}
-      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-        <IconButton onClick={handleBackClick} sx={{ mr: 2 }} aria-label="back">
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{ fontWeight: 500, flexGrow: 1 }}
-        >
-          {patient.firstName} {patient.lastName}
-        </Typography>
-        {isEditing ? (
-          <Box>
-            <Button
-              startIcon={<SaveIcon />}
-              variant="contained"
-              color="primary"
-              onClick={handleSaveChanges}
-              sx={{ mr: 1 }}
-            >
-              Save
-            </Button>
-            <Button
-              startIcon={<CancelIcon />}
-              variant="outlined"
-              onClick={handleCancelEdit}
-            >
-              Cancel
-            </Button>
-          </Box>
-        ) : (
-          <Box>
-            <Button
-              startIcon={<EditIcon />}
-              variant="contained"
-              color="primary"
-              onClick={handleEditClick}
-              sx={{ mr: 1 }}
-            >
-              Edit
-            </Button>
-            <IconButton
-              color="primary"
-              onClick={refreshPatientData}
-              aria-label="refresh"
-              title="Refresh patient data"
-            >
-              <SyncIcon />
-            </IconButton>
-          </Box>
-        )}
-      </Box>
-
+    <PageLayout title={pageTitle} action={headerActions} showBackButton onBack={handleBackClick} maxWidth="xl">
       {/* Personal Info and Medical Info always visible at the top */}
-      <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+      <SectionContainer sx={{ mb: 3 }}> {/* Was Paper */}
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
             <PersonalInfoTab
@@ -396,7 +371,7 @@ function PatientDetailPage() {
             />
           </Grid>
         </Grid>
-      </Paper>
+      </SectionContainer>
 
       {/* Tabs for patient sections (remove Personal Info and Medical Info tabs) */}
       <Box sx={{ mb: 2 }}>
@@ -412,10 +387,10 @@ function PatientDetailPage() {
       </Box>
 
       {/* Tab content (remove PersonalInfoTab and MedicalInfoTab from here) */}
-      <Paper sx={{ p: 3, borderRadius: 2 }}>
+      <SectionContainer> {/* Was Paper */}
         {tabValue === 0 && <AppointmentsTab patientId={patient?.id} />}
         {tabValue === 1 && <MedicalRecordsTab patientId={patient?.id} />}
-      </Paper>
+      </SectionContainer>
 
       {/* Snackbar for notifications */}
       <Snackbar
@@ -431,7 +406,7 @@ function PatientDetailPage() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Container>
+    </PageLayout>
   );
 }
 

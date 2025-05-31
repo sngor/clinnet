@@ -1,8 +1,9 @@
 // src/pages/UnauthorizedPage.jsx
 import React from 'react';
-import { Box, Typography, Button, Container, Paper } from '@mui/material';
+import { Box, Typography, Container, Paper } from '@mui/material'; // Removed Button
 import { useNavigate } from 'react-router-dom';
 import LockIcon from '@mui/icons-material/Lock';
+import { PrimaryButton, SecondaryButton } from '../components/ui/AppButton'; // Added AppButton imports
 import { useAuth } from '../app/providers/AuthProvider';
 
 const UnauthorizedPage = () => {
@@ -77,20 +78,18 @@ const UnauthorizedPage = () => {
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <Button
-              variant="contained"
+            <PrimaryButton // Changed to PrimaryButton
               color="primary"
               onClick={handleGoToDashboard}
             >
               Go to Dashboard
-            </Button>
-            <Button
-              variant="outlined"
+            </PrimaryButton>
+            <SecondaryButton // Changed to SecondaryButton
               color="error"
               onClick={logout}
             >
               Sign Out
-            </Button>
+            </SecondaryButton>
           </Box>
         </Paper>
       </Box>

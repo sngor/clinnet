@@ -2,15 +2,18 @@
 Lambda function to create a new appointment
 """
 import os
-import json
+import json # ensure json is imported
 import uuid
-from datetime import datetime
+from datetime import datetime # ensure datetime is imported
+import logging
 from botocore.exceptions import ClientError
 
 # Import utility functions
+# Utility imports should now work if PYTHONPATH is set correctly
 from utils.db_utils import create_item, generate_response
 from utils.responser_helper import handle_exception, build_error_response
 from utils.cors import add_cors_headers
+
 
 def lambda_handler(event, context):
     """
@@ -23,7 +26,7 @@ def lambda_handler(event, context):
     Returns:
         dict: API Gateway response
     """
-    print(f"Received event: {json.dumps(event)}")
+    logger.info(f"Received event: %s", json.dumps(event))
     
     # Extract origin from request headers
     headers = event.get('headers', {})
@@ -43,6 +46,23 @@ def lambda_handler(event, context):
             if field not in body:
                 return build_error_response(400, 'Validation Error', f'Missing required field: {field}', request_origin)
         
+        # Validate date format (after required field checks)
+        try:
+            datetime.strptime(body['date'], '%Y-%m-%d')
+        except ValueError:
+            return build_error_response(400, 'Validation Error', 'Invalid date format. Expected YYYY-MM-DD.', request_origin)
+
+        # Validate time format (after required field checks)
+        try:
+            datetime.strptime(body['startTime'], '%H:%M')
+            datetime.strptime(body['endTime'], '%H:%M')
+        except ValueError:
+            return build_error_response(400, 'Validation Error', 'Invalid time format. Expected HH:MM.', request_origin)
+
+        # Ensure endTime is after startTime (after individual time format checks)
+        if datetime.strptime(body['endTime'], '%H:%M') <= datetime.strptime(body['startTime'], '%H:%M'):
+            return build_error_response(400, 'Validation Error', 'End time must be after start time.', request_origin)
+
         # Create appointment record
         appointment_id = str(uuid.uuid4())
         timestamp = datetime.utcnow().isoformat() + "Z"
@@ -74,6 +94,8 @@ def lambda_handler(event, context):
     except ClientError as e:
         return handle_exception(e, request_origin)
     except Exception as e:
+
         print(f"Error creating appointment: {e}")
         # Use handle_exception for generic exceptions as well
         return handle_exception(e, request_origin)
+

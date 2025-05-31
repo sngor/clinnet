@@ -35,6 +35,22 @@ const SystemPreferences = () => {
           </Select>
         </FormControl>
       </Box>
+
+      {/* Language Selection Option */}
+      <Box sx={{ minWidth: 120, mt: 2 }}>
+        <FormControl fullWidth>
+          <InputLabel id="language-select-label">Language</InputLabel>
+          <Select
+            labelId="language-select-label"
+            id="language-select"
+            defaultValue="English"
+            label="Language"
+          >
+            <MenuItem value="English">English</MenuItem>
+            <MenuItem value="Khmer">Khmer</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
     </Box>
   );
 };

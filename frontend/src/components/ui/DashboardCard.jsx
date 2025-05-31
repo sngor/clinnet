@@ -1,11 +1,13 @@
 // src/components/DashboardCard.jsx
 import React from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { 
   Paper, 
   Typography, 
   Box 
 } from '@mui/material';
-import LinkButton from './LinkButton';
+import { Link } from 'react-router-dom';
+import { TextButton } from './AppButton';
 
 /**
  * A consistent dashboard card component for summary statistics
@@ -89,18 +91,32 @@ function DashboardCard({ icon, title, value, linkText, linkTo, sx = {} }) {
       
       {/* Link button at the bottom */}
       <Box sx={{ mt: 'auto' }}>
-        <LinkButton 
+        <TextButton
+          component={Link}
           to={linkTo}
           sx={{ 
             alignSelf: "flex-start", 
-            pl: 0
+            pl: 0,
+            // Ensure text button specific styling if needed, e.g., padding adjustments
+            // TextButton is already styled, so this might not be necessary
+            // or could be theme dependent.
+            // For now, direct replacement and rely on TextButton styles.
           }}
         >
           {linkText}
-        </LinkButton>
+        </TextButton>
       </Box>
     </Paper>
   );
 }
+
+DashboardCard.propTypes = {
+  icon: PropTypes.node.isRequired,
+  title: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  linkText: PropTypes.string.isRequired,
+  linkTo: PropTypes.string.isRequired,
+  sx: PropTypes.object,
+};
 
 export default DashboardCard;

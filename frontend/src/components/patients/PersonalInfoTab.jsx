@@ -1,5 +1,5 @@
 // src/components/patients/PersonalInfoTab.jsx
-import React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   Typography,
@@ -17,6 +17,8 @@ function PersonalInfoTab({
   imageUrlToDisplay, // New prop for the image URL
   onEditClick, // New prop for edit button click handler
 }) {
+  const [selectedImage, setSelectedImage] = useState(null);
+
   // Safety check for null/undefined patient or editedPatient
   if (!patient) {
     return (
@@ -27,6 +29,34 @@ function PersonalInfoTab({
       </Box>
     );
   }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSelectedImage(reader.result);
+        // Create a synthetic event-like object to pass to the original handleInputChange
+        const syntheticEvent = {
+          target: {
+            name: "profileImage", // Ensure this matches the field name in editedPatient
+            value: reader.result,
+          },
+        };
+        handleInputChange(syntheticEvent);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setSelectedImage(null);
+      const syntheticEvent = {
+        target: {
+          name: "profileImage", // Ensure this matches the field name in editedPatient
+          value: "",
+        },
+      };
+      handleInputChange(syntheticEvent);
+    }
+  };
 
   return (
     <Box>
@@ -65,7 +95,7 @@ function PersonalInfoTab({
           }}
         >
           <Avatar
-            src={imageUrlToDisplay || ""} // Use the new prop, ensure empty string if null/undefined
+            src={selectedImage || imageUrlToDisplay || ""} // Use selectedImage if available
             alt="Profile Image"
             sx={{
               width: 120,
@@ -78,7 +108,7 @@ function PersonalInfoTab({
             <TextField
               type="file"
               name="profileImageFile"
-              onChange={handleInputChange}
+              onChange={handleImageChange} // Use the new handler for image changes
               accept="image/*"
               size="small"
               fullWidth
