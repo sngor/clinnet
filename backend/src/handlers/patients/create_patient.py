@@ -9,8 +9,10 @@ from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
 from utils.db_utils import generate_response
+
 from utils.responser_helper import handle_exception, build_error_response # build_error_response imported
 from utils.cors import add_cors_headers # For request_origin for build_error_response
+
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
@@ -74,6 +76,9 @@ def lambda_handler(event, context):
         dict: API Gateway response
     """
     logger.info(f"Received event: {json.dumps(event)}") # Changed
+
+    headers = event.get('headers', {})
+    request_origin = headers.get('Origin') or headers.get('origin')
     
     headers = event.get('headers', {}) # Added
     request_origin = headers.get('Origin') or headers.get('origin') # Added
@@ -82,7 +87,9 @@ def lambda_handler(event, context):
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
         logger.error('PatientRecords table name not configured') # Added
+
         return build_error_response(500, 'Configuration Error', 'PatientRecords table name not configured', request_origin) # Changed
+
     
     try:
         # Parse request body
@@ -98,6 +105,7 @@ def lambda_handler(event, context):
         missing_fields = [field for field in required_fields if field not in request_body]
         if missing_fields:
             logger.warning(f"Missing required fields: {missing_fields}")
+
             # Keeping current detailed missing fields response structure, but ensuring CORS
             response = generate_response(400, {
                 'message': 'Missing required fields',
@@ -105,6 +113,7 @@ def lambda_handler(event, context):
             })
             add_cors_headers(response, request_origin) # Ensure CORS
             return response
+
 
         # Detailed field validation
         validation_errors = {}
@@ -159,9 +168,11 @@ def lambda_handler(event, context):
 
         if validation_errors:
             logger.warning(f"Validation errors in request body: {validation_errors}")
+
             # Using build_error_response for consistency, adapting message to include errors stringified
             error_message = "Validation failed. " + json.dumps(validation_errors)
             return build_error_response(400, 'Validation Error', error_message, request_origin) # Changed
+
 
         # Check for extra fields (after validation of known fields)
         # Allowed fields for the patient item itself, not just for validation rules.
@@ -191,3 +202,4 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(f"Error creating patient: {e}", exc_info=True) # Changed
         return build_error_response(500, 'Internal Server Error', f'Error creating patient: {str(e)}', request_origin) # Changed
+

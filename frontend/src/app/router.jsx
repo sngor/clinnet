@@ -24,7 +24,7 @@ const FrontdeskCheckoutPage = lazy(() => import("../pages/FrontdeskCheckoutPage"
 const AdminReportsPage = lazy(() => import("../pages/AdminReportsPage"));
 const StyleGuidePage = lazy(() => import("../pages/StyleGuidePage"));
 const DiagnosticsPage = lazy(() => import("../pages/DiagnosticsPage")); // Import the DiagnosticsPage component
-const AdminSettingsPage = lazy(() => import("../pages/AdminSettingsPage")); // Import the AdminSettingsPage component
+const SettingsPage = lazy(() => import("../pages/SettingsPage")); // Import the SettingsPage component
 import AppLayout from "../components/Layout/AppLayout";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -127,12 +127,12 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
-        {/* Add route for Admin Settings Page */}
+        {/* Add route for Settings Page */}
         <Route
-          path="/admin/settings"
+          path="/settings"
           element={
             <ProtectedRoute allowedRoles={["admin", "doctor", "frontdesk"]}>
-              <AdminSettingsPage />
+              <SettingsPage />
             </ProtectedRoute>
           }
         />

@@ -14,6 +14,7 @@ from utils.db_utils import get_patient_by_pk_sk, update_item_by_pk_sk, generate_
 from utils.responser_helper import handle_exception, build_error_response # Added build_error_response
 from utils.cors import add_cors_headers # Added for request_origin
 
+
 # Initialize Logger
 logger = logging.getLogger() # Added
 logger.setLevel(logging.INFO) # Added
@@ -30,6 +31,9 @@ def lambda_handler(event, context):
         dict: API Gateway response
     """
     logger.info(f"Received event: {json.dumps(event)}") # Changed
+
+    headers = event.get('headers', {})
+    request_origin = headers.get('Origin') or headers.get('origin')
     
     headers = event.get('headers', {}) # Added
     request_origin = headers.get('Origin') or headers.get('origin') # Added
@@ -50,12 +54,15 @@ def lambda_handler(event, context):
         # Sticking to existing simple check for now and will align test messages:
         logger.warning('Patient ID missing from path parameters')
         return build_error_response(400, 'Validation Error', 'Patient ID is required in path parameters.', request_origin) # Changed
+
     
     # Parse request body
     body_str = event.get('body', '{}')
     if not body_str: # Check if body is empty string or None
         logger.warning('Request body is empty or missing')
+
         return build_error_response(400, 'Bad Request', 'Request body is required.', request_origin) # Changed
+
     
     try:
         if event.get('isBase64Encoded'): # Handle base64 encoding
@@ -65,12 +72,15 @@ def lambda_handler(event, context):
         logger.info(f"Decoded request body: {request_body}")
     except json.JSONDecodeError as je:
         logger.error(f"Invalid JSON in request body: {je}", exc_info=True)
+
         return build_error_response(400, 'Bad Request', 'Invalid JSON in request body.', request_origin) # Changed
+
     
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
         logger.error('PatientRecords table name not configured')
         return build_error_response(500, 'Configuration Error', 'PatientRecords table name not configured.', request_origin) # Changed
+
     
     try:
         # Check if patient exists
@@ -81,7 +91,9 @@ def lambda_handler(event, context):
         
         if not existing_patient:
             logger.warning(f"Patient with ID {patient_id} not found for update.")
+
             return build_error_response(404, 'Not Found', f'Patient with ID {patient_id} not found.', request_origin) # Changed
+
         
         # Extract fields to update
         updates = {}
@@ -176,6 +188,7 @@ def lambda_handler(event, context):
 
         if validation_errors: # This validation is for non-image fields
             logger.warning(f"Validation errors in update request body: {validation_errors}")
+
             response = generate_response(400, { # Kept generate_response as per subtask
                 'message': 'Update validation failed',
                 'errors': validation_errors
@@ -183,16 +196,16 @@ def lambda_handler(event, context):
             add_cors_headers(response, request_origin) # Added CORS
             return response
 
+
         # S3 Profile Image Upload Logic
         profile_image_data = request_body.pop('profileImage', None) # Use pop to remove it from request_body
         
         if profile_image_data:
             logger.info(f"Profile image data found for patient {patient_id}. Attempting S3 upload.")
-            s3_bucket_name = os.environ.get('PROFILE_IMAGE_BUCKET')
+            s3_bucket_name = os.environ.get('DOCUMENTS_BUCKET') # Changed to use DOCUMENTS_BUCKET
             if not s3_bucket_name:
                 logger.error("S3 bucket name for profile images not configured (PROFILE_IMAGE_BUCKET env var missing).")
                 return build_error_response(500, 'Configuration Error', 'Server configuration error: S3 bucket not specified.', request_origin) # Changed
-
             try:
                 # Decode base64 string. It might contain a prefix like 'data:image/png;base64,'
                 if ',' in profile_image_data:
@@ -238,6 +251,7 @@ def lambda_handler(event, context):
                 logger.error(f"An unexpected error occurred during profile image processing for patient {patient_id}: {e}", exc_info=True)
                 return build_error_response(500, 'Internal Server Error', 'Error processing profile image.', request_origin) # Changed
 
+
         if not updates and not profile_image_data: # if no other updates and no image was processed
             logger.info(f"No valid fields to update or profile image provided for patient {patient_id}. Returning existing data.")
             response = generate_response(200, existing_patient) # Kept generate_response
@@ -263,3 +277,4 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(f"Error updating patient {patient_id}: {e}", exc_info=True) # Changed
         return build_error_response(500, 'Internal Server Error', f'Error updating patient: {str(e)}', request_origin) # Changed
+

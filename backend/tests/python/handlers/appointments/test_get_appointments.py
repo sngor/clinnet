@@ -1,15 +1,16 @@
 import json
 import os
-import boto3
 import pytest
-from moto import mock_aws
+from unittest.mock import patch, MagicMock, ANY
 from backend.src.handlers.appointments.get_appointments import lambda_handler
+from boto3.dynamodb.conditions import Key, Attr
 
 # Define the appointments table name for tests
 TEST_APPOINTMENTS_TABLE_NAME = "clinnet-appointments-test"
 DEFAULT_ORIGIN = "http://localhost:5173" # One of the allowed origins
 
 # Helper function to create a mock API Gateway event
+
 def create_api_gateway_event(method="GET", path_params=None, body=None, queryStringParameters=None, headers=None):
     base_headers = {"Origin": DEFAULT_ORIGIN}
     if headers:
@@ -21,46 +22,35 @@ def create_api_gateway_event(method="GET", path_params=None, body=None, queryStr
         "headers": base_headers,
         "requestContext": {
             "requestId": "test-request-id-get-appointments",
+
             "authorizer": {"claims": {"cognito:username": "testuser"}}
         }
     }
-    if body:
-        event["body"] = json.dumps(body)
     return event
 
 @pytest.fixture(scope="function")
-def aws_credentials():
-    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
-    os.environ["AWS_SECURITY_TOKEN"] = "testing"
-    os.environ["AWS_SESSION_TOKEN"] = "testing"
-    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-
-@pytest.fixture(scope="function")
-def appointments_table(aws_credentials):
-    with mock_aws():
-        dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
-        table = dynamodb.create_table(
-            TableName=TEST_APPOINTMENTS_TABLE_NAME,
-            KeySchema=[{"AttributeName": "id", "KeyType": "HASH"}],
-            AttributeDefinitions=[{"AttributeName": "id", "AttributeType": "S"}],
-            ProvisionedThroughput={"ReadCapacityUnits": 1, "WriteCapacityUnits": 1},
-        )
-        yield table
-
-@pytest.fixture(scope="function")
-def lambda_environment_appointments(monkeypatch): # Renamed to avoid conflict
+def lambda_environment(monkeypatch):
     monkeypatch.setenv("APPOINTMENTS_TABLE", TEST_APPOINTMENTS_TABLE_NAME)
     monkeypatch.setenv("ENVIRONMENT", "test")
 
+class TestGetAppointmentsHandler:
 
-class TestGetAppointments:
-    def test_get_appointments_empty_table(self, appointments_table, lambda_environment_appointments):
+    @patch('backend.src.handlers.appointments.get_appointments.query_table')
+    def test_get_appointments_no_params(self, mock_query_table, lambda_environment):
+        mock_query_table.return_value = [{'id': 'appt1'}]
         event = create_api_gateway_event()
-        context = {} 
 
-        response = lambda_handler(event, context)
+        response = lambda_handler(event, {})
+
+        assert response['statusCode'] == 200
+        mock_query_table.assert_called_once_with(TEST_APPOINTMENTS_TABLE_NAME) # No kwargs if no params
+
+    @patch('backend.src.handlers.appointments.get_appointments.query_table')
+    def test_get_appointments_with_patient_id(self, mock_query_table, lambda_environment):
+        mock_query_table.return_value = [{'id': 'appt1', 'patientId': 'patient123'}]
+        event = create_api_gateway_event(query_params={'patientId': 'patient123'})
         
+
         assert response["statusCode"] == 200
         body = json.loads(response["body"])
         assert body == []
@@ -73,11 +63,23 @@ class TestGetAppointments:
         appointments_table.put_item(Item=appointment1)
         appointments_table.put_item(Item=appointment2)
 
+
         event = create_api_gateway_event()
-        context = {}
-        response = lambda_handler(event, context)
+        response = lambda_handler(event, {})
         
+        assert response['statusCode'] == 500
+        body = json.loads(response['body'])
+        assert 'error' in body
+        assert 'Appointments table name not configured' in body['message']
+        mock_query_table.assert_not_called()
+
+    @patch('backend.src.handlers.appointments.get_appointments.query_table')
+    def test_cors_preflight_options_request(self, mock_query_table, lambda_environment):
+        event = create_api_gateway_event(method="OPTIONS")
+        response = lambda_handler(event, {})
+
         assert response["statusCode"] == 200
+
         body = json.loads(response["body"])
         assert len(body) == 2
         
@@ -203,3 +205,4 @@ class TestGetAppointments:
 # `create_api_gateway_event` helper is standard.
 # The `lambda_environment_appointments` sets the `APPOINTMENTS_TABLE` env var.
 # (Removed extraneous comments from previous step)
+

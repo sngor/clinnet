@@ -13,38 +13,13 @@ import {
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
+const { buildResponse, buildErrorResponse, buildCorsPreflightResponse } = require('../utils/js-helpers');
 
 const dynamoDBClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
 const tableName = process.env.MEDICAL_REPORTS_TABLE_NAME; // Ensure this matches template.yaml
 const s3Client = new S3Client({});
 const imageBucketName = process.env.MEDICAL_REPORTS_IMAGE_BUCKET_NAME;
-
-// Helper function to format API Gateway responses
-const formatResponse = (statusCode, body) => {
-  // Ensure body is stringified if it's an object
-  const responseBody = typeof body === 'string' ? body : JSON.stringify(body);
-  return {
-    statusCode,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*", // Enable CORS
-      "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-      "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT,DELETE",
-    },
-    body: responseBody,
-  };
-};
-
-// Helper function for error handling
-const handleError = (error, context) => {
-  const requestId = context && context.awsRequestId ? context.awsRequestId : "N/A";
-  console.error(`Error processing request (requestId: ${requestId}):`, error);
-  // Mask internal errors for security
-  const message = error.name === "ResourceNotFoundException" || error.statusCode === 404 ? "Report not found" : "Internal server error. See logs for details.";
-  const statusCode = error.statusCode || (error.name === "ResourceNotFoundException" ? 404 : 500);
-  return formatResponse(statusCode, { message, error: error.message, requestId });
-};
 
 // Helper function to generate presigned URLs for image keys
 const generatePresignedUrls = async (imageKeys, context) => {
@@ -74,11 +49,11 @@ const generatePresignedUrls = async (imageKeys, context) => {
 };
 
 // Create Report
-const createReport = async (eventBody, context) => {
+const createReport = async (eventBody, context, requestOrigin) => {
   const { patientId, doctorId, reportContent } = eventBody;
 
   if (!patientId || !doctorId || !reportContent) {
-    return formatResponse(400, { message: "Missing required fields: patientId, doctorId, reportContent" });
+    return buildErrorResponse(400, 'ValidationError', 'Missing required fields: patientId, doctorId, reportContent', requestOrigin);
   }
 
   const reportId = uuidv4();
@@ -104,16 +79,16 @@ const createReport = async (eventBody, context) => {
     // Even though imageReferences is empty, we call this for consistency in response structure.
     createdItem.imagePresignedUrls = await generatePresignedUrls(createdItem.imageReferences, context);
     console.log("Report created successfully:", createdItem, context.awsRequestId);
-    return formatResponse(201, createdItem);
+    return buildResponse(201, createdItem, requestOrigin);
   } catch (error) {
-    return handleError(error, context);
+    return buildErrorResponse(error.statusCode || 500, error.name || 'OperationFailed', error.message, requestOrigin);
   }
 };
 
 // Get Report by ID
-const getReportById = async (reportId, context) => {
+const getReportById = async (reportId, context, requestOrigin) => {
   if (!reportId) {
-    return formatResponse(400, { message: "Missing reportId path parameter" });
+    return buildErrorResponse(400, 'ValidationError', "Missing reportId path parameter", requestOrigin);
   }
 
   const params = {
@@ -125,7 +100,7 @@ const getReportById = async (reportId, context) => {
     const { Item } = await docClient.send(new GetCommand(params));
     if (!Item) {
       console.log(`Report not found for reportId: ${reportId}`, context.awsRequestId);
-      return formatResponse(404, { message: "Report not found" });
+      return buildErrorResponse(404, 'NotFound', "Report not found", requestOrigin);
     }
     if (Item.imageReferences && Item.imageReferences.length > 0) {
       Item.imagePresignedUrls = await generatePresignedUrls(Item.imageReferences, context);
@@ -133,16 +108,16 @@ const getReportById = async (reportId, context) => {
       Item.imagePresignedUrls = [];
     }
     console.log("Report retrieved successfully:", Item, context.awsRequestId);
-    return formatResponse(200, Item);
+    return buildResponse(200, Item, requestOrigin);
   } catch (error) {
-    return handleError(error, context);
+    return buildErrorResponse(error.statusCode || 500, error.name || 'OperationFailed', error.message, requestOrigin);
   }
 };
 
 // Get Reports by Patient ID
-const getReportsByPatientId = async (patientId, context) => {
+const getReportsByPatientId = async (patientId, context, requestOrigin) => {
   if (!patientId) {
-    return formatResponse(400, { message: "Missing patientId path parameter" });
+    return buildErrorResponse(400, 'ValidationError', "Missing patientId path parameter", requestOrigin);
   }
   const params = {
     TableName: tableName,
@@ -167,16 +142,16 @@ const getReportsByPatientId = async (patientId, context) => {
       }
     }
     console.log(`Reports retrieved for patientId ${patientId}:`, reportsWithUrls.length, context.awsRequestId);
-    return formatResponse(200, reportsWithUrls);
+    return buildResponse(200, reportsWithUrls, requestOrigin);
   } catch (error) {
-    return handleError(error, context);
+    return buildErrorResponse(error.statusCode || 500, error.name || 'OperationFailed', error.message, requestOrigin);
   }
 };
 
 // Get Reports by Doctor ID
-const getReportsByDoctorId = async (doctorId, context) => {
+const getReportsByDoctorId = async (doctorId, context, requestOrigin) => {
   if (!doctorId) {
-    return formatResponse(400, { message: "Missing doctorId path parameter" });
+    return buildErrorResponse(400, 'ValidationError', "Missing doctorId path parameter", requestOrigin);
   }
   const params = {
     TableName: tableName,
@@ -201,21 +176,21 @@ const getReportsByDoctorId = async (doctorId, context) => {
       }
     }
     console.log(`Reports retrieved for doctorId ${doctorId}:`, reportsWithUrls.length, context.awsRequestId);
-    return formatResponse(200, reportsWithUrls);
+    return buildResponse(200, reportsWithUrls, requestOrigin);
   } catch (error) {
-    return handleError(error, context);
+    return buildErrorResponse(error.statusCode || 500, error.name || 'OperationFailed', error.message, requestOrigin);
   }
 };
 
 // Update Report
-const updateReport = async (reportId, eventBody, context) => {
+const updateReport = async (reportId, eventBody, context, requestOrigin) => {
   if (!reportId) {
-    return formatResponse(400, { message: "Missing reportId path parameter" });
+    return buildErrorResponse(400, 'ValidationError', "Missing reportId path parameter", requestOrigin);
   }
 
   const { reportContent, doctorNotes } = eventBody;
   if (!reportContent && !doctorNotes) {
-    return formatResponse(400, { message: "Missing at least one field to update: reportContent or doctorNotes" });
+    return buildErrorResponse(400, 'ValidationError', "Missing at least one field to update: reportContent or doctorNotes", requestOrigin);
   }
 
   const timestamp = new Date().toISOString();
@@ -247,7 +222,7 @@ const updateReport = async (reportId, eventBody, context) => {
     const { Item: existingItem } = await docClient.send(new GetCommand(getItemParams));
     if (!existingItem) {
         console.log(`Report not found for update, reportId: ${reportId}`, context.awsRequestId);
-        return formatResponse(404, { message: "Report not found, cannot update." });
+        return buildErrorResponse(404, 'NotFound', "Report not found, cannot update.", requestOrigin);
     }
 
     const { Attributes } = await docClient.send(new UpdateCommand(params));
@@ -259,16 +234,16 @@ const updateReport = async (reportId, eventBody, context) => {
       }
     }
     console.log("Report updated successfully:", Attributes, context.awsRequestId);
-    return formatResponse(200, Attributes);
+    return buildResponse(200, Attributes, requestOrigin);
   } catch (error) {
-    return handleError(error, context);
+    return buildErrorResponse(error.statusCode || 500, error.name || 'OperationFailed', error.message, requestOrigin);
   }
 };
 
 // Delete Report
-const deleteReport = async (reportId, context) => {
+const deleteReport = async (reportId, context, requestOrigin) => {
   if (!reportId) {
-    return formatResponse(400, { message: "Missing reportId path parameter" });
+    return buildErrorResponse(400, 'ValidationError', "Missing reportId path parameter", requestOrigin);
   }
 
   const params = {
@@ -282,32 +257,32 @@ const deleteReport = async (reportId, context) => {
     const { Item: existingItem } = await docClient.send(new GetCommand(getItemParams));
     if (!existingItem) {
         console.log(`Report not found for deletion, reportId: ${reportId}`);
-        return formatResponse(404, { message: "Report not found, cannot delete." });
+        return buildErrorResponse(404, 'NotFound', "Report not found, cannot delete.", requestOrigin);
     }
 
     await docClient.send(new DeleteCommand(params));
     console.log("Report deleted successfully:", reportId);
-    return formatResponse(204, {}); // Or 200 with a message: { message: "Report deleted successfully" }
+    return buildResponse(204, {}, requestOrigin);
   } catch (error) {
-    return handleError(error, context);
+    return buildErrorResponse(error.statusCode || 500, error.name || 'OperationFailed', error.message, requestOrigin);
   }
 };
 
 // Upload Image to Report
-const uploadImageToReport = async (reportId, eventBody, context) => {
+const uploadImageToReport = async (reportId, eventBody, context, requestOrigin) => {
   if (!reportId) {
-    return formatResponse(400, { message: "Missing reportId path parameter" });
+    return buildErrorResponse(400, 'ValidationError', "Missing reportId path parameter", requestOrigin);
   }
 
   if (!imageBucketName) {
     console.error("MEDICAL_REPORTS_IMAGE_BUCKET_NAME environment variable not set.", context.awsRequestId);
-    return formatResponse(500, { message: "Internal server error: Image bucket configuration missing." });
+    return buildErrorResponse(500, 'ConfigurationError', "Internal server error: Image bucket configuration missing.", requestOrigin);
   }
 
   const { imageName, imageData, contentType } = eventBody;
 
   if (!imageName || !imageData || !contentType) {
-    return formatResponse(400, { message: "Missing required fields: imageName, imageData, contentType" });
+    return buildErrorResponse(400, 'ValidationError', "Missing required fields: imageName, imageData, contentType", requestOrigin);
   }
 
   try {
@@ -316,7 +291,7 @@ const uploadImageToReport = async (reportId, eventBody, context) => {
     const { Item: existingReport } = await docClient.send(new GetCommand(getItemParams));
     if (!existingReport) {
       console.log(`Report not found for image upload, reportId: ${reportId}`, context.awsRequestId);
-      return formatResponse(404, { message: "Report not found. Cannot upload image." });
+      return buildErrorResponse(404, 'NotFound', "Report not found. Cannot upload image.", requestOrigin);
     }
 
     // 2. Prepare image data and S3 key
@@ -356,14 +331,14 @@ const uploadImageToReport = async (reportId, eventBody, context) => {
       }
     }
     console.log(`Report updated with image reference: ${reportId}, image: ${s3ObjectKey}`, context.awsRequestId);
-    return formatResponse(200, { message: "Image uploaded and report updated successfully", s3ObjectKey, updatedReport: updatedReportAttributes });
+    return buildResponse(200, { message: "Image uploaded and report updated successfully", s3ObjectKey, updatedReport: updatedReportAttributes }, requestOrigin);
 
   } catch (error) {
     console.error(`Error in uploadImageToReport (reportId: ${reportId}, imageName: ${imageName}):`, error, context.awsRequestId);
     if (error.name === 'NoSuchBucket') {
-        return formatResponse(500, { message: 'Internal configuration error: S3 bucket not found.' });
+        return buildErrorResponse(500, 'ConfigurationError', 'Internal configuration error: S3 bucket not found.', requestOrigin);
     }
-    return handleError(error, context);
+    return buildErrorResponse(error.statusCode || 500, error.name || 'OperationFailed', error.message, requestOrigin);
   }
 };
 
@@ -375,9 +350,17 @@ export const handler = async (event, context) => {
   console.log(`Received event (requestId: ${awsRequestId}):`, JSON.stringify(event, null, 2));
   // console.log(`Context (requestId: ${awsRequestId}):`, JSON.stringify(context, null, 2)); // Context can be verbose
 
+  const eventHeaders = event.headers || {};
+  const requestOrigin = eventHeaders.Origin || eventHeaders.origin;
+
+  if (event.httpMethod === 'OPTIONS' || event.requestContext?.http?.method === 'OPTIONS') {
+      console.log(`Handling OPTIONS request (requestId: ${awsRequestId})`);
+      return buildCorsPreflightResponse(requestOrigin);
+  }
+
   if (!tableName) {
     console.error(`MEDICAL_REPORTS_TABLE_NAME environment variable not set (requestId: ${awsRequestId}).`);
-    return formatResponse(500, { message: "Internal server error: DB Configuration missing."});
+    return buildErrorResponse(500, 'ConfigurationError', 'Internal server error: DB Configuration missing.', requestOrigin);
   }
   if (!imageBucketName && !(event.httpMethod === "POST" && event.path === "/reports")) { // Bucket name not needed for creating a report initially
      // Check imageBucketName for all relevant paths, e.g. not needed for createReport
@@ -398,35 +381,37 @@ export const handler = async (event, context) => {
     body = event.body ? JSON.parse(event.body) : {};
   } catch (parseError) {
     console.error("Invalid JSON in request body:", event.body, context.awsRequestId);
-    return formatResponse(400, { message: "Invalid JSON format in request body." });
+    return buildErrorResponse(400, 'JSONParseError', 'Invalid JSON format in request body.', requestOrigin);
   }
   const pathParameters = event.pathParameters || {};
 
   // Routing
   try {
     if (httpMethod === "POST" && path === "/reports") {
-      return await createReport(body, context);
+      return await createReport(body, context, requestOrigin);
     } else if (httpMethod === "POST" && path.match(/^\/reports\/[a-zA-Z0-9-]+\/images$/) && pathParameters.reportId) {
       // New route for image upload: POST /reports/{reportId}/images
-      return await uploadImageToReport(pathParameters.reportId, body, context);
+      return await uploadImageToReport(pathParameters.reportId, body, context, requestOrigin);
     } else if (httpMethod === "GET" && pathParameters.reportId && path === `/reports/${pathParameters.reportId}`) {
-      return await getReportById(pathParameters.reportId, context);
+      return await getReportById(pathParameters.reportId, context, requestOrigin);
     } else if (httpMethod === "GET" && pathParameters.patientId && path === `/reports/patient/${pathParameters.patientId}`) {
-      return await getReportsByPatientId(pathParameters.patientId, context);
+      return await getReportsByPatientId(pathParameters.patientId, context, requestOrigin);
     } else if (httpMethod === "GET" && pathParameters.doctorId && path === `/reports/doctor/${pathParameters.doctorId}`) {
-      return await getReportsByDoctorId(pathParameters.doctorId, context);
+      return await getReportsByDoctorId(pathParameters.doctorId, context, requestOrigin);
     } else if (httpMethod === "PUT" && pathParameters.reportId && path === `/reports/${pathParameters.reportId}`) {
-      return await updateReport(pathParameters.reportId, body, context);
+      return await updateReport(pathParameters.reportId, body, context, requestOrigin);
     } else if (httpMethod === "DELETE" && pathParameters.reportId && path === `/reports/${pathParameters.reportId}`) {
-      return await deleteReport(pathParameters.reportId, context);
-    } else if (httpMethod === "OPTIONS") {
-      console.log("Handling OPTIONS request", context.awsRequestId);
-      return formatResponse(200, { message: "CORS preflight check successful" });
+      return await deleteReport(pathParameters.reportId, context, requestOrigin);
+    // Note: OPTIONS is already handled at the top of the handler. This else if can be removed if not needed for other specific OPTIONS logic.
+    // } else if (httpMethod === "OPTIONS") {
+    //   console.log("Handling OPTIONS request (already handled)", context.awsRequestId);
+    //   return buildCorsPreflightResponse(requestOrigin); // Should have been caught earlier
     } else {
       console.log("Route not found for method and path:", httpMethod, path, context.awsRequestId);
-      return formatResponse(404, { message: `Not Found: The requested resource or method was not found. Method: ${httpMethod}, Path: ${path}` });
+      return buildErrorResponse(404, 'RouteNotFound', `Not Found: The requested resource or method was not found. Method: ${httpMethod}, Path: ${path}`, requestOrigin);
     }
   } catch (error) {
-    return handleError(error, context);
+    console.error(`Unhandled error in main handler (requestId: ${awsRequestId}):`, error);
+    return buildErrorResponse(error.statusCode || 500, error.name || 'UnhandledError', error.message, requestOrigin);
   }
 };

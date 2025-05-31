@@ -8,13 +8,13 @@ from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import delete_item, get_item_by_id, generate_response
+
 from utils.responser_helper import handle_exception, build_error_response # build_error_response imported
 from utils.cors import add_cors_headers
 
 logger = logging.getLogger(__name__) # Added
 logger.setLevel(logging.INFO) # Added
 
-# Local build_error_response function removed.
 
 def lambda_handler(event, context):
     """
@@ -62,5 +62,7 @@ def lambda_handler(event, context):
     except ClientError as e:
         return handle_exception(e, request_origin)
     except Exception as e:
+
         logger.error("Error deleting appointment: %s", e, exc_info=True) # Changed from print
         return build_error_response(500, 'Internal Server Error', 'Error deleting appointment', request_origin)
+

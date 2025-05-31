@@ -7,7 +7,8 @@ import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/Person';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import AssessmentIcon from '@mui/icons-material/Assessment';
-// import SettingsIcon from '@mui/icons-material/Settings'; // Removed SettingsIcon
+import SettingsIcon from '@mui/icons-material/Settings'; // Re-added SettingsIcon
+import BiotechIcon from '@mui/icons-material/Biotech'; // Added for Diagnostics
 import ActiveNavLink from '../ActiveNavLink';
 
 function AdminSidebar({ collapsed = false }) {
@@ -53,6 +54,18 @@ function AdminSidebar({ collapsed = false }) {
         to="/admin/reports"
         icon={<AssessmentIcon />}
         primary="Reports"
+        collapsed={collapsed}
+      />
+      <ActiveNavLink
+        to="/admin/diagnostics"
+        icon={<BiotechIcon />}
+        primary="Diagnostics"
+        collapsed={collapsed}
+      />
+      <ActiveNavLink
+        to="/settings"
+        icon={<SettingsIcon />}
+        primary="Settings"
         collapsed={collapsed}
       />
     </List>

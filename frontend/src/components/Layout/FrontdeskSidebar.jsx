@@ -43,6 +43,12 @@ function FrontdeskSidebar({ collapsed = false }) {
         primary="Checkout"
         collapsed={collapsed}
       />
+      <ActiveNavLink
+        to="/settings"
+        icon={<SettingsIcon />}
+        primary="Settings"
+        collapsed={collapsed}
+      />
     </List>
   );
 }

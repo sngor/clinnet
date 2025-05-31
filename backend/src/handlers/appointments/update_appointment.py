@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import get_item_by_id, update_item, generate_response
+
 from utils.responser_helper import handle_exception # Assuming this is used or build_error_response is self-contained
 from utils.cors import add_cors_headers
 
@@ -127,5 +128,7 @@ def lambda_handler(event, context):
     except ClientError as e:
         return handle_exception(e, request_origin)
     except Exception as e:
+
         logger.error("Error updating appointment: %s", e, exc_info=True) # Changed from print to logger.error
         return build_error_response(500, 'Internal Server Error', 'Error updating appointment', request_origin)
+

@@ -1,8 +1,8 @@
 // src/pages/AdminPatientsPage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Drawer } from "@mui/material";
-import { PageLayout } from "../components/ui";
+import { Drawer } from "@mui/material"; // Button removed
+import { PageLayout, PrimaryButton } from "../components/ui"; // PrimaryButton added
 import { useAppData } from "../app/providers/DataProvider";
 import PatientDetailView from "../features/patients/components/PatientDetailView";
 import PatientGrid from "../components/patients/PatientGrid";
@@ -99,13 +99,11 @@ function AdminPatientsPage() {
       showDebug={showDebug}
       debugPanel={<DebugPanel data={filteredPatients} />}
       action={
-        <Button
-          variant="contained"
-          color="primary"
+        <PrimaryButton /* Replaced MUI Button */
           onClick={handleAddNewPatient}
         >
           Add New Patient
-        </Button>
+        </PrimaryButton>
       }
     >
       <PatientSearch

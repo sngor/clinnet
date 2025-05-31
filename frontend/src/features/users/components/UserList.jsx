@@ -33,7 +33,7 @@ import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import TableContainer from "../../../components/TableContainer";
-import ConfirmDeleteDialog from "../../../components/ConfirmDeleteDialog";
+import ConfirmDeleteDialog from "../../../components/ui/ConfirmDeleteDialog"; // Updated path
 import PasswordStrengthMeter from "../../../components/PasswordStrengthMeter";
 import { validatePassword } from "../../../utils/password-validator";
 import useUserManagement from "../hooks/useUserManagement";

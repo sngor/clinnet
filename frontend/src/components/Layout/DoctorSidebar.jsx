@@ -50,6 +50,12 @@ function DoctorSidebar({ collapsed = false }) {
         primary="Medical Records"
         collapsed={collapsed}
       />
+      <ActiveNavLink
+        to="/settings"
+        icon={<SettingsIcon />}
+        primary="Settings"
+        collapsed={collapsed}
+      />
     </List>
   );
 }
