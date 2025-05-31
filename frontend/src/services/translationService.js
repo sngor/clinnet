@@ -6,7 +6,7 @@ import AWS from 'aws-sdk';
 AWS.config.update({
   accessKeyId: 'YOUR_ACCESS_KEY_ID', // Replace with secure method
   secretAccessKey: 'YOUR_SECRET_ACCESS_KEY', // Replace with secure method
-  region: 'us-east-1' // Or your desired region, make this configurable
+  region: import.meta.env.VITE_AWS_REGION || 'us-east-1' // Or your desired region, make this configurable
 });
 
 const translate = new AWS.Translate({ apiVersion: '2017-07-01' });
