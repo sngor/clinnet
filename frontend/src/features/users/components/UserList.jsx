@@ -488,7 +488,7 @@ function UserList() {
                                 width: 32,
                                 height: 32,
                                 fontSize: 16,
-                                borderRadius: 2,
+                                borderRadius: 2, // square with rounded corners
                               }}
                             >
                               {user.firstName

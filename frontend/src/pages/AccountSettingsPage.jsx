@@ -23,7 +23,12 @@ import {
 import { useAuth } from "../app/providers/AuthProvider";
 import userService from "../services/userService";
 import { getAuthToken } from "../utils/cognito-helpers";
-import { PageLayout, FormField, FormLayout } from "../components/ui"; // Added PageLayout
+import {
+  PageLayout,
+  FormField,
+  FormLayout,
+  PageHeading,
+} from "../components/ui"; // Added PageHeading
 import PersonIcon from "@mui/icons-material/Person";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import LockIcon from "@mui/icons-material/Lock";
@@ -335,10 +340,10 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
 
   return (
     <PageLayout>
-      <Box p={2} bgcolor="background.default">
-        <Typography variant="h4" gutterBottom>
-          Account Settings
-        </Typography>
+      {/* Replace Typography header with PageHeading for consistency */}
+      <PageHeading title="Account Settings" divider={false} />
+      <Box p={2}>
+        {/* Removed: <Typography variant="h4" gutterBottom>Account Settings</Typography> */}
 
         <Card variant="outlined">
           <CardContent>

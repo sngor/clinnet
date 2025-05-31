@@ -3,6 +3,11 @@
 /* Smooth scrolling for the entire app */
 html {
   scroll-behavior: smooth;
+  background: #fff; /* Ensure html is white */
+}
+
+body {
+  background: #f7f7f7; /* Changed to light grey */
 }
 
 /* Modern focus styles */
@@ -63,16 +68,6 @@ html {
 
 .hover-lift:hover {
   transform: translateY(-4px);
-}
-
-/* Explicitly prevent hover animations on main content */
-.MuiBox-root:not(.hover-lift),
-.MuiContainer-root:not(.hover-lift),
-.MuiGrid-root:not(.hover-lift),
-.MuiCard-root:not(.hover-lift),
-.MuiPaper-root:not(.hover-lift) {
-  transition: none !important;
-  transform: none !important;
 }
 
 /* Responsive utilities */
@@ -238,4 +233,17 @@ input:-webkit-autofill:active {
 
 .MuiButton-root:not(.Mui-disabled):hover::before {
   transform: translateX(0);
+}
+
+/* Sticky page header utility class */
+.sticky-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 1101;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(67, 97, 238, 0.04);
+  padding-left: 72px; /* space for menu icon */
+  min-height: 56px;
 }

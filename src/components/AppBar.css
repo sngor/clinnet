@@ -1,0 +1,12 @@
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  /* ...existing styles... */
+}
+
+.css-inuwyx {
+  width: 100vw;
+  height: 100vh;
+  /* ...existing code... */
+}

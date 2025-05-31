@@ -103,7 +103,7 @@ function PersonalInfoTab({
               height: 120,
               mb: 2,
               border: "2px solid lightgray",
-              borderRadius: 2,
+              borderRadius: 2, // square with rounded corners
             }}
           />
           {isEditing && (

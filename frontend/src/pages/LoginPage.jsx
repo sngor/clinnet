@@ -100,7 +100,7 @@ function LoginPage() {
         alignItems: "center",
         justifyContent: "center",
         padding: { xs: 2, sm: 4 },
-        backgroundColor: "#f5f7fa",
+        backgroundColor: "transparent", // Use theme background
       }}
     >
       <Box maxWidth="md" sx={{ width: "100%", position: "relative" }}>

@@ -52,8 +52,8 @@ const theme = createTheme({
       contrastText: '#fff',
     },
     background: {
-      default: '#f8f9fd',   // Slightly blue-tinted with higher luminance
-      paper: '#ffffff',
+      default: '#f7f7f7',   // Changed to very light grey
+      paper: '#fff',        // Keep paper white for cards, etc.
     },
     grey: {
       50: '#fafafa',
@@ -153,7 +153,7 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#f8f9fd',
+          backgroundColor: '#fff', // Changed to pure white
           scrollbarWidth: 'thin',
           '&::-webkit-scrollbar': {
             width: '6px',
@@ -169,8 +169,7 @@ const theme = createTheme({
           // Add smooth scrolling
           scrollBehavior: 'smooth',
           // Add a subtle background pattern
-          backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)',
-          backgroundSize: '25px 25px',
+          backgroundImage: 'none', // Remove subtle background pattern
         },
       },
     },
@@ -253,6 +252,7 @@ const theme = createTheme({
           '-webkit-backdrop-filter': 'blur(10px) saturate(180%)',
           backdropFilter: 'blur(10px) saturate(180%)',
           borderBottom: '1px solid rgba(209, 213, 219, 0.3)',
+          borderRadius: 0, // Remove rounded corners from top bar
         },
       },
     },
@@ -557,7 +557,6 @@ const theme = createTheme({
           },
           '&:hover': {
             backgroundColor: 'rgba(0, 0, 0, 0.04)',
-            transform: 'translateX(3px)',
           },
         },
       },

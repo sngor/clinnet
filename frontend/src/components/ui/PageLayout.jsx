@@ -19,12 +19,14 @@
 //   {/* Page content */}
 // </PageLayout>
 
-import React from "react";
+import React, { useContext } from "react";
 import { Box, Alert, Button } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import PageContainer from "./PageContainer";
 import PageHeading from "./PageHeading";
-import { SectionContainer } from "./Container";
 import LoadingIndicator from "./LoadingIndicator";
+import { MenuIconContext } from "../Layout/AppLayout"; // Import the context
 
 /**
  * A consistent layout component for all pages
@@ -40,6 +42,7 @@ const PageLayout = ({
   maxWidth = "lg",
   showDebug = false,
   debugPanel = null,
+  menuIcon = null, // <-- Add menuIcon prop
 }) => {
   if (loading) {
     return (
@@ -71,6 +74,13 @@ const PageLayout = ({
     );
   }
 
+  // Use menuIcon from context if not provided
+  const contextMenuIcon = useContext(MenuIconContext);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const effectiveMenuIcon =
+    !isMobile && (menuIcon !== undefined ? menuIcon : contextMenuIcon);
+
   return (
     <PageContainer maxWidth={maxWidth}>
       {showDebug && debugPanel}
@@ -84,14 +94,23 @@ const PageLayout = ({
             mb: 2,
           }}
         >
-          <PageHeading title={title} subtitle={subtitle} />
-          {action}
+          <PageHeading
+            title={title}
+            subtitle={subtitle}
+            action={action}
+            menuIcon={effectiveMenuIcon}
+          />
         </Box>
       ) : (
-        <PageHeading title={title} subtitle={subtitle} />
+        <PageHeading
+          title={title}
+          subtitle={subtitle}
+          menuIcon={effectiveMenuIcon}
+        />
       )}
 
-      <SectionContainer>{children}</SectionContainer>
+      {/* Remove SectionContainer, render children directly */}
+      {children}
     </PageContainer>
   );
 };

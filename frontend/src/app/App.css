@@ -3,4 +3,5 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: #f7f7f7; /* Changed to very light grey */
 }

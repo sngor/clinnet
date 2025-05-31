@@ -1,11 +1,9 @@
 // src/components/Layout/AppLayout.jsx
-import React, { useState } from "react";
+import React, { useState, createContext, useMemo } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import {
   Box,
   Drawer,
-  AppBar,
-  Toolbar,
   Typography,
   Divider,
   IconButton,
@@ -33,6 +31,9 @@ import ActiveNavLink from "../ActiveNavLink"; // Ensure ActiveNavLink is importe
 
 const drawerWidth = 240;
 const collapsedDrawerWidth = 72;
+
+// Add context for menu icon
+export const MenuIconContext = createContext(null);
 
 function AppLayout() {
   const { user, logout } = useAuth();
@@ -70,6 +71,16 @@ function AppLayout() {
     }
   };
 
+  // Handler for profile section click (open menu)
+  // Replace with direct navigation to account settings
+  const handleProfileSectionClick = () => {
+    navigate("/account-settings");
+    // Close the drawer on mobile when navigating
+    if (isMobile) {
+      setMobileOpen(false);
+    }
+  };
+
   // Get user's display name
   const getUserDisplayName = () => {
     if (user?.firstName && user?.lastName) {
@@ -93,6 +104,130 @@ function AppLayout() {
       return "U";
     }
   };
+
+  // Get user's role label (capitalized)
+  const getUserRoleLabel = () => {
+    if (!user?.role) return "";
+    return user.role.charAt(0).toUpperCase() + user.role.slice(1);
+  };
+
+  // Sidebar profile section (avatar + name + role)
+  const sidebarProfileSection = (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: drawerCollapsed ? "column" : "row",
+        alignItems: "center",
+        justifyContent: drawerCollapsed ? "center" : "flex-start",
+        cursor: "pointer",
+        userSelect: "none",
+        width: "100%",
+        margin: "4px 8px",
+        borderRadius: 10,
+        // Remove hover background effect:
+        // "&:hover": {
+        //   opacity: 0.92,
+        //   backgroundColor: "rgba(0, 0, 0, 0.04)",
+        // },
+        "&:hover": {
+          opacity: 0.92,
+        },
+        transition:
+          "background 0.2s, flex-direction 0.2s, justify-content 0.2s",
+        minHeight: 48,
+        boxSizing: "border-box",
+        px: 1.5,
+        py: 1,
+      }}
+      onClick={handleProfileSectionClick}
+      tabIndex={0}
+      aria-label="Go to account settings"
+    >
+      {user?.profileImage ? (
+        <Avatar
+          alt={getUserDisplayName()}
+          src={user.profileImage}
+          variant="rounded"
+          sx={{
+            width: 44,
+            height: 44,
+            border: "2px solid rgba(67, 97, 238, 0.2)",
+            boxShadow: "0 4px 8px rgba(67, 97, 238, 0.10)",
+            borderRadius: 2,
+            mr: drawerCollapsed ? 0 : 1.5,
+            mb: drawerCollapsed ? 0.5 : 0,
+            mx: drawerCollapsed ? "auto" : undefined,
+            transition: "margin 0.2s",
+          }}
+        />
+      ) : (
+        <Avatar
+          variant="rounded"
+          sx={{
+            width: 44,
+            height: 44,
+            bgcolor: "secondary.main",
+            fontSize: 20,
+            fontWeight: 600,
+            background: "linear-gradient(135deg, #7209b7 0%, #560a86 100%)",
+            border: "2px solid rgba(114, 9, 183, 0.2)",
+            boxShadow: "0 4px 8px rgba(114, 9, 183, 0.10)",
+            borderRadius: 2,
+            mr: drawerCollapsed ? 0 : 1.5,
+            mb: drawerCollapsed ? 0.5 : 0,
+            mx: drawerCollapsed ? "auto" : undefined,
+            transition: "margin 0.2s",
+          }}
+        >
+          {getAvatarLetter()}
+        </Avatar>
+      )}
+      {/* Only show name/role when not collapsed */}
+      {!drawerCollapsed && (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            justifyContent: "center",
+            minWidth: 0,
+            flex: 1,
+          }}
+        >
+          <Typography
+            variant="subtitle2"
+            color="primary.main"
+            sx={{
+              fontWeight: 600,
+              textAlign: "left",
+              maxWidth: 140,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              lineHeight: 1.2,
+            }}
+          >
+            {getUserDisplayName()}
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              textAlign: "left",
+              maxWidth: 140,
+              opacity: 0.85,
+              fontWeight: 500,
+              mt: 0.2,
+              letterSpacing: "0.03em",
+              lineHeight: 1.2,
+            }}
+          >
+            {getUserRoleLabel()}
+          </Typography>
+        </Box>
+      )}
+    </Box>
+  );
 
   // Render sidebar based on user role
   const renderSidebar = () => {
@@ -133,82 +268,11 @@ function AppLayout() {
             }),
         }}
       >
-        <Toolbar
-          sx={{
-            display: "flex",
-            flexDirection: drawerCollapsed ? "column" : "column",
-            alignItems: "center",
-            justifyContent: "center",
-            py: { xs: 2, sm: 3 },
-            background: "white",
-          }}
-        >
-          {/* Logo */}{" "}
-          <Box
-            sx={{
-              width: { xs: 50, sm: 60 },
-              height: { xs: 50, sm: 60 },
-              bgcolor: "primary.main",
-              background: "linear-gradient(135deg, #4361ee 0%, #3a56d4 100%)",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              mb: drawerCollapsed ? 0 : 1.5,
-              position: "relative",
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                width: "100%",
-                height: "100%",
-                borderRadius: "50%",
-                background:
-                  "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%)",
-                top: 0,
-                left: 0,
-              },
-            }}
-          >
-            <Typography
-              variant={isMobile ? "h5" : "h4"}
-              color="white"
-              fontWeight="bold"
-              align="center"
-            >
-              C
-            </Typography>
-          </Box>
-          {/* App Name - Hide when collapsed */}
-          {!drawerCollapsed && (
-            <>
-              <Typography
-                variant={isMobile ? "subtitle1" : "h6"}
-                color="primary.main"
-                fontWeight="bold"
-                align="center"
-                sx={{
-                  mb: 0.5,
-                  letterSpacing: "0.05em",
-                  background: "linear-gradient(90deg, #4361ee, #7209b7)",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  color: "transparent" /* Fallback */,
-                }}
-              >
-                CLINNET
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                align="center"
-                sx={{ opacity: 0.85, fontWeight: 500 }}
-              >
-                Healthcare Management
-              </Typography>
-            </>
-          )}
-        </Toolbar>
+        {/* --- Remove logo and app name from here --- */}
+        {/* <Toolbar> ...logo and app name... </Toolbar> */}
+        {/* Inserted Profile Section */}
+        {sidebarProfileSection}
+        {/* End Profile Section */}
         <Divider />
         <Box
           sx={{
@@ -216,22 +280,53 @@ function AppLayout() {
             flexGrow: 1,
             overflow: "auto",
             py: 1,
+            // Stretch sidebar content vertically on mobile
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           {renderSidebar()}
         </Box>
-        {/* Inserted Settings Link Start */}
+        {/* --- Settings Link Start --- */}
         <Box sx={{ p: 0.5 }}>
-          {" "}
-          {/* Using similar padding as sidebar lists items for consistency */}
           <ActiveNavLink
-            to="/settings" // Path to the shared settings page
+            to="/settings"
             icon={<SettingsIcon />}
             primary="Settings"
-            collapsed={drawerCollapsed} // Use the AppLayout's state for collapsed status
+            collapsed={drawerCollapsed}
           />
         </Box>
-        {/* Inserted Settings Link End */}
+        {/* --- Settings Link End --- */}
+        {/* --- Logout Button Start (now using ActiveNavLink for alignment) --- */}
+        <Box sx={{ p: 0.5 }}>
+          <ActiveNavLink
+            to="#"
+            icon={<LogoutIcon />}
+            primary="Logout"
+            collapsed={drawerCollapsed}
+            onClick={(e) => {
+              e.preventDefault();
+              logout();
+            }}
+            sx={{
+              cursor: "pointer",
+              userSelect: "none",
+              mb: 0.5,
+              // Match hover/focus styles with settings
+              "&:hover": {
+                backgroundColor: "rgba(25, 118, 210, 0.08)",
+                "& .MuiListItemIcon-root": {
+                  color: "primary.main",
+                },
+                "& .MuiTypography-root": {
+                  color: "primary.main",
+                },
+              },
+            }}
+            aria-label="Logout"
+          />
+        </Box>
+        {/* --- Logout Button End --- */}
         <Divider /> {/* Existing divider above collapse button */}
         {/* Collapse/Expand button - hidden on mobile */}
         {!isMobile && (
@@ -250,7 +345,6 @@ function AppLayout() {
               onClick={handleDrawerCollapse}
               aria-label={drawerCollapsed ? "Expand drawer" : "Collapse drawer"}
               sx={{
-                // Preserving some specific styling, review if AppIconButton defaults are better
                 bgcolor: "background.paper",
                 boxShadow: "0 4px 12px rgba(67, 97, 238, 0.15)",
                 width: 36, // AppIconButton might have default sizes, ensure this is desired
@@ -274,410 +368,174 @@ function AppLayout() {
         )}
       </Box>
     ),
-    [user?.role, isMobile, drawerCollapsed, theme]
+    [user?.role, isMobile, drawerCollapsed, theme, sidebarProfileSection]
   );
 
   const currentDrawerWidth = drawerCollapsed
     ? collapsedDrawerWidth
     : drawerWidth;
 
+  // Memoize the menu icon for mobile
+  const menuIconButton = useMemo(
+    () => (
+      <AppIconButton
+        icon={MenuIcon}
+        color="primary"
+        aria-label="Open menu"
+        onClick={handleDrawerToggle}
+        sx={{
+          bgcolor: "white",
+          boxShadow: "0 4px 16px rgba(67, 97, 238, 0.18)",
+          borderRadius: "50%",
+          width: 44,
+          height: 44,
+          position: "fixed",
+          top: 12,
+          right: 12, // <-- move to right
+          zIndex: 2002, // <-- higher than drawer
+          display: { xs: "flex", sm: "none" },
+          "&:hover": {
+            bgcolor: "grey.100",
+            boxShadow: "0 8px 24px rgba(67, 97, 238, 0.22)",
+          },
+        }}
+      />
+    ),
+    [handleDrawerToggle]
+  );
+
   return (
-    <Box sx={{ display: "flex" }}>
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { sm: `calc(100% - ${currentDrawerWidth}px)` },
-          ml: { sm: `${currentDrawerWidth}px` },
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: "rgba(255, 255, 255, 0.85)", // More glass-like
-          color: "primary.main",
-          "-webkit-backdrop-filter": "blur(10px) saturate(180%)",
-          backdropFilter: "blur(10px) saturate(180%)",
-          // Refined top bar with very subtle shadow
-          boxShadow: "0 4px 20px rgba(67, 97, 238, 0.05)",
-          borderBottom: "1px solid rgba(231, 236, 248, 0.8)",
-          transition: (theme) =>
-            theme.transitions.create(["width", "margin"], {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-        }}
-      >
-        <Toolbar
-          sx={{ minHeight: { xs: "56px", sm: "64px" }, px: { xs: 1, sm: 3 } }}
-        >
-          {/* Replaced IconButton with AppIconButton for mobile menu toggle */}
-          <AppIconButton
-            icon={MenuIcon}
-            color="primary"
-            aria-label="open drawer"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }} // edge="start" is not a prop for AppIconButton
-          />
-
-          {/* Centered Portal Title */}
-          <Box
-            sx={{
-              flexGrow: 1,
-              display: "flex",
-              justifyContent: "center",
-              position: "absolute",
-              left: 0,
-              right: 0,
-              pointerEvents: "none",
-            }}
-          >
-            {" "}
-            <Typography
-              variant={isMobile ? "subtitle1" : "h6"}
-              noWrap
-              component="div"
-              sx={{
-                fontWeight: 600,
-                letterSpacing: "0.05em",
-                textAlign: "center",
-                textTransform: "uppercase",
-                lineHeight: 1.3,
-                background: "linear-gradient(90deg, #4361ee, #7209b7)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                color: "transparent" /* Fallback */,
-                padding: "0 8px",
-              }}
-            >
-              {user?.role?.toUpperCase()} PORTAL
-            </Typography>
-          </Box>
-
-          {/* Profile Icon and Menu */}
-          <Box
-            sx={{
-              flexShrink: 0,
-              ml: "auto",
-            }}
-          >
-            <Stack
-              direction="row"
-              spacing={1.5}
-              alignItems="center"
-              onClick={handleMenuOpen}
-              sx={{
-                cursor: "pointer",
-                "&:hover": {
-                  opacity: 0.9,
-                },
-              }}
-            >
-              {/* User Name - Hide on mobile */}
-              {!isMobile && (
-                <Typography
-                  variant="body2"
-                  color="primary"
-                  sx={{
-                    fontWeight: 500,
-                    display: { xs: "none", sm: "block" },
-                    letterSpacing: 0.2,
-                  }}
-                >
-                  {getUserDisplayName()}
-                </Typography>
-              )}
-
-              {/* Avatar */}
-              {user?.profileImage ? (
-                <Avatar
-                  alt={getUserDisplayName()}
-                  src={user.profileImage}
-                  variant="rounded"
-                  sx={{
-                    width: { xs: 34, sm: 38 },
-                    height: { xs: 34, sm: 38 },
-                    border: "2px solid rgba(67, 97, 238, 0.2)",
-                    boxShadow: "0 4px 8px rgba(67, 97, 238, 0.15)",
-                    transition: "all 0.3s ease",
-                    borderRadius: 2,
-                    "&:hover": {
-                      transform: "scale(1.05)",
-                      border: "2px solid rgba(67, 97, 238, 0.4)",
-                    },
-                  }}
-                />
-              ) : (
-                <Avatar
-                  variant="rounded"
-                  sx={{
-                    width: { xs: 34, sm: 38 },
-                    height: { xs: 34, sm: 38 },
-                    bgcolor: "secondary.main",
-                    fontSize: { xs: 16, sm: 18 },
-                    fontWeight: 600,
-                    background:
-                      "linear-gradient(135deg, #7209b7 0%, #560a86 100%)",
-                    border: "2px solid rgba(114, 9, 183, 0.2)",
-                    boxShadow: "0 4px 8px rgba(114, 9, 183, 0.15)",
-                    transition: "all 0.3s ease",
-                    borderRadius: 2,
-                    "&:hover": {
-                      transform: "scale(1.05)",
-                      border: "2px solid rgba(114, 9, 183, 0.4)",
-                    },
-                  }}
-                >
-                  {getAvatarLetter()}
-                </Avatar>
-              )}
-            </Stack>
-
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              keepMounted
-              transformOrigin={{ vertical: "top", horizontal: "right" }}
-              open={open}
-              onClose={handleMenuClose}
-              PaperProps={{
-                sx: {
-                  minWidth: 220,
-                  mt: 1.5,
-                  boxShadow: "0px 8px 30px rgba(0,0,0,0.08)",
-                  borderRadius: 2, // Changed from 3 to 2 for less rounded
-                  border: "1px solid rgba(231, 236, 248, 0.8)",
-                  overflow: "hidden",
-                  "& .MuiMenuItem-root": {
-                    px: 2.5,
-                    py: 1.2,
-                    my: 0.5,
-                    mx: 1,
-                    borderRadius: 2,
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      backgroundColor: "rgba(67, 97, 238, 0.08)",
-                    },
-                    "& .MuiListItemIcon-root": {
-                      minWidth: 36,
-                      color: "primary.main",
-                    },
-                  },
-                },
-              }}
-            >
-              {/* User info in menu */}
-              <Box
-                sx={{ px: 2, py: 1.5, display: "flex", alignItems: "center" }}
-              >
-                {user?.profileImage ? (
-                  <Avatar
-                    alt={getUserDisplayName()}
-                    src={user.profileImage}
-                    variant="rounded"
-                    sx={{ width: 40, height: 40, mr: 1.5, borderRadius: 2 }}
-                  />
-                ) : (
-                  <Avatar
-                    variant="rounded"
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      mr: 1.5,
-                      bgcolor: "secondary.main",
-                      fontSize: 18,
-                      fontWeight: 500,
-                      borderRadius: 2,
-                    }}
-                  >
-                    {getAvatarLetter()}
-                  </Avatar>
-                )}
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ fontWeight: 600, color: "primary.main" }}
-                  >
-                    {getUserDisplayName()}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {user?.email}
-                  </Typography>
-                </Box>
-              </Box>
-              <Divider />
-
-              <MenuItem onClick={() => handleNavigate("/account-settings")}>
-                <ListItemIcon>
-                  <SettingsIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Account Settings"
-                  primaryTypographyProps={{
-                    variant: "body2",
-                    sx: { fontWeight: 500 },
-                  }}
-                />
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={logout}>
-                <ListItemIcon>
-                  <LogoutIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Logout"
-                  primaryTypographyProps={{
-                    variant: "body2",
-                    sx: { fontWeight: 500 },
-                  }}
-                />
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
-      <Box
-        component="nav"
-        sx={{
-          width: { sm: currentDrawerWidth },
-          flexShrink: { sm: 0 },
-          transition: (theme) =>
-            theme.transitions.create("width", {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-        }}
-        aria-label="navigation drawer"
-      >
-        {/* Temporary drawer for mobile */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
+    <MenuIconContext.Provider value={isMobile ? null : menuIconButton}>
+      <Box sx={{ display: "flex" }}>
+        {/* Fixed menu icon for mobile */}
+        {isMobile && menuIconButton}
+        {/* Sidebar navigation */}
+        <Box
+          component="nav"
           sx={{
-            display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
-              width: drawerWidth,
-              boxShadow: "none",
-              borderRight: "1px solid #e0e0e0",
-              pt: "56px",
-              alignItems: "flex-start",
-              overflow: "visible",
-              position: "relative",
-            },
+            width: { sm: currentDrawerWidth },
+            flexShrink: { sm: 0 },
+            transition: (theme) =>
+              theme.transitions.create("width", {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
+          }}
+          aria-label="navigation drawer"
+        >
+          {/* Temporary drawer for mobile */}
+          <Drawer
+            variant="temporary"
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            ModalProps={{ keepMounted: true }}
+            sx={{
+              display: { xs: "block", sm: "none" },
+              "& .MuiDrawer-paper": {
+                boxSizing: "border-box",
+                width: "100vw",
+                height: "auto", // Only as tall as content
+                maxWidth: "100vw",
+                maxHeight: "none",
+                left: 0,
+                top: 0,
+                borderRadius: 0,
+                boxShadow: "none",
+                borderRight: "none",
+                background: "rgba(255,255,255,0.85)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                zIndex: 2001,
+                pt: 0,
+                alignItems: "flex-start",
+                overflow: "visible",
+                position: "fixed",
+                transition: (theme) =>
+                  theme.transitions.create(["width", "left"], {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.enteringScreen,
+                  }),
+              },
+              "& .MuiBackdrop-root": {
+                background: "rgba(67,97,238,0.10)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+              },
+            }}
+          >
+            <Box sx={{ width: "100%" }}>
+              {/* Remove centering, start from top */}
+              {drawer}
+            </Box>
+          </Drawer>
+
+          {/* Permanent drawer for desktop */}
+          <Drawer
+            variant="permanent"
+            sx={{
+              display: { xs: "none", sm: "block" },
+              "& .MuiDrawer-paper": {
+                boxSizing: "border-box",
+                width: drawerCollapsed ? collapsedDrawerWidth : drawerWidth,
+                // Remove shadow, add right border line
+                borderRight: "1px solid #e0e0e0",
+                boxShadow: "none",
+                zIndex: (theme) => theme.zIndex.drawer,
+                transition: (theme) =>
+                  theme.transitions.create("width", {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.enteringScreen,
+                  }),
+                overflowX: "hidden",
+              },
+            }}
+            open
+          >
+            {drawer}
+          </Drawer>
+        </Box>
+        {/* Main content area */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            width: "100%",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            transition: (theme) =>
+              theme.transitions.create(["width", "margin"], {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
           }}
         >
-          {/* Show logo above drawer content on mobile, no nested container */}
+          {/* Remove the floating menu icon here */}
           <Box
             sx={{
-              width: "100%",
-              display: { xs: "flex", sm: "none" },
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
               justifyContent: "center",
-              alignItems: "center",
-              position: "absolute",
-              top: 0,
-              left: 0,
-              height: "56px",
-              zIndex: 2,
-              background: "white",
-              borderBottom: "1px solid #e0e0e0",
-              overflow: "visible",
+              alignItems: "stretch",
+              width: "100%",
+              overflow: "hidden",
             }}
           >
             <Box
               sx={{
-                width: 44,
-                height: 44,
-                bgcolor: "primary.main",
-                background: "linear-gradient(135deg, #4361ee 0%, #3a56d4 100%)",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                position: "relative",
-                mt: 0.5,
-                zIndex: 3,
+                width: "100%",
+                height: "100%",
+                overflow: "auto",
+                flex: 1,
               }}
             >
-              <Typography
-                variant="h5"
-                color="white"
-                fontWeight="bold"
-                align="center"
-              >
-                C
-              </Typography>
+              <Outlet />
             </Box>
-          </Box>
-          <Box sx={{ mt: "56px", width: "100%" }}>{drawer}</Box>
-        </Drawer>
-
-        {/* Permanent drawer for desktop */}
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
-              width: drawerCollapsed ? collapsedDrawerWidth : drawerWidth,
-              // Remove shadow, add right border line
-              borderRight: "1px solid #e0e0e0",
-              boxShadow: "none",
-              zIndex: (theme) => theme.zIndex.drawer,
-              transition: (theme) =>
-                theme.transitions.create("width", {
-                  easing: theme.transitions.easing.sharp,
-                  duration: theme.transitions.duration.enteringScreen,
-                }),
-              overflowX: "hidden",
-            },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          // p: { xs: 2, sm: 3 }, // Padding removed as per instruction
-          width: "100%", // Take up the whole width
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          // Only transition width and margin, not other properties
-          transition: (theme) =>
-            theme.transitions.create(["width", "margin"], {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-        }}
-      >
-        <Toolbar sx={{ minHeight: { xs: "56px", sm: "64px" } }} />
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "stretch",
-            width: "100%",
-            overflow: "hidden",
-          }}
-        >
-          <Box
-            sx={{
-              width: "100%",
-              height: "100%",
-              overflow: "auto",
-              flex: 1,
-            }}
-          >
-            <Outlet />
           </Box>
         </Box>
       </Box>
-    </Box>
+    </MenuIconContext.Provider>
   );
 }
 

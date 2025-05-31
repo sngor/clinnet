@@ -299,7 +299,7 @@ function AdminReportsPage() {
           <ContentCard
             sx={{
               p: { xs: 2, sm: 4 },
-              background: "linear-gradient(135deg, #f5f7fa 0%, #e3eafc 100%)",
+              background: "#f7f7f7", // Use light grey for report card background
               boxShadow: 1,
             }}
           >

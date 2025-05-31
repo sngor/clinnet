@@ -104,7 +104,8 @@ export const TextButton = styled(StyledButton)(({ theme }) => ({
   minWidth: 64,
   padding: "8px 12px",
   "&:hover": {
-    backgroundColor: theme.palette.action.hover,
+    // Remove background and only underline text on hover
+    backgroundColor: "transparent",
     textDecoration: "underline",
   },
   "&:disabled": {

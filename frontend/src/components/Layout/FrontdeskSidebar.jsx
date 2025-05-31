@@ -14,8 +14,13 @@ function FrontdeskSidebar({ collapsed = false }) {
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
+        alignItems: { xs: "center", sm: "center" }, // always center
         p: 0.5, // Reduced padding to give more space to buttons
+        flexGrow: { xs: 0, sm: 0 }, // Don't stretch vertically on mobile
+        justifyContent: { xs: "flex-start", sm: "flex-start" }, // Start from top
+        "& .MuiListItemButton-root": {
+          minHeight: 48, // Consistent height
+        },
       }}
     >
       <ActiveNavLink
