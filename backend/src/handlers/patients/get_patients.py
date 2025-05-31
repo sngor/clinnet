@@ -5,7 +5,7 @@ import os
 import json
 import logging
 from botocore.exceptions import ClientError
-from utils.responser_helper import handle_exception # Added for consistency
+from utils.responser_helper import handle_exception, build_error_response # Added for consistency
 
 # Import utility functions
 from utils.db_utils import query_by_type, generate_response # Changed query_table to query_by_type
@@ -19,10 +19,13 @@ def lambda_handler(event, context=None):
     logger.setLevel(logging.INFO)
     logger.info(f"Received event: {json.dumps(event)}")
 
+    headers = event.get('headers', {})
+    request_origin = headers.get('Origin') or headers.get('origin')
+
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
         logger.error('PatientRecords table name not configured')
-        return generate_response(500, {'message': 'PatientRecords table name not configured'})
+        return build_error_response(500, 'Configuration Error', 'PatientRecords table name not configured', request_origin)
 
     try:
         all_patients = []
@@ -48,10 +51,7 @@ def lambda_handler(event, context=None):
         
     except ClientError as ce:
         logger.error(f"ClientError fetching patients: {ce}", exc_info=True)
-        return handle_exception(ce) # Use imported helper
+        return handle_exception(ce, request_origin) # Use imported helper
     except Exception as e:
         logger.error(f"Error fetching patients: {e}", exc_info=True)
-        return generate_response(500, {
-            'message': 'Error fetching patients',
-            'error': str(e)
-        })
+        return build_error_response(500, 'Internal Server Error', f'Error fetching patients: {str(e)}', request_origin)

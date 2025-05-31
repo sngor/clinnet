@@ -9,7 +9,7 @@ from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
 from utils.db_utils import generate_response
-from utils.responser_helper import handle_exception
+from utils.responser_helper import handle_exception, build_error_response
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
@@ -73,12 +73,15 @@ def lambda_handler(event, context):
         dict: API Gateway response
     """
     logger.info(f"Received event: {json.dumps(event)}") # Changed
+
+    headers = event.get('headers', {})
+    request_origin = headers.get('Origin') or headers.get('origin')
     
     # Get table name from environment
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
         logger.error('PatientRecords table name not configured') # Added
-        return generate_response(500, {'message': 'PatientRecords table name not configured'})
+        return build_error_response(500, 'Configuration Error', 'PatientRecords table name not configured', request_origin)
     
     try:
         # Parse request body
@@ -94,10 +97,8 @@ def lambda_handler(event, context):
         missing_fields = [field for field in required_fields if field not in request_body]
         if missing_fields:
             logger.warning(f"Missing required fields: {missing_fields}")
-            return generate_response(400, {
-                'message': 'Missing required fields',
-                'fields': missing_fields
-            })
+            # Simplified message, omitting details for now
+            return build_error_response(400, 'Validation Error', f'Missing required fields: {", ".join(missing_fields)}', request_origin)
 
         # Detailed field validation
         validation_errors = {}
@@ -152,10 +153,9 @@ def lambda_handler(event, context):
 
         if validation_errors:
             logger.warning(f"Validation errors in request body: {validation_errors}")
-            return generate_response(400, {
-                'message': 'Validation failed',
-                'errors': validation_errors
-            })
+            # Simplified message, joining errors into a string
+            error_messages = "; ".join([f"{k}: {v}" for k, v in validation_errors.items()])
+            return build_error_response(400, 'Validation Error', f'Validation failed: {error_messages}', request_origin)
 
         # Check for extra fields (after validation of known fields)
         # Allowed fields for the patient item itself, not just for validation rules.
@@ -176,13 +176,10 @@ def lambda_handler(event, context):
         
     except json.JSONDecodeError as je:
         logger.error(f"Invalid request body: {je}", exc_info=True) # Changed
-        return generate_response(400, {'message': 'Invalid request body'})
+        return build_error_response(400, 'JSONDecodeError', 'Invalid JSON in request body', request_origin)
     except ClientError as ce: # More specific exception handling
         logger.error(f"ClientError creating patient: {ce}", exc_info=True)
-        return handle_exception(ce) # Use imported helper
+        return handle_exception(ce, request_origin) # Use imported helper
     except Exception as e:
         logger.error(f"Error creating patient: {e}", exc_info=True) # Changed
-        return generate_response(500, {
-            'message': 'Error creating patient',
-            'error': str(e)
-        })
+        return build_error_response(500, 'Internal Server Error', f'Error creating patient: {str(e)}', request_origin)

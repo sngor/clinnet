@@ -9,7 +9,7 @@ from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import query_table, generate_response
-from utils.responser_helper import handle_exception
+from utils.responser_helper import handle_exception, build_error_response
 from utils.cors import add_cors_headers, build_cors_preflight_response
 
 _cache = {}
@@ -32,14 +32,17 @@ def lambda_handler(event, context):
     logger.info(f"Received event: {json.dumps(event)}")
     logger.info(f"Context: {context}")
 
+    headers = event.get('headers', {})
+    request_origin = headers.get('Origin') or headers.get('origin')
+
     table_name = os.environ.get('SERVICES_TABLE')
     if not table_name:
         logger.error('Services table name not configured')
-        return generate_response(500, {'message': 'Services table name not configured'})
+        return build_error_response(500, 'Configuration Error', 'Services table name not configured', request_origin)
     
     # Handle CORS preflight requests
     if event.get('httpMethod') == 'OPTIONS':
-        return build_cors_preflight_response()
+        return build_cors_preflight_response(request_origin)
 
     # Get query parameters
     query_params = event.get('queryStringParameters', {}) or {}
@@ -88,11 +91,7 @@ def lambda_handler(event, context):
     
     except ClientError as e:
         logger.error(f"ClientError: {e}", exc_info=True)
-        return handle_exception(e)
+        return handle_exception(e, request_origin)
     except Exception as e:
         logger.error(f"Error fetching services: {e}", exc_info=True)
-        error_response = generate_response(500, {
-            'message': 'Error fetching services',
-            'error': str(e)
-        })
-        return error_response
+        return build_error_response(500, 'Internal Server Error', f'Error fetching services: {str(e)}', request_origin)

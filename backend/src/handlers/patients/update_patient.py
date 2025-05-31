@@ -11,7 +11,7 @@ from datetime import datetime
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
 
 from utils.db_utils import get_patient_by_pk_sk, update_item_by_pk_sk, generate_response
-from utils.responser_helper import handle_exception # Added
+from utils.responser_helper import handle_exception, build_error_response # Added
 
 # Initialize Logger
 logger = logging.getLogger() # Added
@@ -29,18 +29,21 @@ def lambda_handler(event, context):
         dict: API Gateway response
     """
     logger.info(f"Received event: {json.dumps(event)}") # Changed
+
+    headers = event.get('headers', {})
+    request_origin = headers.get('Origin') or headers.get('origin')
     
     # Extract patient ID from path parameters
     patient_id = event.get('pathParameters', {}).get('id') # Safer access
     if not patient_id:
         logger.warning('Patient ID missing from path parameters')
-        return generate_response(400, {'message': 'Patient ID is required in path parameters'})
+        return build_error_response(400, 'Validation Error', 'Patient ID is required in path parameters', request_origin)
     
     # Parse request body
     body_str = event.get('body', '{}')
     if not body_str: # Check if body is empty string or None
         logger.warning('Request body is empty or missing')
-        return generate_response(400, {'message': 'Request body is required'})
+        return build_error_response(400, 'Validation Error', 'Request body is required', request_origin)
     
     try:
         if event.get('isBase64Encoded'): # Handle base64 encoding
@@ -50,12 +53,12 @@ def lambda_handler(event, context):
         logger.info(f"Decoded request body: {request_body}")
     except json.JSONDecodeError as je:
         logger.error(f"Invalid JSON in request body: {je}", exc_info=True)
-        return generate_response(400, {'message': 'Invalid JSON in request body'})
+        return build_error_response(400, 'JSONDecodeError', 'Invalid JSON in request body', request_origin)
     
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
     if not table_name:
         logger.error('PatientRecords table name not configured')
-        return generate_response(500, {'message': 'PatientRecords table name not configured'})
+        return build_error_response(500, 'Configuration Error', 'PatientRecords table name not configured', request_origin)
     
     try:
         # Check if patient exists
@@ -66,7 +69,7 @@ def lambda_handler(event, context):
         
         if not existing_patient:
             logger.warning(f"Patient with ID {patient_id} not found for update.")
-            return generate_response(404, {'message': f'Patient with ID {patient_id} not found'})
+            return build_error_response(404, 'Not Found', f'Patient with ID {patient_id} not found', request_origin)
         
         # Extract fields to update
         updates = {}
@@ -161,10 +164,8 @@ def lambda_handler(event, context):
 
         if validation_errors: # This validation is for non-image fields
             logger.warning(f"Validation errors in update request body: {validation_errors}")
-            return generate_response(400, {
-                'message': 'Update validation failed',
-                'errors': validation_errors
-            })
+            error_messages = "; ".join([f"{k}: {v}" for k, v in validation_errors.items()])
+            return build_error_response(400, 'Validation Error', f'Update validation failed: {error_messages}', request_origin)
 
         # S3 Profile Image Upload Logic
         profile_image_data = request_body.pop('profileImage', None) # Use pop to remove it from request_body
@@ -174,7 +175,7 @@ def lambda_handler(event, context):
             s3_bucket_name = os.environ.get('PROFILE_IMAGE_BUCKET')
             if not s3_bucket_name:
                 logger.error("S3 bucket name for profile images not configured (PROFILE_IMAGE_BUCKET env var missing).")
-                return generate_response(500, {'message': 'Server configuration error: S3 bucket not specified.'})
+                return build_error_response(500, 'Configuration Error', 'Server configuration error: S3 bucket not specified.', request_origin)
 
             try:
                 # Decode base64 string. It might contain a prefix like 'data:image/png;base64,'
@@ -211,13 +212,13 @@ def lambda_handler(event, context):
 
             except (base64.binascii.Error, ValueError) as b64_error:
                 logger.error(f"Base64 decoding error for profile image: {b64_error}", exc_info=True)
-                return generate_response(400, {'message': 'Invalid profile image data format.'})
+                return build_error_response(400, 'ValidationError', 'Invalid profile image data format.', request_origin)
             except (ClientError, NoCredentialsError, PartialCredentialsError) as s3_error:
                 logger.error(f"S3 upload failed for patient {patient_id}: {s3_error}", exc_info=True)
-                return generate_response(500, {'message': 'Failed to upload profile image.'})
+                return handle_exception(s3_error, request_origin) # Use handle_exception for S3 ClientError
             except Exception as e:
                 logger.error(f"An unexpected error occurred during profile image processing for patient {patient_id}: {e}", exc_info=True)
-                return generate_response(500, {'message': 'Error processing profile image.'})
+                return build_error_response(500, 'Internal Server Error', 'Error processing profile image.', request_origin)
 
         if not updates and not profile_image_data: # if no other updates and no image was processed
             logger.info(f"No valid fields to update or profile image provided for patient {patient_id}. Returning existing data.")
@@ -236,10 +237,7 @@ def lambda_handler(event, context):
         return generate_response(200, updated_patient)
     except ClientError as ce: # More specific exception handling
         logger.error(f"ClientError updating patient {patient_id}: {ce}", exc_info=True)
-        return handle_exception(ce) # Use imported helper
+        return handle_exception(ce, request_origin) # Use imported helper
     except Exception as e:
         logger.error(f"Error updating patient {patient_id}: {e}", exc_info=True) # Changed
-        return generate_response(500, {
-            'message': 'Error updating patient',
-            'error': str(e)
-        })
+        return build_error_response(500, 'Internal Server Error', f'Error updating patient: {str(e)}', request_origin)
