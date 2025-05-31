@@ -1,37 +1,39 @@
 // src/app/router.jsx
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "../pages/LoginPage";
-import AdminDashboard from "../pages/AdminDashboard";
-import DoctorDashboard from "../pages/DoctorDashboard";
-import FrontDeskDashboard from "../pages/FrontdeskDashboard";
-import PatientManagementPage from "../pages/PatientManagementPage";
-import AdminPatientsPage from "../pages/AdminPatientsPage";
-import AdminServicesPage from "../pages/AdminServicesPage";
-import PatientDetailPage from "../pages/PatientDetailPage";
-import NewPatientPage from "../pages/NewPatientPage";
-import NotFoundPage from "../pages/NotFoundPage";
-import UnauthorizedPage from "../pages/UnauthorizedPage";
-import UserManagementPage from "../pages/UserManagementPage";
-import AccountSettingsPage from "../pages/AccountSettingsPage";
-import FrontdeskAppointmentsPage from "../pages/FrontdeskAppointmentsPage";
-import DoctorAppointmentsPage from "../pages/DoctorAppointmentsPage";
-import AdminAppointmentsPage from "../pages/AdminAppointmentsPage";
-import DoctorMedicalRecordsPage from "../pages/DoctorMedicalRecordsPage";
-import DoctorSchedulePage from "../pages/DoctorSchedulePage";
-import FrontdeskCheckoutPage from "../pages/FrontdeskCheckoutPage";
-import AdminReportsPage from "../pages/AdminReportsPage";
-import StyleGuidePage from "../pages/StyleGuidePage";
-import DiagnosticsPage from "../pages/DiagnosticsPage"; // Import the DiagnosticsPage component
-import AdminSettingsPage from "../pages/AdminSettingsPage"; // Import the AdminSettingsPage component
+import LoadingIndicator from "../components/LoadingIndicator";
+const LoginPage = lazy(() => import("../pages/LoginPage"));
+const AdminDashboard = lazy(() => import("../pages/AdminDashboard"));
+const DoctorDashboard = lazy(() => import("../pages/DoctorDashboard"));
+const FrontDeskDashboard = lazy(() => import("../pages/FrontdeskDashboard"));
+const PatientManagementPage = lazy(() => import("../pages/PatientManagementPage"));
+const AdminPatientsPage = lazy(() => import("../pages/AdminPatientsPage"));
+const AdminServicesPage = lazy(() => import("../pages/AdminServicesPage"));
+const PatientDetailPage = lazy(() => import("../pages/PatientDetailPage"));
+const NewPatientPage = lazy(() => import("../pages/NewPatientPage"));
+const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
+const UnauthorizedPage = lazy(() => import("../pages/UnauthorizedPage"));
+const UserManagementPage = lazy(() => import("../pages/UserManagementPage"));
+const AccountSettingsPage = lazy(() => import("../pages/AccountSettingsPage"));
+const FrontdeskAppointmentsPage = lazy(() => import("../pages/FrontdeskAppointmentsPage"));
+const DoctorAppointmentsPage = lazy(() => import("../pages/DoctorAppointmentsPage"));
+const AdminAppointmentsPage = lazy(() => import("../pages/AdminAppointmentsPage"));
+const DoctorMedicalRecordsPage = lazy(() => import("../pages/DoctorMedicalRecordsPage"));
+const DoctorSchedulePage = lazy(() => import("../pages/DoctorSchedulePage"));
+const FrontdeskCheckoutPage = lazy(() => import("../pages/FrontdeskCheckoutPage"));
+const AdminReportsPage = lazy(() => import("../pages/AdminReportsPage"));
+const StyleGuidePage = lazy(() => import("../pages/StyleGuidePage"));
+const DiagnosticsPage = lazy(() => import("../pages/DiagnosticsPage")); // Import the DiagnosticsPage component
+const AdminSettingsPage = lazy(() => import("../pages/AdminSettingsPage")); // Import the AdminSettingsPage component
 import AppLayout from "../components/Layout/AppLayout";
 import ProtectedRoute from "./ProtectedRoute";
 
 function AppRouter() {
   return (
-    <Routes>
-      {/* Public Route */}
-      <Route path="/login" element={<LoginPage />} />
+    <Suspense fallback={<LoadingIndicator />}>
+      <Routes>
+        {/* Public Route */}
+        <Route path="/login" element={<LoginPage />} />
 
       {/* Style Guide Route - accessible without login for development purposes */}
       <Route path="/style-guide" element={<StyleGuidePage />} />
@@ -251,6 +253,7 @@ function AppRouter() {
       {/* Catch-all for Not Found */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </Suspense>
   );
 }
 
