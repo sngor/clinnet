@@ -1,9 +1,9 @@
 // src/app/providers/ThemeProvider.jsx
 import React from 'react';
-import { createTheme, ThemeProvider as MUIThemeProvider, CssBaseline, responsiveFontSizes } from '@mui/material';
+import { createTheme, ThemeProvider as MUIThemeProvider, CssBaseline, responsiveFontSizes, useMediaQuery } from '@mui/material';
 
 // Define a basic theme (customize colors, typography, etc.)
-let theme = createTheme({
+const lightThemeOptions = {
   palette: {
     primary: {
       main: '#1976d2', // Primary blue color
@@ -389,12 +389,43 @@ let theme = createTheme({
   shape: {
     borderRadius: 8,
   },
-});
+};
 
-// Apply responsive font sizes to all typography variants
-theme = responsiveFontSizes(theme);
+const darkThemeOptions = {
+  palette: {
+    mode: 'dark',
+    primary: lightThemeOptions.palette.primary,
+    secondary: lightThemeOptions.palette.secondary,
+    background: {
+      default: '#121212',
+      paper: '#1e1e1e',
+    },
+    text: {
+      primary: '#e0e0e0',
+      secondary: '#b0b0b0',
+    },
+    error: lightThemeOptions.palette.error,
+    warning: lightThemeOptions.palette.warning,
+    info: lightThemeOptions.palette.info,
+    success: lightThemeOptions.palette.success,
+  },
+  typography: lightThemeOptions.typography,
+  components: lightThemeOptions.components,
+  spacing: lightThemeOptions.spacing,
+  shape: lightThemeOptions.shape,
+};
 
 export const ThemeProvider = ({ children }) => {
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+
+  const themeOptions = React.useMemo(
+    () => (prefersDarkMode ? darkThemeOptions : lightThemeOptions),
+    [prefersDarkMode]
+  );
+
+  let theme = createTheme(themeOptions);
+  theme = responsiveFontSizes(theme);
+
   return (
     <MUIThemeProvider theme={theme}>
       <CssBaseline /> {/* Ensures baseline styles */}
