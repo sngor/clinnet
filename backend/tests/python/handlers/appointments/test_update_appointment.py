@@ -6,15 +6,18 @@ from moto import mock_aws
 from backend.src.handlers.appointments.update_appointment import lambda_handler
 from decimal import Decimal # For potential numeric fields, though less common for appointment updates
 import time
+from datetime import datetime as dt, timezone, timedelta # For timestamps
 
 # Define the appointments table name for tests
 TEST_APPOINTMENTS_TABLE_NAME = "clinnet-appointments-test"
+DEFAULT_ORIGIN = "https://d23hk32py5djal.cloudfront.net" # Align with allowed origins
 
 # Helper function to create a mock API Gateway event
-def create_api_gateway_event(method="PUT", body=None, path_params=None):
+def create_api_gateway_event(method="PUT", body=None, path_params=None, headers=None):
     event = {
         "httpMethod": method,
         "pathParameters": path_params if path_params else {},
+        "headers": headers if headers else {"Origin": DEFAULT_ORIGIN},
         "requestContext": {
             "requestId": "test-request-id-update-appointment",
             "authorizer": {"claims": {"cognito:username": "testuser-scheduler"}}
@@ -52,55 +55,69 @@ def lambda_environment_appointments_update(monkeypatch): # Unique name
 class TestUpdateAppointment:
     def test_update_appointment_successful(self, appointments_table, lambda_environment_appointments_update):
         appointment_id = "appt-to-update-001"
-        initial_timestamp = time.strftime("%Y-%m-%dT%H:%M:%S.%fZ", time.gmtime(time.time() - 10))
+        initial_timestamp = dt.now(timezone.utc).isoformat()
+
         initial_item = {
             "id": appointment_id, "patientId": "patientX", "doctorId": "doctorY",
-            "serviceId": "serviceA", "dateTime": "2024-05-01T10:00:00Z",
-            "status": "SCHEDULED", "notes": "Initial notes.",
+            "date": "2024-05-01", "startTime": "10:00", "endTime": "10:30", "type": "Check-up",
+            "status": "scheduled", "notes": "Initial notes.", "services": ["s_abc"], "reason": "r_xyz",
             "createdAt": initial_timestamp, "updatedAt": initial_timestamp
         }
         appointments_table.put_item(Item=initial_item)
 
         update_data = {
-            "dateTime": "2024-05-01T11:00:00Z", 
-            "status": "CONFIRMED",
-            "notes": "Updated notes for confirmation."
+            "date": "2024-05-02",
+            "startTime": "11:00",
+            "endTime": "11:30",
+            "type": "Follow-up",
+            "status": "confirmed", # Changed to lowercase
+            "notes": "Updated notes for confirmation.",
+            "services": ["s_def", "s_ghi"],
+            "reason": "r_123"
         }
         event = create_api_gateway_event(body=update_data, path_params={"id": appointment_id})
         
-        time.sleep(0.01) # Ensure updatedAt can change if based on current time
+        # Ensure updatedAt will be different
+        time.sleep(0.01)
         response = lambda_handler(event, {})
         
         assert response["statusCode"] == 200
         body = json.loads(response["body"])
         
         assert body["id"] == appointment_id
-        assert body["dateTime"] == update_data["dateTime"]
+        assert body["date"] == update_data["date"]
+        assert body["startTime"] == update_data["startTime"]
+        assert body["endTime"] == update_data["endTime"]
+        assert body["type"] == update_data["type"]
         assert body["status"] == update_data["status"]
         assert body["notes"] == update_data["notes"]
+        assert body["services"] == update_data["services"]
+        assert body["reason"] == update_data["reason"]
         assert body["patientId"] == initial_item["patientId"] # Should not change
         assert body["createdAt"] == initial_item["createdAt"] # Should not change
         assert body["updatedAt"] != initial_item["updatedAt"] 
         assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
 
         db_item = appointments_table.get_item(Key={"id": appointment_id}).get("Item")
         assert db_item is not None
-        assert db_item["dateTime"] == update_data["dateTime"]
-        assert db_item["status"] == update_data["status"]
+        for key, value in update_data.items():
+            assert db_item[key] == value
         assert db_item["updatedAt"] != initial_item["updatedAt"]
 
     def test_update_appointment_partial_update(self, appointments_table, lambda_environment_appointments_update):
         appointment_id = "appt-partial-update-002"
-        initial_timestamp = time.strftime("%Y-%m-%dT%H:%M:%S.%fZ", time.gmtime(time.time() - 10))
+        initial_timestamp = dt.now(timezone.utc).isoformat()
         initial_item = {
             "id": appointment_id, "patientId": "patientP", "doctorId": "doctorQ",
-            "serviceId": "serviceB", "dateTime": "2024-06-01T10:00:00Z",
-            "status": "SCHEDULED", "notes": "Original notes.",
+            "date": "2024-06-01", "startTime": "10:00", "endTime": "10:30", "type": "Consultation",
+            "status": "scheduled", "notes": "Original notes.",
             "createdAt": initial_timestamp, "updatedAt": initial_timestamp
         }
         appointments_table.put_item(Item=initial_item)
 
-        update_data = {"status": "CANCELLED"} # Only update status
+        update_data = {"status": "cancelled"} # Only update status, changed to lowercase
         event = create_api_gateway_event(body=update_data, path_params={"id": appointment_id})
         time.sleep(0.01)
         response = lambda_handler(event, {})
@@ -108,94 +125,160 @@ class TestUpdateAppointment:
         assert response["statusCode"] == 200
         body = json.loads(response["body"])
         assert body["status"] == update_data["status"]
-        assert body["dateTime"] == initial_item["dateTime"] # Should remain unchanged
-        assert body["notes"] == initial_item["notes"] # Should remain unchanged
+        assert body["date"] == initial_item["date"] # Should remain unchanged
+        assert body["startTime"] == initial_item["startTime"]
+        assert body["notes"] == initial_item["notes"]
         assert body["updatedAt"] != initial_item["updatedAt"]
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
         db_item = appointments_table.get_item(Key={"id": appointment_id}).get("Item")
         assert db_item["status"] == update_data["status"]
-        assert db_item["dateTime"] == initial_item["dateTime"]
+        assert db_item["date"] == initial_item["date"]
 
 
-    def test_update_appointment_non_existent(self, lambda_environment_appointments_update):
+    def test_update_appointment_non_existent(self, monkeypatch, lambda_environment_appointments_update): # Added monkeypatch
+        appointment_id = "non-existent-appt-003"
+
+        # Mock get_item_by_id to return None for this specific ID
+        def mock_get_item_none(table_name, item_id):
+            if item_id == appointment_id:
+                return None
+            # Fallback for other IDs, though not expected in this test
+            pytest.fail(f"mock_get_item_none called with unexpected ID: {item_id}")
+        monkeypatch.setattr("backend.src.handlers.appointments.update_appointment.get_item_by_id", mock_get_item_none)
+
         update_data = {"status": "CONFIRMED"}
-        event = create_api_gateway_event(body=update_data, path_params={"id": "non-existent-appt-003"})
+        event = create_api_gateway_event(body=update_data, path_params={"id": appointment_id})
         response = lambda_handler(event, {})
         
         assert response["statusCode"] == 404
-        assert "Appointment not found" in json.loads(response["body"])["message"]
+        body = json.loads(response["body"])
+        assert body["error"] == "Not Found"
+        assert body["message"] == f'Appointment with ID {appointment_id} not found'
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
-    def test_update_appointment_invalid_path_id(self, lambda_environment_appointments_update):
-        event_no_id = create_api_gateway_event(body={"status": "RESCHEDULED"}, path_params={})
+
+    def test_update_appointment_missing_path_id(self, lambda_environment_appointments_update): # Renamed
+        event_no_id = create_api_gateway_event(body={"status": "RESCHEDULED"}, path_params={}) # No 'id' in path_params
         response_no_id = lambda_handler(event_no_id, {})
         assert response_no_id["statusCode"] == 400
-        assert "Appointment ID is required" in json.loads(response_no_id["body"])["message"]
+        body = json.loads(response_no_id["body"])
+        assert body["error"] == "Validation Error"
+        assert body["message"] == 'Missing appointment ID' # Corrected message
+        assert response_no_id["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
     def test_update_appointment_empty_body(self, appointments_table, lambda_environment_appointments_update):
         appointment_id = "appt-empty-body-004"
-        appointments_table.put_item(Item={"id": appointment_id, "status": "SCHEDULED"})
-        event = create_api_gateway_event(body={}, path_params={"id": appointment_id})
+        initial_timestamp = dt.now(timezone.utc).isoformat()
+        initial_item = {
+            "id": appointment_id, "patientId": "patientE", "doctorId": "doctorF",
+            "date": "2024-07-01", "startTime": "09:00", "endTime": "09:30", "type": "Test",
+            "status": "scheduled", "createdAt": initial_timestamp, "updatedAt": initial_timestamp
+        }
+        appointments_table.put_item(Item=initial_item)
+
+        event = create_api_gateway_event(body={}, path_params={"id": appointment_id}) # Empty body
         response = lambda_handler(event, {})
         assert response["statusCode"] == 400 
-        assert "No fields to update" in json.loads(response["body"])["message"]
+        body = json.loads(response["body"])
+        assert body["error"] == "Validation Error"
+        assert body["message"] == 'No valid fields provided for update.' # Corrected message
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
-    def test_update_appointment_invalid_datetime_format(self, appointments_table, lambda_environment_appointments_update):
+    # test_update_appointment_invalid_datetime_format removed as per instruction 2.e
+
+    def test_update_appointment_invalid_date_format(self, appointments_table, lambda_environment_appointments_update):
         appointment_id = "appt-invalid-date-005"
-        appointments_table.put_item(Item={"id": appointment_id, "dateTime": "2024-01-01T00:00:00Z"})
-        update_data = {"dateTime": "not-a-date"}
+        initial_timestamp = dt.now(timezone.utc).isoformat()
+        initial_item = {
+            "id": appointment_id, "patientId": "patientG", "doctorId": "doctorH",
+            "date": "2024-08-01", "startTime": "10:00", "endTime": "10:30", "type": "ValidType",
+            "status": "scheduled", "createdAt": initial_timestamp, "updatedAt": initial_timestamp
+        }
+        appointments_table.put_item(Item=initial_item)
+
+        update_data = {"date": "2024/08/01"} # Invalid date format
         event = create_api_gateway_event(body=update_data, path_params={"id": appointment_id})
         response = lambda_handler(event, {})
         assert response["statusCode"] == 400
-        assert "Invalid dateTime format" in json.loads(response["body"])["message"]
+        body = json.loads(response["body"])
+        assert body["error"] == "Validation Error"
+        assert body["message"] == "Invalid date format. Expected YYYY-MM-DD."
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
+    def test_update_appointment_invalid_time_format(self, appointments_table, lambda_environment_appointments_update):
+        appointment_id = "appt-invalid-time-006"
+        initial_timestamp = dt.now(timezone.utc).isoformat()
+        initial_item = {
+            "id": appointment_id, "patientId": "patientI", "doctorId": "doctorJ",
+            "date": "2024-09-01", "startTime": "10:00", "endTime": "10:30", "type": "ValidType",
+            "status": "scheduled", "createdAt": initial_timestamp, "updatedAt": initial_timestamp
+        }
+        appointments_table.put_item(Item=initial_item)
+
+        update_data = {"startTime": "10-00"} # Invalid time format
+        event = create_api_gateway_event(body=update_data, path_params={"id": appointment_id})
+        response = lambda_handler(event, {})
+        assert response["statusCode"] == 400
+        body = json.loads(response["body"])
+        assert body["error"] == "Validation Error"
+        assert body["message"] == "Invalid time format. Expected HH:MM."
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
+    def test_update_appointment_start_time_after_end_time(self, appointments_table, lambda_environment_appointments_update):
+        appointment_id = "appt-time-logic-007"
+        initial_timestamp = dt.now(timezone.utc).isoformat()
+        initial_item = {
+            "id": appointment_id, "patientId": "patientK", "doctorId": "doctorL",
+            "date": "2024-10-01", "startTime": "10:00", "endTime": "10:30", "type": "ValidType",
+            "status": "scheduled", "createdAt": initial_timestamp, "updatedAt": initial_timestamp
+        }
+        appointments_table.put_item(Item=initial_item)
+
+        update_data = {"startTime": "11:00", "endTime": "10:00"} # startTime after endTime
+        event = create_api_gateway_event(body=update_data, path_params={"id": appointment_id})
+        response = lambda_handler(event, {})
+        assert response["statusCode"] == 400
+        body = json.loads(response["body"])
+        assert body["error"] == "Validation Error"
+        assert body["message"] == "End time must be after start time."
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
     def test_update_appointment_dynamodb_failure(self, monkeypatch, lambda_environment_appointments_update):
-        appointment_id_fail = "appt-db-fail-006"
-        # No need to put_item if UpdateItem itself is mocked to fail unconditionally for this ID
+        appointment_id_fail = "appt-db-fail-008"
+        initial_timestamp = dt.now(timezone.utc).isoformat()
         
-        original_boto3_resource = boto3.resource
-        def mock_boto3_resource_for_update_error(service_name, *args, **kwargs):
-            if service_name == 'dynamodb':
-                class MockTableForUpdateError:
-                    def update_item(self, Key=None, **other_kwargs):
-                        if Key and Key.get("id") == appointment_id_fail:
-                            from botocore.exceptions import ClientError # Ensure this is imported
-                            error_response = {'Error': {'Code': 'InternalServerError', 'Message': 'Simulated DynamoDB UpdateItem Error'}}
-                            raise ClientError(error_response, 'UpdateItem')
-                        # If handler does a get_item first to check existence:
-                        # return {"Attributes": {}} # Or mock get_item to return something
-                        # For this test, assume update_item is called and fails.
-                        # If get_item is called first, need to ensure it finds an item for this path.
-                        # For simplicity, if the handler gets then updates, the get_item mock part
-                        # would need to return an item for appointment_id_fail.
-                        # Here, we assume the update_item call is what fails.
-                        return {"Attributes": {"id": Key.get("id") if Key else "unknown"}} # Default mock response
+        mock_initial_item_for_get = {
+            "id": appointment_id_fail, "patientId": "patientFail", "doctorId": "doctorFail",
+            "date": "2024-11-01", "startTime": "14:00", "endTime": "14:30", "type": "FailureCase",
+            "status": "scheduled", "notes": "Item that exists before update attempt.",
+            "createdAt": initial_timestamp, "updatedAt": initial_timestamp
+        }
 
-                    # If handler calls get_item before update
-                    def get_item(self, Key=None, **other_kwargs):
-                        if Key and Key.get("id") == appointment_id_fail:
-                            # Simulate item exists so update can be attempted
-                            return {"Item": {"id": appointment_id_fail, "status": "SCHEDULED"}} 
-                        return {}
+        # Mock get_item_by_id to return the item
+        def mock_get_item(table_name, item_id):
+            if item_id == appointment_id_fail:
+                return mock_initial_item_for_get
+            return None
+        monkeypatch.setattr("backend.src.handlers.appointments.update_appointment.get_item_by_id", mock_get_item)
 
+        # Mock update_item to raise ClientError
+        def mock_update_item_failure(table_name, item_id, updates):
+            from botocore.exceptions import ClientError
+            error_response = {'Error': {'Code': 'InternalServerError', 'Message': 'Simulated DynamoDB UpdateItem Error'}}
+            raise ClientError(error_response, 'UpdateItem')
+        monkeypatch.setattr("backend.src.handlers.appointments.update_appointment.update_item", mock_update_item_failure)
 
-                class MockDynamoDBResourceForError:
-                    def Table(self, table_name):
-                        if table_name == TEST_APPOINTMENTS_TABLE_NAME:
-                            return MockTableForUpdateError()
-                        return original_boto3_resource('dynamodb').Table(table_name)
-                return MockDynamoDBResourceForError()
-            return original_boto3_resource(service_name, *args, **kwargs)
-
-        monkeypatch.setattr(boto3, "resource", mock_boto3_resource_for_update_error)
-
-        update_data = {"status": "COMPLETED"}
+        update_data = {"status": "completed", "notes": "Attempting update that will fail."}
         event = create_api_gateway_event(body=update_data, path_params={"id": appointment_id_fail})
         response = lambda_handler(event, {})
         
         assert response["statusCode"] == 500
         body = json.loads(response["body"])
-        assert "error" in body or "message" in body
-        assert "Simulated DynamoDB UpdateItem Error" in body.get("error", "") or "Internal server error" in body.get("message", "")
+        assert body["error"] == "AWS Error"
+        assert "Simulated DynamoDB UpdateItem Error" in body["message"]
+        assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
 # Notes:
 # - Fixtures `aws_credentials`, `appointments_table`, `lambda_environment_appointments_update` are standard.
@@ -212,7 +295,7 @@ class TestUpdateAppointment:
 # The handler for `update_appointment` should:
 # 1. Get `id` from `pathParameters` and parse `body`.
 # 2. Validate `id` and that `body` is not empty / has updatable fields.
-# 3. Validate data types/formats of fields in `body` (e.g., `dateTime`).
+# 3. Validate data types/formats of fields in `body` (e.g., `date`, `startTime`, `endTime`).
 # 4. (Good practice) Fetch item or use `ConditionExpression="attribute_exists(id)"` with `update_item`. If not found, return 404.
 # 5. Construct `UpdateExpression` and related parameters for `update_item`. Only include fields present in input.
 # 6. Update `updatedAt` timestamp.
@@ -226,14 +309,6 @@ class TestUpdateAppointment:
 # This makes the test for `update_item` failure more robust.
 #
 # Error messages in assertions are examples.
-# `Decimal` is imported for completeness, though appointment updates might primarily involve strings and ISO dates.
-# If fields like `price` or `duration` were part of appointments and updatable, `Decimal` would be more relevant.
-# The current tests focus on common string/status/datetime fields.The test file for `update_appointment.lambda_handler` has been created.
-
-**Step 2.5: Create `backend/tests/python/handlers/appointments/test_delete_appointment.py`**
-This will test `delete_appointment.lambda_handler`.
-Assumptions:
-*   Appointment `id` is passed as a path parameter.
-*   Handler performs a `delete_item` on `AppointmentsTable`.
-*   Might check for item existence before deletion.
-*   Does not use `UtilsLayer`.
+# `Decimal` is imported for completeness.
+# The current tests focus on common string/status/date/time fields.
+# (Removed extraneous comments from previous step)

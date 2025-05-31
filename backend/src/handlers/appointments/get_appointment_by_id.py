@@ -3,12 +3,17 @@ Lambda function to get an appointment by ID
 """
 import os
 import json
+import logging # Added
 from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import get_item_by_id, generate_response
-from utils.responser_helper import handle_exception, build_error_response
+
+from utils.responser_helper import handle_exception, build_error_response # build_error_response imported
 from utils.cors import add_cors_headers
+
+logger = logging.getLogger(__name__) # Added
+logger.setLevel(logging.INFO) # Added
 
 def lambda_handler(event, context):
     """
@@ -21,7 +26,7 @@ def lambda_handler(event, context):
     Returns:
         dict: API Gateway response
     """
-    print(f"Received event: {json.dumps(event)}")
+    logger.info("Received event: %s", json.dumps(event)) # Changed from print
     
     # Extract origin from request headers
     headers = event.get('headers', {})
@@ -32,9 +37,12 @@ def lambda_handler(event, context):
         return build_error_response(500, 'Configuration Error', 'Appointments table name not configured', request_origin)
     
     # Get appointment ID from path parameters
-    appointment_id = event.get('pathParameters', {}).get('id')
-    if not appointment_id:
-        return build_error_response(400, 'Validation Error', 'Missing appointment ID', request_origin)
+    path_params = event.get('pathParameters', {})
+    if 'id' not in path_params: # Check if 'id' key itself is missing
+        return build_error_response(400, 'Validation Error', 'Missing appointment ID path parameter.', request_origin)
+    appointment_id = path_params.get('id')
+    if not appointment_id: # Check if id is None (already caught if key was missing) or an empty string
+        return build_error_response(400, 'Validation Error', 'Appointment ID must be a non-empty string.', request_origin)
     
     try:
         # Get appointment by ID
@@ -50,5 +58,7 @@ def lambda_handler(event, context):
     except ClientError as e:
         return handle_exception(e, request_origin)
     except Exception as e:
-        print(f"Error fetching appointment: {e}")
-        return handle_exception(e, request_origin)
+
+        logger.error("Error fetching appointment: %s", e, exc_info=True) # Changed from print
+        return build_error_response(500, 'Internal Server Error', 'Error fetching appointment', request_origin)
+

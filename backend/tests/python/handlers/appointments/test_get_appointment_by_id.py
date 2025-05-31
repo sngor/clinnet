@@ -7,15 +7,17 @@ from backend.src.handlers.appointments.get_appointment_by_id import lambda_handl
 
 # Define the appointments table name for tests
 TEST_APPOINTMENTS_TABLE_NAME = "clinnet-appointments-test"
+DEFAULT_ORIGIN = "https://d23hk32py5djal.cloudfront.net" # Align with allowed origins
 
 # Helper function to create a mock API Gateway event
-def create_api_gateway_event(method="GET", path_params=None, body=None):
+def create_api_gateway_event(method="GET", path_params=None, body=None, headers=None):
     event = {
         "httpMethod": method,
         "pathParameters": path_params if path_params else {},
+        "headers": headers if headers else {"Origin": DEFAULT_ORIGIN},
         "requestContext": {
             "requestId": "test-request-id-get-appointment-by-id",
-            "authorizer": {"claims": {"cognito:username": "testuser"}} 
+            "authorizer": {"claims": {"cognito:username": "testuser"}}
         }
     }
     if body:
@@ -52,12 +54,19 @@ class TestGetAppointmentById:
     def test_get_appointment_by_existing_id(self, appointments_table, lambda_environment_appointments_by_id):
         appointment_id = "appt_existing_001"
         appointment_item = {
-            "id": appointment_id, 
-            "patientId": "patient001", 
+            "id": appointment_id,
+            "patientId": "patient001",
             "doctorId": "doctor001",
-            "dateTime": "2024-02-01T14:00:00Z",
-            "serviceId": "service001",
-            "status": "CONFIRMED"
+            "date": "2024-02-01",
+            "startTime": "14:00",
+            "endTime": "14:30",
+            "type": "Consultation",
+            "status": "CONFIRMED",
+            "notes": "A note.",
+            "services": ["service1"],
+            "reason": "Follow-up",
+            "createdAt": "2024-01-15T10:00:00Z",
+            "updatedAt": "2024-01-15T11:00:00Z"
         }
         appointments_table.put_item(Item=appointment_item)
 
@@ -68,57 +77,63 @@ class TestGetAppointmentById:
         
         assert response["statusCode"] == 200
         body = json.loads(response["body"])
+
+        # Assert each field individually for clarity if needed, or whole object
+        for key, value in appointment_item.items():
+            assert body.get(key) == value
         assert body == appointment_item # Expect the full item
+
+        assert "Access-Control-Allow-Origin" in response["headers"]
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
         assert response["headers"]["Content-Type"] == "application/json"
 
     def test_get_appointment_by_non_existent_id(self, appointments_table, lambda_environment_appointments_by_id):
-        event = create_api_gateway_event(path_params={"id": "nonexistent_appt_002"})
+        appointment_id = "nonexistent_appt_002"
+        event = create_api_gateway_event(path_params={"id": appointment_id})
         context = {}
 
         response = lambda_handler(event, context)
         
-        assert response["statusCode"] == 404
+        assert response["statusCode"] == 404 # As per handler logic
         body = json.loads(response["body"])
-        assert "message" in body
-        assert "Appointment not found" in body["message"] 
+        assert body["error"] == "Not Found"
+        assert body["message"] == f'Appointment with ID {appointment_id} not found'
         assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
 
     def test_get_appointment_invalid_path_parameter(self, lambda_environment_appointments_by_id):
-        event_no_id = create_api_gateway_event(path_params={}) # Missing 'id'
+        # Test case 1: 'id' key completely missing from pathParameters
+        event_no_id_key = create_api_gateway_event(path_params=None) # Or path_params={}
         context = {}
-        response_no_id = lambda_handler(event_no_id, context)
-        assert response_no_id["statusCode"] == 400 
-        body_no_id = json.loads(response_no_id["body"])
-        assert "message" in body_no_id
-        assert "Appointment ID is required" in body_no_id["message"] # Example message
+        response_no_id_key = lambda_handler(event_no_id_key, context)
+        assert response_no_id_key["statusCode"] == 400
+        body_no_id_key = json.loads(response_no_id_key["body"])
+        assert body_no_id_key["error"] == "Validation Error"
+        assert body_no_id_key["message"] == 'Missing appointment ID path parameter.'
+        assert response_no_id_key["headers"]["Content-Type"] == "application/json" # Added
+        assert response_no_id_key["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
-        event_empty_id = create_api_gateway_event(path_params={"id": ""})
-        response_empty_id = lambda_handler(event_empty_id, context)
-        assert response_empty_id["statusCode"] == 400
-        body_empty_id = json.loads(response_empty_id["body"])
-        assert "Appointment ID must be a non-empty string" in body_empty_id["message"] # Example
+        # Test case 2: 'id' key is present but its value is an empty string
+        event_empty_id_value = create_api_gateway_event(path_params={"id": ""})
+        response_empty_id_value = lambda_handler(event_empty_id_value, context)
+        assert response_empty_id_value["statusCode"] == 400
+        body_empty_id_value = json.loads(response_empty_id_value["body"])
+        assert body_empty_id_value["error"] == "Validation Error"
+        assert body_empty_id_value["message"] == 'Appointment ID must be a non-empty string.'
+        assert response_empty_id_value["headers"]["Content-Type"] == "application/json" # Added
+        assert response_empty_id_value["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
 
     def test_get_appointment_by_id_dynamodb_failure(self, monkeypatch, lambda_environment_appointments_by_id):
         appointment_id_fail = "appt_fail_003"
         
-        original_boto3_resource = boto3.resource
-        def mock_boto3_resource_for_get_item_error(service_name, *args, **kwargs):
-            if service_name == 'dynamodb':
-                class MockTableForGetItemError:
-                    def get_item(self, Key=None, **other_kwargs):
-                        if Key and Key.get("id") == appointment_id_fail:
-                             raise Exception("Simulated DynamoDB GetItem Error")
-                        return {"Item": None} # Default for other keys
-                
-                class MockDynamoDBResourceForError:
-                    def Table(self, table_name):
-                        if table_name == TEST_APPOINTMENTS_TABLE_NAME:
-                            return MockTableForGetItemError()
-                        return original_boto3_resource('dynamodb').Table(table_name)
-                return MockDynamoDBResourceForError()
-            return original_boto3_resource(service_name, *args, **kwargs)
-
-        monkeypatch.setattr(boto3, "resource", mock_boto3_resource_for_get_item_error)
+        # Mock get_item_by_id to raise a generic Exception for this test
+        def mock_get_item_raises_exception(table_name, item_id):
+            if item_id == appointment_id_fail:
+                raise Exception("Simulated Generic DB Error")
+            return None
+        monkeypatch.setattr("backend.src.handlers.appointments.get_appointment_by_id.get_item_by_id", mock_get_item_raises_exception)
 
         event = create_api_gateway_event(path_params={"id": appointment_id_fail})
         context = {}
@@ -126,9 +141,10 @@ class TestGetAppointmentById:
         
         assert response["statusCode"] == 500
         body = json.loads(response["body"])
-        assert "error" in body
-        assert "Simulated DynamoDB GetItem Error" in body["error"] or "Internal server error" in body.get("message", "")
+        assert body.get("error") == "Internal Server Error"
+        assert body.get("message") == "Error fetching appointment" # Matches handler's generic exception message
         assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
 # Notes:
 # - `appointments_table` fixture is standard.
@@ -154,19 +170,11 @@ class TestGetAppointmentById:
 # if fixtures from different test files were to be collected in a broader scope.
 #
 # The structure of the appointment item in `test_get_appointment_by_existing_id` includes
-# fields like `patientId`, `doctorId`, `dateTime`, `serviceId`, `status`.
+# the standardized fields.
 # The test asserts that the entire item is returned in the response body.
 #
 # The `aws_credentials` fixture is standard.
 # `create_api_gateway_event` helper is standard.
 #
-# The DynamoDB failure mock is specific to the `get_item` call for the failing ID.The test file for `get_appointment_by_id.lambda_handler` has been created.
-
-**Step 2.3: Create `backend/tests/python/handlers/appointments/test_create_appointment.py`**
-This will test `create_appointment.lambda_handler`.
-Assumptions:
-*   Handler generates a unique appointment ID (e.g., UUID).
-*   Input body provides appointment details (`patientId`, `doctorId`, `dateTime`, `serviceId`, optional `notes`).
-*   `status` is likely initialized to a default (e.g., "SCHEDULED" or "PENDING").
-*   `createdAt` and `updatedAt` timestamps are generated.
-*   Does not use `UtilsLayer`.
+# The DynamoDB failure mock is specific to the `get_item_by_id` util function.
+# (Removed extraneous comments from previous step)

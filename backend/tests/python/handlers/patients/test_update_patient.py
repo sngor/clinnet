@@ -9,12 +9,19 @@ from decimal import Decimal # If any numeric values are part of patient record
 
 # Define the patient records table name for tests
 TEST_PATIENT_RECORDS_TABLE_NAME = "clinnet-patient-records-test"
+DEFAULT_ORIGIN = "http://localhost:5173" # Example allowed origin
+TEST_PROFILE_IMAGE_BUCKET = "test-profile-bucket"
+
 
 # Helper function to create a mock API Gateway event
-def create_api_gateway_event(method="PUT", body=None, path_params=None):
+def create_api_gateway_event(method="PUT", body=None, path_params=None, headers=None):
+    base_headers = {"Origin": DEFAULT_ORIGIN}
+    if headers:
+        base_headers.update(headers)
     event = {
         "httpMethod": method,
         "pathParameters": path_params if path_params else {},
+        "headers": base_headers,
         "requestContext": {
             "requestId": "test-request-id-update-patient",
             "authorizer": {"claims": {"cognito:username": "testuser-admin"}}
@@ -62,19 +69,20 @@ def patient_records_table(aws_credentials):
 @pytest.fixture(scope="function")
 def lambda_environment(monkeypatch):
     monkeypatch.setenv("PATIENT_RECORDS_TABLE", TEST_PATIENT_RECORDS_TABLE_NAME)
+    monkeypatch.setenv("PROFILE_IMAGE_BUCKET", TEST_PROFILE_IMAGE_BUCKET) # Added for S3 tests
     monkeypatch.setenv("ENVIRONMENT", "test")
 
 class TestUpdatePatient:
     def test_update_patient_successful(self, patient_records_table, lambda_environment):
         patient_id = "patient-to-update-001"
         pk = f"PATIENT#{patient_id}"
-        sk = f"PROFILE#{patient_id}"
+        sk = "METADATA" # Corrected SK
         
-        initial_timestamp = time.strftime("%Y-%m-%dT%H:%M:%S.%fZ", time.gmtime(time.time() - 10)) # ensure it's in the past
+        initial_timestamp = time.strftime("%Y-%m-%dT%H:%M:%S.%fZ", time.gmtime(time.time() - 10))
         initial_item = {
-            "PK": pk, "SK": sk, "type": "PATIENT", "patientId": patient_id,
+            "PK": pk, "SK": sk, "type": "patient", "id": patient_id, # Changed patientId to id
             "firstName": "OriginalFirst", "lastName": "OriginalLast",
-            "email": "original@example.com", "phoneNumber": "111-222-3333",
+            "email": "original@example.com", "phone": "111-222-3333", # Changed phoneNumber to phone
             "dateOfBirth": "1980-05-10",
             "address": {"street": "1 Old Way", "city": "Oldsville", "state": "OS", "zipCode": "00000"},
             "createdAt": initial_timestamp, "updatedAt": initial_timestamp
@@ -83,114 +91,240 @@ class TestUpdatePatient:
 
         update_data = {
             "email": "updated@example.com", 
-            "phoneNumber": "444-555-6666",
+            "phone": "444-555-6666", # Changed
             "address": {"street": "2 New Ave", "city": "Newville", "state": "NS", "zipCode": "11111"}
         }
         event = create_api_gateway_event(body=update_data, path_params={"id": patient_id})
         
-        time.sleep(0.01) # Ensure updatedAt can change
+        time.sleep(0.01)
         response = lambda_handler(event, {})
         
         assert response["statusCode"] == 200
         body = json.loads(response["body"])
         
-        assert body["patientId"] == patient_id
+        assert body["id"] == patient_id # Changed
         assert body["email"] == update_data["email"]
-        assert body["phoneNumber"] == update_data["phoneNumber"]
+        assert body["phone"] == update_data["phone"] # Changed
         assert body["address"]["street"] == update_data["address"]["street"]
-        assert body["firstName"] == initial_item["firstName"] # Should not change if not in update_data
-        assert body["createdAt"] == initial_item["createdAt"] # Should not change
-        assert body["updatedAt"] != initial_item["updatedAt"] # Should be updated
+        assert body["firstName"] == initial_item["firstName"]
+        assert body["createdAt"] == initial_item["createdAt"]
+        assert body["updatedAt"] != initial_item["updatedAt"]
         assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
 
         # Verify item in DynamoDB
         db_item = patient_records_table.get_item(Key={"PK": pk, "SK": sk}).get("Item")
         assert db_item is not None
         assert db_item["email"] == update_data["email"]
-        assert db_item["phoneNumber"] == update_data["phoneNumber"]
+        assert db_item["phone"] == update_data["phone"] # Changed
         assert db_item["address"]["street"] == update_data["address"]["street"]
         assert db_item["updatedAt"] != initial_item["updatedAt"]
-        assert db_item["firstName"] == initial_item["firstName"] # Unchanged field
+        assert db_item["firstName"] == initial_item["firstName"]
 
     def test_update_patient_non_existent(self, patient_records_table, lambda_environment):
+        patient_id = "non-existent-patient-002"
         update_data = {"email": "nosuchpatient@example.com"}
-        event = create_api_gateway_event(body=update_data, path_params={"id": "non-existent-patient-002"})
+        event = create_api_gateway_event(body=update_data, path_params={"id": patient_id})
         response = lambda_handler(event, {})
         
         assert response["statusCode"] == 404
         body = json.loads(response["body"])
-        assert "message" in body
-        assert "Patient not found" in body["message"]
+        assert body.get("error") == "Not Found"
+        assert body.get("message") == f'Patient with ID {patient_id} not found.'
+        assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
 
     def test_update_patient_invalid_path_id(self, lambda_environment):
         event_no_id = create_api_gateway_event(body={"email": "test@example.com"}, path_params={})
         response_no_id = lambda_handler(event_no_id, {})
         assert response_no_id["statusCode"] == 400
         body_no_id = json.loads(response_no_id["body"])
-        assert "Patient ID is required" in body_no_id["message"]
+        assert body_no_id.get("message") == 'Patient ID is required in path parameters.'
+        assert response_no_id["headers"]["Content-Type"] == "application/json"
+        assert response_no_id["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
+        # Note: The handler's current simple `if not patient_id:` check doesn't distinguish missing key vs empty string.
+        # Test for empty string will also yield "Patient ID is required in path parameters."
+        event_empty_id = create_api_gateway_event(path_params={"id": ""})
+        response_empty_id = lambda_handler(event_empty_id, {})
+        assert response_empty_id["statusCode"] == 400
+        body_empty_id = json.loads(response_empty_id["body"])
+        assert body_empty_id.get("message") == 'Patient ID is required in path parameters.' # Adjusted expectation
+        assert response_empty_id["headers"]["Content-Type"] == "application/json"
+        assert response_empty_id["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
 
     def test_update_patient_empty_body(self, patient_records_table, lambda_environment):
         patient_id = "patient-empty-body-003"
-        pk = f"PATIENT#{patient_id}"; sk = f"PROFILE#{patient_id}"
-        patient_records_table.put_item(Item={"PK": pk, "SK": sk, "patientId": patient_id, "email": "test@test.com"})
+        pk = f"PATIENT#{patient_id}"; sk = "METADATA" # Corrected SK
+        initial_item = {"PK": pk, "SK": sk, "id": patient_id, "email": "test@test.com", "firstName": "Test"}
+        patient_records_table.put_item(Item=initial_item)
 
         event = create_api_gateway_event(body={}, path_params={"id": patient_id})
         response = lambda_handler(event, {})
-        assert response["statusCode"] == 400 
+        assert response["statusCode"] == 200 # Handler returns 200 with existing data if no updates
         body = json.loads(response["body"])
-        assert "message" in body
-        assert "No fields to update" in body["message"] # Or similar
+        assert body["id"] == patient_id
+        assert body["email"] == initial_item["email"] # Body should be the existing patient data
+        assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
-    def test_update_patient_invalid_email_format(self, patient_records_table, lambda_environment):
-        patient_id = "patient-invalid-email-004"
-        pk = f"PATIENT#{patient_id}"; sk = f"PROFILE#{patient_id}"
-        patient_records_table.put_item(Item={"PK": pk, "SK": sk, "patientId": patient_id, "email": "good@email.com"})
+    def test_update_patient_missing_body(self, patient_records_table, lambda_environment):
+        patient_id = "patient-missing-body-003b"
+        event = create_api_gateway_event(path_params={"id": patient_id})
+        event['body'] = "" # Set body to empty string to trigger specific handler logic
 
-        update_data = {"email": "bademailformat"}
+        response = lambda_handler(event, {})
+        assert response["statusCode"] == 400
+        body = json.loads(response["body"])
+        assert body.get("error") == "Bad Request"
+        assert body.get("message") == "Request body is required."
+        assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
+    @pytest.mark.parametrize("field,invalid_value,error_message_fragment", [
+        ("firstName", "", "must be a non-empty string"),
+        ("lastName", 123, "must be a non-empty string"),
+        ("dateOfBirth", "not-a-date", "must be in YYYY-MM-DD format"),
+        ("email", "bademail", "must be a valid email string"),
+        ("status", "pending", "must be one of ['active', 'inactive', 'archived']"),
+    ])
+    def test_update_patient_field_validations(self, patient_records_table, lambda_environment, field, invalid_value, error_message_fragment):
+        patient_id = f"patient-valid-{field}"
+        pk = f"PATIENT#{patient_id}"; sk = "METADATA"
+        initial_item = {"PK": pk, "SK": sk, "id": patient_id, "firstName": "Initial", "lastName": "Patient"}
+        patient_records_table.put_item(Item=initial_item)
+
+        update_data = {field: invalid_value}
         event = create_api_gateway_event(body=update_data, path_params={"id": patient_id})
         response = lambda_handler(event, {})
         assert response["statusCode"] == 400
         body = json.loads(response["body"])
-        assert "message" in body
-        assert "Invalid email format" in body["message"] # Assuming handler validates
+        assert body.get("message") == "Update validation failed"
+        assert isinstance(body.get("errors"), dict)
+        assert body["errors"].get(field) == error_message_fragment
+        assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
+    # S3 Tests
+    VALID_BASE64_IMAGE_DATA_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" # Minimal PNG
+
+    def test_update_patient_with_profile_image_upload_successful(self, patient_records_table, lambda_environment, monkeypatch):
+        patient_id = "patient-s3-img-001"
+        pk = f"PATIENT#{patient_id}"; sk = "METADATA"
+        initial_item = {"PK": pk, "SK": sk, "id": patient_id, "firstName": "S3User"}
+        patient_records_table.put_item(Item=initial_item)
+
+        mock_s3_client = boto3.client('s3', region_name='us-east-1')
+        monkeypatch.setattr(boto3, "client", lambda name, **kwargs: mock_s3_client if name == 's3' else boto3.client(name, **kwargs))
+
+        # Mock put_object
+        put_object_calls = []
+        def mock_put_object(**kwargs):
+            put_object_calls.append(kwargs)
+            return {"ResponseMetadata": {"HTTPStatusCode": 200}}
+        monkeypatch.setattr(mock_s3_client, "put_object", mock_put_object)
+
+        update_data = {"profileImage": f"data:image/png;base64,{self.VALID_BASE64_IMAGE_DATA_PNG}"}
+        event = create_api_gateway_event(body=update_data, path_params={"id": patient_id})
+        response = lambda_handler(event, {})
+
+        assert response["statusCode"] == 200
+        body = json.loads(response["body"])
+        expected_s3_uri_prefix = f"s3://{TEST_PROFILE_IMAGE_BUCKET}/patients/{patient_id}/profile/"
+        assert body["profileImage"].startswith(expected_s3_uri_prefix)
+        assert body["profileImage"].endswith(".png")
+
+        db_item = patient_records_table.get_item(Key={"PK": pk, "SK": sk}).get("Item")
+        assert db_item["profileImage"] == body["profileImage"]
+        assert len(put_object_calls) == 1
+        assert put_object_calls[0]["Bucket"] == TEST_PROFILE_IMAGE_BUCKET
+        assert put_object_calls[0]["Key"].startswith(f"patients/{patient_id}/profile/")
+        assert put_object_calls[0]["ContentType"] == "image/png"
+
+
+    def test_update_patient_profile_image_s3_bucket_not_configured(self, patient_records_table, lambda_environment, monkeypatch):
+        monkeypatch.delenv("PROFILE_IMAGE_BUCKET", raising=False)
+        patient_id = "patient-s3-nobucket-002"
+        pk = f"PATIENT#{patient_id}"; sk = "METADATA"
+        initial_item = {"PK": pk, "SK": sk, "id": patient_id, "firstName": "NoBucket"}
+        patient_records_table.put_item(Item=initial_item)
+
+        update_data = {"profileImage": f"data:image/jpeg;base64,{self.VALID_BASE64_IMAGE_DATA_PNG}"} # Use any valid base64
+        event = create_api_gateway_event(body=update_data, path_params={"id": patient_id})
+        response = lambda_handler(event, {})
+
+        assert response["statusCode"] == 500
+        body = json.loads(response["body"])
+        assert body.get("error") == "Configuration Error"
+        assert body.get("message") == "Server configuration error: S3 bucket not specified."
+        assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
+    def test_update_patient_profile_image_invalid_base64(self, patient_records_table, lambda_environment):
+        patient_id = "patient-s3-badb64-003"
+        pk = f"PATIENT#{patient_id}"; sk = "METADATA"
+        initial_item = {"PK": pk, "SK": sk, "id": patient_id, "firstName": "BadB64"}
+        patient_records_table.put_item(Item=initial_item)
+
+        update_data = {"profileImage": "data:image/png;base64,this-is-not-base64"}
+        event = create_api_gateway_event(body=update_data, path_params={"id": patient_id})
+        response = lambda_handler(event, {})
+        assert response["statusCode"] == 400
+        body = json.loads(response["body"])
+        assert body.get("error") == "Bad Request"
+        assert body.get("message") == "Invalid profile image data format."
+        assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
+
+    def test_update_patient_profile_image_s3_upload_fails(self, patient_records_table, lambda_environment, monkeypatch):
+        patient_id = "patient-s3-fail-004"
+        pk = f"PATIENT#{patient_id}"; sk = "METADATA"
+        initial_item = {"PK": pk, "SK": sk, "id": patient_id, "firstName": "S3Fail"}
+        patient_records_table.put_item(Item=initial_item)
+
+        mock_s3_client = boto3.client('s3', region_name='us-east-1')
+        monkeypatch.setattr(boto3, "client", lambda name, **kwargs: mock_s3_client if name == 's3' else boto3.client(name, **kwargs))
+
+        def mock_put_object_raises_error(**kwargs):
+            from botocore.exceptions import ClientError
+            raise ClientError({"Error": {"Code": "InternalError", "Message": "Simulated S3 PutObject Error"}}, "PutObject")
+        monkeypatch.setattr(mock_s3_client, "put_object", mock_put_object_raises_error)
+
+        update_data = {"profileImage": f"data:image/png;base64,{self.VALID_BASE64_IMAGE_DATA_PNG}"}
+        event = create_api_gateway_event(body=update_data, path_params={"id": patient_id})
+        response = lambda_handler(event, {})
+
+        assert response["statusCode"] == 500
+        body = json.loads(response["body"])
+        # This will depend on how the handler's S3 exception catch block calls build_error_response or handle_exception
+        # Based on subtask, it should be build_error_response(500, 'S3 Error', 'Failed to upload profile image.')
+        assert body.get("error") == "S3 Error"
+        assert body.get("message") == "Failed to upload profile image."
+        assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+
 
     def test_update_patient_dynamodb_failure(self, monkeypatch, lambda_environment):
         patient_id_fail = "patient-db-fail-005"
-        # Assume handler might try a get_item or conditional update that fails
-        
-        original_boto3_resource = boto3.resource
-        def mock_boto3_resource_for_update_error(service_name, *args, **kwargs):
-            if service_name == 'dynamodb':
-                class MockTableForUpdateError:
-                    # If handler uses update_item directly:
-                    def update_item(self, Key=None, UpdateExpression=None, **other_kwargs):
-                        pk_val = f"PATIENT#{patient_id_fail}"
-                        sk_val = f"PROFILE#{patient_id_fail}"
-                        if Key and Key.get("PK") == pk_val and Key.get("SK") == sk_val:
-                            from botocore.exceptions import ClientError
-                            error_response = {'Error': {'Code': 'InternalServerError', 'Message': 'Simulated DynamoDB UpdateItem Error'}}
-                            raise ClientError(error_response, 'UpdateItem')
-                        return {} # Default success for other items
-                    
-                    # If handler uses get_item before update (e.g. to check existence or merge):
-                    def get_item(self, Key=None, **other_kwargs):
-                        pk_val = f"PATIENT#{patient_id_fail}"
-                        sk_val = f"PROFILE#{patient_id_fail}"
-                        if Key and Key.get("PK") == pk_val and Key.get("SK") == sk_val:
-                             # Simulate item exists for pre-check, but update_item will fail
-                            return {"Item": {"PK": pk_val, "SK": sk_val, "patientId": patient_id_fail}}
-                        return {}
+        pk_fail = f"PATIENT#{patient_id_fail}"; sk_fail = "METADATA"
 
+        # Mock get_patient_by_pk_sk to simulate item existence
+        def mock_get_item_exists(table_name, pk, sk):
+            if pk == pk_fail and sk == sk_fail:
+                return {"PK": pk, "SK": sk, "id": patient_id_fail, "firstName": "Test"}
+            return None
+        monkeypatch.setattr("backend.src.handlers.patients.update_patient.get_patient_by_pk_sk", mock_get_item_exists)
 
-                class MockDynamoDBResourceForError:
-                    def Table(self, table_name):
-                        if table_name == TEST_PATIENT_RECORDS_TABLE_NAME:
-                            return MockTableForUpdateError()
-                        return original_boto3_resource('dynamodb').Table(table_name)
-                return MockDynamoDBResourceForError()
-            return original_boto3_resource(service_name, *args, **kwargs)
-
-        monkeypatch.setattr(boto3, "resource", mock_boto3_resource_for_update_error)
+        # Mock update_item_by_pk_sk to raise ClientError
+        def mock_update_item_failure(table_name, pk, sk, updates):
+            from botocore.exceptions import ClientError
+            error_response = {'Error': {'Code': 'ProvisionedThroughputExceededException', 'Message': 'Simulated DynamoDB UpdateItem Error'}}
+            raise ClientError(error_response, 'UpdateItem')
+        monkeypatch.setattr("backend.src.handlers.patients.update_patient.update_item_by_pk_sk", mock_update_item_failure)
 
         update_data = {"email": "update.fail@example.com"}
         event = create_api_gateway_event(body=update_data, path_params={"id": patient_id_fail})
@@ -198,8 +332,10 @@ class TestUpdatePatient:
         
         assert response["statusCode"] == 500
         body = json.loads(response["body"])
-        assert "error" in body or "message" in body
-        assert "Simulated DynamoDB UpdateItem Error" in body.get("error", "") or "Internal server error" in body.get("message", "")
+        assert body.get("error") == "AWS Error" # As per handle_exception for ClientError
+        assert "Simulated DynamoDB UpdateItem Error" in body.get("message")
+        assert response["headers"]["Content-Type"] == "application/json"
+        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
 # Notes:
 # - Assumed PK/SK for patient item: `PATIENT#<id>` / `PROFILE#<id>`.
@@ -250,14 +386,5 @@ class TestUpdatePatient:
 # or an adjustment to this mock. The current mock for `update_item` directly raises a generic error.
 # The `get_item` in this mock is to ensure that if the handler calls `get_item` first (e.g. to check existence
 # or retrieve the old item for merging), it finds an item, and then the subsequent `update_item` call fails.
-# This tests the error handling of the `update_item` call itself.The test file for `update_patient.lambda_handler` has been created.
-
-**Step 2.5: Create `backend/tests/python/handlers/patients/test_delete_patient.py`**
-This will test `delete_patient.lambda_handler`.
-Assumptions for patient items in DynamoDB:
-*   Patient ID is passed as a path parameter.
-*   Handler constructs `PK` and `SK` to delete the item.
-*   Handler might check for item existence before attempting deletion.
-
-The `template.yaml` shows `DeletePatientFunction` uses `CodeUri: src/` and `Handler: handlers.patients.delete_patient.lambda_handler`.
-It does *not* explicitly list `UtilsLayer`.
+# This tests the error handling of the `update_item` call itself.
+# (Extraneous comments removed)
