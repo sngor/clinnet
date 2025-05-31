@@ -10,7 +10,7 @@ import {
   // CircularProgress is no longer needed here as AppButton handles it
 } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
-import { SecondaryButton, DangerButton } from './ui/AppButton'; // Added AppButton imports
+import { SecondaryButton, DangerButton } from './AppButton'; // Corrected AppButton import path
 
 /**
  * A reusable confirmation dialog for delete operations
