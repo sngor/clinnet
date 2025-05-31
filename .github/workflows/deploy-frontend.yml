@@ -36,6 +36,22 @@ jobs:
         working-directory: frontend
         run: cat .env
 
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache Vite build cache
+        uses: actions/cache@v3
+        with:
+          path: frontend/node_modules/.vite
+          key: ${{ runner.os }}-vite-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vite-
+
       - name: Install dependencies and build frontend
         working-directory: frontend
         run: |
