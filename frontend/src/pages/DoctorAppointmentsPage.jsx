@@ -1,12 +1,13 @@
 // src/pages/DoctorAppointmentsPage.jsx
 import React, { useState } from 'react';
 import { 
-  Box, 
-  Typography, 
+  Box, // Keep Box for internal layout if needed for Tabs
+  // Typography, // Will be handled by PageLayout
   Tabs, 
   Tab,
-  Container
+  // Container // Replaced by PageLayout
 } from '@mui/material';
+import { PageLayout } from '../components/ui'; // Import PageLayout
 import DoctorAppointmentCalendar from '../features/appointments/components/DoctorAppointmentCalendar';
 import DoctorTodaySchedule from '../features/appointments/components/DoctorTodaySchedule';
 import DoctorAppointmentHistory from '../features/appointments/components/DoctorAppointmentHistory';
@@ -19,46 +20,23 @@ function DoctorAppointmentsPage() {
   };
   
   return (
-    <Container maxWidth="xl" disableGutters>
-      {/* Page header */}
-      <Box 
-        sx={{ 
-          mb: 4,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          pb: 2
-        }}
-      >
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          sx={{ 
-            fontWeight: 'medium',
-            color: 'primary.main'
-          }}
-        >
-          My Appointments
-        </Typography>
-        <Typography 
-          variant="subtitle1" 
-          color="text.secondary"
-          sx={{ mt: 1 }}
-        >
-          View and manage your appointment schedule
-        </Typography>
-      </Box>
-      
+    <PageLayout
+      title="My Appointments"
+      subtitle="View and manage your appointment schedule"
+      maxWidth="xl" // Retain maxWidth if needed, disableGutters is not a PageLayout prop
+    >
       <Tabs 
         value={tabValue} 
         onChange={handleTabChange} 
         sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
-        centered={false}
+        centered={false} // This prop might not be available on default Tabs
       >
         <Tab label="Today's Schedule" />
         <Tab label="Calendar View" />
         <Tab label="Appointment History" />
       </Tabs>
       
+      {/* Content for each tab */}
       {tabValue === 0 && (
         <DoctorTodaySchedule />
       )}
@@ -70,7 +48,7 @@ function DoctorAppointmentsPage() {
       {tabValue === 2 && (
         <DoctorAppointmentHistory />
       )}
-    </Container>
+    </PageLayout>
   );
 }
 

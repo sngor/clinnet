@@ -25,6 +25,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useAuth } from "../../app/providers/AuthProvider";
+import { AppIconButton } from "../ui"; // Added AppIconButton import
 import AdminSidebar from "./AdminSidebar";
 import DoctorSidebar from "./DoctorSidebar";
 import FrontdeskSidebar from "./FrontdeskSidebar";
@@ -223,7 +224,7 @@ function AppLayout() {
         {/* Inserted Settings Link Start */}
         <Box sx={{ p: 0.5 }}> {/* Using similar padding as sidebar lists items for consistency */}
           <ActiveNavLink
-            to="/admin/settings" // Path to the shared settings page
+            to="/settings" // Path to the shared settings page
             icon={<SettingsIcon />}
             primary="Settings"
             collapsed={drawerCollapsed} // Use the AppLayout's state for collapsed status
@@ -242,26 +243,26 @@ function AppLayout() {
               alignItems: "center",
             }}
           >
-            <Tooltip title={drawerCollapsed ? "Expand" : "Collapse"}>
-              <IconButton
-                onClick={handleDrawerCollapse}
-                sx={{
-                  borderRadius: "50%",
-                  bgcolor: "background.paper",
-                  boxShadow: "0 4px 12px rgba(67, 97, 238, 0.15)",
-                  width: 36,
-                  height: 36,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    bgcolor: "background.paper",
-                    transform: "scale(1.1)",
-                    boxShadow: "0 6px 16px rgba(67, 97, 238, 0.2)",
-                  },
-                }}
-              >
-                {drawerCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-              </IconButton>
-            </Tooltip>
+            {/* Replaced IconButton with AppIconButton */}
+            <AppIconButton
+              icon={drawerCollapsed ? ChevronRightIcon : ChevronLeftIcon}
+              tooltip={drawerCollapsed ? "Expand" : "Collapse"}
+              onClick={handleDrawerCollapse}
+              aria-label={drawerCollapsed ? "Expand drawer" : "Collapse drawer"}
+              sx={{
+                // Preserving some specific styling, review if AppIconButton defaults are better
+                bgcolor: "background.paper",
+                boxShadow: "0 4px 12px rgba(67, 97, 238, 0.15)",
+                width: 36, // AppIconButton might have default sizes, ensure this is desired
+                height: 36, // AppIconButton might have default sizes, ensure this is desired
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  bgcolor: "background.paper", // AppIconButton might have its own hover
+                  transform: "scale(1.1)",
+                  boxShadow: "0 6px 16px rgba(67, 97, 238, 0.2)",
+                },
+              }}
+            />
           </Box>
         )}
         {!drawerCollapsed && (
@@ -305,15 +306,14 @@ function AppLayout() {
         <Toolbar
           sx={{ minHeight: { xs: "56px", sm: "64px" }, px: { xs: 1, sm: 3 } }}
         >
-          <IconButton
+          {/* Replaced IconButton with AppIconButton for mobile menu toggle */}
+          <AppIconButton
+            icon={MenuIcon}
             color="primary"
             aria-label="open drawer"
-            edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
-          >
-            <MenuIcon />
-          </IconButton>
+            sx={{ mr: 2, display: { sm: "none" } }} // edge="start" is not a prop for AppIconButton
+          />
 
           {/* Centered Portal Title */}
           <Box
