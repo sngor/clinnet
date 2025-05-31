@@ -1,0 +1,9 @@
+{
+  "system_preferences": "System Preferences",
+  "font_size": "Font Size",
+  "allow_notifications": "Allow Notifications",
+  "language": "Language",
+  "admin_settings_title": "Admin Settings",
+  "system_preferences_tab": "System Preferences",
+  "system_diagnostics_tab": "System Diagnostics"
+}
