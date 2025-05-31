@@ -1,13 +1,11 @@
 // src/pages/PatientManagementPage.jsx
 import React, { useState, useMemo } from "react";
-import {
-  Button,
-} from "@mui/material";
+// Button import removed, PrimaryButton will be used
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../app/providers/AuthProvider";
 import { useAppData } from "../app/providers/DataProvider";
-import { PageLayout } from "../components/ui";
+import { PageLayout, PrimaryButton } from "../components/ui"; // Added PrimaryButton
 import PatientList from "../features/patients/components/PatientList";
 import PatientGrid from "../components/patients/PatientGrid";
 import PatientSearch from "../components/patients/PatientSearch";
@@ -85,14 +83,13 @@ function PatientManagementPage() {
   // Action button for the header - only show for frontdesk role
   const actionButton =
     user?.role === "frontdesk" ? (
-      <Button
-        variant="contained"
+      <PrimaryButton /* Replaced MUI Button */
         startIcon={<PersonAddIcon />}
         onClick={handleNewPatient}
-        sx={{ borderRadius: 1.5 }}
+        // sx={{ borderRadius: 1.5 }} // PrimaryButton has its own styling, sx might not be needed
       >
         New Patient
-      </Button>
+      </PrimaryButton>
     ) : null;
 
   // Determine page title based on user role
