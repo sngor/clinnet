@@ -38,7 +38,7 @@ echo "✅ AWS credentials configured"
 
 # Build the application
 echo "🔨 Building SAM application..."
-if ! sam build; then
+if ! sam build --cached; then
     echo "❌ Build failed"
     exit 1
 fi
