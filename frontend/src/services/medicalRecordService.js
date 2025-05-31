@@ -20,6 +20,28 @@ export const getMedicalRecords = async (idType, id) => {
   }
 };
 
+// Summarize doctor notes using Bedrock AI
+export const summarizeDoctorNotes = async (notesText) => {
+  if (!notesText || typeof notesText !== 'string' || !notesText.trim()) {
+    // Basic validation to prevent sending empty or invalid data
+    const error = new Error('Doctor notes text cannot be empty.');
+    console.error('Error summarizing doctor notes:', error.message);
+    throw error; // Or return a specific error structure: { error: message }
+  }
+  try {
+    console.log('Sending notes for summarization:', notesText); // For debugging
+    const response = await api.post('/ai/summarize-note', { doctorNotes: notesText });
+    // Log the full response for debugging if needed
+    // console.log('Summarization API response:', response);
+    return response.data; // Expected: { summary: "..." }
+  } catch (error) {
+    // The api.js interceptor already logs details.
+    // This log is specific to this service function.
+    console.error('Error in summarizeDoctorNotes service call:', error.response ? error.response.data : error.message);
+    throw error; // Re-throw to be handled by the calling component
+  }
+};
+
 // Get medical record by ID
 export const getMedicalRecordById = async (recordId) => {
   try {
@@ -85,6 +107,7 @@ const medicalRecordService = {
   updateMedicalRecord,
   deleteMedicalRecord,
   uploadImageToRecord,
+  summarizeDoctorNotes, // Add the new function here
 };
 
 export default medicalRecordService;

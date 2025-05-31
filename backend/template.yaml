@@ -1202,6 +1202,48 @@ Resources:
             Auth:
               Authorizer: NONE # OPTIONS should not be auth-protected
 
+  SummarizeDoctorNoteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/ai/
+      Handler: summarize_note.lambda_handler
+      # Runtime: python3.12 # Inherited from Globals
+      Layers:
+        - !Ref UtilsLayer
+      Policies:
+        - Statement:
+          - Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource: "*" # Consider restricting this to specific model ARNs in production
+      # Environment: # Inherits from Globals
+      Events:
+        SummarizeNoteApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /ai/summarize-note
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  SummarizeDoctorNoteOptionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/cors/
+      Handler: cors_options.lambda_handler
+      # Runtime: python3.12 # Inherited from Globals
+      # Layers: # Not strictly necessary for a simple OPTIONS handler unless cors_options needs it
+      Events:
+        SummarizeNoteOptionsApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /ai/summarize-note
+            Method: options
+            Auth:
+              Authorizer: NONE
+
   # --- Frontend (S3 + CloudFront) ---
   FrontendBucket:
     Type: AWS::S3::Bucket

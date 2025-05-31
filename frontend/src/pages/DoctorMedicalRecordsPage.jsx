@@ -34,6 +34,9 @@ import MedicalInformationIcon from "@mui/icons-material/MedicalInformation";
 import BrokenImageIcon from "@mui/icons-material/BrokenImage";
 import CancelIcon from "@mui/icons-material/Cancel"; // For removing selected files
 
+// Import for summarization
+import { summarizeDoctorNotes } from "../services/medicalRecordService";
+
 import PageContainer from "../components/ui/PageContainer";
 import PageHeading from "../components/ui/PageHeading";
 import ContentCard from "../components/ui/ContentCard";
@@ -75,6 +78,11 @@ function DoctorMedicalRecordsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalError, setModalError] = useState(null);
 
+  // State for summarization
+  const [currentSummary, setCurrentSummary] = useState("");
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [summarizationError, setSummarizationError] = useState(null);
+
   // State for delete confirmation
   const [openDeleteConfirmDialog, setOpenDeleteConfirmDialog] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState(null);
@@ -114,6 +122,10 @@ function DoctorMedicalRecordsPage() {
     setSelectedFiles([]);
     setImagePreviews([]);
     setModalError(null);
+    // Reset summarization states
+    setCurrentSummary("");
+    setIsSummarizing(false);
+    setSummarizationError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = ""; // Reset file input
     }
@@ -292,6 +304,30 @@ function DoctorMedicalRecordsPage() {
 
   const handleSearchChange = (event) => setSearchTerm(event.target.value);
   const handleFilterChange = (event) => setFilterType(event.target.value);
+
+  const handleSummarizeNotes = async () => {
+    setIsSummarizing(true);
+    setCurrentSummary("");
+    setSummarizationError(null);
+    try {
+      console.log("Summarizing notes:", currentDoctorNotes);
+      const data = await summarizeDoctorNotes(currentDoctorNotes);
+      if (data && data.summary) {
+        setCurrentSummary(data.summary);
+      } else {
+        setSummarizationError("Failed to get a valid summary from the service.");
+      }
+    } catch (err) {
+      console.error("Summarization failed:", err);
+      setSummarizationError(
+        err.response?.data?.error ||
+          err.message ||
+          "An unexpected error occurred during summarization."
+      );
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
 
   const filteredRecords = records.filter((record) => {
     const searchTermLower = searchTerm.toLowerCase();
@@ -575,6 +611,37 @@ function DoctorMedicalRecordsPage() {
             onChange={(e) => setCurrentDoctorNotes(e.target.value)}
             sx={{ mb: 2 }}
           />
+
+          {/* Summarization Section */}
+          <Box sx={{ mt: 1, mb: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={handleSummarizeNotes}
+              disabled={isSummarizing || !currentDoctorNotes.trim()}
+              sx={{ mt: 1, mb: 1 }}
+              startIcon={isSummarizing ? <CircularProgress size={20} /> : null}
+            >
+              {isSummarizing ? "Summarizing..." : "Generate Summary"}
+            </Button>
+            {summarizationError && (
+              <Alert severity="error" sx={{ mt: 1 }}>
+                {summarizationError}
+              </Alert>
+            )}
+            {currentSummary && (
+              <TextField
+                label="Generated Summary"
+                multiline
+                fullWidth
+                rows={3} // Adjust as needed
+                value={currentSummary}
+                InputProps={{ readOnly: true }}
+                variant="outlined"
+                sx={{ mt: 2, backgroundColor: "action.hover" }}
+              />
+            )}
+          </Box>
+
           <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
             Upload Images (Optional)
           </Typography>
@@ -703,6 +770,36 @@ function DoctorMedicalRecordsPage() {
               onChange={(e) => setCurrentDoctorNotes(e.target.value)}
               sx={{ mb: 2 }}
             />
+
+          {/* Summarization Section for Edit Modal */}
+          <Box sx={{ mt: 1, mb: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={handleSummarizeNotes}
+              disabled={isSummarizing || !currentDoctorNotes.trim()}
+              sx={{ mt: 1, mb: 1 }}
+              startIcon={isSummarizing ? <CircularProgress size={20} /> : null}
+            >
+              {isSummarizing ? "Summarizing..." : "Generate Summary"}
+            </Button>
+            {summarizationError && (
+              <Alert severity="error" sx={{ mt: 1 }}>
+                {summarizationError}
+              </Alert>
+            )}
+            {currentSummary && (
+              <TextField
+                label="Generated Summary"
+                multiline
+                fullWidth
+                rows={3} // Adjust as needed
+                value={currentSummary}
+                InputProps={{ readOnly: true }}
+                variant="outlined"
+                sx={{ mt: 2, backgroundColor: "action.hover" }}
+              />
+            )}
+          </Box>
 
             <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
               Existing Images
