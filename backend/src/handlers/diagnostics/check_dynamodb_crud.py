@@ -23,9 +23,9 @@ def lambda_handler(event, context):
 
         # TODO: These table names should be configured via environment variables in template.yaml
         table_name_map = {
-            'patients': os.environ.get('PATIENT_RECORDS_TABLE', 'clinnet-patient-records-dev'), # Placeholder if env var not set
-            'services': os.environ.get('SERVICES_TABLE', 'clinnet-services-dev'),          # Placeholder
-            'appointments': os.environ.get('APPOINTMENTS_TABLE', 'clinnet-appointments-dev') # Placeholder
+            'patients': os.environ['PATIENT_RECORDS_TABLE'],
+            'services': os.environ['SERVICES_TABLE'],
+            'appointments': os.environ['APPOINTMENTS_TABLE']
         }
         table_name = table_name_map.get(service_name_path)
         
