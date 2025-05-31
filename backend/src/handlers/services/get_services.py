@@ -4,12 +4,17 @@ Lambda function to get all services
 import os
 import json
 import logging
+import time
 from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import query_table, generate_response
 from utils.responser_helper import handle_exception
 from utils.cors import add_cors_headers, build_cors_preflight_response
+
+_cache = {}
+_cache_ttl_seconds = 300  # 5 minutes
+_cache_expiry_time = 0
 
 def lambda_handler(event, context):
     """
@@ -35,11 +40,16 @@ def lambda_handler(event, context):
     # Handle CORS preflight requests
     if event.get('httpMethod') == 'OPTIONS':
         return build_cors_preflight_response()
-    
+
+    # Get query parameters
+    query_params = event.get('queryStringParameters', {}) or {}
+
+    # Only cache if no query parameters are present
+    if not query_params and 'all_services' in _cache and time.time() < _cache_expiry_time:
+        logger.info("Returning all services from cache")
+        return generate_response(200, _cache['all_services'])
+
     try:
-        # Get query parameters
-        query_params = event.get('queryStringParameters', {}) or {}
-        
         # Initialize filter expression
         filter_expressions = []
         
@@ -65,6 +75,12 @@ def lambda_handler(event, context):
         # Query services
         services = query_table(table_name, **kwargs)
         logger.info(f"Fetched {len(services)} services from DynamoDB")
+
+        # Cache the result only if no query parameters were used
+        if not query_params:
+            _cache['all_services'] = services
+            _cache_expiry_time = time.time() + _cache_ttl_seconds
+            logger.info(f"Cached all_services. New expiry: {_cache_expiry_time}")
         
         response = generate_response(200, services)
         
