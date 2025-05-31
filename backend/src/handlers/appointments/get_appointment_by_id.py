@@ -7,20 +7,8 @@ from botocore.exceptions import ClientError
 
 # Import utility functions
 from utils.db_utils import get_item_by_id, generate_response
-from utils.responser_helper import handle_exception
+from utils.responser_helper import handle_exception, build_error_response
 from utils.cors import add_cors_headers
-
-def build_error_response(status_code, error_type, message, request_origin=None):
-    """Build standardized error response with CORS headers"""
-    response = {
-        'statusCode': status_code,
-        'body': json.dumps({
-            'error': error_type,
-            'message': message
-        })
-    }
-    add_cors_headers(response, request_origin)
-    return response
 
 def lambda_handler(event, context):
     """
@@ -63,4 +51,4 @@ def lambda_handler(event, context):
         return handle_exception(e, request_origin)
     except Exception as e:
         print(f"Error fetching appointment: {e}")
-        return build_error_response(500, 'Internal Server Error', 'Error fetching appointment', request_origin)
+        return handle_exception(e, request_origin)

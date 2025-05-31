@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const { transformUsersForClient } = require('../utils/user-helpers');
+const { buildResponse, buildErrorResponse, buildCorsPreflightResponse } = require('../utils/js-helpers');
 
 // Initialize Cognito Identity Provider
 const cognito = new AWS.CognitoIdentityServiceProvider();
@@ -11,6 +12,14 @@ const USER_POOL_ID = process.env.USER_POOL_ID;
  * List users from Cognito User Pool
  */
 exports.handler = async (event) => {
+  const headers = event.headers || {};
+  const requestOrigin = headers.Origin || headers.origin;
+
+  // Handle CORS preflight (OPTIONS) requests
+  if (event.httpMethod === 'OPTIONS' || event.requestContext?.http?.method === 'OPTIONS') {
+      return buildCorsPreflightResponse(requestOrigin);
+  }
+
   try {
     console.log('Listing users, event:', JSON.stringify(event));
     
@@ -37,32 +46,13 @@ exports.handler = async (event) => {
     const transformedUsers = transformUsersForClient(cognitoResponse.Users);
     
     // Return response
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net', // CORS header
-        'Access-Control-Allow-Credentials': true
-      },
-      body: JSON.stringify({
+    return buildResponse(200, {
         users: transformedUsers,
         nextToken: cognitoResponse.PaginationToken || null
-      })
-    };
+    }, requestOrigin);
   } catch (error) {
     console.error('Error listing users:', error);
     
-    return {
-      statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://d23hk32py5djal.cloudfront.net', // CORS header
-        'Access-Control-Allow-Credentials': true
-      },
-      body: JSON.stringify({
-        error: 'Failed to list users',
-        message: error.message
-      })
-    };
+    return buildErrorResponse(500, error.name || 'CognitoListUsersError', error.message || 'Failed to list users', requestOrigin);
   }
 };
