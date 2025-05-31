@@ -371,7 +371,7 @@ function PatientDetailPage() {
             />
           </Grid>
         </Grid>
-      </Paper>
+      </SectionContainer>
 
       {/* Tabs for patient sections (remove Personal Info and Medical Info tabs) */}
       <Box sx={{ mb: 2 }}>
@@ -406,7 +406,7 @@ function PatientDetailPage() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Container>
+    </PageLayout>
   );
 }
 
