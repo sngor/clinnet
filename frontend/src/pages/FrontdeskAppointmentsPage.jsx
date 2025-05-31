@@ -5,13 +5,13 @@ import {
   Typography, 
   Tabs, 
   Tab,
-  Container
+  // Container // Not used directly, PageLayout will be used
 } from '@mui/material';
+import { PageLayout } from '../components/ui'; // Import PageLayout
 import FrontdeskAppointmentCalendar from '../features/appointments/components/FrontdeskAppointmentCalendar';
 import FrontdeskTodaySchedule from '../features/appointments/components/FrontdeskTodaySchedule';
 import FrontdeskAppointmentHistory from '../features/appointments/components/FrontdeskAppointmentHistory';
-import PageContainer from '../components/ui/PageContainer';
-import PageHeading from '../components/ui/PageHeading';
+// PageContainer and PageHeading imports removed
 
 function FrontdeskAppointmentsPage() {
   const [tabValue, setTabValue] = useState(0);
@@ -21,12 +21,10 @@ function FrontdeskAppointmentsPage() {
   };
   
   return (
-    <PageContainer>
-      <PageHeading 
-        title="Appointments" 
-        subtitle="Manage patient check-ins and appointments"
-      />
-      
+    <PageLayout
+      title="Appointments"
+      subtitle="Manage patient check-ins and appointments"
+    >
       <Tabs 
         value={tabValue} 
         onChange={handleTabChange} 
@@ -49,7 +47,7 @@ function FrontdeskAppointmentsPage() {
       {tabValue === 2 && (
         <FrontdeskAppointmentHistory />
       )}
-    </PageContainer>
+    </PageLayout>
   );
 }
 

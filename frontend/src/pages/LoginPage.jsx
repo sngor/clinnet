@@ -9,11 +9,11 @@ import {
   useMediaQuery,
   useTheme,
   InputAdornment,
-  IconButton,
+  // IconButton, // Replaced by AppIconButton
   Divider,
   CircularProgress,
   Link,
-  TextField,
+  // TextField, // Replaced by StyledTextField
   Avatar,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -31,8 +31,13 @@ import {
   FlexBox,
   PrimaryButton,
   SecondaryButton,
-  BodyText,
+  // BodyText, // Not used
   SecondaryText,
+  SectionTitle, // Added
+  SubsectionTitle, // Added
+  Caption, // Added
+  AppIconButton, // Added
+  StyledTextField, // Added
 } from "../components/ui";
 
 const AnimatedAlert = styled(Alert)(({ theme }) => ({
@@ -163,36 +168,18 @@ function LoginPage() {
             >
               <MedicalServicesOutlinedIcon sx={{ fontSize: 40 }} />
             </Box>
-            <Typography
-              variant="h3"
-              component="h1"
-              sx={{
-                fontWeight: 700,
-                mb: 2,
-                fontSize: { xs: "2rem", sm: "2.5rem" },
-              }}
-            >
+            {/* Using SectionTitle for main brand, though h3 might be more PageTitle like, style guide PageTitle is h4 */}
+            <SectionTitle sx={{ typography: {xs: 'h4', sm: 'h3'}, fontWeight: 700, mb: 2, color: "white" }}>
               CLINNET
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{
-                mb: 3,
-                fontWeight: 400,
-              }}
-            >
+            </SectionTitle>
+            <SubsectionTitle sx={{ typography: 'h6', fontWeight: 400, mb: 3, color: "white" }}>
               Healthcare Management System
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                maxWidth: "80%",
-                opacity: 0.9,
-              }}
-            >
+            </SubsectionTitle>
+            {/* Using SecondaryText as it's less emphasis, similar to body2 style */}
+            <SecondaryText sx={{ maxWidth: "80%", opacity: 0.9, color: "white", textAlign: 'center' }}>
               Streamline your clinic operations with our comprehensive EMR
               solution
-            </Typography>
+            </SecondaryText>
           </Box>
 
           {/* Right side - Login form */}
@@ -206,17 +193,9 @@ function LoginPage() {
               backgroundColor: "white",
             }}
           >
-            <Typography
-              variant="h5"
-              component="h2"
-              sx={{
-                mb: 1,
-                fontWeight: 600,
-                color: "text.primary",
-              }}
-            >
+            <SectionTitle sx={{ mb: 1, fontWeight: 600 }}> {/* Was h5 */}
               Sign In
-            </Typography>
+            </SectionTitle>
             <SecondaryText sx={{ mb: 4 }}>
               Enter your credentials to access your account
             </SecondaryText>
@@ -247,7 +226,7 @@ function LoginPage() {
               noValidate
               sx={{ width: "100%" }}
             >
-              <TextField
+              <StyledTextField
                 margin="normal"
                 required
                 fullWidth
@@ -268,7 +247,7 @@ function LoginPage() {
                 }}
                 disabled={isLoading || authLoading}
               />
-              <TextField
+              <StyledTextField
                 margin="normal"
                 required
                 fullWidth
@@ -288,18 +267,13 @@ function LoginPage() {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton
+                      <AppIconButton
                         aria-label="toggle password visibility"
+                        icon={showPassword ? VisibilityOffIcon : VisibilityIcon}
                         onClick={togglePasswordVisibility}
-                        edge="end"
                         disabled={isLoading || authLoading}
-                      >
-                        {showPassword ? (
-                          <VisibilityOffIcon />
-                        ) : (
-                          <VisibilityIcon />
-                        )}
-                      </IconButton>
+                        // edge="end" // Not applicable to AppIconButton
+                      />
                     </InputAdornment>
                   ),
                 }}
@@ -335,17 +309,9 @@ function LoginPage() {
 
               <Box sx={{ mb: 3 }}>
                 <Divider>
-                  <Typography
-                    variant="body2"
-                    component="span"
-                    sx={{
-                      px: 1,
-                      color: "text.secondary",
-                      fontSize: "0.875rem",
-                    }}
-                  >
+                  <Caption sx={{ px: 1, color: "text.secondary" }}> {/* Was Typography body2 */}
                     Demo Accounts
-                  </Typography>
+                  </Caption>
                 </Divider>
               </Box>
 

@@ -2,30 +2,43 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Container,
+  // Container, // Replaced by PageLayout
   Box,
-  Typography,
-  Paper,
+  // Typography, // Replaced by UI kit components
+  // Paper, // Replaced by SectionContainer/CardContainer
   Grid,
-  TextField,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  // TextField, // Replaced by StyledTextField
+  // Button, // Replaced by UI kit components
+  // FormControl, // Replaced by StyledFormControl from FormStyles
+  InputLabel, // Still needed for Select
+  Select, // Still needed
+  MenuItem, // Still needed
   Divider,
-  IconButton,
-  Alert,
-  Snackbar,
-  CircularProgress,
+  // IconButton, // Replaced by AppIconButton or PageLayout's back button
+  Alert, // Keep for now
+  Snackbar, // Keep for now
+  CircularProgress, // Keep for loading prop in PrimaryButton
 } from "@mui/material";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { format } from "date-fns";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack"; // For PageLayout back button
 import SaveIcon from "@mui/icons-material/Save";
 import { useAppData } from "../app/providers/DataProvider";
-import LoadingIndicator from "../components/ui/LoadingIndicator";
+import {
+  LoadingIndicator,
+  PageLayout,
+  PrimaryButton,
+  SecondaryButton,
+  // TextButton, // Or SecondaryButton for Cancel
+  SectionContainer,
+  CardContainer, // For inner form sections
+  SectionTitle,
+  StyledTextField,
+} from "../components/ui";
+// Need to get StyledFormControl from the correct path
+import { StyledFormControl } from "../components/ui/FormStyles";
+
 
 function NewPatientPage() {
   const navigate = useNavigate();
@@ -146,48 +159,41 @@ function NewPatientPage() {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4, position: "relative" }}>
-      {(submitting || loading) && (
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 20,
-            background: "rgba(255,255,255,0.7)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <LoadingIndicator size="large" message="Saving patient..." />
-        </Box>
-      )}
-      {/* Header with back button */}
-      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-        <IconButton onClick={handleBackClick} sx={{ mr: 2 }} aria-label="back">
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 500 }}>
-          Add New Patient
-        </Typography>
-      </Box>
-
-      <Paper
-        sx={{ p: 4, borderRadius: 3, maxWidth: 900, mx: "auto", boxShadow: 3 }}
+    <PageLayout
+      title="Add New Patient"
+      onBack={handleBackClick}
+      showBackButton
+      maxWidth="md" // Adjusted maxWidth for a form page
+    >
+      { (submitting || loading) && (
+      <Box
+        sx={{
+          position: "fixed", // Use fixed to cover PageLayout as well
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: (theme) => theme.zIndex.drawer + 2, // Ensure it's above everything
+          background: "rgba(255,255,255,0.7)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
+        <LoadingIndicator size="large" message="Saving patient..." />
+      </Box>
+      )}
+      <SectionContainer> {/* Was Paper */}
         <form onSubmit={handleSubmit}>
           {/* Personal Information Section */}
-          <Paper variant="outlined" sx={{ p: 3, mb: 4, background: "#fafbfc" }}>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 600, color: "primary.main", mb: 1 }}
-            >
+          <CardContainer sx={{ mb: 4 }}> {/* Was Paper variant="outlined" */}
+            <SectionTitle sx={{ mb: 1 }}> {/* Was Typography h6 */}
               Personal Information
-            </Typography>
+            </SectionTitle>
             <Divider sx={{ mb: 3 }} />
             <Grid container spacing={3}>
               <Grid item xs={12} md={6} lg={4}>
-                <TextField
+                <StyledTextField /* Was TextField */
                   label={
                     <span>
                       First Name <span style={{ color: "red" }}>*</span>
@@ -208,7 +214,7 @@ function NewPatientPage() {
                 />
               </Grid>
               <Grid item xs={12} md={6} lg={4}>
-                <TextField
+                <StyledTextField /* Was TextField */
                   label={
                     <span>
                       Last Name <span style={{ color: "red" }}>*</span>
@@ -229,10 +235,11 @@ function NewPatientPage() {
                 />
               </Grid>
               <Grid item xs={12} md={6} lg={4}>
-                <FormControl fullWidth sx={{ minWidth: 180, maxWidth: 220 }}>
-                  <InputLabel>Gender</InputLabel>
+                <StyledFormControl fullWidth sx={{ minWidth: 180, maxWidth: 220 }}> {/* Was FormControl */}
+                  <InputLabel id="gender-label">Gender</InputLabel> {/* Added id */}
                   <Select
                     name="gender"
+                    labelId="gender-label" /* Added labelId */
                     value={patientData.gender}
                     onChange={handleInputChange}
                     label="Gender"
@@ -241,7 +248,7 @@ function NewPatientPage() {
                     <MenuItem value="Female">Female</MenuItem>
                     <MenuItem value="Other">Other</MenuItem>
                   </Select>
-                </FormControl>
+                </StyledFormControl>
               </Grid>
               <Grid item xs={12} md={6} lg={4}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -258,7 +265,7 @@ function NewPatientPage() {
                     }
                     onChange={handleDateChange}
                     renderInput={(params) => (
-                      <TextField
+                      <StyledTextField /* Was TextField */
                         {...params}
                         fullWidth
                         required
@@ -274,20 +281,17 @@ function NewPatientPage() {
                 </LocalizationProvider>
               </Grid>
             </Grid>
-          </Paper>
+          </CardContainer>
 
           {/* Contact Information Section */}
-          <Paper variant="outlined" sx={{ p: 3, mb: 4, background: "#fafbfc" }}>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 600, color: "primary.main", mb: 1 }}
-            >
+          <CardContainer sx={{ mb: 4 }}> {/* Was Paper variant="outlined" */}
+            <SectionTitle sx={{ mb: 1 }}> {/* Was Typography h6 */}
               Contact Information
-            </Typography>
+            </SectionTitle>
             <Divider sx={{ mb: 3 }} />
             <Grid container spacing={3}>
               <Grid item xs={12} md={6} lg={4}>
-                <TextField
+                <StyledTextField /* Was TextField */
                   label="Email"
                   name="email"
                   type="email"
@@ -298,7 +302,7 @@ function NewPatientPage() {
                 />
               </Grid>
               <Grid item xs={12} md={6} lg={4}>
-                <TextField
+                <StyledTextField /* Was TextField */
                   label={
                     <span>
                       Phone <span style={{ color: "red" }}>*</span>
@@ -319,7 +323,7 @@ function NewPatientPage() {
                 />
               </Grid>
               <Grid item xs={12} lg={4}>
-                <TextField
+                <StyledTextField /* Was TextField */
                   label="Address"
                   name="address"
                   value={patientData.address}
@@ -331,20 +335,17 @@ function NewPatientPage() {
                 />
               </Grid>
             </Grid>
-          </Paper>
+          </CardContainer>
 
           {/* Insurance Information Section */}
-          <Paper variant="outlined" sx={{ p: 3, mb: 4, background: "#fafbfc" }}>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 600, color: "primary.main", mb: 1 }}
-            >
+          <CardContainer sx={{ mb: 4 }}> {/* Was Paper variant="outlined" */}
+            <SectionTitle sx={{ mb: 1 }}> {/* Was Typography h6 */}
               Insurance Information
-            </Typography>
+            </SectionTitle>
             <Divider sx={{ mb: 3 }} />
             <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
-                <TextField
+                <StyledTextField /* Was TextField */
                   label="Insurance Provider"
                   name="insuranceProvider"
                   value={patientData.insuranceProvider}
@@ -354,7 +355,7 @@ function NewPatientPage() {
                 />
               </Grid>
               <Grid item xs={12} md={4}>
-                <TextField
+                <StyledTextField /* Was TextField */
                   label="Insurance Number"
                   name="insuranceNumber"
                   value={patientData.insuranceNumber}
@@ -364,10 +365,11 @@ function NewPatientPage() {
                 />
               </Grid>
               <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Status</InputLabel>
+                <StyledFormControl fullWidth> {/* Was FormControl */}
+                  <InputLabel id="status-label">Status</InputLabel> {/* Added id */}
                   <Select
                     name="status"
+                    labelId="status-label" /* Added labelId */
                     value={patientData.status}
                     onChange={handleInputChange}
                     label="Status"
@@ -375,35 +377,34 @@ function NewPatientPage() {
                     <MenuItem value="Active">Active</MenuItem>
                     <MenuItem value="Inactive">Inactive</MenuItem>
                   </Select>
-                </FormControl>
+                </StyledFormControl>
               </Grid>
             </Grid>
-          </Paper>
+          </CardContainer>
 
           {/* Actions */}
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-            <Button
-              variant="outlined"
+            <SecondaryButton /* Was Button variant="outlined" */
               onClick={handleBackClick}
               sx={{ mr: 2 }}
               disabled={submitting}
             >
               Cancel
-            </Button>
-            <Button
+            </SecondaryButton>
+            <PrimaryButton /* Was Button variant="contained" */
               type="submit"
-              variant="contained"
               startIcon={
-                submitting ? <CircularProgress size={20} /> : <SaveIcon />
+                submitting ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />
               }
               disabled={submitting || loading}
-              sx={{ minWidth: 140 }}
+              loading={submitting} // Use loading prop for PrimaryButton
+              // sx={{ minWidth: 140 }} // PrimaryButton has default sizing
             >
               {submitting ? "Saving..." : "Save Patient"}
-            </Button>
+            </PrimaryButton>
           </Box>
         </form>
-      </Paper>
+      </SectionContainer>
 
       {/* Snackbar for notifications */}
       <Snackbar
@@ -419,7 +420,7 @@ function NewPatientPage() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Container>
+    </PageLayout>
   );
 }
 

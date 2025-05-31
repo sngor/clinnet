@@ -8,15 +8,15 @@ import {
 import patientService from "../services/patientService";
 import {
   Grid,
-  Typography,
+  // Typography, // Replaced by UI kit components
   useMediaQuery,
   useTheme,
   Box,
-  Button,
+  // Button, // Replaced by UI kit components
   Dialog,
   DialogContent,
-  DialogActions,
-  TextField,
+  DialogActions, // Keep for structure, buttons inside will be replaced
+  // TextField, // Replaced by StyledTextField
   FormControl,
   InputLabel,
   Select,
@@ -34,8 +34,12 @@ import {
   ContentCard,
   AppointmentList,
   DialogHeading, // DialogHeading is kept
-  // PageContainer, // Removed PageContainer
-  // PageHeading, // Removed PageHeading
+  BodyText, // Added
+  SectionTitle, // Added
+  PrimaryButton, // Added
+  SecondaryButton, // Added (for Cancel button)
+  TextButton, // Added (alternative for Cancel)
+  StyledTextField, // Added
 } from "../components/ui";
 import DashboardCard from "../components/ui/DashboardCard"; // Updated path
 
@@ -195,10 +199,17 @@ function FrontdeskDashboard() {
       error={null} // Don't block UI with error
     >
       {/* Show error as a warning if partialErrors exist */}
-      {partialErrors.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ color: "#b71c1c", fontWeight: 500 }}>{error}</div>
-        </div>
+      {partialErrors.length > 0 && error && (
+        <BodyText
+          sx={{
+            color: "error.main", // Using theme's error color
+            fontWeight: 500,
+            mb: 2, // Standard spacing
+            textAlign: "center", // Or 'left' based on desired alignment
+          }}
+        >
+          {error}
+        </BodyText>
       )}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -256,24 +267,18 @@ function FrontdeskDashboard() {
 
       {/* Quick Actions */}
       <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="h5"
-          color="primary.main"
-          fontWeight="medium"
-          sx={{ mb: 2 }}
-        >
+        <SectionTitle sx={{ mb: 2 }}> {/* Was Typography h5 */}
           Quick Actions
-        </Typography>
+        </SectionTitle>
         <Grid container spacing={2}>
           <Grid item>
-            <Button
-              variant="contained"
+            <PrimaryButton /* Was Button variant="contained" */
               startIcon={<PersonAddIcon />}
               onClick={handleOpenWalkInModal}
-              sx={{ borderRadius: 1.5 }}
+              // sx={{ borderRadius: 1.5 }} // PrimaryButton has its own styling
             >
               Register Walk-in
-            </Button>
+            </PrimaryButton>
           </Grid>
         </Grid>
       </Box>
@@ -308,7 +313,7 @@ function FrontdeskDashboard() {
           <Box>
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <TextField
+                <StyledTextField /* Was TextField */
                   name="patientName"
                   label="Patient Name"
                   fullWidth
@@ -319,9 +324,10 @@ function FrontdeskDashboard() {
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <InputLabel>Doctor</InputLabel>
+                  <InputLabel id="walk-in-doctor-label">Doctor</InputLabel> {/* Added id for label */}
                   <Select
                     name="doctorName"
+                    labelId="walk-in-doctor-label" // Added labelId
                     value={walkInForm.doctorName}
                     onChange={handleWalkInFormChange}
                     label="Doctor"
@@ -343,7 +349,7 @@ function FrontdeskDashboard() {
                 </FormControl>
               </Grid>
               <Grid item xs={12}>
-                <TextField
+                <StyledTextField /* Was TextField */
                   name="notes"
                   label="Notes"
                   multiline
@@ -357,14 +363,13 @@ function FrontdeskDashboard() {
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCloseWalkInModal}>Cancel</Button>
-          <Button
+          <TextButton onClick={handleCloseWalkInModal}>Cancel</TextButton> {/* Was Button */}
+          <PrimaryButton /* Was Button variant="contained" */
             onClick={handleSubmitWalkIn}
-            variant="contained"
             disabled={!walkInForm.patientName}
           >
             Register
-          </Button>
+          </PrimaryButton>
         </DialogActions>
       </Dialog>
     </PageLayout>
