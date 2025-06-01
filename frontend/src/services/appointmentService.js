@@ -57,22 +57,30 @@ export const deleteAppointment = async (appointmentId) => {
 };
 
 // Get appointments by doctor ID
-export const getAppointmentsByDoctor = async (doctorId) => {
+// Frontend components like AppointmentList.jsx and DoctorTodaySchedule.jsx
+// rely on appointment objects including 'patientId' and 'patientName'.
+export const getAppointmentsByDoctor = async (doctorId, filters = {}) => {
   try {
-    const response = await api.get(`/appointments?doctorId=${doctorId}`);
+    const queryParams = { doctorId, ...filters };
+    // Example: if filters = { date: 'YYYY-MM-DD' },
+    // params will be { doctorId: 'doc123', date: 'YYYY-MM-DD' }
+    const response = await api.get('/appointments', { params: queryParams });
     return response.data;
   } catch (error) {
-    console.error(`Error fetching appointments for doctor ${doctorId}:`, error);
+    console.error(`Error fetching appointments for doctor ${doctorId} with filters ${JSON.stringify(filters)}:`, error);
     throw error;
   }
 };
 
 // Get appointments by patient ID
+// Frontend components like AppointmentsTab.jsx rely on these appointments
+// including details such as 'doctorName', 'type' (or 'serviceName'), and 'status'.
 export const getAppointmentsByPatient = async (patientId) => {
   try {
-    const response = await api.get(`/appointments?patientId=${patientId}`);
+    const response = await api.get('/appointments', { params: { patientId } });
     return response.data;
-  } catch (error) {
+  } catch (error)
+ {
     console.error(`Error fetching appointments for patient ${patientId}:`, error);
     throw error;
   }
@@ -118,10 +126,17 @@ export const updateAppointmentStatus = async (appointmentId, status) => {
 };
 
 // Default export
+// Ensure all functions intended for direct use by components are included here.
 const appointmentService = {
   getAppointments,
   getAppointmentById,
   createAppointment,
+  updateAppointment,
+  deleteAppointment,
+  getAppointmentsByDoctor,
+  getAppointmentsByPatient,
+  getTodaysAppointments, // Keeping for now, though DoctorTodaySchedule should use getAppointmentsByDoctor with date filter
+  updateAppointmentStatus,
 };
 
 export default appointmentService;

@@ -33,6 +33,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import MedicalInformationIcon from "@mui/icons-material/MedicalInformation";
 import BrokenImageIcon from "@mui/icons-material/BrokenImage";
 import CancelIcon from "@mui/icons-material/Cancel"; // For removing selected files
+import { Link } from 'react-router-dom'; // Added Link import
 
 // Import for summarization
 import { summarizeDoctorNotes } from "../services/medicalRecordService";
@@ -346,7 +347,16 @@ function DoctorMedicalRecordsPage() {
 
   const columns = [
     { field: "reportId", headerName: "Record ID", width: 200 },
-    { field: "patientId", headerName: "Patient ID", width: 150 },
+    {
+      field: "patientId",
+      headerName: "Patient ID",
+      width: 150,
+      renderCell: (params) => (
+        <Link to={`/doctor/patients/${params.value}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          {params.value}
+        </Link>
+      ),
+    },
     {
       field: "reportContent",
       headerName: "Report Content",

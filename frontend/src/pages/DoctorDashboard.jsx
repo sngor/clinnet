@@ -4,6 +4,7 @@ import { useAuth } from "../app/providers/AuthProvider";
 import { Grid, useMediaQuery, useTheme } from "@mui/material";
 import { getAppointmentsByDoctor } from "../services/appointmentService";
 import patientService from "../services/patients";
+import medicalRecordService from "../services/medicalRecordService";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -39,6 +40,7 @@ function DoctorDashboard() {
   const navigate = useNavigate();
   const [todaysAppointmentsCount, setTodaysAppointmentsCount] = useState(0);
   const [assignedPatientsCount, setAssignedPatientsCount] = useState(0);
+  const [medicalRecordsCount, setMedicalRecordsCount] = useState(0);
   const [doctorAppointments, setDoctorAppointments] = useState([]); // To store all appointments for the list
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -107,6 +109,17 @@ function DoctorDashboard() {
       } catch (err) {
         errors.push("Patients: " + (err?.message || err));
         if (isMounted) setAssignedPatientsCount(0);
+      }
+      try {
+        const recordsData = await medicalRecordService.getMedicalRecords('doctor', user.username);
+        if (isMounted && Array.isArray(recordsData)) {
+          setMedicalRecordsCount(recordsData.length);
+        } else if (isMounted) {
+          setMedicalRecordsCount(0);
+        }
+      } catch (err) {
+        errors.push("Medical Records: " + (err?.message || err));
+        if (isMounted) setMedicalRecordsCount(0);
       }
       if (isMounted) {
         setPartialErrors(errors);
@@ -193,9 +206,9 @@ function DoctorDashboard() {
           <DashboardCard
             icon={<AssignmentIcon fontSize="large" />}
             title="Records"
-            value={12}
+            value={medicalRecordsCount}
             linkText="View All"
-            linkTo="/doctor/patients"
+            linkTo="/doctor/medical-records"
           />
         </Grid>
       </Grid>

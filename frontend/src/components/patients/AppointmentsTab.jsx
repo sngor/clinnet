@@ -15,36 +15,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns"; // Added parseISO
 import EmptyState from "../ui/EmptyState";
+import appointmentService from "../../../services/appointmentService"; // Added appointmentService
 
-// Mock appointments data - in a real app, this would come from an API
-const mockAppointments = [
-  {
-    id: 1,
-    date: "2023-12-05",
-    time: "09:00 AM",
-    doctor: "Dr. Smith",
-    type: "Checkup",
-    status: "Scheduled",
-  },
-  {
-    id: 2,
-    date: "2023-11-20",
-    time: "02:30 PM",
-    doctor: "Dr. Jones",
-    type: "Follow-up",
-    status: "Completed",
-  },
-  {
-    id: 3,
-    date: "2023-10-15",
-    time: "11:00 AM",
-    doctor: "Dr. Smith",
-    type: "Consultation",
-    status: "Completed",
-  },
-];
 
 function AppointmentsTab({ patientId }) {
   // Safety check for missing patientId
@@ -64,17 +38,40 @@ function AppointmentsTab({ patientId }) {
 
   // Fetch appointments for this patient
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
+    if (!patientId) {
+      setLoading(false);
+      // Error or empty state is already handled by the initial check
+      return;
+    }
+
+    let isMounted = true;
+    const fetchAppointments = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        // Filter appointments for this patient
-        setAppointments(mockAppointments);
-        setLoading(false);
+        const data = await appointmentService.getAppointmentsByPatient(patientId);
+        if (isMounted) {
+          // Assuming data is an array of appointments
+          // And each appointment has: id, appointmentDate, time (or appointmentTime), doctorName, type, status
+          setAppointments(Array.isArray(data) ? data : []);
+        }
       } catch (err) {
-        setError(`Failed to load appointments: ${err.message}`);
-        setLoading(false);
+        if (isMounted) {
+          setError(err.message || "Failed to load appointments.");
+          setAppointments([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    }, 500);
+    };
+
+    fetchAppointments();
+
+    return () => {
+      isMounted = false;
+    };
   }, [patientId]);
 
   // Get color for status chip
@@ -95,10 +92,21 @@ function AppointmentsTab({ patientId }) {
 
   // Format date
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     try {
-      return format(new Date(dateString), "MMM dd, yyyy");
+      // Prefer parseISO for ISO 8601 strings, fallback to new Date for other formats
+      const date = parseISO(dateString);
+      // Check if date is valid after parsing
+      if (isNaN(date.getTime())) {
+          // Attempt direct parsing if parseISO fails (e.g. for "MM/DD/YYYY" or other non-ISO formats)
+          const directDate = new Date(dateString);
+          if (isNaN(directDate.getTime())) return dateString; // Return original if still invalid
+          return format(directDate, "MMM dd, yyyy");
+      }
+      return format(date, "MMM dd, yyyy");
     } catch (error) {
-      return dateString;
+      console.error("Error formatting date:", error);
+      return dateString; // Return original string if formatting fails
     }
   };
 
@@ -145,13 +153,13 @@ function AppointmentsTab({ patientId }) {
             <TableBody>
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
-                  <TableCell>{formatDate(appointment.date)}</TableCell>
-                  <TableCell>{appointment.time}</TableCell>
-                  <TableCell>{appointment.doctor}</TableCell>
-                  <TableCell>{appointment.type}</TableCell>
+                  <TableCell>{formatDate(appointment.appointmentDate || appointment.date)}</TableCell>
+                  <TableCell>{appointment.time || appointment.appointmentTime || "N/A"}</TableCell>
+                  <TableCell>{appointment.doctorName || appointment.doctor || "N/A"}</TableCell>
+                  <TableCell>{appointment.type || appointment.serviceName || "N/A"}</TableCell>
                   <TableCell>
                     <Chip
-                      label={appointment.status}
+                      label={appointment.status || "N/A"}
                       color={getStatusColor(appointment.status)}
                       size="small"
                     />
