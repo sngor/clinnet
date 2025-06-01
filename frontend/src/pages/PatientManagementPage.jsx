@@ -70,7 +70,8 @@ function PatientManagementPage() {
   };
 
   // Navigation handlers
-  const handleViewPatient = (patientId) => {
+  const handleViewPatient = (patient) => {
+    const patientId = patient.id || patient.PK;
     if (user?.role === "doctor") navigate(`/doctor/patients/${patientId}`);
     else if (user?.role === "frontdesk")
       navigate(`/frontdesk/patients/${patientId}`);
@@ -126,7 +127,7 @@ function PatientManagementPage() {
           loading={loading}
         />
       ) : (
-        <PatientList patients={filteredPatients} />
+        <PatientList patients={filteredPatients} onPatientSelect={handleViewPatient} />
       )}
     </PageLayout>
   );
