@@ -11,6 +11,7 @@
 // <AppointmentList appointments={appointments} onAction={handleCheckIn} />
 
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   List,
   ListItem,
@@ -74,7 +75,10 @@ function AppointmentList({
               sx={{ mb: { xs: 2, sm: 0 }, width: { xs: "100%", sm: "auto" } }}
             >
               <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-                {appt.time} - {appt.patientName}
+                {appt.time} -{' '}
+                <Link to={`/doctor/patients/${appt.patientId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  {appt.patientName}
+                </Link>
               </Typography>
 
               {appt.doctorName && (
