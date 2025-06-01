@@ -265,6 +265,7 @@ const theme = createTheme({
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.03)',
           borderRadius: 20,
           border: '1px solid rgba(231, 236, 248, 0.8)',
+          backgroundColor: theme.palette.background.default, // Set card background
           // No transition or hover effects for main content cards
           [theme.breakpoints.down('sm')]: {
             borderRadius: 16, // Smaller radius on mobile
@@ -343,53 +344,20 @@ const theme = createTheme({
         }),
       },
     },
-    MuiContainer: {
-      styleOverrides: {
-        root: ({ theme }) => ({
-          paddingLeft: 16,
-          paddingRight: 16,
-          [theme.breakpoints.up('sm')]: {
-            paddingLeft: 24,
-            paddingRight: 24,
-          },
-          [theme.breakpoints.up('md')]: {
-            paddingLeft: 32,
-            paddingRight: 32,
-          },
-        }),
-        maxWidthXs: ({ theme }) => ({
-          maxWidth: '100%',
-          [theme.breakpoints.up('sm')]: {
-            maxWidth: 444,
-          },
-        }),
-        maxWidthSm: ({ theme }) => ({
-          maxWidth: '100%',
-          [theme.breakpoints.up('sm')]: {
-            maxWidth: 600,
-          },
-        }),
-        maxWidthMd: ({ theme }) => ({
-          maxWidth: '100%',
-          [theme.breakpoints.up('md')]: {
-            maxWidth: 900,
-          },
-        }),
-      },
-    },
     MuiBox: {
       styleOverrides: {
-        root: {
-          // Ensure no animations on hover for main content
+        root: ({ theme }) => ({
           transition: 'none',
-        },
+          backgroundColor: theme.palette.background.default, // Set background color
+        }),
       },
     },
     MuiPaper: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           borderRadius: 16,
-        },
+          backgroundColor: theme.palette.background.default, // Set paper background
+        }),
         elevation1: {
           boxShadow: '0 6px 16px rgba(0, 0, 0, 0.05)',
         },

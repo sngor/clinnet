@@ -32,13 +32,11 @@ export const StyledTableContainer = ({ children, sx = {}, tableSx = {} }) => (
       ...sx,
     }}
   >
-    <TableContainer
-      sx={{ boxShadow: "none", backgroundColor: "background.paper" }}
-    >
+    <TableContainer sx={{ boxShadow: "none", backgroundColor: "#fbfbfb" }}>
       <Table
         sx={{
           minWidth: 650,
-          backgroundColor: "background.paper",
+          backgroundColor: "#fbfbfb",
           "& .MuiTableCell-root": {
             borderBottom: "none",
             padding: "16px",

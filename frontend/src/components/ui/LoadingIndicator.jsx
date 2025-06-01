@@ -36,6 +36,7 @@ const StyledBox = styled(Box)(({ theme }) => ({
   justifyContent: "center",
   padding: theme.spacing(6),
   position: "relative",
+  minHeight: "60vh", // Center vertically in the viewport
 }));
 
 /**

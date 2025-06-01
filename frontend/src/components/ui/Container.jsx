@@ -42,7 +42,7 @@ export const SectionContainer = styled(Box)(({ theme }) => ({
 export const CardContainer = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
   borderRadius: theme.shape.borderRadius,
-  background: theme.palette.background.paper,
+  background: "#fbfbfb",
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
   border: `1px solid ${theme.palette.divider}`,
   marginBottom: theme.spacing(4), // Added margin bottom like SectionContainer

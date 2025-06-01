@@ -118,17 +118,12 @@ function AppLayout() {
         display: "flex",
         flexDirection: drawerCollapsed ? "column" : "row",
         alignItems: "center",
-        justifyContent: drawerCollapsed ? "center" : "flex-start",
+        justifyContent: "center", // always center vertically
         cursor: "pointer",
         userSelect: "none",
         width: "100%",
-        margin: "4px 8px",
+        margin: drawerCollapsed ? 0 : "4px 8px",
         borderRadius: 10,
-        // Remove hover background effect:
-        // "&:hover": {
-        //   opacity: 0.92,
-        //   backgroundColor: "rgba(0, 0, 0, 0.04)",
-        // },
         "&:hover": {
           opacity: 0.92,
         },
@@ -136,8 +131,9 @@ function AppLayout() {
           "background 0.2s, flex-direction 0.2s, justify-content 0.2s",
         minHeight: 48,
         boxSizing: "border-box",
-        px: 1.5,
-        py: 1,
+        px: drawerCollapsed ? 0 : 1.5,
+        py: drawerCollapsed ? 0 : 1,
+        height: drawerCollapsed ? 56 : "auto", // Match menu item height when collapsed
       }}
       onClick={handleProfileSectionClick}
       tabIndex={0}
@@ -149,23 +145,24 @@ function AppLayout() {
           src={user.profileImage}
           variant="rounded"
           sx={{
-            width: 44,
-            height: 44,
+            width: 40, // Match icon size
+            height: 40,
             border: "2px solid rgba(67, 97, 238, 0.2)",
             boxShadow: "0 4px 8px rgba(67, 97, 238, 0.10)",
             borderRadius: 2,
-            mr: drawerCollapsed ? 0 : 1.5,
-            mb: drawerCollapsed ? 0.5 : 0,
-            mx: drawerCollapsed ? "auto" : undefined,
+            mx: drawerCollapsed ? 0 : 0, // margin left/right 0 when collapsed
+            mr: !drawerCollapsed ? 1.5 : 0,   // only margin-right when expanded
+            my: 0,
             transition: "margin 0.2s",
+            display: "block",
           }}
         />
       ) : (
         <Avatar
           variant="rounded"
           sx={{
-            width: 44,
-            height: 44,
+            width: 40, // Match icon size
+            height: 40,
             bgcolor: "secondary.main",
             fontSize: 20,
             fontWeight: 600,
@@ -173,10 +170,11 @@ function AppLayout() {
             border: "2px solid rgba(114, 9, 183, 0.2)",
             boxShadow: "0 4px 8px rgba(114, 9, 183, 0.10)",
             borderRadius: 2,
-            mr: drawerCollapsed ? 0 : 1.5,
-            mb: drawerCollapsed ? 0.5 : 0,
-            mx: drawerCollapsed ? "auto" : undefined,
+            mx: drawerCollapsed ? 0 : 0, // margin left/right 0 when collapsed
+            mr: !drawerCollapsed ? 1.5 : 0,   // only margin-right when expanded
+            my: 0,
             transition: "margin 0.2s",
+            display: "block",
           }}
         >
           {getAvatarLetter()}
@@ -359,13 +357,6 @@ function AppLayout() {
             />
           </Box>
         )}
-        {!drawerCollapsed && (
-          <Box sx={{ p: 2 }}>
-            <Typography variant="body2" color="text.secondary" align="center">
-              © {new Date().getFullYear()} Clinnet EMR
-            </Typography>
-          </Box>
-        )}
       </Box>
     ),
     [user?.role, isMobile, drawerCollapsed, theme, sidebarProfileSection]
@@ -531,6 +522,24 @@ function AppLayout() {
               }}
             >
               <Outlet />
+            </Box>
+            {/* Add footer at the bottom of the page */}
+            <Box
+              component="footer"
+              sx={{
+                width: "100%",
+                py: 2,
+                px: 0,
+                mt: "auto",
+                bgcolor: "transparent",
+                textAlign: "center",
+                color: "text.secondary",
+                fontSize: "0.80rem", // smaller text
+                letterSpacing: 0.1,
+                // borderTop: "1px solid #e0e0e0", // hide divider
+              }}
+            >
+              © {new Date().getFullYear()} Clinnet EMR
             </Box>
           </Box>
         </Box>

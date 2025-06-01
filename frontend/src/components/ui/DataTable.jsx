@@ -46,7 +46,7 @@ const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
       height: 6,
     },
     "&::-webkit-scrollbar-thumb": {
-      backgroundColor: "rgba(0, 0, 0, 0.1)",
+      backgroundColor: "#c7d2fe",
       borderRadius: 10,
     },
   },

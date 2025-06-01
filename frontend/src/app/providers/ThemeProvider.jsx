@@ -402,7 +402,7 @@ const darkThemeOptions = {
     primary: lightThemeOptions.palette.primary,
     secondary: lightThemeOptions.palette.secondary,
     background: {
-      default: "#121212",
+      default: "#fbfbfb",
       paper: "#232323", // Slightly lighter for dark mode, but not white
     },
     text: {

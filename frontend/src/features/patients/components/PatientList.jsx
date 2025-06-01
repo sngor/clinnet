@@ -42,11 +42,14 @@ import {
   FlexBox,
   TextButton,
 } from "../../../components/ui";
-import { formatDateForInput, isValidDateFormat } from '../../../utils/dateUtils'; // Import date utils
+import {
+  formatDateForInput,
+  isValidDateFormat,
+} from "../../../utils/dateUtils"; // Import date utils
 
 // Add missing tableHeaderStyle
 const tableHeaderStyle = {
-  backgroundColor: "background.paper",
+  backgroundColor: "#fbfbfb",
   borderBottom: "1px solid",
   borderColor: "divider",
 };
@@ -137,7 +140,11 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
   // State for delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" }); // Initialize snackbar state
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  }); // Initialize snackbar state
 
   // formatDateForInput and isValidDateFormat are now imported from ../../../utils/dateUtils
 
@@ -183,8 +190,8 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
       lastName: p.lastName,
       // Ensure formatDateForInput is called here if it's still needed for processedPatients
       // If formatDateForInput from dateUtils is intended for use here, ensure it's correctly scoped or passed if not directly accessible
-      dateOfBirth: formatDateForInput(p.dateOfBirth || p.dob || ""), 
-      dob: formatDateForInput(p.dateOfBirth || p.dob || ""), 
+      dateOfBirth: formatDateForInput(p.dateOfBirth || p.dob || ""),
+      dob: formatDateForInput(p.dateOfBirth || p.dob || ""),
       gender: p.gender || "N/A",
       phone: p.phone || "N/A",
       email: p.email || "N/A",
@@ -293,10 +300,14 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
           updatedAt: new Date().toISOString(),
         };
         // It's good practice to remove the old 'dob' if 'dateOfBirth' is canonical
-        // delete patientData.dob; 
+        // delete patientData.dob;
 
         await updatePatient(currentPatient.id, patientData);
-        setSnackbar({ open: true, message: "Patient updated successfully", severity: "success" });
+        setSnackbar({
+          open: true,
+          message: "Patient updated successfully",
+          severity: "success",
+        });
       } else {
         // Add new patient
         const id = `${Date.now()}`;
@@ -310,19 +321,25 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
         // delete patientData.dob;
 
         await addPatient(patientData);
-        setSnackbar({ open: true, message: "Patient added successfully", severity: "success" });
+        setSnackbar({
+          open: true,
+          message: "Patient added successfully",
+          severity: "success",
+        });
       }
 
       handleCloseDialog();
-    } catch (formError) { // Renamed to avoid conflict with apiError from context
+    } catch (formError) {
+      // Renamed to avoid conflict with apiError from context
       console.error("Error submitting form:", formError);
       // setError is removed, snackbar provides user feedback
       setSnackbar({
         open: true,
-        message: "Error saving patient data. Please check all fields and try again.",
+        message:
+          "Error saving patient data. Please check all fields and try again.",
         severity: "error",
       });
-    } 
+    }
     // finally { setLoading(false) } is removed
   };
 
@@ -338,10 +355,19 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
       try {
         // setLoading(true) is removed
         await deletePatient(patientToDelete.id);
-        setSnackbar({ open: true, message: "Patient deleted successfully", severity: "success" });
-      } catch (deleteError) { // Renamed to avoid conflict
+        setSnackbar({
+          open: true,
+          message: "Patient deleted successfully",
+          severity: "success",
+        });
+      } catch (deleteError) {
+        // Renamed to avoid conflict
         console.error("Error deleting patient:", deleteError);
-        setSnackbar({ open: true, message: "Error deleting patient", severity: "error" });
+        setSnackbar({
+          open: true,
+          message: "Error deleting patient",
+          severity: "error",
+        });
       } finally {
         // setLoading(false) is removed
         setDeleteDialogOpen(false);
@@ -369,7 +395,7 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
         {/* Error message */}
         {apiError && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {apiError} 
+            {apiError}
           </Alert>
         )}
         {/* Loading indicator or table */}
@@ -380,7 +406,9 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
         ) : (
           <CardContainer>
             {/* Wrap TableHead and FixedSizeList in a MUI Table component for structure */}
-            <Table sx={{ tableLayout: "fixed" }}> {/* Ensure tableLayout is fixed for virtualization */}
+            <Table sx={{ tableLayout: "fixed" }}>
+              {" "}
+              {/* Ensure tableLayout is fixed for virtualization */}
               <TableHead sx={tableHeaderStyle}>
                 <TableRow>
                   {columns.map((column) => (
@@ -398,7 +426,10 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
                       </TableSortLabel>
                     </TableCell>
                   ))}
-                  <TableCell align="center" style={{ flex: 1 }}>Actions</TableCell> {/* Use flex: 1 for actions header */}
+                  <TableCell align="center" style={{ flex: 1 }}>
+                    Actions
+                  </TableCell>{" "}
+                  {/* Use flex: 1 for actions header */}
                 </TableRow>
               </TableHead>
             </Table>
@@ -407,7 +438,9 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
               <Table>
                 <TableBody>
                   <TableRow>
-                    <TableCell colSpan={columns.length + 1} align="center"> {/* Adjusted colSpan */}
+                    <TableCell colSpan={columns.length + 1} align="center">
+                      {" "}
+                      {/* Adjusted colSpan */}
                       No patients found
                     </TableCell>
                   </TableRow>
@@ -422,15 +455,36 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
                 outerElementType={React.forwardRef((props, ref) => (
                   <TableBody component="div" {...props} ref={ref} />
                 ))}
-                innerElementType={React.forwardRef((props, ref) => <div role="rowgroup" {...props} ref={ref} />)}
+                innerElementType={React.forwardRef((props, ref) => (
+                  <div role="rowgroup" {...props} ref={ref} />
+                ))}
               >
                 {({ index, style }) => {
                   const patient = currentPatients[index];
                   // Important: Wrap the row content in a TableRow and pass the style from react-window
                   // Using component="div" for TableRow and TableCell to work with react-window styling
                   return patient ? (
-                    <TableRow component="div" style={style} key={patient.id || index} sx={{ display: "flex", width: "100%", boxSizing: 'border-box' }} role="row">
-                      <TableCell component="div" style={{ width: columns[0].width, display: "flex", alignItems: "center", boxSizing: 'border-box' }} role="cell">
+                    <TableRow
+                      component="div"
+                      style={style}
+                      key={patient.id || index}
+                      sx={{
+                        display: "flex",
+                        width: "100%",
+                        boxSizing: "border-box",
+                      }}
+                      role="row"
+                    >
+                      <TableCell
+                        component="div"
+                        style={{
+                          width: columns[0].width,
+                          display: "flex",
+                          alignItems: "center",
+                          boxSizing: "border-box",
+                        }}
+                        role="cell"
+                      >
                         <div>
                           <Typography variant="body2" fontWeight="medium">
                             {patient.firstName || ""} {patient.lastName || ""}
@@ -440,7 +494,16 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
                           </Typography>
                         </div>
                       </TableCell>
-                      <TableCell component="div" style={{ width: columns[1].width, display: "flex", alignItems: "center", boxSizing: 'border-box' }} role="cell">
+                      <TableCell
+                        component="div"
+                        style={{
+                          width: columns[1].width,
+                          display: "flex",
+                          alignItems: "center",
+                          boxSizing: "border-box",
+                        }}
+                        role="cell"
+                      >
                         <div>
                           <Typography variant="body2">
                             {patient.phone || "N/A"}
@@ -450,20 +513,52 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
                           </Typography>
                         </div>
                       </TableCell>
-                      <TableCell component="div" style={{ width: columns[2].width, display: "flex", alignItems: "center", boxSizing: 'border-box' }} role="cell">
+                      <TableCell
+                        component="div"
+                        style={{
+                          width: columns[2].width,
+                          display: "flex",
+                          alignItems: "center",
+                          boxSizing: "border-box",
+                        }}
+                        role="cell"
+                      >
                         <div>
                           <Typography variant="body2">
                             {patient.insuranceProvider || "None"}
                           </Typography>
                           {patient.insuranceNumber && (
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               #{patient.insuranceNumber}
                             </Typography>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell component="div" style={{ width: columns[3].width, display: "flex", alignItems: "center", boxSizing: 'border-box' }} role="cell">{patient.lastVisit || "Never"}</TableCell>
-                      <TableCell component="div" style={{ width: columns[4].width, display: "flex", alignItems: "center", boxSizing: 'border-box' }} role="cell">
+                      <TableCell
+                        component="div"
+                        style={{
+                          width: columns[3].width,
+                          display: "flex",
+                          alignItems: "center",
+                          boxSizing: "border-box",
+                        }}
+                        role="cell"
+                      >
+                        {patient.lastVisit || "Never"}
+                      </TableCell>
+                      <TableCell
+                        component="div"
+                        style={{
+                          width: columns[4].width,
+                          display: "flex",
+                          alignItems: "center",
+                          boxSizing: "border-box",
+                        }}
+                        role="cell"
+                      >
                         <Chip
                           label={patient.status || "Active"}
                           color={
@@ -474,7 +569,20 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell component="div" align="center" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", boxSizing: 'border-box' }} role="cell"> {/* Use flex: 1 for actions column */}
+                      <TableCell
+                        component="div"
+                        align="center"
+                        style={{
+                          flex: 1,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxSizing: "border-box",
+                        }}
+                        role="cell"
+                      >
+                        {" "}
+                        {/* Use flex: 1 for actions column */}
                         <Tooltip title="Edit Patient">
                           <AppIconButton
                             size="small"
@@ -522,7 +630,12 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
               </FixedSizeList>
             )}
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25, { label: 'All', value: processedPatients.length }]} // Use processedPatients.length
+              rowsPerPageOptions={[
+                5,
+                10,
+                25,
+                { label: "All", value: processedPatients.length },
+              ]} // Use processedPatients.length
               component="div"
               count={processedPatients.length} // Use processedPatients.length
               rowsPerPage={rowsPerPage}

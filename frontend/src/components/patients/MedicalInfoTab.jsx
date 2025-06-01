@@ -220,10 +220,7 @@ function MedicalInfoTab({
                 rows={3}
               />
             ) : (
-              <Paper
-                variant="outlined"
-                sx={{ p: 2, bgcolor: "background.default" }}
-              >
+              <Paper variant="outlined" sx={{ p: 2, bgcolor: "#fbfbfb" }}>
                 <Typography variant="body2">
                   {notes || "No medical notes available for this patient."}
                 </Typography>

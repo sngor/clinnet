@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Box, Typography, Button, Grid } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Grid,
+  Paper,
+  Divider,
+  Stack,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import LanguageIcon from "@mui/icons-material/Language";
 import CloudQueueIcon from "@mui/icons-material/CloudQueue";
@@ -376,35 +384,83 @@ const DiagnosticsPage = () => {
   }, [services, handleTestService]);
 
   return (
-    <Box>
-      <Box
+    <Box
+      sx={{
+        maxWidth: 1200,
+        mx: "auto",
+        mt: { xs: 2, md: 4 },
+        mb: { xs: 2, md: 4 },
+        px: { xs: 1, sm: 2, md: 3 },
+      }}
+    >
+      <Paper
+        elevation={2}
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2,
+          borderRadius: 4,
+          p: { xs: 2, sm: 4 },
+          background: theme.palette.background.paper,
         }}
       >
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 0 }}>
-          System Diagnostics
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleTestAll}
-          data-testid="test-all-btn"
+        {/* Header Section */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", sm: "center" },
+            mb: 2,
+            gap: 2,
+          }}
         >
-          Test All
-        </Button>
-      </Box>
+          <Box>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{ fontWeight: 700, mb: 0.5 }}
+            >
+              System Diagnostics
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 0 }}>
+              Check the status and connectivity of all core system services.
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleTestAll}
+            data-testid="test-all-btn"
+            sx={{
+              minWidth: 140,
+              fontWeight: 600,
+              borderRadius: 50,
+              boxShadow: "none",
+              px: 3,
+              py: 1.2,
+              mt: { xs: 2, sm: 0 },
+            }}
+          >
+            Test All
+          </Button>
+        </Box>
 
-      <Grid container spacing={3}>
-        {services.map((service) => (
-          <Grid item xs={12} md={6} lg={4} key={service.id}>
-            <ServiceCard service={service} onTestService={handleTestService} />
-          </Grid>
-        ))}
-      </Grid>
+        <Divider sx={{ mb: 3 }} />
+
+        {/* Diagnostics List */}
+        <Box>
+          <Stack spacing={3}>
+            {services.map((service) => (
+              <Box key={service.id} sx={{ width: "100%" }}>
+                <ServiceCard
+                  service={service}
+                  onTestService={handleTestService}
+                  sx={{ width: "100%" }}
+                />
+              </Box>
+            ))}
+          </Stack>
+        </Box>
+        {/* End Diagnostics List */}
+      </Paper>
     </Box>
   );
 };

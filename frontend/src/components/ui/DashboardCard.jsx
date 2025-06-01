@@ -97,10 +97,10 @@ function DashboardCard({ icon, title, value, linkText, linkTo, sx = {} }) {
           sx={{ 
             alignSelf: "flex-start", 
             pl: 0,
-            // Ensure text button specific styling if needed, e.g., padding adjustments
-            // TextButton is already styled, so this might not be necessary
-            // or could be theme dependent.
-            // For now, direct replacement and rely on TextButton styles.
+            // Remove box shadow on hover
+            "&:hover": {
+              boxShadow: "none",
+            },
           }}
         >
           {linkText}

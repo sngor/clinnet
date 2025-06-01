@@ -1204,7 +1204,7 @@ function AdminAppointmentCalendar() {
         <Box
           sx={{
             p: 3,
-            bgcolor: "background.paper",
+            bgcolor: "#fbfbfb",
             borderRadius: 2,
             boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
           }}

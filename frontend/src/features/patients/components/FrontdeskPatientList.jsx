@@ -294,7 +294,7 @@ function FrontdeskPatientList({ onPatientSelect }) {
       {/* Fix DataGrid container to avoid nesting issues */}
       <Box
         sx={{
-          bgcolor: "background.paper",
+          bgcolor: "#fbfbfb",
           borderRadius: 1,
           boxShadow: 1,
           p: 2,
