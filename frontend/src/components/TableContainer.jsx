@@ -3,7 +3,8 @@ import React from 'react';
 import { 
   Box, 
   Typography, 
-  Paper
+  Paper,
+  TableContainer as MuiTableContainer // Import MUI's TableContainer
 } from '@mui/material';
 
 /**
@@ -34,7 +35,9 @@ function TableContainer({ children, title, action, sx = {} }) {
         {action}
       </Box>
       
-      {children}
+      <MuiTableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid rgba(0,0,0,0.08)' }}>
+        {children}
+      </MuiTableContainer>
     </Box>
   );
 }

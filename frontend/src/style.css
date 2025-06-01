@@ -100,37 +100,115 @@ body {
 }
 
 /* Responsive utilities */
-.mobile-hidden {
+/*
+  Note: For Material-UI projects, using the `sx` prop for responsive display
+  (e.g., `sx={{ display: { xs: 'none', sm: 'block' } }}`) is generally preferred
+  over global CSS classes for better maintainability and direct component control.
+  These classes are provided for broader HTML element styling if needed.
+
+  Theme Breakpoints (from theme.js for reference):
+  xs: 0
+  sm: 600px
+  md: 960px
+  lg: 1280px
+  xl: 1536px
+*/
+
+/* Hide BELOW a breakpoint (element is hidden on smaller screens, visible on breakpoint and up) */
+.hide-below-sm { /* Hidden on xs */
   display: none !important;
 }
+@media (min-width: 600px) { /* sm */
+  .hide-below-sm { display: initial !important; }
+}
 
-.tablet-hidden {
+.hide-below-md { /* Hidden on xs, sm */
   display: none !important;
 }
+@media (min-width: 960px) { /* md */
+  .hide-below-md { display: initial !important; }
+}
 
-.desktop-hidden {
+.hide-below-lg { /* Hidden on xs, sm, md */
   display: none !important;
 }
-
-@media (min-width: 600px) {
-  .mobile-hidden {
-    display: initial !important;
-  }
+@media (min-width: 1280px) { /* lg */
+  .hide-below-lg { display: initial !important; }
 }
 
-@media (min-width: 900px) {
-  .tablet-hidden {
-    display: initial !important;
-  }
+.hide-below-xl { /* Hidden on xs, sm, md, lg */
+  display: none !important;
+}
+@media (min-width: 1536px) { /* xl */
+  .hide-below-xl { display: initial !important; }
 }
 
-@media (min-width: 1200px) {
-  .desktop-hidden {
-    display: initial !important;
-  }
+
+/* Show ONLY on a specific breakpoint range */
+/* Show only on xs (0px - 599.95px) */
+.show-only-xs { display: none !important; }
+@media (max-width: 599.95px) { /* down('sm') */
+  .show-only-xs { display: initial !important; }
 }
 
-/* Responsive spacing helpers */
+/* Show only on sm (600px - 959.95px) */
+.show-only-sm { display: none !important; }
+@media (min-width: 600px) and (max-width: 959.95px) { /* between('sm', 'md') */
+  .show-only-sm { display: initial !important; }
+}
+
+/* Show only on md (960px - 1279.95px) */
+.show-only-md { display: none !important; }
+@media (min-width: 960px) and (max-width: 1279.95px) { /* between('md', 'lg') */
+  .show-only-md { display: initial !important; }
+}
+
+/* Show only on lg (1280px - 1535.95px) */
+.show-only-lg { display: none !important; }
+@media (min-width: 1280px) and (max-width: 1535.95px) { /* between('lg', 'xl') */
+  .show-only-lg { display: initial !important; }
+}
+
+/* Show only on xl (1536px and up) */
+.show-only-xl { display: none !important; }
+@media (min-width: 1536px) { /* up('xl') */
+  .show-only-xl { display: initial !important; }
+}
+
+
+/* Hide ABOVE a breakpoint (element is visible on smaller screens, hidden on breakpoint and up) */
+/* Useful for elements that should only appear on mobile/tablet */
+.hide-above-xs { /* Hidden on sm, md, lg, xl. Visible only on xs */
+  display: initial !important;
+}
+@media (min-width: 600px) { /* sm */
+  .hide-above-xs { display: none !important; }
+}
+
+.hide-above-sm { /* Hidden on md, lg, xl. Visible on xs, sm */
+  display: initial !important;
+}
+@media (min-width: 960px) { /* md */
+  .hide-above-sm { display: none !important; }
+}
+
+.hide-above-md { /* Hidden on lg, xl. Visible on xs, sm, md */
+  display: initial !important;
+}
+@media (min-width: 1280px) { /* lg */
+  .hide-above-md { display: none !important; }
+}
+
+.hide-above-lg { /* Hidden on xl. Visible on xs, sm, md, lg */
+  display: initial !important;
+}
+@media (min-width: 1536px) { /* xl */
+  .hide-above-lg { display: none !important; }
+}
+
+
+/* Responsive spacing helpers - these are kept as they are, using fixed steps */
+/* They can be useful for quick, consistent spacing adjustments */
 .responsive-mt {
   margin-top: 16px;
 }
