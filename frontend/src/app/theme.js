@@ -154,22 +154,25 @@ const theme = createTheme({
       styleOverrides: {
         body: {
           backgroundColor: '#fbfbfb', // Ensure very light grey
+          webkitFontSmoothing: "antialiased",
+          mozOsxFontSmoothing: "grayscale",
           scrollbarWidth: 'thin',
           '&::-webkit-scrollbar': {
-            width: '6px',
-            height: '6px',
+            width: '8px', // Consistent with style.css
+            height: '8px', // Consistent with style.css
           },
           '&::-webkit-scrollbar-track': {
-            backgroundColor: '#f8f9fd',
+            backgroundColor: '#f1f5f9', // From style.css
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: '#d0d9f0',
-            borderRadius: '3px',
+            backgroundColor: '#c7d2fe', // From style.css
+            borderRadius: '4px', // From style.css
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            backgroundColor: '#818cf8', // From style.css
           },
           // Add smooth scrolling
           scrollBehavior: 'smooth',
-          // Add a subtle background pattern
-          backgroundImage: 'none', // Remove subtle background pattern
         },
       },
     },
@@ -431,7 +434,7 @@ const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 20,
+          borderRadius: 50, // Changed from 20 to 50
           fontWeight: 500,
           boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
           padding: '2px 2px',
