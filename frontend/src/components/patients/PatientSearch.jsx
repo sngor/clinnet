@@ -17,8 +17,8 @@ function PatientSearch({
     <Box
       sx={{
         display: "flex",
-        justifyContent: "space-between",
         alignItems: "center",
+        gap: 2,
         mb: 3,
       }}
     >
@@ -28,7 +28,7 @@ function PatientSearch({
         placeholder="Search by name, email, or phone..."
         value={searchTerm}
         onChange={onSearchChange}
-        sx={{ width: "40%" }}
+        sx={{ minWidth: 260, flex: 1 }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -37,19 +37,23 @@ function PatientSearch({
           ),
         }}
       />
-      {onAddNew && (
-        <PrimaryButton startIcon={<AddIcon />} onClick={onAddNew}>
-          Add New Patient
-        </PrimaryButton>
-      )}
       <IconButton
         onClick={onRefresh}
         disabled={loading}
         aria-label="Refresh"
-        sx={{ ml: 2 }}
+        sx={{ ml: 0.5 }}
       >
         <RefreshIcon />
       </IconButton>
+      {onAddNew && (
+        <PrimaryButton
+          startIcon={<AddIcon />}
+          onClick={onAddNew}
+          sx={{ ml: 0.5, whiteSpace: "nowrap" }}
+        >
+          Add New Patient
+        </PrimaryButton>
+      )}
     </Box>
   );
 }

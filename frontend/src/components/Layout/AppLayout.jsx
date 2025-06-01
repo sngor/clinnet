@@ -151,7 +151,7 @@ function AppLayout() {
             boxShadow: "0 4px 8px rgba(67, 97, 238, 0.10)",
             borderRadius: 2,
             mx: drawerCollapsed ? 0 : 0, // margin left/right 0 when collapsed
-            mr: !drawerCollapsed ? 1.5 : 0,   // only margin-right when expanded
+            mr: !drawerCollapsed ? 1.5 : 0, // only margin-right when expanded
             my: 0,
             transition: "margin 0.2s",
             display: "block",
@@ -171,7 +171,7 @@ function AppLayout() {
             boxShadow: "0 4px 8px rgba(114, 9, 183, 0.10)",
             borderRadius: 2,
             mx: drawerCollapsed ? 0 : 0, // margin left/right 0 when collapsed
-            mr: !drawerCollapsed ? 1.5 : 0,   // only margin-right when expanded
+            mr: !drawerCollapsed ? 1.5 : 0, // only margin-right when expanded
             my: 0,
             transition: "margin 0.2s",
             display: "block",
@@ -251,14 +251,18 @@ function AppLayout() {
     }
   };
 
+  // Margin and shadow for floating effect
+  const drawerMargin = 5; // px
+
   const drawer = React.useMemo(
     () => (
       <Box
         sx={{
           display: "flex",
           flexDirection: "column",
-          height: "100%",
+          height: "100vh", // Ensure full viewport height
           width: drawerCollapsed ? collapsedDrawerWidth : drawerWidth,
+          overflow: "hidden", // Prevent content from being cut off
           transition: (theme) =>
             theme.transitions.create("width", {
               easing: theme.transitions.easing.sharp,
@@ -276,9 +280,8 @@ function AppLayout() {
           sx={{
             width: "100%",
             flexGrow: 1,
-            overflow: "auto",
+            overflowY: "auto", // Only vertical scroll for sidebar content
             py: 1,
-            // Stretch sidebar content vertically on mobile
             display: "flex",
             flexDirection: "column",
           }}
@@ -310,7 +313,6 @@ function AppLayout() {
               cursor: "pointer",
               userSelect: "none",
               mb: 0.5,
-              // Match hover/focus styles with settings
               "&:hover": {
                 backgroundColor: "rgba(25, 118, 210, 0.08)",
                 "& .MuiListItemIcon-root": {
@@ -325,8 +327,7 @@ function AppLayout() {
           />
         </Box>
         {/* --- Logout Button End --- */}
-        <Divider /> {/* Existing divider above collapse button */}
-        {/* Collapse/Expand button - hidden on mobile */}
+        <Divider />
         {!isMobile && (
           <Box
             sx={{
@@ -336,7 +337,6 @@ function AppLayout() {
               alignItems: "center",
             }}
           >
-            {/* Replaced IconButton with AppIconButton */}
             <AppIconButton
               icon={drawerCollapsed ? ChevronRightIcon : ChevronLeftIcon}
               tooltip={drawerCollapsed ? "Expand" : "Collapse"}
@@ -345,11 +345,11 @@ function AppLayout() {
               sx={{
                 bgcolor: "background.paper",
                 boxShadow: "0 4px 12px rgba(67, 97, 238, 0.15)",
-                width: 36, // AppIconButton might have default sizes, ensure this is desired
-                height: 36, // AppIconButton might have default sizes, ensure this is desired
+                width: 36,
+                height: 36,
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  bgcolor: "background.paper", // AppIconButton might have its own hover
+                  bgcolor: "background.paper",
                   transform: "scale(1.1)",
                   boxShadow: "0 6px 16px rgba(67, 97, 238, 0.2)",
                 },
@@ -404,7 +404,7 @@ function AppLayout() {
         <Box
           component="nav"
           sx={{
-            width: { sm: currentDrawerWidth },
+            width: { sm: currentDrawerWidth + drawerMargin * 2 },
             flexShrink: { sm: 0 },
             transition: (theme) =>
               theme.transitions.create("width", {
@@ -424,16 +424,17 @@ function AppLayout() {
               display: { xs: "block", sm: "none" },
               "& .MuiDrawer-paper": {
                 boxSizing: "border-box",
-                width: "100vw",
-                height: "auto", // Only as tall as content
-                maxWidth: "100vw",
-                maxHeight: "none",
-                left: 0,
-                top: 0,
-                borderRadius: 0,
-                boxShadow: "none",
+                width: `calc(100vw - ${drawerMargin * 2}px)`,
+                height: `calc(100vh - ${drawerMargin * 2}px)`,
+                maxWidth: `calc(100vw - ${drawerMargin * 2}px)`,
+                maxHeight: `calc(100vh - ${drawerMargin * 2}px)`,
+                left: drawerMargin,
+                top: drawerMargin,
+                borderRadius: 1, // smaller radius
+                boxShadow:
+                  "0 8px 32px rgba(67,97,238,0.18), 0 1.5px 6px rgba(0,0,0,0.08)",
                 borderRight: "none",
-                background: "rgba(255,255,255,0.85)",
+                background: "rgba(255,255,255,0.95)",
                 backdropFilter: "blur(16px)",
                 WebkitBackdropFilter: "blur(16px)",
                 zIndex: 2001,
@@ -446,6 +447,7 @@ function AppLayout() {
                     easing: theme.transitions.easing.sharp,
                     duration: theme.transitions.duration.enteringScreen,
                   }),
+                margin: 0, // margin handled by left/top
               },
               "& .MuiBackdrop-root": {
                 background: "rgba(67,97,238,0.10)",
@@ -467,10 +469,14 @@ function AppLayout() {
               display: { xs: "none", sm: "block" },
               "& .MuiDrawer-paper": {
                 boxSizing: "border-box",
-                width: drawerCollapsed ? collapsedDrawerWidth : drawerWidth,
-                // Remove shadow, add right border line
-                borderRight: "1px solid #e0e0e0",
-                boxShadow: "none",
+                width: currentDrawerWidth,
+                // Remove margin here to avoid cutting off the bottom
+                // margin: `${drawerMargin}px`,
+                borderRadius: 1, // smaller radius
+                boxShadow:
+                  "0 8px 32px rgba(67,97,238,0.18), 0 1.5px 6px rgba(0,0,0,0.08)",
+                borderRight: "none",
+                background: "rgba(255,255,255,0.97)",
                 zIndex: (theme) => theme.zIndex.drawer,
                 transition: (theme) =>
                   theme.transitions.create("width", {
@@ -478,6 +484,7 @@ function AppLayout() {
                     duration: theme.transitions.duration.enteringScreen,
                   }),
                 overflowX: "hidden",
+                height: "100vh", // Ensure full height for permanent drawer
               },
             }}
             open

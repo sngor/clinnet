@@ -10,51 +10,55 @@ import ActiveNavLink from "../ActiveNavLink";
 
 function DoctorSidebar({ collapsed = false }) {
   return (
-    <List
-      sx={{
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: { xs: "center", sm: "center" },
-        p: 0.5,
-        flexGrow: { xs: 0, sm: 0 }, // Don't stretch vertically on mobile
-        justifyContent: { xs: "flex-start", sm: "flex-start" }, // Start from top
-        "& .MuiListItemButton-root": {
-          minHeight: 48, // Consistent height
-        },
-      }}
-    >
-      <ActiveNavLink
-        to="/doctor"
-        icon={<HomeIcon />}
-        primary="Dashboard"
-        collapsed={collapsed}
-      />
-      <ActiveNavLink
-        to="/doctor/appointments"
-        icon={<EventIcon />}
-        primary="Appointments"
-        collapsed={collapsed}
-      />
-      <ActiveNavLink
-        to="/doctor/schedule"
-        icon={<CalendarMonthIcon />}
-        primary="My Schedule"
-        collapsed={collapsed}
-      />
-      <ActiveNavLink
-        to="/doctor/patients"
-        icon={<PersonIcon />}
-        primary="Patients"
-        collapsed={collapsed}
-      />
-      <ActiveNavLink
-        to="/doctor/medical-records"
-        icon={<MedicalInformationIcon />}
-        primary="Medical Records"
-        collapsed={collapsed}
-      />
-    </List>
+    <Box sx={{ m: 1 }}>
+      {" "}
+      {/* Add margin around the sidebar menu */}
+      <List
+        sx={{
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: { xs: "center", sm: "center" },
+          p: 0.5,
+          flexGrow: { xs: 0, sm: 0 }, // Don't stretch vertically on mobile
+          justifyContent: { xs: "flex-start", sm: "flex-start" }, // Start from top
+          "& .MuiListItemButton-root": {
+            minHeight: 48, // Consistent height
+          },
+        }}
+      >
+        <ActiveNavLink
+          to="/doctor"
+          icon={<HomeIcon />}
+          primary="Dashboard"
+          collapsed={collapsed}
+        />
+        <ActiveNavLink
+          to="/doctor/appointments"
+          icon={<EventIcon />}
+          primary="Appointments"
+          collapsed={collapsed}
+        />
+        <ActiveNavLink
+          to="/doctor/schedule"
+          icon={<CalendarMonthIcon />}
+          primary="My Schedule"
+          collapsed={collapsed}
+        />
+        <ActiveNavLink
+          to="/doctor/patients"
+          icon={<PersonIcon />}
+          primary="Patients"
+          collapsed={collapsed}
+        />
+        <ActiveNavLink
+          to="/doctor/medical-records"
+          icon={<MedicalInformationIcon />}
+          primary="Medical Records"
+          collapsed={collapsed}
+        />
+      </List>
+    </Box>
   );
 }
 
