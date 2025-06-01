@@ -3,7 +3,7 @@
 /* Smooth scrolling for the entire app */
 html {
   scroll-behavior: smooth;
-  background: #fff; /* Ensure html is white */
+  background: #fbfbfb; /* Ensure very light grey */
 }
 
 body {

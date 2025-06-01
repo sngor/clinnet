@@ -52,8 +52,8 @@ const theme = createTheme({
       contrastText: '#fff',
     },
     background: {
-      default: '#f7f7f7',   // Changed to very light grey
-      paper: '#fff',        // Keep paper white for cards, etc.
+      default: '#fbfbfb',   // Ensure very light grey
+      paper: '#fbfbfb',     // Cards and containers also very light grey
     },
     grey: {
       50: '#fafafa',
@@ -153,7 +153,7 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#fff', // Changed to pure white
+          backgroundColor: '#fbfbfb', // Ensure very light grey
           scrollbarWidth: 'thin',
           '&::-webkit-scrollbar': {
             width: '6px',

@@ -24,8 +24,8 @@ const lightThemeOptions = {
       contrastText: "#fff",
     },
     background: {
-      default: "#f7f7f7", // Changed to light grey
-      paper: "#fff",
+      default: "#fbfbfb", // Ensure very light grey
+      paper: "#fbfbfb", // Cards and containers also very light grey
     },
     text: {
       primary: "#333333", // Darker text for better readability
@@ -403,7 +403,7 @@ const darkThemeOptions = {
     secondary: lightThemeOptions.palette.secondary,
     background: {
       default: "#121212",
-      paper: "#1e1e1e",
+      paper: "#232323", // Slightly lighter for dark mode, but not white
     },
     text: {
       primary: "#e0e0e0",

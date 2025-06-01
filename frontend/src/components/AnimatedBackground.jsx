@@ -144,7 +144,7 @@ function AnimatedBackground({ children, blur = 30 }) {
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        background: "#f7f7f7", // Changed to light grey
+        background: "#fbfbfb", // Ensure very light grey
       }}
     >
       <Box
@@ -158,7 +158,7 @@ function AnimatedBackground({ children, blur = 30 }) {
           height: "100%",
           filter: `blur(${blur}px)`,
           zIndex: -1,
-          background: "#f7f7f7", // Ensure canvas background is light grey
+          background: "#fbfbfb", // Ensure canvas background is very light grey
         }}
       />
       {children}
