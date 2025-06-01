@@ -17,8 +17,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App";
 import AppProviders from "./app/providers/AppProviders";
-import "./index.css";
-import "./styles/global.css";
+import "./style.css";
 
 // Add error handler for debugging
 window.addEventListener("error", function (e) {
