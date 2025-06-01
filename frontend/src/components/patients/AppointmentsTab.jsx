@@ -17,7 +17,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import { format, parseISO } from "date-fns"; // Added parseISO
 import EmptyState from "../ui/EmptyState";
-import appointmentService from "../../../services/appointmentService"; // Added appointmentService
+import appointmentService from "../../services/appointmentService"; // Corrected path
 
 
 function AppointmentsTab({ patientId }) {
