@@ -45,8 +45,8 @@ function AppointmentCard({ appointment, showDoctor = true }) {
         }
       }}
     >
-      <CardContent sx={{ flexGrow: 1, p: 2.5 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+      <CardContent sx={{ flexGrow: 1, p: { xs: 1.5, sm: 2, md: 2.5 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: { xs: 1, sm: 1.5 } }}>
           <Typography variant="h6" component="div" sx={{ fontWeight: 500 }}>
             {appointment.time}
           </Typography>
@@ -54,28 +54,28 @@ function AppointmentCard({ appointment, showDoctor = true }) {
             label={appointment.status} 
             color={getStatusColor(appointment.status)}
             size="small"
-            sx={{ fontWeight: 500 }}
+            sx={{ fontWeight: 500, fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
           />
         </Box>
         
-        <Typography variant="body1" sx={{ fontWeight: 500, mb: 1 }}>
+        <Typography variant="body1" sx={{ fontWeight: 500, mb: { xs: 0.5, sm: 1 } }}>
           {appointment.patientName}
         </Typography>
         
         {showDoctor && appointment.doctorName && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 0.25, sm: 0.5 } }}>
             Doctor: {appointment.doctorName}
           </Typography>
         )}
         
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 0.25, sm: 0.5 } }}>
           Type: {appointment.type}
         </Typography>
         
         {appointment.notes && (
           <>
-            <Divider sx={{ my: 1.5 }} />
-            <Typography variant="body2" color="text.secondary">
+            <Divider sx={{ my: { xs: 1, sm: 1.5 } }} />
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
               <Box component="span" sx={{ fontWeight: 500 }}>Notes:</Box> {appointment.notes}
             </Typography>
           </>

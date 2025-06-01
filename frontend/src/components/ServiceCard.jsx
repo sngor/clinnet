@@ -71,9 +71,10 @@ const ServiceCard = ({ service, onTestService, sx }) => {
   return (
     <Paper
       sx={{
-        p: 2,
+        p: { xs: 1, sm: 1.5, md: 2 },
         display: "flex",
-        alignItems: "center",
+        flexDirection: { xs: 'column', sm: 'row' }, // Stack on xs
+        alignItems: { xs: 'flex-start', sm: 'center' },
         mb: 2,
         boxShadow: 3,
         borderLeft: `5px solid ${
@@ -83,26 +84,26 @@ const ServiceCard = ({ service, onTestService, sx }) => {
       }}
     >
       {/* Icon */}
-      <Box sx={{ mr: 2, display: "flex", alignItems: "center" }}>
+      <Box sx={{ mr: { sm: 2 }, mb: { xs: 1, sm: 0 }, display: "flex", alignItems: "center" }}>
         {service.icon &&
           React.cloneElement(service.icon, {
             sx: { color: statusProps.icon.props.sx.color },
           })}
       </Box>
       {/* Main content */}
-      <Box sx={{ flex: 1 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+      <Box sx={{ flex: 1, width: '100%' }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
           {service.name}
         </Typography>
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ mt: 0.5, mb: 1 }}
+          sx={{ mt: 0.5, mb: 1, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
         >
           {service.status}
         </Typography>
         {expanded && (service.details || service.isCrudService) && (
-          <CardContent sx={{ pt: 0 }}>
+          <CardContent sx={{ pt: 0, px: { xs: 0, sm: 2 } /* Adjust padding for expanded content */ }}>
             {service.details && (
               <Typography
                 variant="body2"
@@ -172,7 +173,13 @@ const ServiceCard = ({ service, onTestService, sx }) => {
           variant="outlined"
           color="primary"
           onClick={() => onTestService(service.id)}
-          sx={{ ml: 2, whiteSpace: "nowrap", mt: expanded ? 2 : 0 }}
+          sx={{
+            ml: { sm: 2 },
+            mt: { xs: 1, sm: (expanded ? 2 : 0) }, // Adjust margin top for xs and when expanded on sm+
+            whiteSpace: "nowrap",
+            alignSelf: { xs: 'flex-end', sm: 'center' } // Align button to end on xs
+          }}
+          size={expanded ? "medium" : "small"} // Potentially adjust size
         >
           {service.status === "Checking..." ? (
             <CircularProgress size={24} color="inherit" />
@@ -185,7 +192,11 @@ const ServiceCard = ({ service, onTestService, sx }) => {
         <IconButton
           onClick={handleToggleExpand}
           size="small"
-          sx={{ position: "absolute", top: 8, right: 8 }}
+          sx={{
+            position: "absolute",
+            top: { xs: 4, sm: 8 }, // Adjust position for xs
+            right: { xs: 4, sm: 8 }
+          }}
         >
           {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         </IconButton>
