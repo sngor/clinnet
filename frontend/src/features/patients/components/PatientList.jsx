@@ -627,6 +627,7 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
                   }}
                 </FixedSizeList>
               )}
+            </Table>
             {/* TablePagination should be outside the Table component but within the TableContainer */}
             <TablePagination
               rowsPerPageOptions={[
