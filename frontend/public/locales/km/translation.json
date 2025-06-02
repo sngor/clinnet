@@ -1,0 +1,23 @@
+{
+  "appTitle": "កម្មវិធីរបស់ខ្ញុំ (Kămmĕvithī robsakhnhom)",
+  "settings": "ការកំណត់ (Kar Kamnât)",
+  "systemPreferences": "ចំណូលចិត្តប្រព័ន្ធ (Chamnaulchett Broănpônth)",
+  "systemDiagnostics": "រោគវិនិច្ឆ័យប្រព័ន្ធ (Rokvinichhăy Broănpônth)",
+  "fontSize": "ទំហំពុម្ពអក្សរ (Tomhom Pumh Âksâr)",
+  "adjustFontSize": "លៃតម្រូវទំហំពុម្ពអក្សរទូទាំងកម្មវិធី។ (Ly Tômrov Tomhom Pumh Âksâr Touteang Kămmĕvithī.)",
+  "language": "ភាសា (Pheasa)",
+  "selectLanguage": "ជ្រើសរើសភាសាកម្មវិធី។ (Chreusareus Pheasa Kămmĕvithī.)",
+  "loadingPage": "កំពុងផ្ទុកទំព័រ... (Kampoung Phtouk Tompuar...)",
+  "retry": "ព្យាយាម​ម្តង​ទៀត (Pyeayeam Mdang Tiet)",
+  "unknownErrorOccurred": "មាន​កំហុស​មិន​ស្គាល់​មួយ​បាន​កើត​ឡើង។ (Mean Kamhosa Min Skal Muoy Ban Kaet Laeng.)",
+  "welcome": "សូមស្វាគមន៍ (Som Svakom)",
+  "dashboard": "ផ្ទាំងគ្រប់គ្រង (Phteah Krôbkrông)",
+  "profile": "ប្រវត្តិរូប (Bravattirub)",
+  "save": "រក្សាទុក (Roksatuk)",
+  "cancel": "បោះបង់ (Bosabng)",
+  "edit": "កែសម្រួល (Kaesamroul)",
+  "delete": "លុប (Lub)",
+  "createNew": "បង្កើត​ថ្មី (Bangaet Thmey)",
+  "viewDetails": "មើល​ពត៌មាន​លំអិត (Meul Poatmean Lmoat)",
+  "loading": "កំពុងផ្ទុក... (Kampoung Phtouk...)"
+}

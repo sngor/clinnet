@@ -295,13 +295,37 @@ export const userService = {
   extractUsername(email) {
     if (!email) return "";
     return email.split("@")[0];
-  }
+  },
+
+  updateUserLanguagePreference(languageCode) {
+    try {
+      localStorage.setItem('userLanguagePreference', languageCode);
+      console.log(`User language preference saved: ${languageCode}`);
+      return Promise.resolve({ success: true });
+    } catch (error) {
+      console.error('Error saving language preference to localStorage:', error);
+      return Promise.reject({ success: false, error });
+    }
+  },
+
+  getUserLanguagePreference() {
+    try {
+      const languageCode = localStorage.getItem('userLanguagePreference');
+      console.log(`User language preference retrieved: ${languageCode}`);
+      return Promise.resolve({ success: true, languageCode });
+    } catch (error) {
+      console.error('Error retrieving language preference from localStorage:', error);
+      return Promise.reject({ success: false, error });
+    }
+  },
 };
 
 // For backward compatibility
 const userServiceExports = {
   ...userService,
-  extractUsername: userService.extractUsername
+  extractUsername: userService.extractUsername, // Keep existing
+  updateUserLanguagePreference: userService.updateUserLanguagePreference, // Add new
+  getUserLanguagePreference: userService.getUserLanguagePreference, // Add new
 };
 
 export default userServiceExports;

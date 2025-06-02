@@ -20,6 +20,7 @@
 // </PageLayout>
 
 import React, { useContext } from "react";
+import { useTranslation } from 'react-i18next';
 import { Box, Alert, Button } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -44,10 +45,12 @@ const PageLayout = ({
   debugPanel = null,
   menuIcon = null, // <-- Add menuIcon prop
 }) => {
+  const { t } = useTranslation();
+
   if (loading) {
     return (
       <PageContainer maxWidth={maxWidth}>
-        <LoadingIndicator size="large" message="Loading page..." />
+        <LoadingIndicator size="large" message={t('loadingPage')} />
       </PageContainer>
     );
   }
@@ -61,14 +64,14 @@ const PageLayout = ({
           action={
             onRetry && (
               <Button color="inherit" onClick={onRetry} variant="outlined">
-                Retry
+                {t('retry')}
               </Button>
             )
           }
         >
           {typeof error === "string"
             ? error
-            : error?.message || "An unknown error occurred."}
+            : error?.message || t('unknownErrorOccurred')}
         </Alert>
       </PageContainer>
     );

@@ -18,6 +18,8 @@ import ReactDOM from "react-dom/client";
 import App from "./app/App";
 import AppProviders from "./app/providers/AppProviders";
 import "./style.css";
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
 
 // Add error handler for debugging
 window.addEventListener("error", function (e) {
@@ -40,7 +42,9 @@ console.log("Environment:", {
 });
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <AppProviders>
-    <App />
-  </AppProviders>
+  <I18nextProvider i18n={i18n}>
+    <AppProviders>
+      <App />
+    </AppProviders>
+  </I18nextProvider>
 );

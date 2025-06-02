@@ -1,0 +1,23 @@
+{
+  "appTitle": "My Application",
+  "settings": "Settings",
+  "systemPreferences": "System Preferences",
+  "systemDiagnostics": "System Diagnostics",
+  "fontSize": "Font Size",
+  "adjustFontSize": "Adjust the application-wide font size.",
+  "language": "Language",
+  "selectLanguage": "Select the application language.",
+  "loadingPage": "Loading page...",
+  "retry": "Retry",
+  "unknownErrorOccurred": "An unknown error occurred.",
+  "welcome": "Welcome",
+  "dashboard": "Dashboard",
+  "profile": "Profile",
+  "save": "Save",
+  "cancel": "Cancel",
+  "edit": "Edit",
+  "delete": "Delete",
+  "createNew": "Create New",
+  "viewDetails": "View Details",
+  "loading": "Loading..."
+}
