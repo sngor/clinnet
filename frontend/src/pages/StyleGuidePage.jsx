@@ -205,22 +205,24 @@ function StyleGuidePage() {
         <SectionTitle>Layout Containers</SectionTitle>
         <Grid container spacing={3}>
           <Grid item xs={12} md={4}>
-            <CardContainer>
+            <CardContainer sx={{ boxShadow: "none", border: "1px solid #eee" }}>
               <SubsectionTitle>Card Container</SubsectionTitle>
               <SecondaryText>
                 Used for content cards, list items, or any content that should
-                be visually grouped. Has hover effects and consistent padding.
+                be visually grouped. Has consistent padding.{" "}
+                {/* Removed hover effects and elevation for cleaner look */}
               </SecondaryText>
             </CardContainer>
           </Grid>
           <Grid item xs={12} md={8}>
-            <CardContainer>
+            <CardContainer sx={{ boxShadow: "none", border: "1px solid #eee" }}>
               <SubsectionTitle>
-                Section Container with Elevation
+                Section Container (No Elevation)
               </SubsectionTitle>
               <SecondaryText>
-                Used for major sections of a page. Can have elevation or border.
-                Provides consistent padding and margin.
+                Used for major sections of a page. No elevation or shadow for a
+                flatter, cleaner appearance. Provides consistent padding and
+                margin.
               </SecondaryText>
               <FlexBox justify="space-between" sx={{ mt: 2 }}>
                 <TextButton>Cancel</TextButton>

@@ -44,7 +44,6 @@ import {
 } from "../../../components/ui";
 import {
   PageContainer,
-  SectionContainer,
   CardContainer,
   PrimaryButton,
   SecondaryButton,
@@ -55,6 +54,7 @@ import {
 } from "../../../components/ui";
 import Avatar from "@mui/material/Avatar";
 import LoadingIndicator from "../../../components/LoadingIndicator";
+import UserTable from "../../../components/admin/UserTable";
 
 // Table column definitions
 const columns = [
@@ -407,183 +407,187 @@ function UserList() {
   );
 
   return (
-    <PageContainer>
+    <Box
+      sx={{
+        background: "#fff",
+        borderRadius: 2,
+        boxShadow: "0 2px 12px rgba(67,97,238,0.04)",
+        p: { xs: 2, sm: 3 },
+        mb: 4,
+      }}
+    >
       <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
-        <Typography variant="h5">User Management</Typography>
-        {/* Only keep one Add User button in the table action bar below */}
-      </FlexBox>
-
-      {/* Replace nested containers with just CardContainer */}
-      <CardContainer>
-        <TableContainer
-          title="Users"
-          action={actionButtons}
-          aria-label="Users table"
+        <Typography variant="h5">Users</Typography>
+        <PrimaryButton
+          startIcon={<AddIcon />}
+          onClick={handleAddUser}
+          sx={{ borderRadius: 1.5 }}
+          aria-label="Add new user"
         >
-          {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {error}
-            </Alert>
-          )}
-
-          {loading && !openAddEdit && !openDelete ? (
-            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-              {/* Use the shared LoadingIndicator for consistency */}
-              <LoadingIndicator size="large" message="Loading users..." />
-            </Box>
-          ) : (
-            <StyledTableContainer>
-              <TableHead sx={tableHeaderStyle}>
-                <TableRow>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.id}
-                      sortDirection={orderBy === column.id ? order : false}
+          Add User
+        </PrimaryButton>
+      </FlexBox>
+      <TableContainer
+        title={null}
+        action={null}
+        aria-label="Users table"
+        sx={{ boxShadow: "none", border: "none", borderRadius: 1, p: 0 }}
+      >
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+        {loading && !openAddEdit && !openDelete ? (
+          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+            <LoadingIndicator size="large" message="Loading users..." />
+          </Box>
+        ) : (
+          <StyledTableContainer
+            sx={{ border: "none", borderRadius: 1 }} // Remove any border from the table container
+          >
+            <TableHead sx={tableHeaderStyle}>
+              <TableRow>
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.id}
+                    sortDirection={orderBy === column.id ? order : false}
+                  >
+                    <TableSortLabel
+                      active={orderBy === column.id}
+                      direction={orderBy === column.id ? order : "asc"}
+                      onClick={createSortHandler(column.id)}
                     >
-                      <TableSortLabel
-                        active={orderBy === column.id}
-                        direction={orderBy === column.id ? order : "asc"}
-                        onClick={createSortHandler(column.id)}
-                      >
-                        {column.label}
-                      </TableSortLabel>
-                    </TableCell>
-                  ))}
-                  <TableCell align="center">Actions</TableCell>
+                      {column.label}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
+                <TableCell align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length + 1} align="center">
+                    No users found
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length + 1} align="center">
-                      No users found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  stableSort(users, getComparator(order, orderBy)).map(
-                    (user) => (
-                      <TableRow
-                        key={user.username}
+              ) : (
+                stableSort(users, getComparator(order, orderBy)).map((user) => (
+                  <TableRow
+                    key={user.username}
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  >
+                    <TableCell>
+                      <Box
                         sx={{
-                          "&:last-child td, &:last-child th": { border: 0 },
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
                         }}
                       >
-                        <TableCell>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <Avatar
-                              src={user.profileImage || undefined}
-                              alt={
-                                user.firstName ||
-                                user.email?.split("@")[0] ||
-                                "User"
-                              }
-                              variant="rounded"
-                              sx={{
-                                width: 32,
-                                height: 32,
-                                fontSize: 16,
-                                borderRadius: 2, // square with rounded corners
-                              }}
-                            >
-                              {user.firstName
-                                ? user.firstName[0]
-                                : user.email
-                                ? user.email[0].toUpperCase()
-                                : "U"}
-                            </Avatar>
-                            <span>
-                              {user.email ? user.email.split("@")[0] : "-"}
-                            </span>
-                          </Box>
-                        </TableCell>
-                        <TableCell>{user.firstName || "-"}</TableCell>
-                        <TableCell>{user.lastName || "-"}</TableCell>
-                        <TableCell>{user.email || "-"}</TableCell>
-                        <TableCell>{user.phone || "-"}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={
-                              user.role.charAt(0).toUpperCase() +
-                              user.role.slice(1)
-                            }
-                            size="small"
-                            color={
-                              user.role === "admin"
-                                ? "error"
-                                : user.role === "doctor"
-                                ? "primary"
-                                : "secondary"
-                            }
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            icon={
-                              user.enabled ? <CheckCircleIcon /> : <BlockIcon />
-                            }
-                            label={user.enabled ? "Active" : "Disabled"}
-                            size="small"
-                            color={user.enabled ? "success" : "default"}
-                            variant={user.enabled ? "filled" : "outlined"}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Tooltip title="Edit User">
-                            <AppIconButton
-                              icon={EditIcon}
-                              color="primary"
-                              size="small"
-                              onClick={() => handleEditUser(user)}
-                              disabled={actionLoading}
-                              aria-label={`Edit user ${user.firstName} ${user.lastName}`}
-                            />
-                          </Tooltip>
-                          <Tooltip title="Delete User">
-                            <AppIconButton
-                              icon={DeleteIcon}
-                              color="error"
-                              size="small"
-                              onClick={() => handleDeleteClick(user)}
-                              disabled={actionLoading}
-                              aria-label={`Delete user ${user.firstName} ${user.lastName}`}
-                            />
-                          </Tooltip>
-                          <Tooltip
-                            title={
-                              user.enabled ? "Disable User" : "Enable User"
-                            }
-                          >
-                            <AppIconButton
-                              icon={user.enabled ? BlockIcon : CheckCircleIcon}
-                              color={user.enabled ? "default" : "success"}
-                              size="small"
-                              onClick={() => handleToggleUserStatus(user)}
-                              disabled={actionLoading}
-                              aria-label={
-                                user.enabled
-                                  ? `Disable user ${user.firstName} ${user.lastName}`
-                                  : `Enable user ${user.firstName} ${user.lastName}`
-                              }
-                            />
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  )
-                )}
-              </TableBody>
-            </StyledTableContainer>
-          )}
-        </TableContainer>
-      </CardContainer>
-
+                        <Avatar
+                          src={user.profileImage || undefined}
+                          alt={
+                            user.firstName ||
+                            user.email?.split("@")[0] ||
+                            "User"
+                          }
+                          variant="rounded"
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            fontSize: 16,
+                            borderRadius: 2, // square with rounded corners
+                          }}
+                        >
+                          {user.firstName
+                            ? user.firstName[0]
+                            : user.email
+                            ? user.email[0].toUpperCase()
+                            : "U"}
+                        </Avatar>
+                        <span>
+                          {user.email ? user.email.split("@")[0] : "-"}
+                        </span>
+                      </Box>
+                    </TableCell>
+                    <TableCell>{user.firstName || "-"}</TableCell>
+                    <TableCell>{user.lastName || "-"}</TableCell>
+                    <TableCell>{user.email || "-"}</TableCell>
+                    <TableCell>{user.phone || "-"}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={
+                          user.role.charAt(0).toUpperCase() + user.role.slice(1)
+                        }
+                        size="small"
+                        color={
+                          user.role === "admin"
+                            ? "error"
+                            : user.role === "doctor"
+                            ? "primary"
+                            : "secondary"
+                        }
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        icon={
+                          user.enabled ? <CheckCircleIcon /> : <BlockIcon />
+                        }
+                        label={user.enabled ? "Active" : "Disabled"}
+                        size="small"
+                        color={user.enabled ? "success" : "default"}
+                        variant={user.enabled ? "filled" : "outlined"}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Edit User">
+                        <AppIconButton
+                          icon={EditIcon}
+                          color="primary"
+                          size="small"
+                          onClick={() => handleEditUser(user)}
+                          disabled={actionLoading}
+                          aria-label={`Edit user ${user.firstName} ${user.lastName}`}
+                        />
+                      </Tooltip>
+                      <Tooltip title="Delete User">
+                        <AppIconButton
+                          icon={DeleteIcon}
+                          color="error"
+                          size="small"
+                          onClick={() => handleDeleteClick(user)}
+                          disabled={actionLoading}
+                          aria-label={`Delete user ${user.firstName} ${user.lastName}`}
+                        />
+                      </Tooltip>
+                      <Tooltip
+                        title={user.enabled ? "Disable User" : "Enable User"}
+                      >
+                        <AppIconButton
+                          icon={user.enabled ? BlockIcon : CheckCircleIcon}
+                          color={user.enabled ? "default" : "success"}
+                          size="small"
+                          onClick={() => handleToggleUserStatus(user)}
+                          disabled={actionLoading}
+                          aria-label={
+                            user.enabled
+                              ? `Disable user ${user.firstName} ${user.lastName}`
+                              : `Enable user ${user.firstName} ${user.lastName}`
+                          }
+                        />
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </StyledTableContainer>
+        )}
+      </TableContainer>
       {/* Add/Edit User Dialog */}
       <Dialog
         open={openAddEdit}
@@ -812,7 +816,7 @@ function UserList() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </PageContainer>
+    </Box>
   );
 }
 

@@ -111,7 +111,10 @@ const UserList = () => {
   // Render the user table
   const renderUserTable = () => {
     return (
-      <TableContainer component={Paper}>
+      <TableContainer
+        component={Paper}
+        sx={{ border: "none", boxShadow: "none" }}
+      >
         <Table>
           <TableHead>
             <TableRow>

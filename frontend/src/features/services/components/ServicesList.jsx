@@ -43,7 +43,6 @@ import {
 } from "../../../components/ui";
 import {
   PageContainer,
-  SectionContainer,
   CardContainer,
   PrimaryButton,
   AppIconButton,
@@ -308,164 +307,162 @@ function ServicesList() {
     handleRequestSort(property);
   };
 
-  // Action button for the table
-  const actionButton = (
-    <PrimaryButton
-      startIcon={<AddIcon />}
-      onClick={handleAddService}
-      size="large"
-    >
-      Add Service
-    </PrimaryButton>
-  );
-
   return (
-    <PageContainer>
+    <Box
+      sx={{
+        background: "#fff",
+        borderRadius: 2,
+        boxShadow: "0 2px 12px rgba(67,97,238,0.04)",
+        p: { xs: 2, sm: 3 },
+        mb: 4,
+      }}
+    >
       <FlexBox justify="space-between" align="center" sx={{ mb: 2 }}>
-        <Typography variant="h5">Medical Services</Typography>
-        {actionButton}
+        <Typography variant="h5">Services</Typography>
+        <PrimaryButton
+          startIcon={<AddIcon />}
+          onClick={handleAddService}
+          sx={{ borderRadius: 1.5 }}
+          aria-label="Add new service"
+        >
+          Add Service
+        </PrimaryButton>
       </FlexBox>
-
-      {/* Replace nested containers with just CardContainer */}
-      <CardContainer>
-        <TableContainer>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-              {/* Use the shared LoadingIndicator for consistency */}
-              <LoadingIndicator size="large" message="Loading services..." />
-            </Box>
-          ) : (
-            <StyledTableContainer>
-              <TableHead sx={tableHeaderStyle}>
-                <TableRow>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.id}
-                      sortDirection={orderBy === column.id ? order : false}
+      <TableContainer
+        title={null}
+        action={null}
+        aria-label="Services table"
+        sx={{ boxShadow: "none", border: "none", borderRadius: 1, p: 0 }}
+      >
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+            <LoadingIndicator size="large" message="Loading services..." />
+          </Box>
+        ) : (
+          <StyledTableContainer sx={{ border: "none", borderRadius: 1 }}>
+            <TableHead sx={tableHeaderStyle}>
+              <TableRow>
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.id}
+                    sortDirection={orderBy === column.id ? order : false}
+                  >
+                    <TableSortLabel
+                      active={orderBy === column.id}
+                      direction={orderBy === column.id ? order : "asc"}
+                      onClick={createSortHandler(column.id)}
                     >
-                      <TableSortLabel
-                        active={orderBy === column.id}
-                        direction={orderBy === column.id ? order : "asc"}
-                        onClick={createSortHandler(column.id)}
-                      >
-                        {column.label}
-                      </TableSortLabel>
-                    </TableCell>
-                  ))}
-                  <TableCell align="center">Actions</TableCell>
+                      {column.label}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
+                <TableCell align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {safeServices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length + 1} align="center">
+                    No services found
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {safeServices.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length + 1} align="center">
-                      No services found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  stableSort(safeServices, getComparator(order, orderBy)).map(
-                    (service) => (
-                      <TableRow
-                        key={service.id}
-                        sx={{
-                          "&:last-child td, &:last-child th": { border: 0 },
-                        }}
-                      >
-                        {/* <TableCell component="th" scope="row">{service.id}</TableCell> */}
-                        <TableCell>
-                          <Typography variant="body2" fontWeight="medium">
-                            {service.name}
-                          </Typography>
+              ) : (
+                stableSort(safeServices, getComparator(order, orderBy)).map(
+                  (service) => (
+                    <TableRow
+                      key={service.id}
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                    >
+                      {/* <TableCell component="th" scope="row">{service.id}</TableCell> */}
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="medium">
+                          {service.name}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: "block" }}
+                        >
+                          {service.description &&
+                          service.description.length > 50
+                            ? `${service.description.substring(0, 50)}...`
+                            : service.description}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={
+                            service.category
+                              ? service.category.charAt(0).toUpperCase() +
+                                service.category.slice(1)
+                              : "Consultation"
+                          }
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {formatPrice(service.price)}
+                        {service.discountPercentage > 0 && (
                           <Typography
                             variant="caption"
-                            color="text.secondary"
+                            color="success.main"
                             sx={{ display: "block" }}
                           >
-                            {service.description &&
-                            service.description.length > 50
-                              ? `${service.description.substring(0, 50)}...`
-                              : service.description}
+                            {formatPrice(
+                              calculateFinalPrice(
+                                service.price,
+                                service.discountPercentage
+                              )
+                            )}
                           </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={
-                              service.category
-                                ? service.category.charAt(0).toUpperCase() +
-                                  service.category.slice(1)
-                                : "Consultation"
-                            }
-                            size="small"
+                        )}
+                      </TableCell>
+                      <TableCell>{service.discountPercentage || 0}%</TableCell>
+                      <TableCell>{service.duration || 30} min</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={
+                            service.active !== false ? "Active" : "Inactive"
+                          }
+                          size="small"
+                          color={
+                            service.active !== false ? "success" : "default"
+                          }
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Tooltip title="Edit Service">
+                          <AppIconButton
+                            icon={EditIcon}
+                            aria-label="Edit"
                             color="primary"
-                            variant="outlined"
+                            onClick={() => handleEditService(service)}
                           />
-                        </TableCell>
-                        <TableCell>
-                          {formatPrice(service.price)}
-                          {service.discountPercentage > 0 && (
-                            <Typography
-                              variant="caption"
-                              color="success.main"
-                              sx={{ display: "block" }}
-                            >
-                              {formatPrice(
-                                calculateFinalPrice(
-                                  service.price,
-                                  service.discountPercentage
-                                )
-                              )}
-                            </Typography>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {service.discountPercentage || 0}%
-                        </TableCell>
-                        <TableCell>{service.duration || 30} min</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={
-                              service.active !== false ? "Active" : "Inactive"
-                            }
-                            size="small"
-                            color={
-                              service.active !== false ? "success" : "default"
-                            }
+                        </Tooltip>
+                        <Tooltip title="Delete Service">
+                          <AppIconButton
+                            icon={DeleteIcon}
+                            aria-label="Delete"
+                            color="error"
+                            onClick={() => handleDeleteClick(service)}
                           />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Tooltip title="Edit Service">
-                            <AppIconButton
-                              icon={EditIcon}
-                              aria-label="Edit"
-                              color="primary"
-                              onClick={() => handleEditService(service)}
-                            />
-                          </Tooltip>
-                          <Tooltip title="Delete Service">
-                            <AppIconButton
-                              icon={DeleteIcon}
-                              aria-label="Delete"
-                              color="error"
-                              onClick={() => handleDeleteClick(service)}
-                            />
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    )
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
                   )
-                )}
-              </TableBody>
-            </StyledTableContainer>
-          )}
-        </TableContainer>
-      </CardContainer>
-
+                )
+              )}
+            </TableBody>
+          </StyledTableContainer>
+        )}
+      </TableContainer>
       {/* Add/Edit Service Dialog */}
       <Dialog
         open={openAddEdit}
@@ -617,7 +614,7 @@ function ServicesList() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </PageContainer>
+    </Box>
   );
 }
 

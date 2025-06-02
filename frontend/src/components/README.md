@@ -26,9 +26,10 @@ Located in the `ui` directory:
 
 - **Container.jsx**: Layout components
 
-  - `PageContainer`: Outer page wrapper
-  - `SectionContainer`: Content sections
-  - `CardContainer`: Card-style containers
+  - `PageContainer`: Outermost wrapper for pages (do not nest)
+  - `SectionContainer`: For grouping content with spacing only (no visual border/shadow)
+  - `CardContainer`: For content that needs a visual container (border/shadow)
+  - **Do not nest CardContainer inside SectionContainer. Use only one container type at a time.**
   - `FlexBox`: Flexible layout box
 
 - **PageHeading.jsx**: Consistent page headers

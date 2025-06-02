@@ -1,18 +1,5 @@
 import React, { useEffect } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
-  Avatar,
-  Tooltip,
-  Box,
-  Typography,
-} from "@mui/material";
+import { Avatar, Box, IconButton, Tooltip, Typography } from "@mui/material";
 // Explicitly import the icons with specific paths to ensure they load properly
 import EditIcon from "@mui/icons-material/Edit";
 import BlockIcon from "@mui/icons-material/Block";
@@ -78,102 +65,98 @@ const UserTable = ({ users, onEditUser, onToggleUserStatus }) => {
   };
 
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>User</TableCell>
-            <TableCell>Email</TableCell>
-            <TableCell>Role</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell align="right">Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.uniqueId || user.id || user.sub}>
-              <TableCell>
-                <Box display="flex" alignItems="center">
-                  <Avatar
-                    src={getUserAvatarSrc(user)}
-                    alt={getUserInitials(user)}
-                    variant="rounded"
-                    sx={{ mr: 2, borderRadius: 2, width: 40, height: 40 }}
-                  >
-                    {getUserInitials(user)}
-                  </Avatar>
-                  <Typography>
-                    {user.firstName && user.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : user.displayUsername ||
-                        extractUsernameFromEmail(user.email) ||
-                        user.username}
-                  </Typography>
-                </Box>
-              </TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.role || "User"}</TableCell>
-              <TableCell>
-                {user.enabled !== false ? "Active" : "Disabled"}
-              </TableCell>
-              <TableCell align="right">
+    <table>
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th style={{ textAlign: "right" }}>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {users.map((user) => (
+          <tr key={user.uniqueId || user.id || user.sub}>
+            <td>
+              <Box display="flex" alignItems="center">
+                <Avatar
+                  src={getUserAvatarSrc(user)}
+                  alt={getUserInitials(user)}
+                  variant="rounded"
+                  sx={{ mr: 2, borderRadius: 2, width: 40, height: 40 }}
+                >
+                  {getUserInitials(user)}
+                </Avatar>
+                <Typography>
+                  {user.firstName && user.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user.displayUsername ||
+                      extractUsernameFromEmail(user.email) ||
+                      user.username}
+                </Typography>
+              </Box>
+            </td>
+            <td>{user.email}</td>
+            <td>{user.role || "User"}</td>
+            <td>{user.enabled !== false ? "Active" : "Disabled"}</td>
+            <td style={{ textAlign: "right" }}>
+              <Box display="flex" justifyContent="flex-end">
                 {/* Action Icons with explicit styling to ensure visibility */}
-                <Box display="flex" justifyContent="flex-end">
-                  <Tooltip title="Edit User">
+                <Tooltip title="Edit User">
+                  <IconButton
+                    onClick={() => onEditUser(user)}
+                    color="primary"
+                    aria-label="edit user"
+                    sx={{
+                      color: "primary.main",
+                      visibility: "visible",
+                      "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+                    }}
+                  >
+                    <EditIcon sx={{ fontSize: 24, display: "block" }} />
+                  </IconButton>
+                </Tooltip>
+
+                {user.enabled !== false ? (
+                  <Tooltip title="Disable User">
                     <IconButton
-                      onClick={() => onEditUser(user)}
-                      color="primary"
-                      aria-label="edit user"
+                      onClick={() => onToggleUserStatus(user, false)}
+                      color="warning"
+                      aria-label="disable user"
                       sx={{
-                        color: "primary.main",
+                        color: "warning.main",
                         visibility: "visible",
                         "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
                       }}
                     >
-                      <EditIcon sx={{ fontSize: 24, display: "block" }} />
+                      <BlockIcon sx={{ fontSize: 24, display: "block" }} />
                     </IconButton>
                   </Tooltip>
-
-                  {user.enabled !== false ? (
-                    <Tooltip title="Disable User">
-                      <IconButton
-                        onClick={() => onToggleUserStatus(user, false)}
-                        color="warning"
-                        aria-label="disable user"
-                        sx={{
-                          color: "warning.main",
-                          visibility: "visible",
-                          "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
-                        }}
-                      >
-                        <BlockIcon sx={{ fontSize: 24, display: "block" }} />
-                      </IconButton>
-                    </Tooltip>
-                  ) : (
-                    <Tooltip title="Enable User">
-                      <IconButton
-                        onClick={() => onToggleUserStatus(user, true)}
-                        color="success"
-                        aria-label="enable user"
-                        sx={{
-                          color: "success.main",
-                          visibility: "visible",
-                          "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
-                        }}
-                      >
-                        <CheckCircleIcon
-                          sx={{ fontSize: 24, display: "block" }}
-                        />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </Box>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+                ) : (
+                  <Tooltip title="Enable User">
+                    <IconButton
+                      onClick={() => onToggleUserStatus(user, true)}
+                      color="success"
+                      aria-label="enable user"
+                      sx={{
+                        color: "success.main",
+                        visibility: "visible",
+                        "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+                      }}
+                    >
+                      <CheckCircleIcon
+                        sx={{ fontSize: 24, display: "block" }}
+                      />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 };
 

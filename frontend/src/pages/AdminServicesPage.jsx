@@ -1,7 +1,6 @@
 // src/pages/AdminServicesPage.jsx
 import React from "react";
-import { Box } from "@mui/material"; // Box might not be needed if ContentCard handles all layout
-import { PageLayout, ContentCard } from "../components/ui"; // Replaced PageHeading, PageContainer with PageLayout
+import { PageLayout } from "../components/ui";
 import ServicesList from "../features/services/components/ServicesList";
 
 function AdminServicesPage() {
@@ -10,17 +9,8 @@ function AdminServicesPage() {
       title="Services Management"
       subtitle="Add, edit, and manage medical services offered by the clinic"
     >
-      <ContentCard 
-        elevation={0} 
-        sx={{ 
-          // If ContentCard needs to fill width or specific layout, Box might be useful here
-          // For now, assuming ContentCard handles its layout appropriately within PageLayout
-          border: '1px solid',
-          borderColor: 'divider'
-        }}
-      >
-        <ServicesList />
-      </ContentCard>
+      {/* Render ServicesList directly, no outer Box container */}
+      <ServicesList />
     </PageLayout>
   );
 }

@@ -119,8 +119,8 @@ function PatientDashboard() {
         title="Recent Appointments"
         elevation={0}
         sx={{
-          border: "1px solid",
-          borderColor: "divider",
+          border: "none", // Remove outer border
+          borderColor: undefined,
         }}
       >
         <AppointmentList
