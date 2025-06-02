@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PageLayout, SectionContainer } from "../components/ui";
 import { useFontSize } from "../context/FontSizeContext";
 import {
@@ -14,6 +14,17 @@ import DiagnosticsPage from "./DiagnosticsPage"; // Import diagnostics page
 const SettingsPage = () => {
   const { fontSize, updateFontSize, fontSizes } = useFontSize();
   const [tab, setTab] = useState(0);
+
+  // Automatically select tab based on URL query param
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    if (tabParam === "system-diagnostics") {
+      setTab(1);
+    } else if (tabParam === "system-preferences") {
+      setTab(0);
+    }
+  }, []);
 
   const handleFontSizeChange = (event, newSize) => {
     if (newSize !== null) {
@@ -74,7 +85,9 @@ const SettingsPage = () => {
 
       {tab === 1 && (
         <Box sx={{ mt: 2 }}>
-          <DiagnosticsPage />
+          <Box sx={{ borderRadius: 1, overflow: "hidden" }}>
+            <DiagnosticsPage />
+          </Box>
         </Box>
       )}
     </PageLayout>

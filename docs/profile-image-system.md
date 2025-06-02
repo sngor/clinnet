@@ -6,7 +6,7 @@ This guide documents the profile image upload and fetch system, including backen
 
 ## Overview
 
-- Upload, fetch, and remove patient profile images
+- Upload, fetch, and remove patient profile images by staff
 - S3-backed storage, secure and CORS-compliant
 - Robust error handling and user feedback
 

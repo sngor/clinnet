@@ -668,6 +668,14 @@ const theme = createTheme({
         },
       },
     },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          boxShadow: "none",
+          borderRight: "1px solid #e0e0e0",
+        },
+      },
+    },
   },
 });
 

@@ -99,7 +99,7 @@ frontend/
 ├── src/
 │   ├── app/             # App configuration
 │   ├── components/      # Shared UI components
-│   ├── features/        # Feature modules (appointments, patients, etc.)
+│   ├── features/        # Feature modules (appointments, patient management, etc.)
 │   ├── mock/            # Mock data
 │   ├── pages/           # Page components
 │   └── utils/           # Utility functions

@@ -42,6 +42,7 @@ import {
   StyledTextField, // Added
 } from "../components/ui";
 import DashboardCard from "../components/ui/DashboardCard"; // Updated path
+import BannerWarning from "../components/ui/BannerWarning";
 
 // Import mock data from centralized location
 // import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments"; // Removed
@@ -58,6 +59,7 @@ function FrontdeskDashboard() {
   const [totalPatientsCount, setTotalPatientsCount] = useState(0);
   const [totalAppointmentsCount, setTotalAppointmentsCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [partialErrors, setPartialErrors] = useState([]);
   const [error, setError] = useState(null);
   const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
   const [walkInForm, setWalkInForm] = useState({
@@ -66,7 +68,6 @@ function FrontdeskDashboard() {
     type: "Walk-in",
     notes: "",
   });
-  const [partialErrors, setPartialErrors] = useState([]);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -103,12 +104,12 @@ function FrontdeskDashboard() {
         setTotalAppointmentsCount(0);
       }
       setPartialErrors(errors);
-      setLoading(false);
       setError(
         errors.length > 0
           ? `Some data failed to load: ${errors.join("; ")}`
           : null
       );
+      setLoading(false);
     };
 
     fetchData();
@@ -194,23 +195,24 @@ function FrontdeskDashboard() {
       title={`${getTimeBasedGreeting()}, ${
         user?.firstName || user?.username || "Front Desk"
       }!`}
-      subtitle={`${todaysAppointmentsCount} appointments scheduled for today`}
+      subtitle={
+        <>
+          {`${todaysAppointmentsCount} appointments scheduled for today`}
+          <br />
+          <span style={{ color: "#888", fontSize: 16 }}>
+            {new Date().toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+        </>
+      }
       loading={loading}
       error={null} // Don't block UI with error
     >
       {/* Show error as a warning if partialErrors exist */}
-      {partialErrors.length > 0 && error && (
-        <BodyText
-          sx={{
-            color: "error.main", // Using theme's error color
-            fontWeight: 500,
-            mb: 2, // Standard spacing
-            textAlign: "center", // Or 'left' based on desired alignment
-          }}
-        >
-          {error}
-        </BodyText>
-      )}
+      {partialErrors.length > 0 && error && <BannerWarning message={error} />}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid
@@ -267,7 +269,9 @@ function FrontdeskDashboard() {
 
       {/* Quick Actions */}
       <Box sx={{ mb: 4 }}>
-        <SectionTitle sx={{ mb: 2 }}> {/* Was Typography h5 */}
+        <SectionTitle sx={{ mb: 2 }}>
+          {" "}
+          {/* Was Typography h5 */}
           Quick Actions
         </SectionTitle>
         <Grid container spacing={2}>
@@ -324,7 +328,8 @@ function FrontdeskDashboard() {
               </Grid>
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <InputLabel id="walk-in-doctor-label">Doctor</InputLabel> {/* Added id for label */}
+                  <InputLabel id="walk-in-doctor-label">Doctor</InputLabel>{" "}
+                  {/* Added id for label */}
                   <Select
                     name="doctorName"
                     labelId="walk-in-doctor-label" // Added labelId
@@ -363,7 +368,8 @@ function FrontdeskDashboard() {
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <TextButton onClick={handleCloseWalkInModal}>Cancel</TextButton> {/* Was Button */}
+          <TextButton onClick={handleCloseWalkInModal}>Cancel</TextButton>{" "}
+          {/* Was Button */}
           <PrimaryButton /* Was Button variant="contained" */
             onClick={handleSubmitWalkIn}
             disabled={!walkInForm.patientName}

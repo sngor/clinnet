@@ -431,9 +431,9 @@ function AppLayout() {
                 left: drawerMargin,
                 top: drawerMargin,
                 borderRadius: 1, // smaller radius
-                boxShadow:
-                  "0 8px 32px rgba(67,97,238,0.18), 0 1.5px 6px rgba(0,0,0,0.08)",
-                borderRight: "none",
+                // Remove shadow and add border
+                boxShadow: "none",
+                borderRight: "1px solid #e0e0e0",
                 background: "rgba(255,255,255,0.95)",
                 backdropFilter: "blur(16px)",
                 WebkitBackdropFilter: "blur(16px)",
@@ -470,12 +470,10 @@ function AppLayout() {
               "& .MuiDrawer-paper": {
                 boxSizing: "border-box",
                 width: currentDrawerWidth,
-                // Remove margin here to avoid cutting off the bottom
-                // margin: `${drawerMargin}px`,
                 borderRadius: 1, // smaller radius
-                boxShadow:
-                  "0 8px 32px rgba(67,97,238,0.18), 0 1.5px 6px rgba(0,0,0,0.08)",
-                borderRight: "none",
+                // Remove shadow and add border
+                boxShadow: "none",
+                borderRight: "1px solid #e0e0e0",
                 background: "rgba(255,255,255,0.97)",
                 zIndex: (theme) => theme.zIndex.drawer,
                 transition: (theme) =>

@@ -20,6 +20,7 @@ import {
   // PageHeading, // Removed PageHeading
 } from "../components/ui";
 import DashboardCard from "../components/ui/DashboardCard"; // Updated path
+import BannerWarning from "../components/ui/BannerWarning";
 
 // Import mock data from centralized location
 // import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments"; // Removed
@@ -43,8 +44,8 @@ function DoctorDashboard() {
   const [medicalRecordsCount, setMedicalRecordsCount] = useState(0);
   const [doctorAppointments, setDoctorAppointments] = useState([]); // To store all appointments for the list
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [partialErrors, setPartialErrors] = useState([]);
+  const [error, setError] = useState(null);
 
   // Fetch data
   useEffect(() => {
@@ -111,7 +112,10 @@ function DoctorDashboard() {
         if (isMounted) setAssignedPatientsCount(0);
       }
       try {
-        const recordsData = await medicalRecordService.getMedicalRecords('doctor', user.username);
+        const recordsData = await medicalRecordService.getMedicalRecords(
+          "doctor",
+          user.username
+        );
         if (isMounted && Array.isArray(recordsData)) {
           setMedicalRecordsCount(recordsData.length);
         } else if (isMounted) {
@@ -142,23 +146,24 @@ function DoctorDashboard() {
       title={`${getTimeBasedGreeting()}, Dr. ${
         user?.lastName || user?.username || "Smith"
       }!`}
-      subtitle={`${todaysAppointmentsCount} appointments scheduled for today`}
+      subtitle={
+        <>
+          {`${todaysAppointmentsCount} appointments scheduled for today`}
+          <br />
+          <span style={{ color: "#888", fontSize: 16 }}>
+            {new Date().toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+        </>
+      }
       loading={loading}
       error={null} // Don't block UI with error
     >
       {/* Show error as a warning if partialErrors exist */}
-      {partialErrors.length > 0 && error && (
-        <BodyText
-          sx={{
-            color: "error.main", // Using theme's error color
-            fontWeight: 500,
-            mb: 2, // Standard spacing
-            textAlign: "center", // Or 'left' based on desired alignment
-          }}
-        >
-          {error}
-        </BodyText>
-      )}
+      {partialErrors.length > 0 && error && <BannerWarning message={error} />}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid

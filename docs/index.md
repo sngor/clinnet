@@ -11,7 +11,7 @@ Welcome to the Clinnet-EMR documentation. This guide provides comprehensive info
 
 ## Overview
 
-Clinnet-EMR is a comprehensive Electronic Medical Records (EMR) system for healthcare providers. It provides interfaces for administrators, doctors, and front desk staff to manage patients, appointments, and medical records.
+Clinnet-EMR is a comprehensive Electronic Medical Records (EMR) system for healthcare providers. It provides interfaces for administrators, doctors, and front desk staff to manage appointments and medical records.
 
 ## Key Features
 
@@ -38,6 +38,7 @@ The application uses a custom UI component library built on top of Material UI:
 - **Responsive Design**: Mobile-first approach with responsive breakpoints
 
 Key components include:
+
 - Page headers, section headers, and content cards
 - Status indicators and appointment cards
 - Data tables and form dialogs
@@ -46,10 +47,12 @@ Key components include:
 ## Development Workflow
 
 1. **Local Development**:
+
    - Set up the local development environment following the [Local Development Guide](./local-development.md)
    - Use centralized mock data for consistent development experience
 
 2. **Component Development**:
+
    - Create reusable UI components in `/components/ui/`
    - Implement feature-specific components in their respective feature folders
    - Compose page components using UI and feature components

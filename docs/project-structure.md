@@ -34,7 +34,7 @@ This document describes the directory and file layout of the Clinnet-EMR project
 
 - `app/` — App configuration, providers, and theme
 - `components/` — Shared UI components (see `components/ui/` for design system)
-- `features/` — Feature modules (appointments, patients, etc.)
+- `features/` — Feature modules (appointments, etc.)
 - `mock/` — Mock data for development/testing
 - `pages/` — Page-level React components (route targets)
 - `services/` — API and business logic services

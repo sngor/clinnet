@@ -19,6 +19,7 @@ import ListAltIcon from "@mui/icons-material/ListAlt";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import adminService from "../services/adminService";
 import ServiceCard from "../components/ServiceCard";
+import PageContainer from "../components/ui/PageContainer"; // Add this import
 
 const initialServicesData = [
   {
@@ -384,14 +385,9 @@ const DiagnosticsPage = () => {
   }, [services, handleTestService]);
 
   return (
-    <Box
-      sx={{
-        maxWidth: 1200,
-        mx: "auto",
-        mt: { xs: 2, md: 4 },
-        mb: { xs: 2, md: 4 },
-        px: { xs: 1, sm: 2, md: 3 },
-      }}
+    <PageContainer
+      maxWidth="lg"
+      sx={{ mt: { xs: 2, md: 4 }, mb: { xs: 2, md: 4 } }}
     >
       <Paper
         elevation={2}
@@ -461,7 +457,7 @@ const DiagnosticsPage = () => {
         </Box>
         {/* End Diagnostics List */}
       </Paper>
-    </Box>
+    </PageContainer>
   );
 };
 

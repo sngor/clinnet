@@ -6,7 +6,7 @@ A comprehensive guide for developers working with DynamoDB in Clinnet-EMR, inclu
 
 ## 🏗️ Overview & Best Practices
 
-- **Single-table design:** All entities (patients, appointments, records, billing, services) share one table.
+- **Single-table design:** All entities (patient records, appointments, records, billing, services) share one table.
 - **Consistent key prefixes:** Use `PAT#`, `APPT#`, `RECORD#`, etc.
 - **ISO timestamps:** Always use `new Date().toISOString()` for `createdAt` and `updatedAt`.
 - **Related items:** Store all related items (e.g., records, appointments) under the same partition key for efficient queries.
