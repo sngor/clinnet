@@ -28,3 +28,4 @@ export {
   formGridProps, 
   commonFieldProps 
 } from './FormStyles';
+export { default as TableContainer } from '../TableContainer';
