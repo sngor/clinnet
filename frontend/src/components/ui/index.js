@@ -28,4 +28,5 @@ export {
   formGridProps, 
   commonFieldProps 
 } from './FormStyles';
-export { default as TableContainer } from '../TableContainer';
+export { default as TableContainer } from '../TableContainer';\nexport { default as DashboardGridLayout } from './DashboardGridLayout';
+\nexport { default as EntityListPage } from './EntityListPage';

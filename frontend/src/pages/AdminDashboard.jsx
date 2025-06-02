@@ -1,35 +1,34 @@
 // src/pages/AdminDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
-import { useMediaQuery, useTheme } from "@mui/material";
-import adminService from "../services/adminService";
-import patientService from "../services/patientService";
-import { getTodaysAppointments } from "../services/appointmentService";
-import Grid from "@mui/material/Grid"; // Updated Grid import
+// Grid import removed as DashboardGridLayout handles it.
+// import Grid from "@mui/material/Grid";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import PersonIcon from "@mui/icons-material/Person";
-import { useNavigate } from "react-router-dom";
 
 // Import UI components
 import {
-  PageLayout, // Added PageLayout
+  PageLayout,
   ContentCard,
   AppointmentList,
-  BodyText, // Added BodyText
+  BodyText,
+  DashboardGridLayout, // Added DashboardGridLayout
 } from "../components/ui";
-import DashboardCard from "../components/ui/DashboardCard"; // Updated path
-
-// Import mock data from centralized location
-// import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments";
+// DashboardCard import removed as it's used by DashboardGridLayout
+// import DashboardCard from "../components/ui/DashboardCard";
+import adminService from "../services/adminService";
+import patientService from "../services/patientService";
+import { getTodaysAppointments } from "../services/appointmentService";
 import { getTimeBasedGreeting } from "../utils/dateUtils";
 
 function AdminDashboard() {
   const { user } = useAuth();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const navigate = useNavigate();
+  // theme and isMobile might not be needed if layout is simpler
+  // const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  // const navigate = useNavigate(); // Not used directly for navigation in this simplified version
   const [appointmentsCount, setAppointmentsCount] = useState(0);
   const [usersCount, setUsersCount] = useState(0);
   const [doctorsCount, setDoctorsCount] = useState(0);
@@ -37,7 +36,7 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [partialErrors, setPartialErrors] = useState([]);
-  const [appointmentsData, setAppointmentsData] = useState([]); // <-- Add this line
+  const [appointmentsData, setAppointmentsData] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -52,7 +51,7 @@ function AdminDashboard() {
         if (isMounted) {
           setUsersCount(usersData.users.length);
           setDoctorsCount(
-            usersData.users.filter((user) => user.role === "doctor").length
+            usersData.users.filter((u) => u.role === "doctor").length
           );
         }
       } catch (err) {
@@ -73,19 +72,19 @@ function AdminDashboard() {
         if (isMounted) setPatientsCount(0);
       }
       // Appointments
-      let appointmentsData = [];
+      let appointmentsApiData = []; // Renamed to avoid conflict
       try {
-        appointmentsData = await getTodaysAppointments();
-        if (!Array.isArray(appointmentsData)) appointmentsData = [];
+        appointmentsApiData = await getTodaysAppointments();
+        if (!Array.isArray(appointmentsApiData)) appointmentsApiData = [];
         if (isMounted) {
-          setAppointmentsCount(appointmentsData.length);
-          setAppointmentsData(appointmentsData); // <-- Add this line
+          setAppointmentsCount(appointmentsApiData.length);
+          setAppointmentsData(appointmentsApiData);
         }
       } catch (err) {
         errors.push("Appointments: " + (err?.message || err));
         if (isMounted) {
           setAppointmentsCount(0);
-          setAppointmentsData([]); // <-- Add this line
+          setAppointmentsData([]);
         }
       }
       if (isMounted) {
@@ -104,6 +103,45 @@ function AdminDashboard() {
     };
   }, []);
 
+  const dashboardItems = [
+    {
+      icon: <PeopleIcon fontSize="large" />,
+      title: "Users",
+      value: usersCount,
+      linkText: "Manage Users",
+      linkTo: "/admin/users",
+      md: 3, // Equivalent to 25% width (4 items per row on medium screens)
+      // itemSx: { p: 1.5 } // Padding is handled by containerSpacing in DashboardGridLayout
+    },
+    {
+      icon: <EventIcon fontSize="large" />,
+      title: "Appointments",
+      value: appointmentsCount,
+      linkText: "View All",
+      linkTo: "/admin/appointments",
+      md: 3,
+      // itemSx: { p: 1.5 }
+    },
+    {
+      icon: <PersonIcon fontSize="large" />,
+      title: "Patients",
+      value: patientsCount,
+      linkText: "View All",
+      linkTo: "/admin/patients",
+      md: 3,
+      // itemSx: { p: 1.5 }
+    },
+    {
+      icon: <LocalHospitalIcon fontSize="large" />,
+      title: "Doctors",
+      value: doctorsCount,
+      linkText: "View All",
+      linkTo: "/admin/users",
+      md: 3,
+      // itemSx: { p: 1.5 }
+    },
+  ];
+
   return (
     <PageLayout
       title={`${getTimeBasedGreeting()}, ${
@@ -117,54 +155,19 @@ function AdminDashboard() {
       {partialErrors.length > 0 && error && (
         <BodyText
           sx={{
-            color: "error.main", // Using theme's error color
+            color: "error.main",
             fontWeight: 500,
-            mb: 2, // Standard spacing
-            textAlign: "center", // Or 'left' based on desired alignment
+            mb: 2,
+            textAlign: "center",
           }}
         >
           {error}
         </BodyText>
       )}
+
       {/* Dashboard Summary Cards */}
-      <Grid container spacing={0} sx={{ mb: 4 }}>
-        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
-          <DashboardCard
-            icon={<PeopleIcon fontSize="large" />}
-            title="Users"
-            value={usersCount}
-            linkText="Manage Users"
-            linkTo="/admin/users"
-          />
-        </Grid>
-        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
-          <DashboardCard
-            icon={<EventIcon fontSize="large" />}
-            title="Appointments"
-            value={appointmentsCount}
-            linkText="View All"
-            linkTo="/admin/appointments"
-          />
-        </Grid>
-        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
-          <DashboardCard
-            icon={<PersonIcon fontSize="large" />}
-            title="Patients"
-            value={patientsCount}
-            linkText="View All"
-            linkTo="/admin/patients"
-          />
-        </Grid>
-        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
-          <DashboardCard
-            icon={<LocalHospitalIcon fontSize="large" />}
-            title="Doctors"
-            value={doctorsCount}
-            linkText="View All"
-            linkTo="/admin/users"
-          />
-        </Grid>
-      </Grid>
+      <DashboardGridLayout items={dashboardItems} containerSpacing={3} />
+
       {/* Appointments List */}
       <ContentCard
         title="Recent Appointments"

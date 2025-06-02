@@ -7,16 +7,13 @@ import {
 } from "../services/appointmentService";
 import patientService from "../services/patientService";
 import {
-  Grid,
-  // Typography, // Replaced by UI kit components
-  useMediaQuery,
-  useTheme,
+  // Grid, // Removed
+  // useMediaQuery, // Removed as isMobile not used for layout here
+  // useTheme, // Removed as theme not used directly for layout here
   Box,
-  // Button, // Replaced by UI kit components
   Dialog,
   DialogContent,
-  DialogActions, // Keep for structure, buttons inside will be replaced
-  // TextField, // Replaced by StyledTextField
+  DialogActions,
   FormControl,
   InputLabel,
   Select,
@@ -26,33 +23,32 @@ import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { useNavigate } from "react-router-dom";
+// useNavigate import removed as it's not used after refactor
+// import { useNavigate } from "react-router-dom";
 
 // Import UI components
 import {
-  PageLayout, // Added PageLayout
+  PageLayout,
   ContentCard,
   AppointmentList,
-  DialogHeading, // DialogHeading is kept
-  BodyText, // Added
-  SectionTitle, // Added
-  PrimaryButton, // Added
-  SecondaryButton, // Added (for Cancel button)
-  TextButton, // Added (alternative for Cancel)
-  StyledTextField, // Added
+  DialogHeading,
+  BodyText,
+  SectionTitle,
+  PrimaryButton,
+  // SecondaryButton, // Not used directly, TextButton for cancel
+  TextButton,
+  StyledTextField,
+  DashboardGridLayout, // Added
 } from "../components/ui";
-import DashboardCard from "../components/ui/DashboardCard"; // Updated path
-
-// Import mock data from centralized location
-// import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments"; // Removed
-// import { mockDoctors } from "../mock/mockDoctors"; // Removed
+// DashboardCard import removed
+// import DashboardCard from "../components/ui/DashboardCard";
 import { getTimeBasedGreeting } from "../utils/dateUtils";
 
 function FrontdeskDashboard() {
   const { user } = useAuth();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const navigate = useNavigate();
+  // const theme = useTheme(); // Not used
+  // const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Not used
+  // const navigate = useNavigate(); // Not used
   const [todaysAppointments, setTodaysAppointments] = useState([]);
   const [todaysAppointmentsCount, setTodaysAppointmentsCount] = useState(0);
   const [totalPatientsCount, setTotalPatientsCount] = useState(0);
@@ -68,7 +64,6 @@ function FrontdeskDashboard() {
   });
   const [partialErrors, setPartialErrors] = useState([]);
 
-  // Fetch dashboard data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -114,16 +109,11 @@ function FrontdeskDashboard() {
     fetchData();
   }, []);
 
-  // Handle Check-in Action
   const handleCheckIn = (appointmentId) => {
     setError(null);
     try {
-      // API call would go here
-      // Assuming the status update is handled by a dedicated service call in a real app
       setTodaysAppointments(
-        (
-          prevAppointments // Update today's appointments list
-        ) =>
+        (prevAppointments) =>
           prevAppointments.map((appt) =>
             appt.id === appointmentId ? { ...appt, status: "Checked-in" } : appt
           )
@@ -137,7 +127,6 @@ function FrontdeskDashboard() {
     }
   };
 
-  // --- Walk-in Handlers ---
   const handleOpenWalkInModal = () => {
     setIsWalkInModalOpen(true);
   };
@@ -157,36 +146,58 @@ function FrontdeskDashboard() {
   const handleSubmitWalkIn = () => {
     console.log("Walk-in data submitted:", walkInForm);
     setError(null);
-
-    // Simulate adding to the list for now:
     const newWalkInAppointment = {
       ...walkInForm,
-      id: `walkin-${Date.now()}`, // Ensure unique ID for walk-ins
-      appointmentDate: new Date().toISOString().split("T")[0], // Set current date
+      id: `walkin-${Date.now()}`,
+      appointmentDate: new Date().toISOString().split("T")[0],
       appointmentTime: new Date().toLocaleTimeString([], {
-        // Set current time
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
       }),
-      doctorName: walkInForm.doctorName || "Unassigned", // Use selected doctor or default
-      status: "Checked-in", // Walk-ins are typically checked-in immediately
-      // patientId: "new-patient-" + Date.now(), // Placeholder for actual patient ID generation
+      doctorName: walkInForm.doctorName || "Unassigned",
+      status: "Checked-in",
     };
-    // Add to today's appointments list for immediate UI update
     setTodaysAppointments((prev) => [newWalkInAppointment, ...prev]);
-    setTodaysAppointmentsCount((prevCount) => prevCount + 1); // Increment today's appointment count
-    // Potentially increment total appointments count as well if walk-ins are added to the main schedule
+    setTodaysAppointmentsCount((prevCount) => prevCount + 1);
     setTotalAppointmentsCount((prevCount) => prevCount + 1);
-    handleCloseWalkInModal(); // Close modal on success
-
-    // Reset form
+    handleCloseWalkInModal();
     setWalkInForm({
       patientName: "",
       doctorName: "",
       type: "Walk-in",
       notes: "",
     });
+  };
+
+  const dashboardItems = [
+    {
+      icon: <EventIcon fontSize="large" />,
+      title: "Appointments",
+      value: todaysAppointmentsCount,
+      linkText: "View All",
+      linkTo: "/frontdesk/appointments",
+      // md: 4 is default in DashboardGridLayout for 3 items per row on medium
+    },
+    {
+      icon: <PeopleIcon fontSize="large" />,
+      title: "Patients",
+      value: totalPatientsCount,
+      linkText: "View All",
+      linkTo: "/frontdesk/patients",
+    },
+    {
+      icon: <CalendarMonthIcon fontSize="large" />,
+      title: "Schedule",
+      value: totalAppointmentsCount,
+      linkText: "View All",
+      linkTo: "/frontdesk/appointments",
+    },
+  ];
+
+  const commonGridItemSx = {
+    minWidth: { xs: '100%', sm: 260 },
+    maxWidth: { xs: '100%', sm: 320 },
   };
 
   return (
@@ -196,94 +207,38 @@ function FrontdeskDashboard() {
       }!`}
       subtitle={`${todaysAppointmentsCount} appointments scheduled for today`}
       loading={loading}
-      error={null} // Don't block UI with error
+      error={null}
     >
-      {/* Show error as a warning if partialErrors exist */}
       {partialErrors.length > 0 && error && (
         <BodyText
           sx={{
-            color: "error.main", // Using theme's error color
+            color: "error.main",
             fontWeight: 500,
-            mb: 2, // Standard spacing
-            textAlign: "center", // Or 'left' based on desired alignment
+            mb: 2,
+            textAlign: "center",
           }}
         >
           {error}
         </BodyText>
       )}
-      {/* Dashboard Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          lg={3}
-          sx={{ minWidth: 260, maxWidth: 320 }}
-        >
-          <DashboardCard
-            icon={<EventIcon fontSize="large" />}
-            title="Appointments"
-            value={todaysAppointmentsCount}
-            linkText="View All"
-            linkTo="/frontdesk/appointments"
-          />
-        </Grid>
 
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          lg={3}
-          sx={{ minWidth: 260, maxWidth: 320 }}
-        >
-          <DashboardCard
-            icon={<PeopleIcon fontSize="large" />}
-            title="Patients"
-            value={totalPatientsCount}
-            linkText="View All"
-            linkTo="/frontdesk/patients"
-          />
-        </Grid>
+      <DashboardGridLayout items={dashboardItems} commonGridItemSx={commonGridItemSx} />
 
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          lg={3}
-          sx={{ minWidth: 260, maxWidth: 320 }}
-        >
-          <DashboardCard
-            icon={<CalendarMonthIcon fontSize="large" />}
-            title="Schedule"
-            value={totalAppointmentsCount}
-            linkText="View All"
-            linkTo="/frontdesk/appointments"
-          />
-        </Grid>
-      </Grid>
-
-      {/* Quick Actions */}
       <Box sx={{ mb: 4 }}>
-        <SectionTitle sx={{ mb: 2 }}> {/* Was Typography h5 */}
+        <SectionTitle sx={{ mb: 2 }}>
           Quick Actions
         </SectionTitle>
-        <Grid container spacing={2}>
-          <Grid item>
-            <PrimaryButton /* Was Button variant="contained" */
-              startIcon={<PersonAddIcon />}
-              onClick={handleOpenWalkInModal}
-              // sx={{ borderRadius: 1.5 }} // PrimaryButton has its own styling
-            >
-              Register Walk-in
-            </PrimaryButton>
-          </Grid>
-        </Grid>
+        {/* Using Box instead of Grid for a single button for simplicity */}
+        <Box>
+          <PrimaryButton
+            startIcon={<PersonAddIcon />}
+            onClick={handleOpenWalkInModal}
+          >
+            Register Walk-in
+          </PrimaryButton>
+        </Box>
       </Box>
 
-      {/* Appointments List */}
       <ContentCard
         title="Upcoming Appointments"
         elevation={0}
@@ -293,15 +248,13 @@ function FrontdeskDashboard() {
         }}
       >
         <AppointmentList
-          appointments={todaysAppointments} // Use fetched today's appointments
-          // loading={loading} // Removed, as PageLayout handles main loading
+          appointments={todaysAppointments}
           onAction={handleCheckIn}
           actionText="Check In"
           actionStatus="Scheduled"
         />
       </ContentCard>
 
-      {/* Walk-in Registration Modal */}
       <Dialog
         open={isWalkInModalOpen}
         onClose={handleCloseWalkInModal}
@@ -310,61 +263,47 @@ function FrontdeskDashboard() {
       >
         <DialogHeading title="Register Walk-in Patient" />
         <DialogContent sx={{ pt: 3 }}>
-          <Box>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <StyledTextField /* Was TextField */
-                  name="patientName"
-                  label="Patient Name"
-                  fullWidth
-                  required
-                  value={walkInForm.patientName}
+          <Box component="form" noValidate autoComplete="off"> {/* Added form element */}
+            {/* <Grid container spacing={2}> // Removed outer grid, using Box for direct layout */}
+              <StyledTextField
+                name="patientName"
+                label="Patient Name"
+                fullWidth
+                required
+                value={walkInForm.patientName}
+                onChange={handleWalkInFormChange}
+                sx={{ mb: 2 }} // Added margin bottom
+              />
+              <FormControl fullWidth sx={{ mb: 2 }}> {/* Added margin bottom */}
+                <InputLabel id="walk-in-doctor-label">Doctor</InputLabel>
+                <Select
+                  name="doctorName"
+                  labelId="walk-in-doctor-label"
+                  value={walkInForm.doctorName}
                   onChange={handleWalkInFormChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel id="walk-in-doctor-label">Doctor</InputLabel> {/* Added id for label */}
-                  <Select
-                    name="doctorName"
-                    labelId="walk-in-doctor-label" // Added labelId
-                    value={walkInForm.doctorName}
-                    onChange={handleWalkInFormChange}
-                    label="Doctor"
-                  >
-                    {/* 
-                      TODO: Replace mockDoctors with actual fetched doctor list
-                      For now, this will be empty or show a placeholder if mockDoctors is removed.
-                      It's recommended to fetch doctors similar to other data.
-                    */}
-                    {/* {mockDoctors.map((doctor) => (
-                      <MenuItem key={doctor.id} value={doctor.name}>
-                        {doctor.name} ({doctor.specialty})
-                      </MenuItem>
-                    ))} */}
-                    <MenuItem value="">
-                      <em>Select Doctor (Feature pending)</em>
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <StyledTextField /* Was TextField */
-                  name="notes"
-                  label="Notes"
-                  multiline
-                  rows={3}
-                  fullWidth
-                  value={walkInForm.notes}
-                  onChange={handleWalkInFormChange}
-                />
-              </Grid>
-            </Grid>
+                  label="Doctor"
+                >
+                  <MenuItem value="">
+                    <em>Select Doctor (Feature pending)</em>
+                  </MenuItem>
+                </Select>
+              </FormControl>
+              <StyledTextField
+                name="notes"
+                label="Notes"
+                multiline
+                rows={3}
+                fullWidth
+                value={walkInForm.notes}
+                onChange={handleWalkInFormChange}
+                // No specific margin needed if last element or handled by DialogContent padding
+              />
+            {/* </Grid> */}
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <TextButton onClick={handleCloseWalkInModal}>Cancel</TextButton> {/* Was Button */}
-          <PrimaryButton /* Was Button variant="contained" */
+          <TextButton onClick={handleCloseWalkInModal}>Cancel</TextButton>
+          <PrimaryButton
             onClick={handleSubmitWalkIn}
             disabled={!walkInForm.patientName}
           >

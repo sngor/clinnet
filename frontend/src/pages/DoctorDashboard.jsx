@@ -1,52 +1,43 @@
 // src/pages/DoctorDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
-import { Grid, useMediaQuery, useTheme } from "@mui/material";
-import { getAppointmentsByDoctor } from "../services/appointmentService";
-import patientService from "../services/patients";
-import medicalRecordService from "../services/medicalRecordService";
+// Grid import removed
+// import { Grid, useMediaQuery, useTheme } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import { useNavigate } from "react-router-dom";
+// useNavigate import removed as it's not used after refactor
+// import { useNavigate } from "react-router-dom";
 
 // Import UI components
 import {
-  PageLayout, // Added PageLayout
+  PageLayout,
   ContentCard,
   AppointmentList,
-  BodyText, // Added BodyText
-  // PageContainer, // Removed PageContainer
-  // PageHeading, // Removed PageHeading
+  BodyText,
+  DashboardGridLayout, // Added
 } from "../components/ui";
-import DashboardCard from "../components/ui/DashboardCard"; // Updated path
-
-// Import mock data from centralized location
-// import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments"; // Removed
+// DashboardCard import removed
+// import DashboardCard from "../components/ui/DashboardCard";
+import { getAppointmentsByDoctor } from "../services/appointmentService";
+import patientService from "../services/patients";
+import medicalRecordService from "../services/medicalRecordService";
 import { getTimeBasedGreeting } from "../utils/dateUtils";
-
-// Mock data for doctor's patients - Removed
-// const mockPatients = [
-//   { id: 1, name: "John Doe", lastVisit: "2023-11-20" },
-//   { id: 2, name: "Jane Smith", lastVisit: "2023-10-05" },
-//   { id: 3, name: "Michael Johnson", lastVisit: "2023-09-20" },
-//   { id: 4, name: "Emily Williams", lastVisit: "2023-11-25" },
-// ];
 
 function DoctorDashboard() {
   const { user } = useAuth();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const navigate = useNavigate();
+  // theme and isMobile might not be needed
+  // const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  // const navigate = useNavigate(); // Not used
   const [todaysAppointmentsCount, setTodaysAppointmentsCount] = useState(0);
   const [assignedPatientsCount, setAssignedPatientsCount] = useState(0);
   const [medicalRecordsCount, setMedicalRecordsCount] = useState(0);
-  const [doctorAppointments, setDoctorAppointments] = useState([]); // To store all appointments for the list
+  const [doctorAppointments, setDoctorAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [partialErrors, setPartialErrors] = useState([]);
 
-  // Fetch data
   useEffect(() => {
     if (!user || !user.username) {
       setLoading(false);
@@ -58,7 +49,7 @@ function DoctorDashboard() {
       setLoading(true);
       const errors = [];
       let appointmentsData = [];
-      let patientsData = [];
+      // let patientsData = []; // Defined later
       try {
         appointmentsData = await getAppointmentsByDoctor(user.username);
         if (!Array.isArray(appointmentsData)) appointmentsData = [];
@@ -137,6 +128,37 @@ function DoctorDashboard() {
     };
   }, [user]);
 
+  const dashboardItems = [
+    {
+      icon: <EventIcon fontSize="large" />,
+      title: "Appointments",
+      value: todaysAppointmentsCount,
+      linkText: "View All",
+      linkTo: "/doctor/appointments",
+      // md: 4 is default in DashboardGridLayout for 3 items per row on medium
+    },
+    {
+      icon: <PeopleIcon fontSize="large" />,
+      title: "Patients",
+      value: assignedPatientsCount,
+      linkText: "View All",
+      linkTo: "/doctor/patients",
+    },
+    {
+      icon: <AssignmentIcon fontSize="large" />,
+      title: "Records",
+      value: medicalRecordsCount,
+      linkText: "View All",
+      linkTo: "/doctor/medical-records",
+    },
+  ];
+
+  const commonGridItemSx = {
+    // These were the sx from the <Grid item> in DoctorDashboard
+    minWidth: { xs: '100%', sm: 260 },
+    maxWidth: { xs: '100%', sm: 320 },
+  };
+
   return (
     <PageLayout
       title={`${getTimeBasedGreeting()}, Dr. ${
@@ -146,74 +168,21 @@ function DoctorDashboard() {
       loading={loading}
       error={null} // Don't block UI with error
     >
-      {/* Show error as a warning if partialErrors exist */}
       {partialErrors.length > 0 && error && (
         <BodyText
           sx={{
-            color: "error.main", // Using theme's error color
+            color: "error.main",
             fontWeight: 500,
-            mb: 2, // Standard spacing
-            textAlign: "center", // Or 'left' based on desired alignment
+            mb: 2,
+            textAlign: "center",
           }}
         >
           {error}
         </BodyText>
       )}
-      {/* Dashboard Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          lg={3}
-          sx={{ minWidth: 260, maxWidth: 320 }}
-        >
-          <DashboardCard
-            icon={<EventIcon fontSize="large" />}
-            title="Appointments"
-            value={todaysAppointmentsCount}
-            linkText="View All"
-            linkTo="/doctor/appointments"
-          />
-        </Grid>
 
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          lg={3}
-          sx={{ minWidth: 260, maxWidth: 320 }}
-        >
-          <DashboardCard
-            icon={<PeopleIcon fontSize="large" />}
-            title="Patients"
-            value={assignedPatientsCount}
-            linkText="View All"
-            linkTo="/doctor/patients"
-          />
-        </Grid>
+      <DashboardGridLayout items={dashboardItems} commonGridItemSx={commonGridItemSx} />
 
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          lg={3}
-          sx={{ minWidth: 260, maxWidth: 320 }}
-        >
-          <DashboardCard
-            icon={<AssignmentIcon fontSize="large" />}
-            title="Records"
-            value={medicalRecordsCount}
-            linkText="View All"
-            linkTo="/doctor/medical-records"
-          />
-        </Grid>
-      </Grid>
-
-      {/* Appointments List */}
       <ContentCard
         title="Today's Schedule"
         elevation={0}

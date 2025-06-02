@@ -1,28 +1,25 @@
 // src/pages/UserManagementPage.jsx
 import React from "react";
+// PageLayout and ContentCard imports removed.
+// import { PageLayout, ContentCard } from "../components/ui";
+import { EntityListPage } from "../components/ui"; // Added
 import UserList from "../features/users/components/UserList";
-import { Box } from "@mui/material";
-// Updated imports from ../components/ui
-import { PageLayout, ContentCard } from "../components/ui"; 
+// Box import removed as it's not used directly anymore.
+// import { Box } from "@mui/material";
+
 
 function UserManagementPage() {
+  // Similar to AdminServicesPage, assuming UserList is self-contained
+  // or loading/error states would be managed appropriately if needed by EntityListPage.
+
   return (
-    <PageLayout
+    <EntityListPage
       title="User Management"
       subtitle="Add, edit, and manage system users"
-      // maxWidth="lg" // Default is lg, suitable here
-    >
-      {/* User list */}
-      <ContentCard 
-        elevation={0} 
-        sx={{ 
-          border: '1px solid',
-          borderColor: 'divider'
-        }}
-      >
-        <UserList />
-      </ContentCard>
-    </PageLayout>
+      ListRenderComponent={UserList}
+      // listProps={{}} // Pass any props needed by UserList here
+      // headerAction={<PrimaryButton>Add New User</PrimaryButton>} // Example
+    />
   );
 }
 

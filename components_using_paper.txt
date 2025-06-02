@@ -1,0 +1,8 @@
+frontend/src/components/ui/FormLayout.jsx
+frontend/src/components/ui/EmptyState.jsx
+frontend/src/components/ui/TableStyles.jsx
+frontend/src/components/ui/ContentCard.jsx
+frontend/src/components/ui/Container.jsx
+frontend/src/components/patients/PatientGrid.jsx
+frontend/src/pages/AppointmentsPage.jsx
+frontend/src/pages/UnauthorizedPage.jsx
