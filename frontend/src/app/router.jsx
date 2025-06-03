@@ -1,7 +1,7 @@
 // src/app/router.jsx
 import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import LoadingIndicator from "../components/LoadingIndicator";
+import LoadingIndicator from "../components/ui/LoadingIndicator";
 const LoginPage = lazy(() => import("../pages/LoginPage"));
 const AdminDashboard = lazy(() => import("../pages/AdminDashboard"));
 const DoctorDashboard = lazy(() => import("../pages/DoctorDashboard"));

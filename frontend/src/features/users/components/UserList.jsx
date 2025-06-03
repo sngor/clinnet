@@ -53,7 +53,7 @@ import {
   FlexBox,
 } from "../../../components/ui";
 import Avatar from "@mui/material/Avatar";
-import LoadingIndicator from "../../../components/LoadingIndicator";
+import LoadingIndicator from "../../../components/ui/LoadingIndicator";
 import UserTable from "../../../components/admin/UserTable";
 
 // Table column definitions

@@ -49,7 +49,7 @@ import {
   FlexBox,
   SecondaryButton,
 } from "../../../components/ui";
-import LoadingIndicator from "../../../components/LoadingIndicator";
+import LoadingIndicator from "../../../components/ui/LoadingIndicator";
 
 // Table column definitions
 const columns = [

@@ -25,7 +25,7 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import PageContainer from "./PageContainer";
 import PageHeading from "./PageHeading";
-import LoadingIndicator from "./LoadingIndicator";
+import LoadingIndicator from "../ui/LoadingIndicator";
 import { MenuIconContext } from "../Layout/AppLayout"; // Import the context
 
 /**

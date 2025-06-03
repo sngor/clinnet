@@ -21,7 +21,7 @@ import {
   Button,
 } from "@mui/material";
 import StatusChip from "./StatusChip";
-import LoadingIndicator from "./LoadingIndicator";
+import LoadingIndicator from "../ui/LoadingIndicator";
 import EmptyState from "./EmptyState";
 
 /**
@@ -75,8 +75,11 @@ function AppointmentList({
               sx={{ mb: { xs: 2, sm: 0 }, width: { xs: "100%", sm: "auto" } }}
             >
               <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-                {appt.time} -{' '}
-                <Link to={`/doctor/patients/${appt.patientId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                {appt.time} -{" "}
+                <Link
+                  to={`/doctor/patients/${appt.patientId}`}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
                   {appt.patientName}
                 </Link>
               </Typography>
