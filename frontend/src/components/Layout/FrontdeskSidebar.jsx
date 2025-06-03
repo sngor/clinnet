@@ -9,7 +9,7 @@ import ActiveNavLink from "../ActiveNavLink";
 
 function FrontdeskSidebar({ collapsed = false }) {
   return (
-    <Box sx={{ m: 1 }}>
+    <Box sx={{ m: collapsed ? 0 : 1 }}>
       {" "}
       {/* Add margin around the sidebar menu */}
       <List

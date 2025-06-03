@@ -13,7 +13,7 @@ import ActiveNavLink from "../ActiveNavLink";
 
 function AdminSidebar({ collapsed = false }) {
   return (
-    <Box>
+    <Box sx={{ m: collapsed ? 0 : 1 }}>
       {/* Sidebar menu without extra margin or floating effect */}
       <List
         sx={{

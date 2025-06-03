@@ -373,10 +373,15 @@ function ServicesList() {
                 </TableRow>
               ) : (
                 stableSort(safeServices, getComparator(order, orderBy)).map(
-                  (service) => (
+                  (service, idx) => (
                     <TableRow
                       key={service.id}
-                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                      sx={{
+                        "&:last-child td, &:last-child th": { border: 0 },
+                        borderBottom: "1.5px solid #e0e0e0",
+                        backgroundColor: idx % 2 === 0 ? "#fafbfc" : "#fff",
+                        transition: "background 0.2s",
+                      }}
                     >
                       {/* <TableCell component="th" scope="row">{service.id}</TableCell> */}
                       <TableCell>

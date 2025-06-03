@@ -10,9 +10,7 @@ import ActiveNavLink from "../ActiveNavLink";
 
 function DoctorSidebar({ collapsed = false }) {
   return (
-    <Box sx={{ m: 1 }}>
-      {" "}
-      {/* Add margin around the sidebar menu */}
+    <Box sx={{ m: collapsed ? 0 : 1 }}>
       <List
         sx={{
           width: "100%",
@@ -20,10 +18,10 @@ function DoctorSidebar({ collapsed = false }) {
           flexDirection: "column",
           alignItems: { xs: "center", sm: "center" },
           p: 0.5,
-          flexGrow: { xs: 0, sm: 0 }, // Don't stretch vertically on mobile
-          justifyContent: { xs: "flex-start", sm: "flex-start" }, // Start from top
+          flexGrow: { xs: 0, sm: 0 },
+          justifyContent: { xs: "flex-start", sm: "flex-start" },
           "& .MuiListItemButton-root": {
-            minHeight: 48, // Consistent height
+            minHeight: 48,
           },
         }}
       >

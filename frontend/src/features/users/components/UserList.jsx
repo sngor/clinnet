@@ -473,10 +473,15 @@ function UserList() {
                   </TableCell>
                 </TableRow>
               ) : (
-                stableSort(users, getComparator(order, orderBy)).map((user) => (
+                users.map((user, idx) => (
                   <TableRow
-                    key={user.username}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                    key={user.id}
+                    sx={{
+                      "&:last-child td, &:last-child th": { border: 0 },
+                      borderBottom: "1.5px solid #e0e0e0",
+                      backgroundColor: idx % 2 === 0 ? "#fafbfc" : "#fff",
+                      transition: "background 0.2s",
+                    }}
                   >
                     <TableCell>
                       <Box
