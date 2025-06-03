@@ -110,7 +110,8 @@ export const adminService = {
         method: 'POST',
         headers: {
           'Authorization': idToken,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Origin': 'https://d23hk32py5djal.cloudfront.net'
         },
         body: JSON.stringify(userData)
       });
@@ -184,8 +185,9 @@ export const adminService = {
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'application/json'
+          'Authorization': idToken,
+          'Content-Type': 'application/json',
+          'Origin': 'https://d23hk32py5djal.cloudfront.net'
         },
         body: JSON.stringify(requestBody)
       });
@@ -220,7 +222,8 @@ export const adminService = {
         method: 'DELETE',
         headers: {
           'Authorization': idToken,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Origin': 'https://d23hk32py5djal.cloudfront.net'
         }
       });
       console.log('API response status:', response.status);
@@ -262,7 +265,8 @@ export const adminService = {
         method: 'POST',
         headers: {
           'Authorization': idToken,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Origin': 'https://d23hk32py5djal.cloudfront.net'
         }
       });
       console.log('API response status:', response.status);
@@ -304,7 +308,8 @@ export const adminService = {
         method: 'POST',
         headers: {
           'Authorization': idToken,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Origin': 'https://d23hk32py5djal.cloudfront.net'
         }
       });
       console.log('API response status:', response.status);
@@ -328,72 +333,7 @@ export const adminService = {
     }
   },
   
-  /**
-   * Update an existing user
-   * @param {string} userId - User ID (sub)
-   * @param {Object} userData - User data to update
-   * @returns {Promise<Object>} Updated user data
-   */
-  async updateUser(userId, userData) {
-    try {
-      console.log('Updating user', userId, 'with data:', userData);
-      // Always use email as the Cognito username for the API path
-      const cognitoUsername = userData.email || userData.username || userId;
-      if (!cognitoUsername || !cognitoUsername.includes('@')) {
-        throw new Error('A valid email is required for updating a user');
-      }
-      if (userData.phone) {
-        const { formatPhoneNumber } = await import('../utils/cognito-helpers');
-        userData.phone = formatPhoneNumber(userData.phone);
-      }
-      const idToken = await getAuthToken();
-      const displayUsername = userData.email ? extractUsernameFromEmail(userData.email) : userData.username;
-      // Build request body, omitting empty fields
-      const requestBody = {
-        username: cognitoUsername,
-        displayUsername: displayUsername,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        phone: userData.phone || '',
-        role: userData.role,
-        enabled: userData.enabled,
-      };
-      // Only include password if non-empty
-      if (userData.password && userData.password.trim() !== '') {
-        requestBody.password = userData.password;
-      }
-      if (userData.profileImage) {
-        requestBody.profileImage = userData.profileImage;
-      }
-      // Remove any undefined/null fields
-      Object.keys(requestBody).forEach(
-        (key) => (requestBody[key] === undefined || requestBody[key] === null) && delete requestBody[key]
-      );
-      // Prevent sending an empty body
-      if (Object.keys(requestBody).length === 0) {
-        throw new Error('No valid fields to update');
-      }
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      });
-      console.log('API response status:', response.status);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('API response text:', errorText);
-        throw new Error(`API request failed with status ${response.status}: ${errorText}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating user:', error);
-      throw error;
-    }
-  },
+  // Removed duplicate updateUser method
   
   /**
    * Enable or disable a user
@@ -414,8 +354,9 @@ export const adminService = {
       const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}/status`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'application/json'
+          'Authorization': idToken,
+          'Content-Type': 'application/json',
+          'Origin': 'https://d23hk32py5djal.cloudfront.net'
         },
         body: JSON.stringify({
           enabled
