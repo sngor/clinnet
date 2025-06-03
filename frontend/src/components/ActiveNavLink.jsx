@@ -94,7 +94,7 @@ function ActiveNavLink({
             <span
               style={{
                 fontSize: "0.75rem",
-                fontWeight: hovered || isActive ? 700 : 500,
+                fontWeight: isActive ? 700 : 500, // Only bold when active
                 marginTop: 0,
                 textAlign: "center",
                 lineHeight: 1.2,

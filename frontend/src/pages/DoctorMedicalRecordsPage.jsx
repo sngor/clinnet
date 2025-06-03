@@ -33,7 +33,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import MedicalInformationIcon from "@mui/icons-material/MedicalInformation";
 import BrokenImageIcon from "@mui/icons-material/BrokenImage";
 import CancelIcon from "@mui/icons-material/Cancel"; // For removing selected files
-import { Link } from 'react-router-dom'; // Added Link import
+import { Link } from "react-router-dom"; // Added Link import
 
 // Import for summarization
 import { summarizeDoctorNotes } from "../services/medicalRecordService";
@@ -316,7 +316,9 @@ function DoctorMedicalRecordsPage() {
       if (data && data.summary) {
         setCurrentSummary(data.summary);
       } else {
-        setSummarizationError("Failed to get a valid summary from the service.");
+        setSummarizationError(
+          "Failed to get a valid summary from the service."
+        );
       }
     } catch (err) {
       console.error("Summarization failed:", err);
@@ -352,7 +354,10 @@ function DoctorMedicalRecordsPage() {
       headerName: "Patient ID",
       width: 150,
       renderCell: (params) => (
-        <Link to={`/doctor/patients/${params.value}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+        <Link
+          to={`/doctor/patients/${params.value}`}
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
           {params.value}
         </Link>
       ),
@@ -478,7 +483,7 @@ function DoctorMedicalRecordsPage() {
   return (
     <PageContainer>
       <PageHeading
-        title="My Medical Records"
+        title="Medical Records"
         subtitle="View and manage patient medical records"
       />
       <ContentCard>
@@ -781,35 +786,37 @@ function DoctorMedicalRecordsPage() {
               sx={{ mb: 2 }}
             />
 
-          {/* Summarization Section for Edit Modal */}
-          <Box sx={{ mt: 1, mb: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={handleSummarizeNotes}
-              disabled={isSummarizing || !currentDoctorNotes.trim()}
-              sx={{ mt: 1, mb: 1 }}
-              startIcon={isSummarizing ? <CircularProgress size={20} /> : null}
-            >
-              {isSummarizing ? "Summarizing..." : "Generate Summary"}
-            </Button>
-            {summarizationError && (
-              <Alert severity="error" sx={{ mt: 1 }}>
-                {summarizationError}
-              </Alert>
-            )}
-            {currentSummary && (
-              <TextField
-                label="Generated Summary"
-                multiline
-                fullWidth
-                rows={3} // Adjust as needed
-                value={currentSummary}
-                InputProps={{ readOnly: true }}
+            {/* Summarization Section for Edit Modal */}
+            <Box sx={{ mt: 1, mb: 2 }}>
+              <Button
                 variant="outlined"
-                sx={{ mt: 2, backgroundColor: "action.hover" }}
-              />
-            )}
-          </Box>
+                onClick={handleSummarizeNotes}
+                disabled={isSummarizing || !currentDoctorNotes.trim()}
+                sx={{ mt: 1, mb: 1 }}
+                startIcon={
+                  isSummarizing ? <CircularProgress size={20} /> : null
+                }
+              >
+                {isSummarizing ? "Summarizing..." : "Generate Summary"}
+              </Button>
+              {summarizationError && (
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  {summarizationError}
+                </Alert>
+              )}
+              {currentSummary && (
+                <TextField
+                  label="Generated Summary"
+                  multiline
+                  fullWidth
+                  rows={3} // Adjust as needed
+                  value={currentSummary}
+                  InputProps={{ readOnly: true }}
+                  variant="outlined"
+                  sx={{ mt: 2, backgroundColor: "action.hover" }}
+                />
+              )}
+            </Box>
 
             <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
               Existing Images
