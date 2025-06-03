@@ -15,6 +15,96 @@ function ActiveNavLink({
   collapsed = false,
   ...props
 }) {
+  if (collapsed) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
+        <ListItemButton
+          component={NavLink}
+          to={to}
+          end={to.split("/").length <= 2}
+          onClick={onClick}
+          className="nav-link"
+          sx={(theme) => ({
+            py: 1.5,
+            px: 1.5,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "row",
+            width: "100%",
+            borderRadius: "12px",
+            mx: "auto",
+            my: 0.5,
+            maxWidth: "56px",
+            minHeight: 48,
+            transition: theme.transitions.create(
+              ["width", "margin", "background-color"],
+              {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.standard,
+              }
+            ),
+            "&:hover": {
+              backgroundColor: "rgba(25, 118, 210, 0.08)",
+              "& .MuiListItemIcon-root": {
+                color: theme.palette.primary.main,
+              },
+            },
+            "&.active": {
+              backgroundColor: "rgba(25, 118, 210, 0.12)",
+              "& .MuiListItemIcon-root": {
+                color: theme.palette.primary.main,
+              },
+            },
+          })}
+          {...props}
+        >
+          {icon && (
+            <ListItemIcon
+              sx={{
+                minWidth: 0,
+                mr: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "text.secondary",
+                fontSize: 28,
+                transition: "font-size 0.2s",
+              }}
+            >
+              {icon}
+            </ListItemIcon>
+          )}
+        </ListItemButton>
+        <span
+          style={{
+            fontSize: "0.75rem",
+            fontWeight: 500,
+            marginTop: 4,
+            textAlign: "center",
+            lineHeight: 1.2,
+            whiteSpace: "normal",
+            wordBreak: "break-word",
+            opacity: 0.95,
+            width: "100%",
+            color: "#555",
+            userSelect: "none",
+            pointerEvents: "none",
+          }}
+        >
+          {primary}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <ListItemButton
       component={NavLink}
@@ -24,18 +114,19 @@ function ActiveNavLink({
       className="nav-link"
       sx={(theme) => ({
         py: 1.5,
-        px: collapsed ? 1.5 : 2,
+        px: 2,
         display: "flex",
         alignItems: "center",
-        justifyContent: collapsed ? "center" : "flex-start",
+        justifyContent: "flex-start",
+        flexDirection: "row",
         width: "100%",
         borderRadius: "12px",
         mx: "auto",
         my: 0.5,
-        maxWidth: collapsed ? "48px" : "95%",
-        minHeight: 48, // Force consistent height on all screens
+        maxWidth: "95%",
+        minHeight: 48,
         [theme.breakpoints.down("sm")]: {
-          minHeight: 48, // Ensure same height on mobile
+          minHeight: 48,
         },
         transition: theme.transitions.create(
           ["width", "margin", "background-color"],
@@ -45,22 +136,22 @@ function ActiveNavLink({
           }
         ),
         "&:hover": {
-          backgroundColor: "rgba(25, 118, 210, 0.08)", // Light blue background on hover
+          backgroundColor: "rgba(25, 118, 210, 0.08)",
           "& .MuiListItemText-primary": {
-            color: theme.palette.primary.main, // Blue text on hover
+            color: theme.palette.primary.main,
           },
           "& .MuiListItemIcon-root": {
-            color: theme.palette.primary.main, // Blue icon on hover
+            color: theme.palette.primary.main,
           },
         },
         "&.active": {
-          backgroundColor: "rgba(25, 118, 210, 0.12)", // Slightly darker blue background
+          backgroundColor: "rgba(25, 118, 210, 0.12)",
           "& .MuiListItemIcon-root": {
-            color: theme.palette.primary.main, // Theme primary color for icon
+            color: theme.palette.primary.main,
           },
           "& .MuiListItemText-primary": {
-            color: theme.palette.primary.main, // Theme primary color for text
-            fontWeight: "bold", // Bold text for active state
+            color: theme.palette.primary.main,
+            fontWeight: "bold",
           },
         },
       })}
@@ -69,36 +160,34 @@ function ActiveNavLink({
       {icon && (
         <ListItemIcon
           sx={{
-            minWidth: collapsed ? 0 : 36, // No min width when collapsed
-            mr: collapsed ? 0 : 1.5, // Reduced margin for better spacing
+            minWidth: 0,
+            mr: 1.5,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "text.secondary", // Consistent color for inactive state
+            color: "text.secondary",
           }}
         >
           {icon}
         </ListItemIcon>
       )}
-      {!collapsed && (
-        <ListItemText
-          primary={primary}
-          disableTypography={false}
-          primaryTypographyProps={{
-            fontSize: { xs: "0.9rem", sm: "1rem" }, // Responsive text size
-            fontWeight: 500, // Medium weight for better readability
-            variant: "body2",
-          }}
-          sx={{
-            my: 0, // Remove default margin for better vertical alignment
-            opacity: collapsed ? 0 : 1, // Hide text when collapsed
-            "& .MuiListItemText-primary": {
-              display: "block", // Ensure text is on its own line
-              whiteSpace: "nowrap", // Prevent text wrapping
-            },
-          }}
-        />
-      )}
+      <ListItemText
+        primary={primary}
+        disableTypography={false}
+        primaryTypographyProps={{
+          fontSize: { xs: "0.9rem", sm: "1rem" },
+          fontWeight: 500,
+          variant: "body2",
+        }}
+        sx={{
+          my: 0,
+          opacity: 1,
+          "& .MuiListItemText-primary": {
+            display: "block",
+            whiteSpace: "nowrap",
+          },
+        }}
+      />
     </ListItemButton>
   );
 }

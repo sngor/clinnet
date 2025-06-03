@@ -30,7 +30,7 @@ import FrontdeskSidebar from "./FrontdeskSidebar";
 import ActiveNavLink from "../ActiveNavLink"; // Ensure ActiveNavLink is imported
 
 const drawerWidth = 240;
-const collapsedDrawerWidth = 72;
+const collapsedDrawerWidth = 96; // Increased width to fit menu item names
 
 // Add context for menu icon
 export const MenuIconContext = createContext(null);
