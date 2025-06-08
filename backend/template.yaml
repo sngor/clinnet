@@ -132,10 +132,22 @@ Resources:
           AttributeType: S
         - AttributeName: doctorId # Added for GSI
           AttributeType: S
+        - AttributeName: appointmentDate # Ensure this is defined for the GSI sort key
+          AttributeType: S
+        - AttributeName: entityType # New attribute for GSI partition key
+          AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
       GlobalSecondaryIndexes:
+        - IndexName: AppointmentDateIndex
+          KeySchema:
+            - AttributeName: entityType
+              KeyType: HASH
+            - AttributeName: appointmentDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
         - IndexName: PatientIdIndex
           KeySchema:
             - AttributeName: patientId
