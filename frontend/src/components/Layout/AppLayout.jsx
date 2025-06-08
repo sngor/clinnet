@@ -574,6 +574,7 @@ function AppLayout() {
           </Box>
         </Box>
       </Box>
+    </Box>
     </MenuIconContext.Provider>
   );
 }
