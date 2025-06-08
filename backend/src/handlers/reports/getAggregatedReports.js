@@ -43,19 +43,18 @@ module.exports.handler = async (event, context) => {
 
         const params = {
           TableName: appointmentsTableName,
-          // Scan can be inefficient. A GSI on appointmentDate would be better for querying.
-          // This example assumes appointmentDate is a string in ISO format.
-          // Adjust attribute names and types if your schema is different.
-          FilterExpression: "appointmentDate BETWEEN :startDate AND :endDate",
+          IndexName: 'AppointmentDateIndex', // Use the new GSI
+          KeyConditionExpression: "entityType = :entityType AND appointmentDate BETWEEN :startDate AND :endDate",
           ExpressionAttributeValues: {
+            ":entityType": "APPOINTMENT_ENTITY", // The constant value for the partition key
             ":startDate": startDate.toISOString().split('T')[0], // YYYY-MM-DD format
             ":endDate": endDate.toISOString().split('T')[0],     // YYYY-MM-DD format
           }
         };
         
-        console.log("DynamoDB Scan Params:", JSON.stringify(params));
-        const result = await dynamoDb.scan(params).promise();
-        console.log("DynamoDB Scan Result Count:", result.Items ? result.Items.length : 0);
+        console.log("DynamoDB Query Params:", JSON.stringify(params)); // Log the new params
+        const result = await dynamoDb.query(params).promise(); // Changed from scan to query
+        console.log("DynamoDB Query Result Count:", result.Items ? result.Items.length : 0); // Log query results
 
         // 2. Process items
         const monthlyData = {}; // e.g., { "2023-10": { name: "Oct", completed: 0, cancelled: 0, total: 0 } }
