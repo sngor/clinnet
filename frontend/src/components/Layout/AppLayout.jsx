@@ -1,6 +1,7 @@
 // src/components/Layout/AppLayout.jsx
 import React, { useState, createContext, useMemo } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import useOfflineStatus from "../../hooks/useOfflineStatus"; // Import the hook
 import {
   Box,
   Drawer,
@@ -44,6 +45,7 @@ function AppLayout() {
   const open = Boolean(anchorEl);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isOffline = useOfflineStatus(); // Use the hook
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -397,14 +399,35 @@ function AppLayout() {
 
   return (
     <MenuIconContext.Provider value={isMobile ? null : menuIconButton}>
-      <Box sx={{ display: "flex" }}>
-        {/* Fixed menu icon for mobile */}
-        {isMobile && menuIconButton}
-        {/* Sidebar navigation */}
-        <Box
-          component="nav"
-          sx={{
-            width: { sm: currentDrawerWidth + drawerMargin * 2 },
+      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}> {/* Ensure main Box is column for banner */}
+        {isOffline && (
+          <Box
+            sx={{
+              backgroundColor: theme.palette.warning.main, // Or "error.main" for more severity
+              color: theme.palette.warning.contrastText, // Or "error.contrastText"
+              p: 1,
+              textAlign: "center",
+              width: "100%",
+              position: "sticky", // Or "fixed" if you want it to overlay content
+              top: 0,
+              zIndex: theme.zIndex.snackbar, // Ensure it's above most other elements
+              boxShadow: theme.shadows[4],
+            }}
+          >
+            <Typography variant="subtitle2" component="p" sx={{ fontWeight: "medium" }}>
+              You are currently offline. Some functionality may be limited.
+            </Typography>
+          </Box>
+        )}
+        {/* Main layout content */}
+        <Box sx={{ display: "flex", flexGrow: 1 }}> {/* This Box now contains the sidebar and main content area */}
+          {/* Fixed menu icon for mobile */}
+          {isMobile && menuIconButton}
+          {/* Sidebar navigation */}
+          <Box
+            component="nav"
+            sx={{
+              width: { sm: currentDrawerWidth + drawerMargin * 2 },
             flexShrink: { sm: 0 },
             transition: (theme) =>
               theme.transitions.create("width", {
@@ -535,7 +558,7 @@ function AppLayout() {
                 width: "100%",
                 py: 2,
                 px: 0,
-                mt: "auto",
+                mt: "auto", // Pushes footer to bottom if content is short
                 bgcolor: "transparent",
                 textAlign: "center",
                 color: "text.secondary",
@@ -545,10 +568,13 @@ function AppLayout() {
               }}
             >
               © {new Date().getFullYear()} Clinnet EMR
+              {/* Placeholder for queue processing notifications */}
+              {/* e.g., <QueueStatusNotifier /> */}
             </Box>
           </Box>
         </Box>
       </Box>
+    </Box>
     </MenuIconContext.Provider>
   );
 }

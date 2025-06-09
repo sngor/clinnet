@@ -1,6 +1,12 @@
 // src/services/api.js
 import axios from 'axios';
 import { getAuthToken } from '../utils/cognito-helpers';
+import {
+  handleOfflineGet,
+  handleOfflineMutation,
+  cacheGetResponse,
+  isCurrentlyOffline
+} from './offlineApiHandler'; // Adjusted path if necessary, assuming it's in the same services directory
 
 // Create an axios instance with base configuration
 const api = axios.create({
@@ -16,6 +22,20 @@ const api = axios.create({
 // Add request interceptor for authentication
 api.interceptors.request.use(
   async (config) => {
+    const offline = isCurrentlyOffline();
+
+    if (offline) {
+      const method = config.method?.toLowerCase();
+      if (method === 'get') {
+        console.log(`[API Interceptor] GET request for ${config.url}. App is offline. Attempting cache.`);
+        return handleOfflineGet(config);
+      } else if (['post', 'put', 'delete'].includes(method)) {
+        console.log(`[API Interceptor] ${method.toUpperCase()} request for ${config.url}. App is offline. Attempting to queue.`);
+        return handleOfflineMutation(config);
+      }
+    }
+
+    // Original request logic
     try {
       // Always get the Cognito token from Cognito helpers
       const token = await getAuthToken();
@@ -43,6 +63,12 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    // If the error is from our offline handlers, it might already be structured
+    if (error.message && error.message.startsWith('Offline:')) {
+        console.warn(`[API Interceptor] Offline operation error: ${error.message}`);
+        return Promise.reject(error);
+    }
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -55,14 +81,24 @@ api.interceptors.response.use(
       console.log('API Response:', {
         url: `${response.config.baseURL}${response.config.url}`,
         status: response.status,
-        data: response.data
+        data: response.data,
+        isFromCache: response.isFromCache // Log if from cache
       });
+    }
+
+    // If it's a GET request and not from cache, cache it
+    if (response.config.method === 'get' && response.status === 200 && !response.isFromCache) {
+      cacheGetResponse(response);
     }
     return response;
   },
   (error) => {
     // Handle common errors here
-    if (error.response) {
+    // If the error is due to being offline and the request was handled by offline handlers,
+    // it might already be a custom error/rejection from there.
+    if (error.message && error.message.startsWith('Offline:')) {
+      console.warn(`[API Interceptor] Offline operation resulted in error: ${error.message}`);
+    } else if (error.response) {
       // Server responded with a status code outside of 2xx range
       console.error('API Error:', error.response.status, error.response.data);
       
@@ -71,7 +107,7 @@ api.interceptors.response.use(
         case 401:
           // Unauthorized - redirect to login or refresh token
           console.log('Unauthorized access');
-          localStorage.removeItem('token');
+          localStorage.removeItem('token'); // Assuming 'token' is the key for the auth token
           // Only redirect if not already on login page
           if (!window.location.pathname.includes('/login')) {
             window.location.href = '/login';
