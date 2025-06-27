@@ -1,7 +1,7 @@
 // src/components/ActiveNavLink.jsx
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { ListItemButton, ListItemIcon, ListItemText, useTheme } from "@mui/material";
 
 /**
  * A component that combines MUI ListItemButton with React Router's NavLink
@@ -15,6 +15,7 @@ function ActiveNavLink({
   collapsed = false,
   ...props
 }) {
+  const theme = useTheme(); // Added useTheme hook
   // Add hover state for collapsed mode
   const [hovered, setHovered] = useState(false);
 
@@ -71,6 +72,14 @@ function ActiveNavLink({
                     isActive || hovered
                       ? theme.palette.primary.main
                       : theme.palette.text.secondary,
+                  "& .MuiSvgIcon-root": { // Target the SVG icon directly for transform
+                    transition: "transform 0.2s ease-in-out",
+                  },
+                },
+                "&:hover": { // Add hover effect for the icon
+                  "& .MuiSvgIcon-root": {
+                    transform: "scale(1.15)",
+                  },
                 },
               })}
               {...props}
@@ -84,7 +93,7 @@ function ActiveNavLink({
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: 28,
-                    transition: "font-size 0.2s",
+                    // transition for font-size is okay, but transform is on SvgIcon now
                   }}
                 >
                   {icon}
@@ -95,7 +104,7 @@ function ActiveNavLink({
               style={{
                 fontSize: "0.75rem",
                 fontWeight: isActive ? 700 : 500, // Only bold when active
-                marginTop: 0,
+                marginTop: theme.spacing(0.5), // Added margin-top using theme.spacing
                 textAlign: "center",
                 lineHeight: 1.2,
                 whiteSpace: "normal",
@@ -153,12 +162,16 @@ function ActiveNavLink({
           },
           "& .MuiListItemIcon-root": {
             color: theme.palette.primary.main,
+            "& .MuiSvgIcon-root": {
+              transform: "scale(1.1)", // Icon scales on parent hover
+            },
           },
         },
         "&.active": {
           backgroundColor: "rgba(25, 118, 210, 0.12)",
           "& .MuiListItemIcon-root": {
             color: theme.palette.primary.main,
+            // No specific transform for active, hover takes precedence if also hovered
           },
           "& .MuiListItemText-primary": {
             color: theme.palette.primary.main,
@@ -172,11 +185,14 @@ function ActiveNavLink({
         <ListItemIcon
           sx={{
             minWidth: 0,
-            mr: 0.4, // Bring name closer to icon
+            mr: 1.5, // Increased from 0.4 for better spacing
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             color: "text.secondary",
+            "& .MuiSvgIcon-root": { // Target the SVG icon directly
+              transition: "transform 0.2s ease-in-out",
+            },
           }}
         >
           {icon}
