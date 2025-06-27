@@ -13,6 +13,7 @@ import {
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
+const parser = require('aws-lambda-multipart-parser');
 const { buildResponse, buildErrorResponse, buildCorsPreflightResponse } = require('../utils/js-helpers');
 
 const dynamoDBClient = new DynamoDBClient({});
@@ -269,7 +270,7 @@ const deleteReport = async (reportId, context, requestOrigin) => {
 };
 
 // Upload Image to Report
-const uploadImageToReport = async (reportId, eventBody, context, requestOrigin) => {
+const uploadImageToReport = async (reportId, event, context, requestOrigin) => {
   if (!reportId) {
     return buildErrorResponse(400, 'ValidationError', "Missing reportId path parameter", requestOrigin);
   }
@@ -279,13 +280,21 @@ const uploadImageToReport = async (reportId, eventBody, context, requestOrigin) 
     return buildErrorResponse(500, 'ConfigurationError', "Internal server error: Image bucket configuration missing.", requestOrigin);
   }
 
-  const { imageName, imageData, contentType } = eventBody;
-
-  if (!imageName || !imageData || !contentType) {
-    return buildErrorResponse(400, 'ValidationError', "Missing required fields: imageName, imageData, contentType", requestOrigin);
-  }
-
   try {
+    const form = await parser.parse(event);
+    if (!form.files || form.files.length === 0 || !form.files[0]) {
+      return buildErrorResponse(400, 'ValidationError', "No file uploaded or file is invalid.", requestOrigin);
+    }
+
+    const uploadedFile = form.files[0];
+    const imageName = uploadedFile.filename;
+    const imageBuffer = uploadedFile.content; // This is already a Buffer
+    const contentType = uploadedFile.contentType;
+
+    if (!imageName || !imageBuffer || !contentType) {
+      return buildErrorResponse(400, 'ValidationError', "Missing file name, data, or content type from parsed file.", requestOrigin);
+    }
+
     // 1. Check if the report exists
     const getItemParams = { TableName: tableName, Key: { reportId } };
     const { Item: existingReport } = await docClient.send(new GetCommand(getItemParams));
@@ -295,7 +304,6 @@ const uploadImageToReport = async (reportId, eventBody, context, requestOrigin) 
     }
 
     // 2. Prepare image data and S3 key
-    const imageBuffer = Buffer.from(imageData, 'base64');
     const s3ObjectKey = `reports/${reportId}/${uuidv4()}-${imageName}`;
 
     // 3. Upload to S3
@@ -377,11 +385,24 @@ export const handler = async (event, context) => {
   const httpMethod = event.httpMethod;
   const path = event.path;
   let body;
-  try {
-    body = event.body ? JSON.parse(event.body) : {};
-  } catch (parseError) {
-    console.error("Invalid JSON in request body:", event.body, context.awsRequestId);
-    return buildErrorResponse(400, 'JSONParseError', 'Invalid JSON format in request body.', requestOrigin);
+  // Check content type before parsing JSON
+  const contentTypeHeader = event.headers && (event.headers['content-type'] || event.headers['Content-Type']);
+  const isMultipart = contentTypeHeader && contentTypeHeader.startsWith('multipart/form-data');
+
+  // Only parse JSON if not multipart and body exists
+  if (!isMultipart && event.body) {
+    try {
+      body = JSON.parse(event.body);
+    } catch (parseError) {
+      console.error("Invalid JSON in request body:", event.body, context.awsRequestId);
+      return buildErrorResponse(400, 'JSONParseError', 'Invalid JSON format in request body.', requestOrigin);
+    }
+  } else if (event.body) {
+    // For multipart, body will be handled by the parser in the specific route,
+    // but we can assign event.body to body if needed elsewhere, or leave body undefined.
+    // For this specific case, uploadImageToReport will parse the raw event.
+  } else {
+    body = {};
   }
   const pathParameters = event.pathParameters || {};
 
@@ -391,7 +412,8 @@ export const handler = async (event, context) => {
       return await createReport(body, context, requestOrigin);
     } else if (httpMethod === "POST" && path.match(/^\/reports\/[a-zA-Z0-9-]+\/images$/) && pathParameters.reportId) {
       // New route for image upload: POST /reports/{reportId}/images
-      return await uploadImageToReport(pathParameters.reportId, body, context, requestOrigin);
+      // Pass the full event here
+      return await uploadImageToReport(pathParameters.reportId, event, context, requestOrigin);
     } else if (httpMethod === "GET" && pathParameters.reportId && path === `/reports/${pathParameters.reportId}`) {
       return await getReportById(pathParameters.reportId, context, requestOrigin);
     } else if (httpMethod === "GET" && pathParameters.patientId && path === `/reports/patient/${pathParameters.patientId}`) {

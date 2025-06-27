@@ -89,9 +89,12 @@ export const deleteMedicalRecord = async (recordId) => {
 };
 
 // Upload an image to a medical record
-export const uploadImageToRecord = async (recordId, imageDataPayload) => {
+export const uploadImageToRecord = async (recordId, formData) => { // formData instead of imageDataPayload
   try {
-    const response = await api.post(`/reports/${recordId}/images`, imageDataPayload);
+    // The second argument to api.post is now formData directly.
+    // Axios (if used in api.js) should automatically set the Content-Type
+    // to multipart/form-data with the correct boundary.
+    const response = await api.post(`/reports/${recordId}/images`, formData);
     return response.data;
   } catch (error) {
     console.error(`Error uploading image to record ${recordId}:`, error);

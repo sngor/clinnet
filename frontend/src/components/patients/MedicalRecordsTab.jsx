@@ -33,16 +33,6 @@ import medicalRecordService from "../../services/medicalRecordService";
 import EmptyState from "../ui/EmptyState"; // Assuming EmptyState component exists
 import LoadingIndicator from "../ui/LoadingIndicator"; // Assuming LoadingIndicator component exists
 
-// Helper function to convert file to base64
-const fileToBase64 = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result.split(",")[1]); // Get only base64 part
-    reader.onerror = (error) => reject(error);
-  });
-};
-
 // Placeholder for Doctor ID - In a real app, this might come from auth context or be selectable
 // const PLACEHOLDER_DOCTOR_ID = "doc-from-patient-tab-placeholder"; // No longer needed
 
@@ -233,14 +223,11 @@ function MedicalRecordsTab({ patientId }) {
       if (createdRecord && createdRecord.reportId && selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           try {
-            const base64String = await fileToBase64(file);
+            const formData = new FormData();
+            formData.append('image', file, file.name);
             await medicalRecordService.uploadImageToRecord(
               createdRecord.reportId,
-              {
-                imageName: file.name,
-                imageData: base64String,
-                contentType: file.type,
-              }
+              formData
             );
           } catch (uploadError) {
             console.error(`Failed to upload image ${file.name}:`, uploadError);
@@ -277,14 +264,11 @@ function MedicalRecordsTab({ patientId }) {
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           try {
-            const base64String = await fileToBase64(file);
+            const formData = new FormData();
+            formData.append('image', file, file.name);
             await medicalRecordService.uploadImageToRecord(
               selectedRecord.reportId,
-              {
-                imageName: file.name,
-                imageData: base64String,
-                contentType: file.type,
-              }
+              formData
             );
           } catch (uploadError) {
             console.error(
