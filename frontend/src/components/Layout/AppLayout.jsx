@@ -547,6 +547,7 @@ function AppLayout() {
                 height: "100%",
                 overflow: "auto",
                 flex: 1,
+                p: { xs: 2, sm: 3 }, // Added consistent padding
               }}
             >
               <Outlet />

@@ -19,12 +19,14 @@ const theme = createTheme({
       main: '#4361ee',       // Modern blue with higher vibrancy
       light: '#738aff',
       dark: '#2541b2',
+      darker: '#1e3a8a', // Slightly darker shade for hover/active states
       contrastText: '#fff',
     },
     secondary: {
       main: '#7209b7',      // Rich purple
       light: '#9d4edd',
       dark: '#560a86',
+      darker: '#4a067a', // Slightly darker shade for hover/active states
       contrastText: '#fff',
     },
     error: {
@@ -53,7 +55,7 @@ const theme = createTheme({
     },
     background: {
       default: '#fbfbfb',   // Ensure very light grey
-      paper: '#fbfbfb',     // Cards and containers also very light grey
+      paper: '#ffffff',     // Pure white for cards and paper elements for better separation
     },
     grey: {
       50: '#fafafa',
@@ -188,12 +190,14 @@ const theme = createTheme({
     },
     body1: {
       fontSize: '1rem', // Base for xs
+      lineHeight: 1.5, // Improved line height for readability
       '@media (min-width:960px)': { // md
         fontSize: '1.05rem',
       },
     },
     body2: {
       fontSize: '0.875rem', // Base for xs
+      lineHeight: 1.6, // Improved line height for readability
       '@media (min-width:960px)': { // md
         fontSize: '0.925rem',
       },
@@ -344,7 +348,7 @@ const theme = createTheme({
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.03)',
           borderRadius: 20,
           border: '1px solid rgba(231, 236, 248, 0.8)',
-          backgroundColor: theme.palette.background.default, // Set card background
+          backgroundColor: theme.palette.background.paper, // Use paper background for cards
           // No transition or hover effects for main content cards
           [theme.breakpoints.down('sm')]: {
             borderRadius: 16, // Smaller radius on mobile
@@ -425,9 +429,10 @@ const theme = createTheme({
     },
     MuiBox: {
       styleOverrides: {
+        // Removed default background color for MuiBox.
+        // It's a layout utility and should generally not have a global background.
         root: ({ theme }) => ({
           transition: 'none',
-          backgroundColor: theme.palette.background.default, // Set background color
         }),
       },
     },
@@ -435,7 +440,7 @@ const theme = createTheme({
       styleOverrides: {
         root: ({ theme }) => ({
           borderRadius: 16,
-          backgroundColor: theme.palette.background.default, // Set paper background
+          backgroundColor: theme.palette.background.paper, // Use paper background
         }),
         elevation1: {
           boxShadow: '0 6px 16px rgba(0, 0, 0, 0.05)',
