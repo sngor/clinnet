@@ -231,6 +231,7 @@ Resources:
       # Improve CORS configuration
       BinaryMediaTypes:
         - application/json
+        - multipart/form-data
       Cors:
         AllowMethods: "'GET, POST, PUT, DELETE, OPTIONS'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
