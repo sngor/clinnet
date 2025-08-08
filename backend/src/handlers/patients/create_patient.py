@@ -9,12 +9,9 @@ from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
 from utils.db_utils import generate_response
-
 from utils.responser_helper import handle_exception, build_error_response
+from utils.cors import add_cors_headers
 
-
-# Initialize DynamoDB client
-dynamodb = boto3.resource('dynamodb')
 
 # Initialize Logger
 logger = logging.getLogger() # Added
@@ -31,6 +28,7 @@ def create_patient(table_name, patient_data):
     Returns:
         dict: Created patient item
     """
+    dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
     
     # Generate ID and timestamps
@@ -56,12 +54,8 @@ def create_patient(table_name, patient_data):
         'updatedAt': timestamp
     }
     
-    try:
-        table.put_item(Item=item)
-        return item
-    except ClientError as e:
-        logger.error(f"Error creating patient in DynamoDB: {e}", exc_info=True) # Changed
-        raise
+    table.put_item(Item=item)
+    return item
 
 def lambda_handler(event, context):
     """
@@ -78,9 +72,6 @@ def lambda_handler(event, context):
 
     headers = event.get('headers', {})
     request_origin = headers.get('Origin') or headers.get('origin')
-    
-    headers = event.get('headers', {}) # Added
-    request_origin = headers.get('Origin') or headers.get('origin') # Added
 
     # Get table name from environment
     table_name = os.environ.get('PATIENT_RECORDS_TABLE')
@@ -186,13 +177,13 @@ def lambda_handler(event, context):
         add_cors_headers(response, request_origin) # Ensure CORS for success response
         return response
         
-    except json.JSONDecodeError as je:
-        logger.error(f"Invalid request body: {je}", exc_info=True) # Changed
-        return build_error_response(400, 'JSONDecodeError', 'Invalid JSON in request body', request_origin)
-    except ClientError as ce: # More specific exception handling
-        logger.error(f"ClientError creating patient: {ce}", exc_info=True)
-        return handle_exception(ce, request_origin) # Use imported helper
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON format in request body")
+        return build_error_response(400, "BadRequest", "Invalid JSON format in request body.", request_origin)
+    except ClientError as e:
+        logger.error(f"Error interacting with DynamoDB: {e.response['Error']['Message']}")
+        return handle_exception(e, request_origin)
     except Exception as e:
-        logger.error(f"Error creating patient: {e}", exc_info=True) # Changed
-        return build_error_response(500, 'Internal Server Error', f'Error creating patient: {str(e)}', request_origin)
+        logger.error(f"An unexpected error occurred: {e}", exc_info=True)
+        return build_error_response(500, "InternalServerError", "An unexpected error occurred.", request_origin)
 

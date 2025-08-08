@@ -32,7 +32,7 @@ function PatientSearch({
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon />
+              <SearchIcon aria-label="Search icon" />
             </InputAdornment>
           ),
         }}
@@ -40,7 +40,7 @@ function PatientSearch({
       <IconButton
         onClick={onRefresh}
         disabled={loading}
-        aria-label="Refresh"
+        aria-label="Refresh patient list"
         sx={{ ml: 0.5 }}
       >
         <RefreshIcon />

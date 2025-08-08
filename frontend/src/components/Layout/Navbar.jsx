@@ -22,7 +22,7 @@ const Navbar = ({ onMenuClick, navItems }) => {
         <Typography variant="h6" noWrap component={RouterLink} to="/" sx={{ flexGrow: 1, color: 'inherit', textDecoration: 'none' }}>
           HealthApp
         </Typography>
-        <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+        <Box component="nav" sx={{ display: { xs: 'none', md: 'flex' } }} aria-label="Main navigation">
           {navItems.map((item) => (
             <Button
               key={item.text}
