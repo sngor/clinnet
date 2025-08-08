@@ -269,12 +269,14 @@ class TestUpdateUser:
 # The exact fields that can be updated and how they are mapped to Cognito attributes vs. DynamoDB fields
 # depend on the handler's logic. The tests make reasonable assumptions (e.g., `given_name`, `family_name`, `role`).
 # Email/username is typically not updated via a generic update attributes function due to its significance as an identifier.
-# Password changes are also usually handled by separate, dedicated API endpoints/functions.The test file for `update_user.lambda_handler` has been created.
-
-**Step 2.4: Create `backend/tests/python/handlers/users/test_delete_user.py`**
-This will test `delete_user.lambda_handler`.
-It interacts with Cognito to delete a user and with DynamoDB's `UsersTable` to delete user metadata.
-The `template.yaml` shows `DeleteUserFunction` uses `CodeUri: src/handlers/users/`, `Handler: delete_user.lambda_handler`, and does *not* explicitly list `UtilsLayer`.
-The username is passed as a path parameter.
-Policies: Cognito `AdminDeleteUser`, DynamoDB CRUD on `UsersTable`.
-Assumptions: `username` in path is the Cognito username (email). `UsersTable.id` is the Cognito username.
+# Password changes are also usually handled by separate, dedicated API endpoints/functions.
+#
+# The test file for `update_user.lambda_handler` has been created.
+#
+# **Step 2.4: Create `backend/tests/python/handlers/users/test_delete_user.py`**
+# This will test `delete_user.lambda_handler`.
+# It interacts with Cognito to delete a user and with DynamoDB's `UsersTable` to delete user metadata.
+# The `template.yaml` shows `DeleteUserFunction` uses `CodeUri: src/handlers/users/`, `Handler: delete_user.lambda_handler`, and does *not* explicitly list `UtilsLayer`.
+# The username is passed as a path parameter.
+# Policies: Cognito `AdminDeleteUser`, DynamoDB CRUD on `UsersTable`.
+# Assumptions: `username` in path is the Cognito username (email). `UsersTable.id` is the Cognito username.

@@ -205,12 +205,14 @@ class TestGetProfileImage:
 # implementation details will determine which one it uses primarily to identify the user for Cognito calls
 # and for constructing S3 paths (typically `sub` is preferred for S3 paths).
 # The tests assume `sub` is used for S3 path and `username` for `AdminGetUser`.
-# The `test_user_with_image` fixture sets `custom:profile_image` to an S3 key that includes the `sub`.The test file for `get_profile_image.lambda_handler` has been created.
-
-**Step 2.9: Create `backend/tests/python/handlers/users/test_remove_profile_image.py`**
-This will test `remove_profile_image.lambda_handler`.
-It interacts with Cognito to clear the user's `profile_image` attribute and S3 to delete the image file.
-The `template.yaml` shows `RemoveProfileImageFunction` uses `CodeUri: src/handlers/users/`, `Handler: remove_profile_image.lambda_handler`, and the `UtilsLayer`.
-Needs `DOCUMENTS_BUCKET`, `USER_POOL_ID`. Username from JWT token.
-S3 key is derived from Cognito `profile_image` attribute.
-The Cognito `profile_image` attribute should be set to empty or removed.
+# The `test_user_with_image` fixture sets `custom:profile_image` to an S3 key that includes the `sub`.
+#
+# The test file for `get_profile_image.lambda_handler` has been created.
+#
+# **Step 2.9: Create `backend/tests/python/handlers/users/test_remove_profile_image.py`**
+# This will test `remove_profile_image.lambda_handler`.
+# It interacts with Cognito to clear the user's `profile_image` attribute and S3 to delete the image file.
+# The `template.yaml` shows `RemoveProfileImageFunction` uses `CodeUri: src/handlers/users/`, `Handler: remove_profile_image.lambda_handler`, and the `UtilsLayer`.
+# Needs `DOCUMENTS_BUCKET`, `USER_POOL_ID`. Username from JWT token.
+# S3 key is derived from Cognito `profile_image` attribute.
+# The Cognito `profile_image` attribute should be set to empty or removed.

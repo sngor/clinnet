@@ -35,19 +35,19 @@ def lambda_environment(monkeypatch):
 
 class TestGetAppointmentsHandler:
 
-    @patch('backend.src.handlers.appointments.get_appointments.query_table')
-    def test_get_appointments_no_params(self, mock_query_table, lambda_environment):
-        mock_query_table.return_value = [{'id': 'appt1'}]
+    @patch('backend.src.handlers.appointments.get_appointments.scan_table')
+    def test_get_appointments_no_params(self, mock_scan_table, lambda_environment):
+        mock_scan_table.return_value = [{'id': 'appt1'}]
         event = create_api_gateway_event()
 
         response = lambda_handler(event, {})
 
         assert response['statusCode'] == 200
-        mock_query_table.assert_called_once_with(TEST_APPOINTMENTS_TABLE_NAME) # No kwargs if no params
+        mock_scan_table.assert_called_once_with(TEST_APPOINTMENTS_TABLE_NAME) # No kwargs if no params
 
-    @patch('backend.src.handlers.appointments.get_appointments.query_table')
-    def test_get_appointments_with_patient_id(self, mock_query_table, lambda_environment):
-        mock_query_table.return_value = [{'id': 'appt1', 'patientId': 'patient123'}]
+    @patch('backend.src.handlers.appointments.get_appointments.scan_table')
+    def test_get_appointments_with_patient_id(self, mock_scan_table, lambda_environment):
+        mock_scan_table.return_value = [{'id': 'appt1', 'patientId': 'patient123'}]
         event = create_api_gateway_event(query_params={'patientId': 'patient123'})
         
 
@@ -71,10 +71,10 @@ class TestGetAppointmentsHandler:
         body = json.loads(response['body'])
         assert 'error' in body
         assert 'Appointments table name not configured' in body['message']
-        mock_query_table.assert_not_called()
+        mock_scan_table.assert_not_called()
 
-    @patch('backend.src.handlers.appointments.get_appointments.query_table')
-    def test_cors_preflight_options_request(self, mock_query_table, lambda_environment):
+    @patch('backend.src.handlers.appointments.get_appointments.scan_table')
+    def test_cors_preflight_options_request(self, mock_scan_table, lambda_environment):
         event = create_api_gateway_event(method="OPTIONS")
         response = lambda_handler(event, {})
 
@@ -149,10 +149,10 @@ class TestGetAppointmentsHandler:
         assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
     def test_get_appointments_dynamodb_scan_failure(self, monkeypatch, lambda_environment_appointments):
-        # Mock query_table to raise a generic Exception for this test
-        def mock_query_table_raises_exception(table_name, **kwargs):
+        # Mock scan_table to raise a generic Exception for this test
+        def mock_scan_table_raises_exception(table_name, **kwargs):
             raise Exception("Simulated DB Scan/Query Error")
-        monkeypatch.setattr("backend.src.handlers.appointments.get_appointments.query_table", mock_query_table_raises_exception)
+        monkeypatch.setattr("backend.src.handlers.appointments.get_appointments.scan_table", mock_scan_table_raises_exception)
         
         event = create_api_gateway_event()
         context = {}

@@ -8,10 +8,9 @@ import boto3 # Added boto3
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key, Attr # Added Key, Attr for safety, though may not be strictly needed for the new code
 
-from backend.src.utils.db_utils import query_table, generate_response
-
-from backend.src.utils.responser_helper import handle_exception, build_error_response
-from backend.src.utils.cors import build_cors_preflight_response, add_cors_headers
+from utils.db_utils import scan_table, generate_response
+from utils.responser_helper import handle_exception, build_error_response
+from utils.cors import build_cors_preflight_response
 
 logger = logging.getLogger(__name__)
 
@@ -33,17 +32,13 @@ def lambda_handler(event, context):
     # logger.setLevel(logging.INFO) # Or as configured
     logging.info("Received event: %s", json.dumps(event))
     
-    # Extract origin from request headers
-    headers = event.get('headers', {})
-    request_origin = headers.get('Origin') or headers.get('origin')
-    
     # --- Handle CORS preflight (OPTIONS) requests ---
     if event.get('httpMethod', '').upper() == 'OPTIONS':
-        return build_cors_preflight_response(request_origin)
+        return build_cors_preflight_response()
 
     table_name = os.environ.get('APPOINTMENTS_TABLE')
     if not table_name:
-        return build_error_response(500, 'Configuration Error', 'Appointments table name not configured', request_origin)
+        return build_error_response(500, 'Configuration Error: Appointments table name not configured')
     
     try:
         # Get query parameters
@@ -82,7 +77,7 @@ def lambda_handler(event, context):
                 combined_filter_expr = combined_filter_expr & expr
             kwargs['FilterExpression'] = combined_filter_expr
 
-        appointments = query_table(table_name, **kwargs)
+        appointments = scan_table(table_name, **kwargs)
 
         # --- Start of Patient Name Enrichment ---
         enriched_appointments = []
@@ -136,13 +131,10 @@ def lambda_handler(event, context):
                 enriched_appointments = appointments # Fallback to original appointments
         # --- End of Patient Name Enrichment ---
         
-        response = generate_response(200, enriched_appointments) # Use enriched data
-        add_cors_headers(response, request_origin)
-        return response
+        return generate_response(200, enriched_appointments) # Use enriched data
     
     except ClientError as e:
-        return handle_exception(e, request_origin)
+        return handle_exception(e)
     except Exception as e:
         print(f"Error fetching appointments: {e}")
-        return handle_exception(e, request_origin)
-
+        return handle_exception(e)

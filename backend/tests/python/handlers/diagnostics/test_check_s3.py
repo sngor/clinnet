@@ -110,21 +110,23 @@ class TestCheckS3Connectivity:
 #
 # The tests cover these aspects.
 # The error message check in `test_check_s3_list_buckets_failure` allows for either the raw
-# error message or a more user-friendly one from the handler/UtilsLayer.The test file for `check_s3.lambda_handler` has been created.
-
-**Step 2.2: Create `backend/tests/python/handlers/diagnostics/test_check_dynamodb_crud.py`**
-This will test `check_dynamodb_crud.lambda_handler`.
-The handler takes `serviceName` (table name) as a path parameter.
-It performs Put, Get, Update (implicitly via Put), and Delete on the specified table.
-It uses `UtilsLayer`.
-Needs `PATIENT_RECORDS_TABLE`, `SERVICES_TABLE`, `APPOINTMENTS_TABLE` env vars to map `serviceName` to actual table names if the handler uses such a mapping, or if `serviceName` is the direct table name. The template suggests `serviceName` is a placeholder in the path `/diagnostics/crud/{serviceName}` but the actual table names are resolved from env vars within the handler.
-The test will need to mock all three tables and test CRUD against each.
-# End of valid Python code. Removed markdown and commentary for pytest compatibility.
-
-For testing, we'll pass `serviceName` as one of the known logical names and ensure the environment variables for these tables are set. The handler will then pick the correct table.
-The test will mock all three tables.
-Let's assume `serviceName` will be "PatientRecordsTable", "ServicesTable", or "AppointmentsTable" (matching the Ref names in the template). The handler will then internally use `os.environ.get(serviceNameAsEnvVar)` where `serviceNameAsEnvVar` is e.g., `PATIENT_RECORDS_TABLE`.
-
-The handler logic seems to be:
-`if serviceName == "PatientRecordsTable": tableName = os.environ['PATIENT_RECORDS_TABLE']` etc.
-So, the path parameter `serviceName` should be "PatientRecordsTable", "ServicesTable", or "AppointmentsTable".
+# error message or a more user-friendly one from the handler/UtilsLayer.
+#
+# The test file for `check_s3.lambda_handler` has been created.
+#
+# **Step 2.2: Create `backend/tests/python/handlers/diagnostics/test_check_dynamodb_crud.py`**
+# This will test `check_dynamodb_crud.lambda_handler`.
+# The handler takes `serviceName` (table name) as a path parameter.
+# It performs Put, Get, Update (implicitly via Put), and Delete on the specified table.
+# It uses `UtilsLayer`.
+# Needs `PATIENT_RECORDS_TABLE`, `SERVICES_TABLE`, `APPOINTMENTS_TABLE` env vars to map `serviceName` to actual table names if the handler uses such a mapping, or if `serviceName` is the direct table name. The template suggests `serviceName` is a placeholder in the path `/diagnostics/crud/{serviceName}` but the actual table names are resolved from env vars within the handler.
+# The test will need to mock all three tables and test CRUD against each.
+# # End of valid Python code. Removed markdown and commentary for pytest compatibility.
+#
+# For testing, we'll pass `serviceName` as one of the known logical names and ensure the environment variables for these tables are set. The handler will then pick the correct table.
+# The test will mock all three tables.
+# Let's assume `serviceName` will be "PatientRecordsTable", "ServicesTable", or "AppointmentsTable" (matching the Ref names in the template). The handler will then internally use `os.environ.get(serviceNameAsEnvVar)` where `serviceNameAsEnvVar` is e.g., `PATIENT_RECORDS_TABLE`.
+#
+# The handler logic seems to be:
+# `if serviceName == "PatientRecordsTable": tableName = os.environ['PATIENT_RECORDS_TABLE']` etc.
+# So, the path parameter `serviceName` should be "PatientRecordsTable", "ServicesTable", or "AppointmentsTable".

@@ -6,7 +6,7 @@ import json
 from botocore.exceptions import ClientError
 
 # Import utility functions
-from utils.db_utils import query_table, generate_response
+from utils.db_utils import scan_table, generate_response
 from utils.responser_helper import handle_exception, build_error_response
 
 def lambda_handler(event, context):
@@ -59,7 +59,7 @@ def lambda_handler(event, context):
             kwargs['FilterExpression'] = filter_expr
         
         # Query billing records
-        billing_records = query_table(table_name, **kwargs)
+        billing_records = scan_table(table_name, **kwargs)
         
         return generate_response(200, billing_records)
     

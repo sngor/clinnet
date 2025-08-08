@@ -174,6 +174,9 @@ class TestGetPatients:
 #   should be consistent with utilities provided by that layer. The tests verify this.
 # - The assertion `item.get("patientId", item.get("PK").split("#")[1])` is a defensive way
 #   to get the patient ID from the returned item, assuming it might be stored as a top-level
-#   `patientId` attribute or derivable from `PK`. Ideally, the returned item has a consistent `patientId`.The test file for `get_patients.lambda_handler` has been created.
-# End of valid Python code. Removed markdown and commentary for pytest compatibility.
-**Step 2.2: Create `backend/tests/python/handlers/patients/test_get_patient_by_id.py`**
+#   `patientId` attribute or derivable from `PK`. Ideally, the returned item has a consistent `patientId`.
+#
+# The test file for `get_patients.lambda_handler` has been created.
+# # End of valid Python code. Removed markdown and commentary for pytest compatibility.
+#
+# **Step 2.2: Create `backend/tests/python/handlers/patients/test_get_patient_by_id.py`**

@@ -8,9 +8,8 @@ from datetime import datetime # ensure datetime is imported
 import logging
 from botocore.exceptions import ClientError
 
-from backend.src.utils.db_utils import create_item, generate_response
-from backend.src.utils.responser_helper import handle_exception, build_error_response
-from backend.src.utils.cors import add_cors_headers
+from utils.db_utils import create_item, generate_response
+from utils.responser_helper import handle_exception, build_error_response
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +27,9 @@ def lambda_handler(event, context):
     """
     logger.info(f"Received event: %s", json.dumps(event))
     
-    # Extract origin from request headers
-    headers = event.get('headers', {})
-    request_origin = headers.get('Origin') or headers.get('origin')
-    
     table_name = os.environ.get('APPOINTMENTS_TABLE')
     if not table_name:
-        return build_error_response(500, 'Configuration Error', 'Appointments table name not configured', request_origin)
+        return build_error_response(500, 'Configuration Error', 'Appointments table name not configured')
     
     try:
         # Parse request body
@@ -44,24 +39,24 @@ def lambda_handler(event, context):
         required_fields = ['patientId', 'doctorId', 'date', 'startTime', 'endTime', 'type']
         for field in required_fields:
             if field not in body:
-                return build_error_response(400, 'Validation Error', f'Missing required field: {field}', request_origin)
+                return build_error_response(400, 'Validation Error', f'Missing required field: {field}')
         
         # Validate date format (after required field checks)
         try:
             datetime.strptime(body['date'], '%Y-%m-%d')
         except ValueError:
-            return build_error_response(400, 'Validation Error', 'Invalid date format. Expected YYYY-MM-DD.', request_origin)
+            return build_error_response(400, 'Validation Error', 'Invalid date format. Expected YYYY-MM-DD.')
 
         # Validate time format (after required field checks)
         try:
             datetime.strptime(body['startTime'], '%H:%M')
             datetime.strptime(body['endTime'], '%H:%M')
         except ValueError:
-            return build_error_response(400, 'Validation Error', 'Invalid time format. Expected HH:MM.', request_origin)
+            return build_error_response(400, 'Validation Error', 'Invalid time format. Expected HH:MM.')
 
         # Ensure endTime is after startTime (after individual time format checks)
         if datetime.strptime(body['endTime'], '%H:%M') <= datetime.strptime(body['startTime'], '%H:%M'):
-            return build_error_response(400, 'Validation Error', 'End time must be after start time.', request_origin)
+            return build_error_response(400, 'Validation Error', 'End time must be after start time.')
 
         # Create appointment record
         appointment_id = str(uuid.uuid4())
@@ -87,15 +82,12 @@ def lambda_handler(event, context):
         create_item(table_name, appointment_item)
         
         # Return the created appointment
-        response = generate_response(201, appointment_item)
-        add_cors_headers(response, request_origin)
-        return response
+        return generate_response(201, appointment_item)
     
     except ClientError as e:
-        return handle_exception(e, request_origin)
+        return handle_exception(e)
     except Exception as e:
 
         print(f"Error creating appointment: {e}")
         # Use handle_exception for generic exceptions as well
-        return handle_exception(e, request_origin)
-
+        return handle_exception(e)

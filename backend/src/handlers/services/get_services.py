@@ -8,7 +8,7 @@ import time
 from botocore.exceptions import ClientError
 
 # Import utility functions
-from utils.db_utils import query_table, generate_response
+from utils.db_utils import scan_table, generate_response
 from utils.responser_helper import handle_exception, build_error_response
 from utils.cors import add_cors_headers, build_cors_preflight_response
 
@@ -76,7 +76,7 @@ def lambda_handler(event, context):
             kwargs['FilterExpression'] = filter_expr
         
         # Query services
-        services = query_table(table_name, **kwargs)
+        services = scan_table(table_name, **kwargs)
         logger.info(f"Fetched {len(services)} services from DynamoDB")
 
         # Cache the result only if no query parameters were used
