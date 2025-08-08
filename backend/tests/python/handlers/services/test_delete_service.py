@@ -188,18 +188,20 @@ class TestDeleteService:
 # This usually results in a 404 if the handler checks for existence before attempting deletion or if a
 # conditional delete fails because the item doesn't exist.
 #
-# All tests are within the `TestDeleteService` class, following a good structure.The test file for `delete_service` has been created.
-All five test files for the "Services" group of Lambda functions (`get_services`, `get_service_by_id`, `create_service`, `update_service`, `delete_service`) have now been created in the `backend/tests/python/handlers/services/` directory.
-
-Each test file includes:
-*   Setup for moto mocks (`@mock_aws` and DynamoDB table creation).
-*   Mocking of environment variables (`SERVICES_TABLE`, AWS credentials).
-*   Import of the respective Lambda handler.
-*   A helper function to create mock API Gateway events.
-*   Test scenarios covering successful operations, edge cases (e.g., item not found, invalid input), and DynamoDB operation failures.
-*   Verification of HTTP status codes, response bodies, and headers.
-*   Specific considerations for each CRUD operation (e.g., UUID mocking for create, `updatedAt` checks for update, item verification in DynamoDB).
-
-The directory structure including `__init__.py` files was also handled in the first step of this multi-turn process.
-
-The next logical step would be to run these tests using `pytest` via the `npm run test:python` script.
+# All tests are within the `TestDeleteService` class, following a good structure.
+#
+# The test file for `delete_service` has been created.
+# All five test files for the "Services" group of Lambda functions (`get_services`, `get_service_by_id`, `create_service`, `update_service`, `delete_service`) have now been created in the `backend/tests/python/handlers/services/` directory.
+#
+# Each test file includes:
+# *   Setup for moto mocks (`@mock_aws` and DynamoDB table creation).
+# *   Mocking of environment variables (`SERVICES_TABLE`, AWS credentials).
+# *   Import of the respective Lambda handler.
+# *   A helper function to create mock API Gateway events.
+# *   Test scenarios covering successful operations, edge cases (e.g., item not found, invalid input), and DynamoDB operation failures.
+# *   Verification of HTTP status codes, response bodies, and headers.
+# *   Specific considerations for each CRUD operation (e.g., UUID mocking for create, `updatedAt` checks for update, item verification in DynamoDB).
+#
+# The directory structure including `__init__.py` files was also handled in the first step of this multi-turn process.
+#
+# The next logical step would be to run these tests using `pytest` via the `npm run test:python` script.

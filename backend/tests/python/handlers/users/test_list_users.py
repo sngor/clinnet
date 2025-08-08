@@ -202,11 +202,13 @@ class TestListUsers:
 # The test for Cognito failure ensures that if the AWS SDK call fails, the handler
 # returns a 500 error with an appropriate message. The check
 # `assert "Simulated Cognito ListUsers Error" in body["error"] or "Internal server error" in body.get("message", "")`
-# allows for either the raw error or a generic message from the UtilsLayer.The test file for `list_users.lambda_handler` has been created.
-
-**Step 2.2: Create `backend/tests/python/handlers/users/test_create_cognito_user.py`**
-This will test `create_cognito_user.lambda_handler`.
-It interacts with Cognito to create a user and with DynamoDB's `UsersTable` to store user metadata.
-The `template.yaml` shows `CreateUserFunction` uses `CodeUri: src/handlers/users/`, `Handler: create_cognito_user.lambda_handler`, and does *not* explicitly list `UtilsLayer`.
-It has policies for Cognito `AdminCreateUser`, `AdminSetUserPassword`, `AdminGetUser` and DynamoDB CRUD on `UsersTable`.
-Assumed `UsersTable` structure: `id` (String, HASH key) - this `id` is likely the Cognito username or sub. Let's assume it's the Cognito username for now, or the sub if that's what's stored. The problem description for `UsersTable` for `MedicalReportsTable` just says `id` (String) as HASH. For `UsersTable` in the template, it's `id` (S) HASH. This `id` would likely be the Cognito User's `sub` (unique ID) or `Username`. The handler logic will determine this. Let's assume for now it's the `Username` from Cognito, which is typically an email.
+# allows for either the raw error or a generic message from the UtilsLayer.
+#
+# The test file for `list_users.lambda_handler` has been created.
+#
+# **Step 2.2: Create `backend/tests/python/handlers/users/test_create_cognito_user.py`**
+# This will test `create_cognito_user.lambda_handler`.
+# It interacts with Cognito to create a user and with DynamoDB's `UsersTable` to store user metadata.
+# The `template.yaml` shows `CreateUserFunction` uses `CodeUri: src/handlers/users/`, `Handler: create_cognito_user.lambda_handler`, and does *not* explicitly list `UtilsLayer`.
+# It has policies for Cognito `AdminCreateUser`, `AdminSetUserPassword`, `AdminGetUser` and DynamoDB CRUD on `UsersTable`.
+# Assumed `UsersTable` structure: `id` (String, HASH key) - this `id` is likely the Cognito username or sub. Let's assume it's the Cognito username for now, or the sub if that's what's stored. The problem description for `UsersTable` for `MedicalReportsTable` just says `id` (String) as HASH. For `UsersTable` in the template, it's `id` (S) HASH. This `id` would likely be the Cognito User's `sub` (unique ID) or `Username`. The handler logic will determine this. Let's assume for now it's the `Username` from Cognito, which is typically an email.

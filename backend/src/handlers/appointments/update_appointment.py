@@ -7,9 +7,8 @@ import json
 from datetime import datetime # Added
 from botocore.exceptions import ClientError
 
-from backend.src.utils.db_utils import get_item_by_id, update_item, generate_response
-from backend.src.utils.responser_helper import handle_exception, build_error_response
-from backend.src.utils.cors import add_cors_headers
+from utils.db_utils import get_item_by_id, update_item, generate_response
+from utils.responser_helper import handle_exception, build_error_response
 
 logger = logging.getLogger(__name__)
 
@@ -26,18 +25,14 @@ def lambda_handler(event, context):
     """
     logger.info("Received event: %s", json.dumps(event)) # Changed from print to logger.info
     
-    # Extract origin from request headers
-    headers = event.get('headers', {})
-    request_origin = headers.get('Origin') or headers.get('origin')
-    
     table_name = os.environ.get('APPOINTMENTS_TABLE')
     if not table_name:
-        return build_error_response(500, 'Configuration Error', 'Appointments table name not configured', request_origin)
+        return build_error_response(500, 'Configuration Error: Appointments table name not configured')
     
     # Get appointment ID from path parameters
     appointment_id = event.get('pathParameters', {}).get('id')
     if not appointment_id:
-        return build_error_response(400, 'Validation Error', 'Missing appointment ID', request_origin)
+        return build_error_response(400, 'Validation Error: Missing appointment ID')
     
     try:
         # Parse request body
@@ -47,14 +42,14 @@ def lambda_handler(event, context):
         existing_appointment = get_item_by_id(table_name, appointment_id)
         
         if not existing_appointment:
-            return build_error_response(404, 'Not Found', f'Appointment with ID {appointment_id} not found', request_origin)
+            return build_error_response(404, f'Not Found: Appointment with ID {appointment_id} not found')
         
         # Validate date format if 'date' is in body
         if 'date' in body:
             try:
                 datetime.strptime(body['date'], '%Y-%m-%d')
             except ValueError:
-                return build_error_response(400, 'Validation Error', 'Invalid date format. Expected YYYY-MM-DD.', request_origin)
+                return build_error_response(400, 'Validation Error: Invalid date format. Expected YYYY-MM-DD.')
 
         # Validate time format if 'startTime' or 'endTime' is in body
         if 'startTime' in body or 'endTime' in body:
@@ -64,7 +59,7 @@ def lambda_handler(event, context):
                 if 'endTime' in body:
                     datetime.strptime(body['endTime'], '%H:%M')
             except ValueError:
-                return build_error_response(400, 'Validation Error', 'Invalid time format. Expected HH:MM.', request_origin)
+                return build_error_response(400, 'Validation Error: Invalid time format. Expected HH:MM.')
 
         # Ensure endTime is after startTime if both are present and valid
         # This logic needs to handle cases where one might be in existing_appointment and the other in body
@@ -84,9 +79,9 @@ def lambda_handler(event, context):
                 new_startTime_dt = datetime.strptime(new_startTime_str, '%H:%M')
                 new_endTime_dt = datetime.strptime(new_endTime_str, '%H:%M')
                 if new_endTime_dt <= new_startTime_dt:
-                    return build_error_response(400, 'Validation Error', 'End time must be after start time.', request_origin)
+                    return build_error_response(400, 'Validation Error: End time must be after start time.')
             except ValueError: # Should not happen if stored data is valid and body data was validated
-                 return build_error_response(400, 'Validation Error', 'Invalid time format for comparison (startTime/endTime).', request_origin)
+                 return build_error_response(400, 'Validation Error: Invalid time format for comparison (startTime/endTime).')
 
         # Fields that can be updated
         updatable_fields = [
@@ -101,18 +96,15 @@ def lambda_handler(event, context):
                 updates[field] = body[field]
 
         if not updates:
-            return build_error_response(400, 'Validation Error', 'No valid fields provided for update.', request_origin)
+            return build_error_response(400, 'Validation Error: No valid fields provided for update.')
         
         # Update appointment
         updated_appointment = update_item(table_name, appointment_id, updates)
         
-        response = generate_response(200, updated_appointment)
-        add_cors_headers(response, request_origin)
-        return response
+        return generate_response(200, updated_appointment)
     
     except ClientError as e:
-        return handle_exception(e, request_origin)
+        return handle_exception(e)
     except Exception as e:
         print(f"Error updating appointment: {e}")
-        return handle_exception(e, request_origin)
-
+        return handle_exception(e)

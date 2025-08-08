@@ -168,10 +168,10 @@ class TestCheckCognitoUserCrud:
 # not explicitly mocked (e.g., if the handler uses others, or moto setup itself uses some)
 # End of valid Python code. Removed markdown and commentary for pytest compatibility.
 # End of valid Python code. Removed markdown and commentary for pytest compatibility.
-The `template.yaml` also has per-API Gateway resource level `Cors:` blocks (e.g. under `ClinicAPI.Properties.Cors`).
-The test should verify the headers returned by the *Lambda function itself*, as that's what it's unit testing.
-The `cors_options.lambda_handler` is likely returning a static set of headers.
-The global API config has `AllowOrigin: "'*'" ` under `ClinicAPI.Properties.Cors`. This is more likely what a generic OPTIONS handler would mirror.
-The `Globals.Api.Cors.AllowOrigin` is more specific, which might be for actual API responses, not preflight.
-
-Let's assume the `cors_options.lambda_handler` returns values similar to `ClinicAPI.Properties.Cors`.
+# The `template.yaml` also has per-API Gateway resource level `Cors:` blocks (e.g. under `ClinicAPI.Properties.Cors`).
+# The test should verify the headers returned by the *Lambda function itself*, as that's what it's unit testing.
+# The `cors_options.lambda_handler` is likely returning a static set of headers.
+# The global API config has `AllowOrigin: "'*'" ` under `ClinicAPI.Properties.Cors`. This is more likely what a generic OPTIONS handler would mirror.
+# The `Globals.Api.Cors.AllowOrigin` is more specific, which might be for actual API responses, not preflight.
+#
+# Let's assume the `cors_options.lambda_handler` returns values similar to `ClinicAPI.Properties.Cors`.

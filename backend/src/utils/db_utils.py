@@ -12,8 +12,8 @@ def get_item_by_id(table, item_id):
     # Stub: Simulate DynamoDB get_item
     return {"Item": {"id": item_id}}
 
-def query_table(table, key_expr, expr_attr_vals):
-    # Stub: Simulate DynamoDB query
+def scan_table(table, **kwargs):
+    # Stub: Simulate DynamoDB scan
     return {"Items": []}
 
 def update_item(table, key, update_expr, expr_attr_vals):

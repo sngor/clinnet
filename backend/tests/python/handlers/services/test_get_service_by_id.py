@@ -256,6 +256,8 @@ class TestGetServiceById:
 # The use of `monkeypatch.setattr(boto3, "resource", ...)` is a common way to inject
 # such behavior for testing specific error paths.
 #
-# The tests seem well-structured.The test file for `get_service_by_id` has been created. I will now proceed to create the test file for `create_service.lambda_handler`.
-
-**Step 2.3: Create `backend/tests/python/handlers/services/test_create_service.py`**
+# The tests seem well-structured.
+#
+# The test file for `get_service_by_id` has been created. I will now proceed to create the test file for `create_service.lambda_handler`.
+#
+# **Step 2.3: Create `backend/tests/python/handlers/services/test_create_service.py`**

@@ -91,10 +91,10 @@ class TestCreateCognitoUser:
 
         # Verify user in Cognito
         cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
-        try {
+        try:
             cognito_user = cognito_client.admin_get_user(
                 UserPoolId=os.environ["USER_POOL_ID"],
-                Username=user_data["email"] 
+                Username=user_data["email"]
             )
             assert cognito_user is not None
             assert cognito_user["Username"] == user_data["email"]
@@ -103,7 +103,7 @@ class TestCreateCognitoUser:
             assert email_attr["Value"] == user_data["email"]
             # Add checks for given_name, family_name, role if set as custom attributes by handler
 
-        } except cognito_client.exceptions.UserNotFoundException:
+        except cognito_client.exceptions.UserNotFoundException:
             pytest.fail("User not found in Cognito after creation")
 
 
@@ -258,7 +258,7 @@ class TestCreateCognitoUser:
         # This requires careful mocking so Cognito part succeeds.
         # The current mock_boto3_resource_dynamodb_error doesn't interfere with Cognito client.
         cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
-        try {
+        try:
             cognito_user = cognito_client.admin_get_user(UserPoolId=os.environ["USER_POOL_ID"], Username=user_data["email"])
             assert cognito_user is not None # User should exist in Cognito
             
@@ -272,82 +272,5 @@ class TestCreateCognitoUser:
             # We can't easily get the SUB here in the test without more complex interaction or assumptions
             # about the handler's response *before* the DB error is thrown and caught.
             # So, we'll primarily rely on the 500 error and message.
-        } except cognito_client.exceptions.UserNotFoundException:
+        except cognito_client.exceptions.UserNotFoundException:
              pytest.fail("Cognito user should have been created even if DB write failed, but was not found.")
-
-
-# Notes:
-# - `CreateUserFunction` interacts with both Cognito and DynamoDB. Tests need to mock both.
-# - `cognito_user_pool_and_id` fixture sets up a mock User Pool.
-# - `users_table` fixture sets up a mock DynamoDB table for user metadata.
-# - `lambda_environment` sets `USER_POOL_ID` and `USERS_TABLE`.
-# - `test_create_user_successful`:
-#   - Verifies user creation in Cognito (using `admin_get_user`).
-#   - Verifies metadata storage in `UsersTable`. The `id` for `UsersTable` is assumed to be the Cognito user's `sub` (Subject UUID),
-#     which is returned by `admin_create_user` and should ideally be in the handler's response.
-# - `test_create_user_already_exists_cognito`: Pre-creates user in Cognito, expects 409.
-# - Validation tests: Invalid email, weak password (Cognito policies usually handle this, moto might simplify), missing fields.
-# - Failure simulations:
-#   - `test_create_user_cognito_admin_create_user_failure`: Mocks `admin_create_user` to fail.
-#   - `test_create_user_dynamodb_put_failure`: Assumes Cognito creation succeeds but DynamoDB `put_item` fails.
-#     This test highlights potential transactional issues (Cognito user created, DB record not).
-# - `CreateUserFunction` does *not* use `UtilsLayer` per template, so response format (headers, errors) might be specific.
-#   Tests assume basic JSON responses.
-#
-# The `id` in `UsersTable`: The key for `UsersTable` is `id`. This `id` should be the unique identifier
-# from Cognito, which is the `UserSub` (a UUID-like string). The handler, after successfully calling
-# `admin_create_user`, receives this `UserSub` in the response and should use it as the `id` when
-# writing to the `UsersTable`. The handler's response to the client should also include this `UserSub`
-# as `userId`. The `test_create_user_successful` reflects this assumption.
-#
-# Password policy testing with Moto: Moto's `create_user_pool` might not fully simulate complex password
-# policies. The test for weak password assumes either the handler has some basic checks or that the
-# Cognito SDK call itself might return an error for a very weak password.
-# The `AdminCreateUser` API call can create a user with a temporary password that might bypass some immediate
-# policy checks if `MessageAction` is `SUPPRESS`, but `AdminSetUserPassword` (if used) would enforce them.
-# The handler is assumed to call `AdminCreateUser` and potentially `AdminSetUserPassword` or rely on
-# temporary password mechanisms. The test for weak password is a general expectation.
-#
-# The schema for `create_user_pool` in `cognito_user_pool_and_id` fixture includes `email` as a required
-# and auto-verified attribute, which is a common setup.
-#
-# The `lambda_handler` for `create_cognito_user` is expected to:
-# 1. Parse and validate input: `email`, `password`, `given_name`, `family_name`, `role`.
-# 2. Call Cognito `admin_create_user` with `Username=email` and attributes.
-# 3. (Optional) Call `admin_set_user_password` if not using temporary passwords.
-# 4. Get the `UserSub` from the Cognito response.
-# 5. Create an item in `UsersTable` with `id = UserSub` and other relevant user details.
-# 6. Return 201 with `userId (UserSub)` and a success message.
-#
-# The DynamoDB failure test `test_create_user_dynamodb_put_failure` checks if Cognito user was created.
-# This is important to understand the state if the DB part fails. A production system might need
-# a cleanup mechanism or a retry for the DB write. The test verifies that the Cognito part (mocked by moto)
-# still proceeds if the DB mock is the one failing.
-#
-# The `mock_boto3_client_cognito_error` for `admin_create_user` failure ensures that the specific call
-# for the test user fails, while other Cognito calls (like `admin_set_user_password` if made by the handler)
-# might still succeed (mocked as success here). This requires careful mocking.
-# The `__getattr__` fallback in the mock client is a simple way to allow other methods to pass through
-# to a default (moto-mocked) client, which can be helpful if the handler makes multiple Cognito calls.
-#
-# The `users_table` fixture correctly defines `id` as the HASH key.
-#
-# The `lambda_environment` correctly sets `USER_POOL_ID` and `USERS_TABLE`.
-#
-# The `create_api_gateway_event` helper is standard.
-#
-# The test for missing required fields iterates through a list. If error messages are specific
-# per field, more granular tests would be better. The current test uses `or` for message checking.
-#
-# The response for successful creation `test_create_user_successful` includes `userId`.
-# This `userId` is assumed to be the Cognito `sub`.The test file for `create_cognito_user.lambda_handler` has been created.
-
-**Step 2.3: Create `backend/tests/python/handlers/users/test_update_user.py`**
-This will test `update_user.lambda_handler`.
-It interacts with Cognito to update user attributes and with DynamoDB's `UsersTable` to update user metadata.
-The `template.yaml` shows `UpdateUserFunction` uses `CodeUri: src/handlers/users/`, `Handler: update_user.lambda_handler`, and does *not* explicitly list `UtilsLayer`.
-The username (which is the email for Cognito login) is passed as a path parameter.
-It has policies for various Cognito admin actions and DynamoDB CRUD on `UsersTable`.
-The `UsersTable` `id` is assumed to be the Cognito username (email) or sub. If `username` in path is email, the handler would use this to call Cognito. The `id` in DynamoDB should be consistent (e.g., Cognito sub). The handler needs to map `username` (email) to `sub` if `UsersTable` uses `sub` as key. Let's assume `username` in path is the Cognito username (email) and the handler uses this for Cognito calls, and updates DynamoDB using an `id` that is consistent (e.g. the `sub` it retrieves from Cognito, or if `UsersTable` primary key `id` is the email/username itself).
-For this test, let's assume `UsersTable` uses the Cognito username (email) as its `id` for simplicity, or that the handler maps this correctly. The template shows `UsersTable` has `id` as key, which could be the username.
-Let's assume `id` in `UsersTable` refers to the Cognito `Username`.

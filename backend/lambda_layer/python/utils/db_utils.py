@@ -15,6 +15,28 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+DYNAMODB_RESOURCE = None
+
+def get_dynamodb_resource():
+    global DYNAMODB_RESOURCE
+    if DYNAMODB_RESOURCE is None:
+        aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
+        aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+        aws_session_token = os.environ.get("AWS_SESSION_TOKEN")
+        aws_region = os.environ.get("AWS_DEFAULT_REGION")
+
+        if aws_access_key_id:
+            DYNAMODB_RESOURCE = boto3.resource(
+                'dynamodb',
+                region_name=aws_region,
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+                aws_session_token=aws_session_token
+            )
+        else:
+            DYNAMODB_RESOURCE = boto3.resource('dynamodb')
+    return DYNAMODB_RESOURCE
+
 # Helper class to convert a DynamoDB item to JSON
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
@@ -26,23 +48,66 @@ class DecimalEncoder(json.JSONEncoder):
                 return float(o)
         return super(DecimalEncoder, self).default(o)
 
-def query_table(table_name, **kwargs):
+def _build_update_params(updates: dict, exclude_keys: list = None):
     """
-    Scan DynamoDB table with optional parameters (Consider using query for better performance if possible)
+    Builds parameters for a DynamoDB update_item call, excluding certain keys.
+
+    Args:
+        updates (dict): The dictionary of key-value pairs to update.
+        exclude_keys (list): A list of keys to exclude from the update expression.
+
+    Returns:
+        dict: A dictionary containing UpdateExpression, ExpressionAttributeNames,
+              and ExpressionAttributeValues, or None if no updates are to be made.
+    """
+    if exclude_keys is None:
+        exclude_keys = []
+
+    update_expression_parts = []
+    expression_attribute_values = {}
+    expression_attribute_names = {}
+
+    filtered_updates = {k: v for k, v in updates.items() if k not in exclude_keys}
+
+    for i, (key, value) in enumerate(filtered_updates.items()):
+        attr_val_placeholder = f":val{i}"
+        attr_name_placeholder = f"#key{i}"
+        update_expression_parts.append(f"{attr_name_placeholder} = {attr_val_placeholder}")
+        expression_attribute_names[attr_name_placeholder] = key
+        expression_attribute_values[attr_val_placeholder] = value
+
+    if not update_expression_parts:
+        return None
+
+    update_expression = "SET " + ", ".join(update_expression_parts)
+
+    # Convert floats/ints in values to Decimals for DynamoDB
+    decimal_values = json.loads(json.dumps(expression_attribute_values), parse_float=decimal.Decimal)
+
+    return {
+        'UpdateExpression': update_expression,
+        'ExpressionAttributeNames': expression_attribute_names,
+        'ExpressionAttributeValues': decimal_values
+    }
+
+def scan_table(table_name, **kwargs):
+    """
+    Perform a scan operation on a DynamoDB table.
+    Warning: Scans read the entire table and can be inefficient and costly for large tables.
+    Use queries with specific keys and indexes whenever possible.
 
     Args:
         table_name (str): DynamoDB table name
         **kwargs: Additional scan parameters (e.g., FilterExpression)
 
     Returns:
-        list: Scan results
+        list: A list of items from the scan operation.
     """
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = get_dynamodb_resource()
     table = dynamodb.Table(table_name)
 
     try:
         response = table.scan(**kwargs)
-        # Handle potential pagination if the table is large
         items = response.get('Items', [])
         while 'LastEvaluatedKey' in response:
             logger.info(f"Scanning {table_name} again for pagination...")
@@ -54,24 +119,25 @@ def query_table(table_name, **kwargs):
         logger.error(f"Error scanning table {table_name}: {e}", exc_info=True)
         raise
 
-def get_item_by_id(table_name, item_id):
+def get_item_by_id(table_name, item_id, p_key='id'):
     """
     Get item by ID from DynamoDB table
 
     Args:
         table_name (str): DynamoDB table name
-        item_id (str): Item ID (primary key 'id')
+        item_id (str): Item ID
+        p_key (str): The name of the primary key. Defaults to 'id'.
 
     Returns:
         dict: Item data or None if not found
     """
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = get_dynamodb_resource()
     table = dynamodb.Table(table_name)
 
     try:
         response = table.get_item(
             Key={
-                'id': item_id
+                p_key: item_id
             }
         )
         return response.get('Item')
@@ -90,7 +156,7 @@ def put_item(table_name, item):
     Returns:
         dict: The item that was put
     """
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = get_dynamodb_resource()
     table = dynamodb.Table(table_name)
 
     try:
@@ -122,62 +188,46 @@ def create_item(table_name, item):
     item['createdAt'] = timestamp
     item['updatedAt'] = timestamp
 
-    return put_item(table_name, item)
+    try:
+        return put_item(table_name, item)
+    except ClientError as e:
+        raise e
 
 
-def update_item(table_name, item_id, updates):
+def update_item(table_name, item_id, updates, p_key='id'):
     """
     Update item in DynamoDB table
 
     Args:
         table_name (str): DynamoDB table name
-        item_id (str): Item ID to update (primary key 'id')
+        item_id (str): Item ID to update
         updates (dict): Fields to update
+        p_key (str): The name of the primary key. Defaults to 'id'.
 
     Returns:
         dict: Updated item attributes
     """
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = get_dynamodb_resource()
     table = dynamodb.Table(table_name)
 
     if not updates:
         logger.warning(f"No updates provided for item {item_id} in table {table_name}. Returning current item.")
-        return get_item_by_id(table_name, item_id) # Return current item if no updates
+        return get_item_by_id(table_name, item_id, p_key)
 
     # Add updatedAt timestamp automatically
-    updates['updatedAt'] = datetime.utcnow().isoformat() + "Z" # Add Z for UTC timezone indicator
+    updates['updatedAt'] = datetime.utcnow().isoformat() + "Z"
 
-    # Build update expression
-    update_expression_parts = []
-    expression_attribute_values = {}
-    expression_attribute_names = {} # Needed if keys are reserved words
+    update_params = _build_update_params(updates, exclude_keys=[p_key])
 
-    for i, (key, value) in enumerate(updates.items()):
-        if key != 'id': # Don't update the primary key
-            attr_val_placeholder = f":val{i}"
-            attr_name_placeholder = f"#key{i}"
-            update_expression_parts.append(f"{attr_name_placeholder} = {attr_val_placeholder}")
-            expression_attribute_names[attr_name_placeholder] = key
-            expression_attribute_values[attr_val_placeholder] = value
-
-    if not update_expression_parts:
-         logger.warning(f"No valid fields to update for item {item_id} in table {table_name}. Returning current item.")
-         return get_item_by_id(table_name, item_id)
-
-    update_expression = "SET " + ", ".join(update_expression_parts)
+    if not update_params:
+        logger.warning(f"No valid fields to update for item {item_id} in table {table_name}. Returning current item.")
+        return get_item_by_id(table_name, item_id, p_key)
 
     try:
-         # Convert floats/ints in values to Decimals if needed
-        decimal_values = json.loads(json.dumps(expression_attribute_values), parse_float=decimal.Decimal)
-
         response = table.update_item(
-            Key={
-                'id': item_id
-            },
-            UpdateExpression=update_expression,
-            ExpressionAttributeNames=expression_attribute_names,
-            ExpressionAttributeValues=decimal_values,
-            ReturnValues='ALL_NEW' # Return the entire updated item
+            Key={p_key: item_id},
+            **update_params,
+            ReturnValues='ALL_NEW'
         )
         return response.get('Attributes')
     except ClientError as e:
@@ -188,21 +238,22 @@ def update_item(table_name, item_id, updates):
         raise
 
 
-def delete_item(table_name, item_id):
+def delete_item(table_name, item_id, p_key='id'):
     """
     Delete item from DynamoDB table
 
     Args:
         table_name (str): DynamoDB table name
-        item_id (str): Item ID to delete (primary key 'id')
+        item_id (str): Item ID to delete
+        p_key (str): The name of the primary key. Defaults to 'id'.
     """
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = get_dynamodb_resource()
     table = dynamodb.Table(table_name)
 
     try:
         response = table.delete_item(
             Key={
-                'id': item_id
+                p_key: item_id
             },
             ReturnValues='ALL_OLD' # Optionally return the deleted item
         )
@@ -223,18 +274,17 @@ def generate_response(status_code, body):
     Returns:
         dict: API Gateway response object
     """
-    response = {
+    return {
         'statusCode': status_code,
         'headers': {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',  # Basic CORS header
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT,DELETE'
         },
         # Use the custom DecimalEncoder to handle DynamoDB numbers
         'body': json.dumps(body, cls=DecimalEncoder)
     }
-    
-    # Import here to avoid circular imports
-    from utils.cors import add_cors_headers
-    return add_cors_headers(response)
 
 def get_patient_by_pk_sk(table_name, pk, sk):
     """
@@ -246,7 +296,7 @@ def get_patient_by_pk_sk(table_name, pk, sk):
     Returns:
         dict: Item data or None if not found
     """
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = get_dynamodb_resource()
     table = dynamodb.Table(table_name)
     try:
         response = table.get_item(Key={'PK': pk, 'SK': sk})
@@ -268,7 +318,7 @@ def update_item_by_pk_sk(table_name, pk, sk, updates):
     Returns:
         dict: Updated item attributes
     """
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = get_dynamodb_resource()
     table = dynamodb.Table(table_name)
 
     if not updates:
@@ -277,35 +327,15 @@ def update_item_by_pk_sk(table_name, pk, sk, updates):
     # Add updatedAt timestamp automatically
     updates['updatedAt'] = datetime.utcnow().isoformat() + "Z"
 
-    # Build update expression
-    update_expression_parts = []
-    expression_attribute_values = {}
-    expression_attribute_names = {}
+    update_params = _build_update_params(updates, exclude_keys=['PK', 'SK'])
 
-    for i, (key, value) in enumerate(updates.items()):
-        if key not in ['PK', 'SK']: # Don't update the primary keys
-            attr_val_placeholder = f":val{i}"
-            attr_name_placeholder = f"#key{i}"
-            update_expression_parts.append(f"{attr_name_placeholder} = {attr_val_placeholder}")
-            expression_attribute_names[attr_name_placeholder] = key
-            expression_attribute_values[attr_val_placeholder] = value
-
-    if not update_expression_parts:
+    if not update_params:
         return get_patient_by_pk_sk(table_name, pk, sk)
 
-    update_expression = "SET " + ", ".join(update_expression_parts)
-
     try:
-        decimal_values = json.loads(json.dumps(expression_attribute_values), parse_float=decimal.Decimal)
-
         response = table.update_item(
-            Key={
-                'PK': pk,
-                'SK': sk
-            },
-            UpdateExpression=update_expression,
-            ExpressionAttributeNames=expression_attribute_names,
-            ExpressionAttributeValues=decimal_values,
+            Key={'PK': pk, 'SK': sk},
+            **update_params,
             ReturnValues='ALL_NEW'
         )
         return response.get('Attributes')
@@ -325,7 +355,7 @@ def query_by_type(table_name, type_value, last_evaluated_key=None):
     Returns:
         dict: Query results with Items and LastEvaluatedKey
     """
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = get_dynamodb_resource()
     table = dynamodb.Table(table_name)
     query_params = {
         'IndexName': 'type-index',

@@ -193,6 +193,9 @@ class TestDisableUser:
 # The DynamoDB update in `test_disable_user_successful` assumes a field like `status` is set to `"DISABLED"`.
 # This depends on the handler's design for the `UsersTable`.
 #
-# All other fixture and mocking considerations are similar to `test_enable_user.py`.The test file for `disable_user.lambda_handler` has been created.
-# End of valid Python code. Removed markdown and commentary for pytest compatibility.
-**Step 2.7: Create `backend/tests/python/handlers/users/test_upload_profile_image.py`**
+# All other fixture and mocking considerations are similar to `test_enable_user.py`.
+#
+# The test file for `disable_user.lambda_handler` has been created.
+# # End of valid Python code. Removed markdown and commentary for pytest compatibility.
+#
+# **Step 2.7: Create `backend/tests/python/handlers/users/test_upload_profile_image.py`**

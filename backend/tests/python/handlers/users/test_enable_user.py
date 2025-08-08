@@ -213,12 +213,14 @@ class TestEnableUser:
 # to simulate the user existing (and being disabled) if the handler checks first.
 #
 # The DynamoDB failure test `test_enable_user_dynamodb_failure` assumes the Cognito part succeeded.
-# This is crucial for testing the atomicity or error handling of the combined operation.The test file for `enable_user.lambda_handler` has been created.
-
-**Step 2.6: Create `backend/tests/python/handlers/users/test_disable_user.py`**
-This will test `disable_user.lambda_handler`.
-Structure will be very similar to `test_enable_user.py` but for the disable action.
-It interacts with Cognito to disable a user. It might also update a status in `UsersTable`.
-The `template.yaml` shows `DisableUserFunction` uses `CodeUri: src/handlers/users/`, `Handler: disable_user.lambda_handler`, and does *not* explicitly list `UtilsLayer`.
-Username is from path parameter. Policies: Cognito `AdminDisableUser`, DynamoDB CRUD.
-Assumptions: `username` in path is the Cognito username (email). `UsersTable.id` is the Cognito username. Handler updates a `status` or `enabled` field in `UsersTable`.
+# This is crucial for testing the atomicity or error handling of the combined operation.
+#
+# The test file for `enable_user.lambda_handler` has been created.
+#
+# **Step 2.6: Create `backend/tests/python/handlers/users/test_disable_user.py`**
+# This will test `disable_user.lambda_handler`.
+# Structure will be very similar to `test_enable_user.py` but for the disable action.
+# It interacts with Cognito to disable a user. It might also update a status in `UsersTable`.
+# The `template.yaml` shows `DisableUserFunction` uses `CodeUri: src/handlers/users/`, `Handler: disable_user.lambda_handler`, and does *not* explicitly list `UtilsLayer`.
+# Username is from path parameter. Policies: Cognito `AdminDisableUser`, DynamoDB CRUD.
+# Assumptions: `username` in path is the Cognito username (email). `UsersTable.id` is the Cognito username. Handler updates a `status` or `enabled` field in `UsersTable`.

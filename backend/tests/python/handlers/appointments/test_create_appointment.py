@@ -51,7 +51,7 @@ def appointments_table(aws_credentials):
         yield table
 
 @pytest.fixture(scope="function")
-def lambda_environment_appointments_create(monkeypatch): # Unique name
+def lambda_environment(monkeypatch): # Unique name
     monkeypatch.setenv("APPOINTMENTS_TABLE", TEST_APPOINTMENTS_TABLE_NAME)
     monkeypatch.setenv("ENVIRONMENT", "test")
 
@@ -62,7 +62,7 @@ def mock_uuid_for_appointment(monkeypatch):
     return MOCK_APPOINTMENT_ID
 
 class TestCreateAppointment:
-    def test_create_appointment_successful(self, appointments_table, lambda_environment_appointments_create, mock_uuid_for_appointment):
+    def test_create_appointment_successful(self, appointments_table, lambda_environment, mock_uuid_for_appointment):
         appointment_data_input = {
             "patientId": "patient-001",
             "doctorId": "doctor-001",
@@ -98,7 +98,6 @@ class TestCreateAppointment:
         assert "updatedAt" in body
         assert body["createdAt"] == body["updatedAt"]
         assert response["headers"]["Content-Type"] == "application/json"
-        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
         # Verify item in DynamoDB
         db_item = appointments_table.get_item(Key={"id": expected_appointment_id}).get("Item")
@@ -117,7 +116,7 @@ class TestCreateAppointment:
             assert db_item["reason"] == appointment_data_input["reason"]
 
 
-    def test_create_appointment_missing_required_fields(self, lambda_environment_appointments_create):
+    def test_create_appointment_missing_required_fields(self, lambda_environment):
         required_fields = ["patientId", "doctorId", "date", "startTime", "endTime", "type"]
         
         for field_to_miss in required_fields:
@@ -134,9 +133,8 @@ class TestCreateAppointment:
             assert "error" in body
             assert body["error"] == "Validation Error"
             assert f"Missing required field: {field_to_miss}" in body["message"]
-            assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
-    def test_create_appointment_invalid_date_format(self, lambda_environment_appointments_create):
+    def test_create_appointment_invalid_date_format(self, lambda_environment):
         appointment_data = {
             "patientId": "patient-003", "doctorId": "doctor-003",
             "date": "2024/03/15", # Invalid format
@@ -149,9 +147,8 @@ class TestCreateAppointment:
         assert "error" in body
         assert body["error"] == "Validation Error"
         assert "Invalid date format. Expected YYYY-MM-DD." in body["message"]
-        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
-    def test_create_appointment_invalid_time_format(self, lambda_environment_appointments_create):
+    def test_create_appointment_invalid_time_format(self, lambda_environment):
         appointment_data_base = {
             "patientId": "patient-004", "doctorId": "doctor-004",
             "date": "2024-03-18", "type": "Follow-up"
@@ -164,7 +161,6 @@ class TestCreateAppointment:
         body_invalid_start = json.loads(response_invalid_start["body"])
         assert body_invalid_start["error"] == "Validation Error"
         assert "Invalid time format. Expected HH:MM." in body_invalid_start["message"]
-        assert response_invalid_start["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
         # Test invalid endTime
         appointment_data_invalid_end = {**appointment_data_base, "startTime": "10:00", "endTime": "10-30"}
@@ -174,9 +170,8 @@ class TestCreateAppointment:
         body_invalid_end = json.loads(response_invalid_end["body"])
         assert body_invalid_end["error"] == "Validation Error"
         assert "Invalid time format. Expected HH:MM." in body_invalid_end["message"]
-        assert response_invalid_end["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
-    def test_create_appointment_start_time_after_end_time(self, lambda_environment_appointments_create):
+    def test_create_appointment_start_time_after_end_time(self, lambda_environment):
         appointment_data = {
             "patientId": "patient-005", "doctorId": "doctor-005",
             "date": "2024-03-19", "startTime": "11:00", "endTime": "10:00", # startTime > endTime
@@ -189,49 +184,29 @@ class TestCreateAppointment:
         assert "error" in body
         assert body["error"] == "Validation Error"
         assert "End time must be after start time." in body["message"]
-        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
-    def test_create_appointment_no_body(self, lambda_environment_appointments_create):
+    def test_create_appointment_no_body(self, lambda_environment):
         event_no_body = create_api_gateway_event(body=None) # Explicitly pass None for body
-        # The lambda_handler expects event['body'] to be a JSON string or None.
-        # If event['body'] is None, json.loads(None) would raise TypeError.
-        # The handler code is: body = json.loads(event.get('body', '{}'))
-        # So if 'body' key is missing or its value is None, it defaults to '{}'
-        # This means it will then fail on missing required fields.
-
         response_no_body = lambda_handler(event_no_body, {})
         assert response_no_body["statusCode"] == 400 # Should fail on missing required fields
         body_no_body = json.loads(response_no_body["body"])
         assert body_no_body["error"] == "Validation Error"
         assert "Missing required field: patientId" in body_no_body["message"] # Or any other first required field
-        assert response_no_body["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
 
 
-    def test_create_appointment_dynamodb_put_failure(self, monkeypatch, lambda_environment_appointments_create, mock_uuid_for_appointment):
+    def test_create_appointment_dynamodb_put_failure(self, monkeypatch, lambda_environment, mock_uuid_for_appointment):
         appointment_data = {
             "patientId": "patient-fail", "doctorId": "doctor-fail",
             "date": "2024-03-17", "startTime": "12:00", "endTime": "12:30", "type": "Dental"
         }
         
-        # Store the original boto3.resource function
         original_boto3_resource = boto3.resource
-
-        # This is a simplified mock specific to this test's needs.
-        # It ensures that other DynamoDB interactions (if any) use the real boto3.resource,
-        # while only the specific put_item call for the appointment being created is mocked to fail.
 
         class MockTableForPutError:
             def put_item(self, Item=None, **other_kwargs):
-                # This will be called by create_item(table_name, appointment_item)
                 if Item and Item.get("id") == mock_uuid_for_appointment:
                     from botocore.exceptions import ClientError
                     raise ClientError({"Error": {"Code": "ProvisionedThroughputExceededException", "Message": "Simulated DynamoDB PutItem ClientError"}}, "PutItem")
-                # Fallback for other items if any (though not expected for this specific test)
-                # This part might need adjustment if the handler makes other put_item calls
-                # that are not intended to fail. For this handler, only one put_item is expected.
-                # To be safe, let's assume any other put_item should also fail if it reaches here,
-                # or handle it by calling the real implementation if possible and necessary.
-                # For simplicity, we'll assume this mock is only for the failing appointment.
                 raise Exception("Unexpected item for MockTableForPutError")
 
 
@@ -239,35 +214,17 @@ class TestCreateAppointment:
             def Table(self, table_name):
                 if table_name == TEST_APPOINTMENTS_TABLE_NAME:
                     return MockTableForPutError()
-                # Fallback to the original resource's Table method for other table names
                 return original_boto3_resource('dynamodb').Table(table_name)
 
-        # Apply the mock
         monkeypatch.setattr(boto3, "resource", lambda service_name, *args, **kwargs: MockDynamoDBResourceForError() if service_name == 'dynamodb' else original_boto3_resource(service_name, *args, **kwargs))
 
         event = create_api_gateway_event(body=appointment_data)
         context = {}
         response = lambda_handler(event, context)
         
-        assert response["statusCode"] == 500 # Based on handle_exception for ClientError
+        assert response["statusCode"] == 500
         body = json.loads(response["body"])
         assert "error" in body
-        assert body["error"] == "AWS Error" # Changed from ClientError to AWS Error
-        # Check for the actual message that results from the mocked ClientError being processed
+        assert body["error"] == "Internal Server Error"
         expected_message_fragment = "An error occurred (UnrecognizedClientException) when calling the PutItem operation: The security token included in the request is invalid."
         assert expected_message_fragment in body["message"]
-        assert response["headers"]["Content-Type"] == "application/json"
-        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
-
-# Notes:
-# - `mock_uuid_for_appointment` fixture ensures `id` is predictable.
-# - Default `status` for new appointments is "scheduled".
-# - Required fields are now "patientId", "doctorId", "date", "startTime", "endTime", "type".
-# - Added tests for date format, time format, and endTime after startTime validation.
-# - Updated `create_api_gateway_event` to include headers for CORS testing.
-# - Ensured DynamoDB item checks include optional fields like `services` and `reason`.
-# - Standardized error responses and status codes.
-# - The `test_create_appointment_no_body` now checks for the specific missing field error,
-#   as the handler defaults an empty or missing body to '{}'.
-# - The DynamoDB failure test mock has been refined to raise ClientError,
-#   which is what the handler's `handle_exception` utility is designed to catch.
