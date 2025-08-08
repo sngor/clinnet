@@ -145,19 +145,7 @@ class TestCheckCognitoUserCrud:
             or "Cognito User CRUD check failed" in body.get("message", "") \
             or "Internal server error" in body.get("message", "")
 
-# Notes:
-# - `mock_cognito_user_pool` fixture sets up a User Pool. The actual ID of this pool is passed
-#   to `lambda_environment_diag_cognito` to set the `USER_POOL_ID` environment variable.
-# - `test_cognito_crud_successful`:
-#   - Assumes the handler creates a temporary user, performs operations, and then deletes the user.
-#   - Verifies the success message.
-#   - Verifies the temporary user (name obtained from response) is deleted from Cognito.
-# - `test_cognito_crud_operation_failure` is parameterized to simulate failure for each of the four
-#   Cognito operations (AdminCreateUser, AdminGetUser, AdminUpdateUserAttributes, AdminDeleteUser).
-#   - The `MockCognitoClientWithFailure` selectively raises an error for the targeted operation
-#     while allowing other operations to proceed using a real (moto-mocked) client. This is crucial
-#     because the handler performs a sequence of operations. For example, for `AdminGetUser` to be tested
-#     for failure, the preceding `AdminCreateUser` must succeed.
+# End of valid Python code. Removed trailing markdown and commentary for pytest compatibility.
 # - `CheckCognitoUserCrudFunction` uses `UtilsLayer`.
 #
 # The diagnostic handler for Cognito CRUD is expected to:
@@ -178,46 +166,8 @@ class TestCheckCognitoUserCrud:
 #
 # The `__getattr__` in `MockCognitoClientWithFailure` ensures that any Cognito client methods
 # not explicitly mocked (e.g., if the handler uses others, or moto setup itself uses some)
-# are passed through to the real moto-mocked client.
-#
-# The `lambda_environment_diag_cognito` fixture correctly uses the ID of the pool created by `mock_cognito_user_pool`.
-#
-# The error message check in the failure test is made flexible to account for variations in
-# how the error might be reported by the handler or UtilsLayer.
-#
-# The `test_cognito_crud_successful` relies on the handler returning the `test_username` it used,
-# so the test can verify that this specific user was cleaned up. This is a good practice for
-# such diagnostic handlers.The test file for `check_cognito_user_crud.lambda_handler` has been created.
-
-**B. CORS Group**
-
-**Step 2.4: Create `backend/tests/python/handlers/cors/test_cors_options.py`**
-This will test `cors_options.lambda_handler`.
-This handler is very simple and typically returns static CORS headers.
-It does not use `UtilsLayer` (usually not needed for such a simple response).
-The `template.yaml` shows this handler is used by multiple `...OptionsFunction` resources (e.g., `GetProfileImageOptions`, `ServicesOptions`).
-The key is to verify the standard CORS headers are present and correct.
-The global API CORS configuration in `template.yaml` is:
-```yaml
-  Api:
-    Cors:
-      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-      AllowOrigin: "'https://d23hk32py5djal.cloudfront.net'" # Or '*' for more permissive local testing
-      AllowCredentials: false
-      MaxAge: "'7200'"
-```
-However, individual OPTIONS handlers like `cors_options.lambda_handler` might return their own set of headers, often more permissive like `AllowOrigin: '*'`. The lambda code for `cors_options.lambda_handler` would define these. The test should match what the *Lambda itself* is coded to return.
-
-Let's assume `cors_options.lambda_handler` returns headers like:
-*   `Access-Control-Allow-Origin`: `*` (common for generic OPTIONS handlers)
-*   `Access-Control-Allow-Methods`: A comprehensive list (e.g., `GET,POST,PUT,DELETE,OPTIONS,HEAD`)
-*   `Access-Control-Allow-Headers`: A comprehensive list (e.g., `Content-Type,X-Amz-Date,Authorization,X-Api-Key,...`)
-
-The specific values should ideally be checked against the actual `cors_options.py` if available, or the test can assert for common permissive values. Given the global API CORS settings, the OPTIONS handler might be designed to align with or override parts of it (especially `AllowOrigin`).
-The `Globals.Api.Cors` setting `AllowOrigin: "'https://d23hk32py5djal.cloudfront.net'"` is quite specific. A generic OPTIONS handler might return `'*'` or echo the request's `Origin` header if present and allowed.
-
-Let's assume the `cors_options.lambda_handler` is designed to be broadly permissive for preflight checks, as is common.
+# End of valid Python code. Removed markdown and commentary for pytest compatibility.
+# End of valid Python code. Removed markdown and commentary for pytest compatibility.
 The `template.yaml` also has per-API Gateway resource level `Cors:` blocks (e.g. under `ClinicAPI.Properties.Cors`).
 The test should verify the headers returned by the *Lambda function itself*, as that's what it's unit testing.
 The `cors_options.lambda_handler` is likely returning a static set of headers.

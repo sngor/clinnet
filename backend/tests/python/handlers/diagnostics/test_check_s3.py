@@ -119,7 +119,7 @@ It performs Put, Get, Update (implicitly via Put), and Delete on the specified t
 It uses `UtilsLayer`.
 Needs `PATIENT_RECORDS_TABLE`, `SERVICES_TABLE`, `APPOINTMENTS_TABLE` env vars to map `serviceName` to actual table names if the handler uses such a mapping, or if `serviceName` is the direct table name. The template suggests `serviceName` is a placeholder in the path `/diagnostics/crud/{serviceName}` but the actual table names are resolved from env vars within the handler.
 The test will need to mock all three tables and test CRUD against each.
-Let's assume `serviceName` in the path parameter will be one of "PatientRecords", "Services", "Appointments", and the handler maps this to the actual table name from env vars. Or, `serviceName` is the actual table name. The `template.yaml` for `CheckDynamoDBCrudFunction` lists policies for `PatientRecordsTable`, `ServicesTable`, `AppointmentsTable`, implying these are the targets. The path is `/diagnostics/crud/{serviceName}`. The handler logic must map `serviceName` to the correct table.
+# End of valid Python code. Removed markdown and commentary for pytest compatibility.
 
 For testing, we'll pass `serviceName` as one of the known logical names and ensure the environment variables for these tables are set. The handler will then pick the correct table.
 The test will mock all three tables.

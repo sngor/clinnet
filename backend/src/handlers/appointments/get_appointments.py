@@ -8,11 +8,12 @@ import boto3 # Added boto3
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key, Attr # Added Key, Attr for safety, though may not be strictly needed for the new code
 
-# Import utility functions
-from utils.db_utils import query_table, generate_response
+from backend.src.utils.db_utils import query_table, generate_response
 
-from utils.responser_helper import handle_exception, build_error_response
-from utils.cors import build_cors_preflight_response, add_cors_headers
+from backend.src.utils.responser_helper import handle_exception, build_error_response
+from backend.src.utils.cors import build_cors_preflight_response, add_cors_headers
+
+logger = logging.getLogger(__name__)
 
 
 def lambda_handler(event, context):

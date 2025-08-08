@@ -236,8 +236,5 @@ class TestCheckDynamoDBCrud:
 # The error message check in the failure test is flexible.
 # The `__getattr__` in `MockTableWithFailure` ensures that methods not explicitly mocked
 # (like `query`, `scan`, etc., if they were ever called) would pass through to the underlying moto table.The test file for `check_dynamodb_crud.lambda_handler` has been created.
-
-**Step 2.3: Create `backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py`**
-This will test `check_cognito_user_crud.lambda_handler`.
-The handler performs a sequence of AdminCreateUser, AdminGetUser, AdminUpdateUserAttributes, AdminDeleteUser.
-It uses `UtilsLayer`. Needs `USER_POOL_ID` env var.
+# End of valid Python code. Removed markdown and commentary for pytest compatibility.
+# End of valid Python code. Removed markdown and commentary for pytest compatibility.

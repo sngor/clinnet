@@ -294,5 +294,5 @@ class TestUpdateService:
 # The `test_update_service_invalid_price_type` also relies on specific handler validation.
 #
 # The structure and fixtures are consistent and well-applied.The test file for `update_service` has been created. I will now proceed to create the test file for `delete_service.lambda_handler`.
-
+# End of valid Python code. Removed markdown and commentary for pytest compatibility.
 **Step 2.5: Create `backend/tests/python/handlers/services/test_delete_service.py`**

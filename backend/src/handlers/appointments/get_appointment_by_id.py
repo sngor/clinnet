@@ -6,11 +6,12 @@ import json
 import logging # Added
 from botocore.exceptions import ClientError
 
-# Import utility functions
-from utils.db_utils import get_item_by_id, generate_response
+from backend.src.utils.db_utils import get_item_by_id, generate_response
 
-from utils.responser_helper import handle_exception, build_error_response
-from utils.cors import add_cors_headers
+from backend.src.utils.responser_helper import handle_exception, build_error_response
+from backend.src.utils.cors import add_cors_headers
+
+logger = logging.getLogger(__name__)
 
 
 def lambda_handler(event, context):

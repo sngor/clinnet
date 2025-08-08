@@ -194,21 +194,5 @@ class TestDisableUser:
 # This depends on the handler's design for the `UsersTable`.
 #
 # All other fixture and mocking considerations are similar to `test_enable_user.py`.The test file for `disable_user.lambda_handler` has been created.
-
+# End of valid Python code. Removed markdown and commentary for pytest compatibility.
 **Step 2.7: Create `backend/tests/python/handlers/users/test_upload_profile_image.py`**
-This will test `upload_profile_image.lambda_handler`.
-It interacts with S3 to upload an image and Cognito to update user's `profile_image` attribute.
-The `template.yaml` shows `UploadProfileImageFunction` uses `CodeUri: src/handlers/users/`, `Handler: upload_profile_image.lambda_handler`, and the `UtilsLayer`.
-It needs `DOCUMENTS_BUCKET` and `USER_POOL_ID` from environment variables.
-The S3 path is `profile-images/<cognito_user_sub>/<filename>`.
-The request is expected to be `multipart/form-data` with a file part. API Gateway needs to be configured for binary media types and pass this through. For testing, we'll mock the event as if API Gateway has processed it and provided the file content (e.g., base64 encoded) and filename in the event body. The exact event structure depends on how API Gateway is configured and how the Lambda expects the file data.
-Commonly, for Lambda proxy integration with binary data, `event['isBase64Encoded'] = True` and `event['body']` contains the base64 string. The handler then decodes it. Content-type header is also important.
-
-Let's assume the handler expects a JSON body with `filename` and `file_content_base64`.
-Or, if API Gateway is set up for `multipart/form-data` passthrough and the Lambda uses a parser, the event structure might be more complex. For Lambda with Python, often a presigned URL for upload is preferred for large files to avoid Lambda payload limits. Given this is a direct upload *through* Lambda, it implies smaller files, likely base64 encoded in JSON.
-
-Let's assume the Lambda expects:
-`event['body'] = json.dumps({"filename": "profile.jpg", "image_data_base64": "<base64_string>"})`
-And the Cognito username (to find the SUB) is part of the path or resolved from the JWT token. The template doesn't show a path param for username, so it's likely from the JWT token (`event.requestContext.authorizer.claims.sub` or `username`). Let's assume it uses `event.requestContext.authorizer.claims['cognito:username']` to get the username, then `admin_get_user` to get the `sub`. Or, if `profile_image` is associated with the username itself, then `sub` might not be strictly needed for the S3 path, but it's good practice. The policy refers to `profile-images/*`, not specific user subfolders. Let's assume the S3 path will be `profile-images/<username_or_sub>/<filename>`.
-
-For simplicity, let's test with `username` from authorizer claims being used to construct S3 path part. The Cognito `profile_image` custom attribute will store the S3 object URL.

@@ -8,11 +8,11 @@ from datetime import datetime # ensure datetime is imported
 import logging
 from botocore.exceptions import ClientError
 
-# Import utility functions
-# Utility imports should now work if PYTHONPATH is set correctly
-from utils.db_utils import create_item, generate_response
-from utils.responser_helper import handle_exception, build_error_response
-from utils.cors import add_cors_headers
+from backend.src.utils.db_utils import create_item, generate_response
+from backend.src.utils.responser_helper import handle_exception, build_error_response
+from backend.src.utils.cors import add_cors_headers
+
+logger = logging.getLogger(__name__)
 
 
 def lambda_handler(event, context):

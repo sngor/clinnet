@@ -7,6 +7,9 @@ from backend.src.handlers.patients.create_patient import lambda_handler # Adjust
 import uuid
 from decimal import Decimal # If any numeric values need Decimal conversion for DynamoDB
 
+# Update db_utils import
+from backend.src.utils.db_utils import generate_response
+
 # Define the patient records table name for tests
 TEST_PATIENT_RECORDS_TABLE_NAME = "clinnet-patient-records-test"
 MOCK_PATIENT_ID = "fixed-patient-uuid-123"

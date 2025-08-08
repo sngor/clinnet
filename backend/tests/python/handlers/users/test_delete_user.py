@@ -192,10 +192,5 @@ class TestDeleteUser:
 # All other fixtures (`aws_credentials`, `cognito_user_pool_and_id_delete`, `users_table_delete`,
 # `lambda_environment_delete`) are standard for these tests.
 # Error messages are examples.
-# The test for successful deletion allows for 200 (with message) or 204 (no content) status codes.The test file for `delete_user.lambda_handler` has been created.
+# End of valid Python code. Removed markdown and commentary for pytest compatibility.
 
-**Step 2.5: Create `backend/tests/python/handlers/users/test_enable_user.py`**
-This will test `enable_user.lambda_handler`.
-It interacts with Cognito to enable a user. It might also update a status in `UsersTable`.
-The `template.yaml` shows `EnableUserFunction` uses `CodeUri: src/handlers/users/`, `Handler: enable_user.lambda_handler`, and does *not* explicitly list `UtilsLayer`.
-Username is from path parameter. Policies: Cognito `AdminEnableUser`, DynamoDB CRUD.
