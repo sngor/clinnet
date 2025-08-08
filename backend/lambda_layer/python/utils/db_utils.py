@@ -11,9 +11,6 @@ from datetime import datetime
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 
-# Initialize DynamoDB client
-dynamodb = boto3.resource('dynamodb')
-
 # Initialize Logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -40,6 +37,7 @@ def query_table(table_name, **kwargs):
     Returns:
         list: Scan results
     """
+    dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
 
     try:
@@ -67,6 +65,7 @@ def get_item_by_id(table_name, item_id):
     Returns:
         dict: Item data or None if not found
     """
+    dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
 
     try:
@@ -91,6 +90,7 @@ def put_item(table_name, item):
     Returns:
         dict: The item that was put
     """
+    dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
 
     try:
@@ -137,6 +137,7 @@ def update_item(table_name, item_id, updates):
     Returns:
         dict: Updated item attributes
     """
+    dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
 
     if not updates:
@@ -195,6 +196,7 @@ def delete_item(table_name, item_id):
         table_name (str): DynamoDB table name
         item_id (str): Item ID to delete (primary key 'id')
     """
+    dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
 
     try:
@@ -244,6 +246,7 @@ def get_patient_by_pk_sk(table_name, pk, sk):
     Returns:
         dict: Item data or None if not found
     """
+    dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
     try:
         response = table.get_item(Key={'PK': pk, 'SK': sk})
@@ -265,6 +268,7 @@ def update_item_by_pk_sk(table_name, pk, sk, updates):
     Returns:
         dict: Updated item attributes
     """
+    dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
 
     if not updates:
@@ -321,6 +325,7 @@ def query_by_type(table_name, type_value, last_evaluated_key=None):
     Returns:
         dict: Query results with Items and LastEvaluatedKey
     """
+    dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(table_name)
     query_params = {
         'IndexName': 'type-index',
