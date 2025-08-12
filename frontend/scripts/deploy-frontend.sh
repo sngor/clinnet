@@ -10,10 +10,33 @@ TEMPLATE_FILE="$FRONTEND_DIR/../backend/template.yaml"
 
 cd "$FRONTEND_DIR"
 
-# Ensure .env exists and is not empty
+# Additional environment checks
+echo "🔍 Validating environment..."
+
+# Check .env file
 if [ ! -s .env ]; then
-  echo "ERROR: .env file is missing or empty in $FRONTEND_DIR. Deployment aborted."
-  exit 1
+    echo "❌ .env file is missing or empty"
+    exit 1
+fi
+
+# Validate API URL in .env
+if ! grep -q "VITE_API_URL=" .env; then
+    echo "❌ VITE_API_URL not configured in .env"
+    exit 1
+fi
+
+# Check node version
+if ! node -v | grep -q "v18"; then
+    echo "❌ Node.js 18.x required"
+    exit 1
+fi
+
+# Validate npm dependencies
+echo "📦 Checking dependencies..."
+npm ls --depth=0
+if [ $? -ne 0 ]; then
+    echo "❌ Dependency issues detected"
+    exit 1
 fi
 
 echo "Using .env file for build:"

@@ -1,14 +1,39 @@
 # Clinnet-EMR Deployment Guide
 
-This guide covers deployment for both backend (AWS Lambda/SAM) and frontend (React/Vite) systems, as well as end-to-end testing and troubleshooting. It assumes you have completed all local development steps (see `docs/local-development.md`).
+## Prerequisites
+
+- **Node.js 18.x**
+- **Python 3.10+**
+- **AWS CLI & SAM CLI**
+- **AWS credentials configured**
+
+## Deployment Process
+
+### Backend
+
+```bash
+cd backend
+python deploy_validation.py
+```
+
+### Frontend
+
+```bash
+cd frontend
+./scripts/deploy-frontend.sh
+```
+
+## Post-Deployment Verification
+
+1. Check API Gateway endpoints
+2. Verify frontend accessibility
+3. Test core functionality
+4. Monitor CloudWatch logs
 
 ---
 
-## Backend Deployment (AWS Lambda/SAM)
+For more details, see the other guides in the `docs/` folder.
 
-### Prerequisites
-
-- **Python 3.10+** (check with `python --version`)
 - **AWS CLI** and **SAM CLI** installed and configured (`aws configure`)
 - **IAM permissions** for Lambda, API Gateway, S3, and DynamoDB
 - **Virtual environment**: Activate with `source test_env/bin/activate` (or create with `python -m venv test_env`)

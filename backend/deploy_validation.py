@@ -7,6 +7,7 @@ import subprocess
 import sys
 import os
 import json
+import time
 
 def run_command(command, description):
     """Run a command and return the result"""
@@ -31,25 +32,23 @@ def check_prerequisites():
     """Check if all prerequisites are met"""
     print("🔍 Checking prerequisites...")
     
-    # Check SAM CLI
-    success, output = run_command("sam --version", "Checking SAM CLI")
+    # Add test coverage check
+    success, output = run_command(
+        "pytest --cov=handlers --cov-report=term-missing",
+        "Running test coverage"
+    )
     if not success:
-        print("❌ SAM CLI not found. Please install AWS SAM CLI first.")
+        print("❌ Test coverage below threshold")
         return False
-    
-    # Check AWS credentials
-    success, output = run_command("aws sts get-caller-identity", "Checking AWS credentials")
+        
+    # Add template validation
+    success, output = run_command(
+        "sam validate --lint",
+        "Validating SAM template"
+    )
     if not success:
-        print("❌ AWS credentials not configured. Please configure AWS credentials.")
+        print("❌ SAM template validation failed")
         return False
-    
-    # Parse AWS account info
-    try:
-        account_info = json.loads(output)
-        print(f"✅ AWS Account: {account_info.get('Account', 'Unknown')}")
-        print(f"✅ AWS User: {account_info.get('Arn', 'Unknown')}")
-    except:
-        print("⚠️  Could not parse AWS account info, but credentials seem to work")
     
     return True
 
@@ -74,11 +73,34 @@ def validate_template():
     success, output = run_command("sam validate", "Validating SAM template")
     return success
 
+def monitor_deployment(stack_name, region):
+    """Monitor deployment progress"""
+    print("\n📊 Monitoring deployment status...")
+    max_attempts = 30
+    attempt = 1
+    
+    while attempt <= max_attempts:
+        success, output = run_command(
+            f"aws cloudformation describe-stacks --stack-name {stack_name} --region {region} --query 'Stacks[0].StackStatus' --output text",
+            f"Checking stack status (attempt {attempt}/{max_attempts})"
+        )
+        if success:
+            status = output.strip()
+            if status in ['CREATE_COMPLETE', 'UPDATE_COMPLETE']:
+                return True
+            elif status in ['CREATE_FAILED', 'UPDATE_FAILED', 'ROLLBACK_COMPLETE']:
+                return False
+        attempt += 1
+        time.sleep(30)
+    return False
+
 def deploy_application():
-    """Deploy the SAM application"""
+    """Deploy and monitor the SAM application"""
     print("\n🚀 Deploying SAM application...")
-    success, output = run_command("sam deploy", "Deploying SAM application")
-    return success
+    success, _ = run_command("sam deploy", "Initiating deployment")
+    if success:
+        return monitor_deployment("sam-clinnet", "us-east-2")
+    return False
 
 def get_stack_outputs():
     """Get the stack outputs to find API endpoint"""
@@ -124,6 +146,33 @@ def main():
         return False
     
     # Ask user if they want to deploy
+    print("\n🤔 All pre-deployment checks passed!")
+    response = input("Do you want to proceed with deployment? (y/N): ").strip().lower()
+    
+    if response in ['y', 'yes']:
+        # Deploy
+        if deploy_application():
+            print("\n🎉 Deployment successful!")
+            get_stack_outputs()
+            
+            print("\n📝 Next steps:")
+            print("1. Test the profile image endpoints in the frontend")
+            print("2. Verify CORS is working correctly")
+            print("3. Test error handling scenarios")
+            print("4. Monitor CloudWatch logs for any issues")
+            
+            return True
+        else:
+            print("\n❌ Deployment failed. Please check the deployment errors.")
+            return False
+    else:
+        print("\n⏸️  Deployment skipped by user.")
+        print("You can deploy later by running: sam deploy")
+        return True
+
+if __name__ == "__main__":
+    success = main()
+    sys.exit(0 if success else 1)
     print("\n🤔 All pre-deployment checks passed!")
     response = input("Do you want to proceed with deployment? (y/N): ").strip().lower()
     

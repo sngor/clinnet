@@ -46,9 +46,10 @@ See [docs/project-structure.md](./docs/project-structure.md) for a detailed dire
 
 ## 🏗️ Deployment Overview
 
-- **Backend**: See [deployment.md](./docs/deployment.md#backend-deployment-aws-lambdasam) for full instructions. Use `deploy_validation.py` for automated deployment, or `sam build && sam deploy` for manual.
-- **Frontend**: See [deployment.md](./docs/deployment.md#frontend-deployment-reactvite). Build with `npm run build` and deploy `dist/` to S3, Vercel, or Netlify. Use `scripts/deploy-frontend.sh` for S3 automation.
-- **Environment**: Set API URLs in `frontend/.env` and update Amplify config as needed.
+- **Backend**: Run `python backend/deploy_validation.py`
+- **Frontend**: Run `frontend/scripts/deploy-frontend.sh`
+
+For detailed instructions, see [deployment.md](./docs/deployment.md).
 
 ---
 
