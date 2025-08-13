@@ -13,7 +13,13 @@ def run_command(command, description):
     """Run a command and return the result"""
     print(f"🔧 {description}...")
     try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd='/Users/sengngor/Desktop/App/Clinnet-EMR/backend')
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            cwd='/Users/sengngor/Desktop/Apps/Clinnet-EMR/backend'
+        )
         if result.returncode == 0:
             print(f"✅ {description} completed successfully")
             if result.stdout.strip():
@@ -146,33 +152,6 @@ def main():
         return False
     
     # Ask user if they want to deploy
-    print("\n🤔 All pre-deployment checks passed!")
-    response = input("Do you want to proceed with deployment? (y/N): ").strip().lower()
-    
-    if response in ['y', 'yes']:
-        # Deploy
-        if deploy_application():
-            print("\n🎉 Deployment successful!")
-            get_stack_outputs()
-            
-            print("\n📝 Next steps:")
-            print("1. Test the profile image endpoints in the frontend")
-            print("2. Verify CORS is working correctly")
-            print("3. Test error handling scenarios")
-            print("4. Monitor CloudWatch logs for any issues")
-            
-            return True
-        else:
-            print("\n❌ Deployment failed. Please check the deployment errors.")
-            return False
-    else:
-        print("\n⏸️  Deployment skipped by user.")
-        print("You can deploy later by running: sam deploy")
-        return True
-
-if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
     print("\n🤔 All pre-deployment checks passed!")
     response = input("Do you want to proceed with deployment? (y/N): ").strip().lower()
     

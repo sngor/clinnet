@@ -94,7 +94,8 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
-    DeletionPolicy: Retain # Retaining the table on stack deletion
+  DeletionPolicy: Retain # Retaining the table on stack deletion
+  UpdateReplacePolicy: Retain
 
   UsersTable:
     Type: AWS::DynamoDB::Table
@@ -270,10 +271,10 @@ Resources:
         RESOURCE_NOT_FOUND:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'''*'''"
-              Access-Control-Allow-Headers: "'''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''"
-              Access-Control-Allow-Methods: "'''GET,POST,PUT,DELETE,OPTIONS'''"
-              Access-Control-Max-Age: "'''7200'''"
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
+              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              Access-Control-Max-Age: "'7200'"
 
   # Cognito User Pool
   UserPool:
@@ -448,7 +449,7 @@ Resources:
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer # CHANGED: Protect patient list
-    DependsOn: PatientRecordsTable
+    
 
   GetPatientByIdFunction:
     Type: AWS::Serverless::Function
@@ -753,29 +754,25 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: GetAggregatedReports # Explicit name
-      Handler: handlers/reports/getAggregatedReports.handler # Corrected path based on CodeUri
-      Runtime: nodejs18.x
-      CodeUri: src/ # Assuming template.yaml is in backend/, so src/ refers to backend/src/
+      Handler: handlers/reports/getAggregatedReports.handler
+      Runtime: nodejs22.x
+      CodeUri: src/
       Description: Fetches aggregated report data for admin reporting
       Policies:
         - AWSLambdaBasicExecutionRole
         - DynamoDBReadPolicy:
             TableName: !Ref AppointmentsTable
         - DynamoDBReadPolicy:
-            TableName: !Ref PatientRecordsTable # For patient counts and demographics
+            TableName: !Ref PatientRecordsTable
         - DynamoDBReadPolicy:
-            TableName: !Ref ServicesTable # For revenue calculations based on services
-        # If there's a specific Billing/Invoices table in the future, add policy for it too.
-      Environment: # Inherits from Globals, but can be specific if needed
+            TableName: !Ref ServicesTable
+      Environment:
         Variables:
-          # Example: REPORTS_CONFIG_TABLE: !Ref SomeOtherTable (if needed in future)
-          # For now, it will use global env vars like USER_POOL_ID if the handler needs it
-          # Ensure it gets necessary table names if it were to query them.
-          # Since it's mock data, no specific table names needed yet beyond globals.
           PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
           USERS_TABLE: !Ref UsersTable
           SERVICES_TABLE: !Ref ServicesTable
           APPOINTMENTS_TABLE: !Ref AppointmentsTable
+          APPOINTMENTS_TABLE_NAME: !Ref AppointmentsTable
           DOCUMENTS_BUCKET: !Ref DocumentsBucket
           ENVIRONMENT: !Ref Environment
           USER_POOL_ID: !Ref UserPool
@@ -784,10 +781,11 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports # Path for fetching aggregated reports
+            Path: /reports
             Method: get
             Auth:
-              Authorizer: CognitoAuthorizer # Protected endpoint
+              Authorizer: CognitoAuthorizer
+    
 
   RemoveProfileImageFunction:
     Type: AWS::Serverless::Function
@@ -1112,9 +1110,9 @@ Resources:
   MedicalReportsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/handlers/medical_reports/
-      Handler: index.handler # Assuming index.js as the entry point
-      Runtime: nodejs18.x
+      CodeUri: src/
+      Handler: handlers/medical_reports/index.handler # Entry point adjusted for shared CodeUri
+      Runtime: nodejs22.x
       Environment: # Add specific environment variables here
         Variables:
           MEDICAL_REPORTS_TABLE_NAME: !Ref MedicalReportsTable # Already available via Globals, but being explicit
@@ -1237,6 +1235,7 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE # OPTIONS should not be auth-protected
+    
 
   SummarizeDoctorNoteFunction:
     Type: AWS::Serverless::Function
@@ -1285,7 +1284,6 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub clinnet-frontend-${Environment}-${AWS::AccountId}-${AWS::Region}
-      AccessControl: Private
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: index.html

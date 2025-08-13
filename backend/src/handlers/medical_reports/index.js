@@ -1,20 +1,21 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const {
   DynamoDBDocumentClient,
   PutCommand,
   GetCommand,
   QueryCommand,
   UpdateCommand,
   DeleteCommand,
-} from "@aws-sdk/lib-dynamodb";
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { v4 as uuidv4 } from "uuid";
+} = require("@aws-sdk/lib-dynamodb");
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { v4: uuidv4 } = require("uuid");
 const parser = require('aws-lambda-multipart-parser');
-const { buildResponse, buildErrorResponse, buildCorsPreflightResponse } = require('../utils/js-helpers');
+// Correct relative path from handlers/medical_reports/ to src/utils/
+const { buildResponse, buildErrorResponse, buildCorsPreflightResponse } = require('../../utils/js-helpers');
 
 const dynamoDBClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
@@ -352,7 +353,7 @@ const uploadImageToReport = async (reportId, event, context, requestOrigin) => {
 
 
 // Main Lambda Handler
-export const handler = async (event, context) => {
+const handler = async (event, context) => {
   // Add AWS Request ID to all logs for better traceability
   const awsRequestId = context.awsRequestId;
   console.log(`Received event (requestId: ${awsRequestId}):`, JSON.stringify(event, null, 2));
@@ -437,3 +438,5 @@ export const handler = async (event, context) => {
     return buildErrorResponse(error.statusCode || 500, error.name || 'UnhandledError', error.message, requestOrigin);
   }
 };
+
+module.exports = { handler };

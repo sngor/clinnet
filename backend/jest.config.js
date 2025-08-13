@@ -7,6 +7,8 @@ module.exports = {
     "**/tests/**/*.test.js?(x)",
     "**/__tests__/**/*.test.js?(x)",
   ],
+  // Ignore SAM build artifacts to avoid package name collisions (jest-haste-map)
+  modulePathIgnorePatterns: ["<rootDir>/.aws-sam/"],
   // Automatically clear mock calls and instances between every test
   clearMocks: true,
   // Indicates whether the coverage information should be collected while executing the test

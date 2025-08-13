@@ -1,27 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1748323962926" clover="3.2.0">
-  <project timestamp="1748323962926" name="All files">
-    <metrics statements="18" coveredstatements="0" conditionals="10" coveredconditionals="0" methods="1" coveredmethods="0" elements="29" coveredelements="0" complexity="0" loc="18" ncloc="18" packages="1" files="1" classes="1"/>
-    <file name="listUsers.js" path="/app/backend/src/handlers/listUsers.js">
-      <metrics statements="18" coveredstatements="0" conditionals="10" coveredconditionals="0" methods="1" coveredmethods="0"/>
-      <line num="1" count="0" type="stmt"/>
-      <line num="2" count="0" type="stmt"/>
-      <line num="5" count="0" type="stmt"/>
-      <line num="8" count="0" type="stmt"/>
-      <line num="13" count="0" type="stmt"/>
-      <line num="14" count="0" type="stmt"/>
-      <line num="15" count="0" type="stmt"/>
-      <line num="18" count="0" type="cond" truecount="0" falsecount="2"/>
-      <line num="19" count="0" type="cond" truecount="0" falsecount="2"/>
-      <line num="20" count="0" type="cond" truecount="0" falsecount="2"/>
-      <line num="23" count="0" type="stmt"/>
-      <line num="29" count="0" type="cond" truecount="0" falsecount="2"/>
-      <line num="30" count="0" type="stmt"/>
-      <line num="34" count="0" type="stmt"/>
-      <line num="37" count="0" type="stmt"/>
-      <line num="40" count="0" type="stmt"/>
-      <line num="53" count="0" type="stmt"/>
-      <line num="55" count="0" type="stmt"/>
-    </file>
+<coverage generated="1755041173682" clover="3.2.0">
+  <project timestamp="1755041173682" name="All files">
+    <metrics statements="84" coveredstatements="0" conditionals="60" coveredconditionals="0" methods="4" coveredmethods="0" elements="148" coveredelements="0" complexity="0" loc="84" ncloc="84" packages="2" files="2" classes="2"/>
+    <package name="handlers">
+      <metrics statements="23" coveredstatements="0" conditionals="22" coveredconditionals="0" methods="1" coveredmethods="0"/>
+      <file name="listUsers.js" path="/Users/sengngor/Desktop/Apps/Clinnet-EMR/backend/src/handlers/listUsers.js">
+        <metrics statements="23" coveredstatements="0" conditionals="22" coveredconditionals="0" methods="1" coveredmethods="0"/>
+        <line num="1" count="0" type="stmt"/>
+        <line num="2" count="0" type="stmt"/>
+        <line num="3" count="0" type="stmt"/>
+        <line num="6" count="0" type="stmt"/>
+        <line num="9" count="0" type="stmt"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="15" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="16" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="19" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="20" count="0" type="stmt"/>
+        <line num="23" count="0" type="stmt"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="27" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="28" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="29" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="32" count="0" type="stmt"/>
+        <line num="38" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="39" count="0" type="stmt"/>
+        <line num="43" count="0" type="stmt"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="49" count="0" type="stmt"/>
+        <line num="54" count="0" type="stmt"/>
+        <line num="56" count="0" type="cond" truecount="0" falsecount="4"/>
+      </file>
+    </package>
+    <package name="handlers.reports">
+      <metrics statements="61" coveredstatements="0" conditionals="38" coveredconditionals="0" methods="3" coveredmethods="0"/>
+      <file name="getAggregatedReports.js" path="/Users/sengngor/Desktop/Apps/Clinnet-EMR/backend/src/handlers/reports/getAggregatedReports.js">
+        <metrics statements="61" coveredstatements="0" conditionals="38" coveredconditionals="0" methods="3" coveredmethods="0"/>
+        <line num="3" count="0" type="stmt"/>
+        <line num="12" count="0" type="stmt"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="17" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="18" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="19" count="0" type="stmt"/>
+        <line num="22" count="0" type="stmt"/>
+        <line num="28" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="30" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="32" count="0" type="stmt"/>
+        <line num="33" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="34" count="0" type="stmt"/>
+        <line num="35" count="0" type="stmt"/>
+        <line num="37" count="0" type="stmt"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="41" count="0" type="stmt"/>
+        <line num="42" count="0" type="stmt"/>
+        <line num="44" count="0" type="stmt"/>
+        <line num="55" count="0" type="stmt"/>
+        <line num="56" count="0" type="stmt"/>
+        <line num="57" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="60" count="0" type="stmt"/>
+        <line num="62" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="63" count="0" type="stmt"/>
+        <line num="65" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="66" count="0" type="stmt"/>
+        <line num="67" count="0" type="stmt"/>
+        <line num="70" count="0" type="stmt"/>
+        <line num="72" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="73" count="0" type="stmt"/>
+        <line num="74" count="0" type="stmt"/>
+        <line num="77" count="0" type="stmt"/>
+        <line num="78" count="0" type="stmt"/>
+        <line num="79" count="0" type="stmt"/>
+        <line num="83" count="0" type="stmt"/>
+        <line num="84" count="0" type="stmt"/>
+        <line num="86" count="0" type="stmt"/>
+        <line num="88" count="0" type="stmt"/>
+        <line num="89" count="0" type="stmt"/>
+        <line num="92" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="93" count="0" type="stmt"/>
+        <line num="96" count="0" type="stmt"/>
+        <line num="98" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="100" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="101" count="0" type="stmt"/>
+        <line num="102" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="103" count="0" type="stmt"/>
+        <line num="110" count="0" type="stmt"/>
+        <line num="112" count="0" type="stmt"/>
+        <line num="114" count="0" type="stmt"/>
+        <line num="117" count="0" type="stmt"/>
+        <line num="120" count="0" type="stmt"/>
+        <line num="126" count="0" type="stmt"/>
+        <line num="127" count="0" type="stmt"/>
+        <line num="129" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="131" count="0" type="stmt"/>
+        <line num="136" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="138" count="0" type="stmt"/>
+        <line num="144" count="0" type="stmt"/>
+      </file>
+    </package>
   </project>
 </coverage>
