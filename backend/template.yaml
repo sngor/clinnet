@@ -1,8 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
+Description: |
   Clinnet-EMR
-
   SAM Template for Clinnet-EMR backend services
 
 Parameters:
@@ -33,11 +32,11 @@ Globals:
       - x86_64
   Api:
     Cors:
-      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-      AllowOrigin: "'*'"  # Allow all origins, Lambda functions will handle specific CORS logic
+      AllowMethods: '''GET,POST,PUT,DELETE,OPTIONS'''
+      AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
+      AllowOrigin: '''*''' # Allow all origins, Lambda functions will handle specific CORS logic
       AllowCredentials: false
-      MaxAge: "'7200'" # Added for consistency with Lambda OPTIONS handlers
+      MaxAge: '''7200''' # Added for consistency with Lambda OPTIONS handlers
 
 Resources:
   # DynamoDB Table for Patients and Medical Records (hybrid single-table design)
@@ -68,6 +67,8 @@ Resources:
 
   MedicalReportsTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain # Retaining the table on stack deletion
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub clinnet-medical-reports-${Environment}
       BillingMode: PAY_PER_REQUEST
@@ -94,8 +95,6 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
-  DeletionPolicy: Retain # Retaining the table on stack deletion
-  UpdateReplacePolicy: Retain
 
   UsersTable:
     Type: AWS::DynamoDB::Table
@@ -167,7 +166,8 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub clinnet-documents-${Environment}-${AWS::AccountId}-${AWS::Region}-${AWS::StackName} # Existing bucket
-      PublicAccessBlockConfiguration: # Ensure public access is blocked
+      PublicAccessBlockConfiguration:
+        # Ensure public access is blocked
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls: true
@@ -191,7 +191,8 @@ Resources:
             Status: Enabled
             ExpirationInDays: 30 # Automatically delete objects after 30 days
 
-  MedicalReportImagesBucket: # New S3 bucket for medical report images
+  MedicalReportImagesBucket:
+    # New S3 bucket for medical report images
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub clinnet-emr-report-images-${AWS::AccountId}-${AWS::Region}-${Environment} # Unique bucket name
@@ -200,7 +201,8 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
-      CorsConfiguration: # Basic CORS for potential direct browser uploads in future, adjust as needed
+      CorsConfiguration:
+        # Basic CORS for potential direct browser uploads in future, adjust as needed
         CorsRules:
           - AllowedHeaders:
               - '*'
@@ -208,15 +210,16 @@ Resources:
               - PUT
               - GET
               - DELETE
-            AllowedOrigins: # Restrict this if frontend origin is fixed
+            AllowedOrigins:
+              # Restrict this if frontend origin is fixed
               - '*'
             MaxAge: 3000
-      LifecycleConfiguration: # Optional: Add lifecycle rules if needed, e.g., for non-current versions
+      LifecycleConfiguration:
+        # Optional: Add lifecycle rules if needed, e.g., for non-current versions
         Rules:
           - Id: ExpireOldVersions
             Status: Enabled
             NoncurrentVersionExpirationInDays: 90
-
 
   # API Gateway
   ClinicAPI:
@@ -234,47 +237,47 @@ Resources:
         - application/json
         - multipart/form-data
       Cors:
-        AllowMethods: "'GET, POST, PUT, DELETE, OPTIONS'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-        AllowOrigin: "'*'"  # Allow all origins, Lambda functions will handle specific CORS logic
-        MaxAge: "'7200'"
+        AllowMethods: '''GET, POST, PUT, DELETE, OPTIONS'''
+        AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
+        AllowOrigin: '''*''' # Allow all origins, Lambda functions will handle specific CORS logic
+        MaxAge: '''7200'''
         AllowCredentials: false
       GatewayResponses:
         DEFAULT_4XX:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Max-Age: "'7200'"
+              Access-Control-Allow-Origin: '''*'''
+              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
+              Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
+              Access-Control-Max-Age: '''7200'''
         DEFAULT_5XX:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Max-Age: "'7200'"
+              Access-Control-Allow-Origin: '''*'''
+              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
+              Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
+              Access-Control-Max-Age: '''7200'''
         UNAUTHORIZED:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Max-Age: "'7200'"
+              Access-Control-Allow-Origin: '''*'''
+              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
+              Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
+              Access-Control-Max-Age: '''7200'''
         ACCESS_DENIED:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Max-Age: "'7200'"
+              Access-Control-Allow-Origin: '''*'''
+              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
+              Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
+              Access-Control-Max-Age: '''7200'''
         RESOURCE_NOT_FOUND:
           ResponseParameters:
             Headers:
-              Access-Control-Allow-Origin: "'*'"
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
-              Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-              Access-Control-Max-Age: "'7200'"
+              Access-Control-Allow-Origin: '''*'''
+              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
+              Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
+              Access-Control-Max-Age: '''7200'''
 
   # Cognito User Pool
   UserPool:
@@ -426,7 +429,7 @@ Resources:
             Method: delete
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
-  # Lambda Functions for Patients
+            # Lambda Functions for Patients
   GetPatientsFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -449,7 +452,6 @@ Resources:
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer # CHANGED: Protect patient list
-    
 
   GetPatientByIdFunction:
     Type: AWS::Serverless::Function
@@ -503,11 +505,11 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref PatientRecordsTable
         - Statement:
-          - Effect: Allow
-            Action:
-              - s3:PutObject
-              - s3:PutObjectAcl
-            Resource: !Sub "arn:aws:s3:::${DocumentsBucket}/patients/*" # Corrected path
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:PutObjectAcl
+              Resource: !Sub arn:aws:s3:::${DocumentsBucket}/patients/* # Corrected path
       Events:
         UpdatePatient:
           Type: Api
@@ -534,7 +536,7 @@ Resources:
             Method: delete
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
-   # Lambda Functions for User Management
+            # Lambda Functions for User Management
   ListUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -702,9 +704,9 @@ Resources:
             - Effect: Allow
               Action:
                 - s3:PutObject
-                - s3:GetObject 
-                - s3:HeadObject 
-              Resource: !Sub "arn:aws:s3:::${DocumentsBucket}/profile-images/*"
+                - s3:GetObject
+                - s3:HeadObject
+              Resource: !Sub arn:aws:s3:::${DocumentsBucket}/profile-images/*
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -722,7 +724,8 @@ Resources:
     Properties:
       CodeUri: src/handlers/users/
       Handler: get_profile_image.lambda_handler
-      Environment: # Add Environment Variables
+      Environment:
+        # Add Environment Variables
         Variables:
           DOCUMENTS_BUCKET: !Ref DocumentsBucket
           USER_POOL_ID: !Ref UserPool
@@ -737,7 +740,7 @@ Resources:
               Action:
                 - s3:GetObject
                 - s3:HeadObject
-              Resource: !Sub "arn:aws:s3:::${DocumentsBucket}/profile-images/*" 
+              Resource: !Sub arn:aws:s3:::${DocumentsBucket}/profile-images/*
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -785,7 +788,6 @@ Resources:
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
-    
 
   RemoveProfileImageFunction:
     Type: AWS::Serverless::Function
@@ -805,7 +807,7 @@ Resources:
                 - s3:DeleteObject
                 - s3:GetObject
                 - s3:HeadObject
-              Resource: !Sub "${DocumentsBucket.Arn}/profile-images/*"
+              Resource: !Sub ${DocumentsBucket.Arn}/profile-images/*
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -925,7 +927,8 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
-        DynamoCrudDiagnosticsOptions: # New OPTIONS for DynamoDB CRUD
+        DynamoCrudDiagnosticsOptions:
+          # New OPTIONS for DynamoDB CRUD
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
@@ -933,7 +936,8 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
-        CognitoUsersDiagnosticsOptions: # New OPTIONS for Cognito CRUD
+        CognitoUsersDiagnosticsOptions:
+          # New OPTIONS for Cognito CRUD
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
@@ -953,7 +957,7 @@ Resources:
             - Effect: Allow
               Action:
                 - s3:ListAllMyBuckets
-              Resource: "*"
+              Resource: '*'
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -966,7 +970,8 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  CheckDynamoDBCrudFunction: # New DynamoDB CRUD Function
+  CheckDynamoDBCrudFunction:
+    # New DynamoDB CRUD Function
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/diagnostics/
@@ -991,7 +996,8 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  CheckCognitoUserCrudFunction: # New Cognito User CRUD Function
+  CheckCognitoUserCrudFunction:
+    # New Cognito User CRUD Function
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/diagnostics/
@@ -1113,7 +1119,8 @@ Resources:
       CodeUri: src/
       Handler: handlers/medical_reports/index.handler # Entry point adjusted for shared CodeUri
       Runtime: nodejs22.x
-      Environment: # Add specific environment variables here
+      Environment:
+        # Add specific environment variables here
         Variables:
           MEDICAL_REPORTS_TABLE_NAME: !Ref MedicalReportsTable # Already available via Globals, but being explicit
           MEDICAL_REPORTS_IMAGE_BUCKET_NAME: !Ref MedicalReportImagesBucket # New S3 bucket
@@ -1128,15 +1135,16 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref MedicalReportsTable
-        - Statement: # IAM policy for S3 access
+        - Statement:
+            # IAM policy for S3 access
             - Effect: Allow
               Action:
                 - s3:PutObject
                 - s3:GetObject
                 - s3:DeleteObject
-              Resource: 
+              Resource:
                 - !GetAtt MedicalReportImagesBucket.Arn # Bucket level permissions if needed for ListBucket etc.
-                - !Sub "${MedicalReportImagesBucket.Arn}/*" # Object level permissions
+                - !Sub ${MedicalReportImagesBucket.Arn}/* # Object level permissions
       Events:
         CreateReport:
           Type: Api
@@ -1186,7 +1194,8 @@ Resources:
             Method: delete
             Auth:
               Authorizer: CognitoAuthorizer
-        UploadReportImage: # New endpoint for uploading images to a report
+        UploadReportImage:
+          # New endpoint for uploading images to a report
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
@@ -1227,7 +1236,8 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE
-        OptionsReportImageUpload: # OPTIONS for the new image upload endpoint
+        OptionsReportImageUpload:
+          # OPTIONS for the new image upload endpoint
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
@@ -1235,7 +1245,6 @@ Resources:
             Method: options
             Auth:
               Authorizer: NONE # OPTIONS should not be auth-protected
-    
 
   SummarizeDoctorNoteFunction:
     Type: AWS::Serverless::Function
@@ -1247,10 +1256,10 @@ Resources:
         - !Ref UtilsLayer
       Policies:
         - Statement:
-          - Effect: Allow
-            Action:
-              - bedrock:InvokeModel
-            Resource: "*" # Consider restricting this to specific model ARNs in production
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: '*' # Consider restricting this to specific model ARNs in production
       # Environment: # Inherits from Globals
       Events:
         SummarizeNoteApi:
@@ -1289,9 +1298,13 @@ Resources:
         ErrorDocument: index.html
       CorsConfiguration:
         CorsRules:
-          - AllowedHeaders: ['*']
-            AllowedMethods: [GET, HEAD]
-            AllowedOrigins: ['*']
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - HEAD
+            AllowedOrigins:
+              - '*'
             MaxAge: 3000
 
   FrontendBucketPolicy:
@@ -1304,13 +1317,13 @@ Resources:
             Principal:
               CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
             Action: s3:GetObject
-            Resource: !Sub "${FrontendBucket.Arn}/*"
+            Resource: !Sub ${FrontendBucket.Arn}/*
 
   CloudFrontOAI:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
-        Comment: !Sub "OAI for Clinnet-EMR frontend ${Environment}"
+        Comment: !Sub OAI for Clinnet-EMR frontend ${Environment}
 
   FrontendDistribution:
     Type: AWS::CloudFront::Distribution
@@ -1322,12 +1335,16 @@ Resources:
           - Id: S3Origin
             DomainName: !GetAtt FrontendBucket.DomainName
             S3OriginConfig:
-              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CloudFrontOAI}
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https
-          AllowedMethods: [GET, HEAD]
-          CachedMethods: [GET, HEAD]
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
           Compress: true
           ForwardedValues:
             QueryString: false
@@ -1335,31 +1352,35 @@ Resources:
               Forward: none
           # Add cache control settings
           MinTTL: 0
-          DefaultTTL: 86400  # 1 day for most assets
-          MaxTTL: 31536000  # 1 year max
+          DefaultTTL: 86400 # 1 day for most assets
+          MaxTTL: 31536000 # 1 year max
         # Add a specific cache behavior for index.html
         CacheBehaviors:
-          - PathPattern: '/index.html'
+          - PathPattern: /index.html
             TargetOriginId: S3Origin
             ViewerProtocolPolicy: redirect-to-https
-            AllowedMethods: [GET, HEAD]
-            CachedMethods: [GET, HEAD]
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
             Compress: true
             ForwardedValues:
               QueryString: false
               Cookies:
                 Forward: none
             MinTTL: 0
-            DefaultTTL: 0  # Don't cache index.html
-            MaxTTL: 0      # Always fetch the latest version
+            DefaultTTL: 0 # Don't cache index.html
+            MaxTTL: 0 # Always fetch the latest version
         ViewerCertificate:
           CloudFrontDefaultCertificate: true
         PriceClass: PriceClass_100
         CustomErrorResponses:
-          - ErrorCode: 403  # Add 403 error handling
+          - ErrorCode: 403 # Add 403 error handling
             ResponseCode: 200
             ResponsePagePath: /index.html
-          - ErrorCode: 404  # Keep existing 404 handling
+          - ErrorCode: 404 # Keep existing 404 handling
             ResponseCode: 200
             ResponsePagePath: /index.html
 
@@ -1378,45 +1399,45 @@ Resources:
 
 Outputs:
   ClinicAPI:
-    Description: "API Gateway endpoint URL for the current environment"
-    Value: !Sub "https://${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+    Description: API Gateway endpoint URL for the current environment
+    Value: !Sub https://${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
     Export:
-      Name: !Sub "${AWS::StackName}-ApiEndpoint"
+      Name: !Sub ${AWS::StackName}-ApiEndpoint
 
   UserPoolId:
-    Description: "Cognito User Pool ID"
+    Description: Cognito User Pool ID
     Value: !Ref UserPool
     Export:
-      Name: !Sub "${AWS::StackName}-UserPoolId"
+      Name: !Sub ${AWS::StackName}-UserPoolId
 
   UserPoolClientId:
-    Description: "Cognito User Pool Client ID"
+    Description: Cognito User Pool Client ID
     Value: !Ref UserPoolClient
     Export:
-      Name: !Sub "${AWS::StackName}-UserPoolClientId"
+      Name: !Sub ${AWS::StackName}-UserPoolClientId
 
   DocumentsBucket:
-    Description: "S3 bucket for document storage"
+    Description: S3 bucket for document storage
     Value: !Ref DocumentsBucket
     Export:
-      Name: !Sub "${AWS::StackName}-DocumentsBucket"
+      Name: !Sub ${AWS::StackName}-DocumentsBucket
 
   MedicalReportImagesBucketName:
-    Description: "S3 bucket for medical report images"
+    Description: S3 bucket for medical report images
     Value: !Ref MedicalReportImagesBucket
     Export:
-      Name: !Sub "${AWS::StackName}-MedicalReportImagesBucket"
+      Name: !Sub ${AWS::StackName}-MedicalReportImagesBucket
 
   Region:
-    Description: "AWS Region"
+    Description: AWS Region
     Value: !Ref AWS::Region
     Export:
-      Name: !Sub "${AWS::StackName}-Region"
+      Name: !Sub ${AWS::StackName}-Region
 
   FrontendBucketName:
     Description: S3 bucket for static frontend hosting
     Value: !Ref FrontendBucket
-    
+
   CloudFrontDistributionDomain:
     Description: CloudFront distribution domain name
     Value: !GetAtt FrontendDistribution.DomainName
