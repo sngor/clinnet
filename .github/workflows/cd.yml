@@ -1,0 +1,151 @@
+name: CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deploy environment (dev|test|prod)
+        required: true
+        default: dev
+        type: choice
+        options: [dev, test, prod]
+  push:
+    branches: [ main ]
+    paths:
+  - 'backend/**'
+  - 'frontend/**'
+  - '.github/workflows/cd.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend (SAM)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install JS deps and run tests
+        run: |
+          npm install
+          npm run test:js --silent
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-2' }}
+
+      - name: Install AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python deps and run tests
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r requirements.txt -r requirements-dev.txt
+          pytest -q tests/python
+
+      - name: Validate template
+        run: sam validate --lint
+
+      - name: Build
+        run: sam build --cached
+
+      - name: Deploy
+        env:
+          SAM_DEPLOY_ENV: ${{ github.event.inputs.environment || 'dev' }}
+        run: |
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
+            --stack-name sam-clinnet \
+            --region ${{ secrets.AWS_REGION || 'us-east-2' }} \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides Environment=$SAM_DEPLOY_ENV
+
+  deploy-frontend:
+    name: Deploy Frontend (S3 + CloudFront)
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configure AWS credentials (OIDC)
+        if: ${{ secrets.AWS_DEPLOY_ROLE_ARN != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-2' }}
+
+      - name: Create .env file from secrets
+        run: |
+          : > .env
+          [ -n "${{ secrets.VITE_API_ENDPOINT }}" ] && echo "VITE_API_ENDPOINT=${{ secrets.VITE_API_ENDPOINT }}" >> .env
+          [ -n "${{ secrets.VITE_API_URL }}" ] && echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
+          [ -n "${{ secrets.VITE_COGNITO_REGION }}" ] && echo "VITE_COGNITO_REGION=${{ secrets.VITE_COGNITO_REGION }}" >> .env
+          [ -n "${{ secrets.VITE_USER_POOL_ID }}" ] && echo "VITE_USER_POOL_ID=${{ secrets.VITE_USER_POOL_ID }}" >> .env
+          [ -n "${{ secrets.VITE_USER_POOL_CLIENT_ID }}" ] && echo "VITE_USER_POOL_CLIENT_ID=${{ secrets.VITE_USER_POOL_CLIENT_ID }}" >> .env
+          [ -n "${{ secrets.VITE_S3_BUCKET }}" ] && echo "VITE_S3_BUCKET=${{ secrets.VITE_S3_BUCKET }}" >> .env
+          [ -n "${{ secrets.VITE_S3_REGION }}" ] && echo "VITE_S3_REGION=${{ secrets.VITE_S3_REGION }}" >> .env
+
+      - name: Print .env (debug)
+        run: cat .env
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache Vite build cache
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules/.vite
+          key: ${{ runner.os }}-vite-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vite-
+
+      - name: Install dependencies and build frontend
+        run: |
+          npm ci || npm install
+          npm run build
+
+      - name: Deploy frontend to S3 and invalidate CloudFront (via script)
+        if: ${{ secrets.AWS_DEPLOY_ROLE_ARN == '' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-2' }}
+        run: bash scripts/deploy-frontend.sh ${{ github.event.inputs.environment || 'dev' }}
+
+      - name: Deploy frontend to S3 and invalidate CloudFront (OIDC creds)
+        if: ${{ secrets.AWS_DEPLOY_ROLE_ARN != '' }}
+        run: bash scripts/deploy-frontend.sh ${{ github.event.inputs.environment || 'dev' }}

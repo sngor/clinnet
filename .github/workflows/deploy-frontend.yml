@@ -1,67 +1,10 @@
-name: Deploy Frontend to AWS
+name: Frontend Deployment (deprecated)
 
 on:
-  push:
-    branches:
-      - main  # Change to your deployment branch if needed
+  workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install AWS CLI
-        run: |
-          pip install --upgrade --user awscli
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Create .env file from secrets
-        working-directory: frontend
-        run: |
-          echo "VITE_API_ENDPOINT=${{ secrets.VITE_API_ENDPOINT }}" >> .env
-          echo "VITE_COGNITO_REGION=${{ secrets.VITE_COGNITO_REGION }}" >> .env
-          echo "VITE_USER_POOL_ID=${{ secrets.VITE_USER_POOL_ID }}" >> .env
-          echo "VITE_USER_POOL_CLIENT_ID=${{ secrets.VITE_USER_POOL_CLIENT_ID }}" >> .env
-          echo "VITE_S3_BUCKET=${{ secrets.VITE_S3_BUCKET }}" >> .env
-          echo "VITE_S3_REGION=${{ secrets.VITE_S3_REGION }}" >> .env
-
-      - name: Print .env for debugging
-        working-directory: frontend
-        run: cat .env
-
-      - name: Cache node_modules
-        uses: actions/cache@v3
-        with:
-          path: frontend/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Cache Vite build cache
-        uses: actions/cache@v3
-        with:
-          path: frontend/node_modules/.vite
-          key: ${{ runner.os }}-vite-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-vite-
-
-      - name: Install dependencies and build frontend
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run build
-
-      - name: Deploy frontend to S3 and invalidate CloudFront
-        working-directory: frontend
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-2
-        run: bash scripts/deploy-frontend.sh dev
+      - run: echo "Frontend deployment has been consolidated into .github/workflows/cd.yml"
