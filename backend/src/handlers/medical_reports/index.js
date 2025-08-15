@@ -12,7 +12,7 @@ const {
 } = require("@aws-sdk/lib-dynamodb");
 const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require('crypto');
 const parser = require('aws-lambda-multipart-parser');
 // Correct relative path from handlers/medical_reports/ to src/utils/
 const { buildResponse, buildErrorResponse, buildCorsPreflightResponse } = require('../../utils/js-helpers');
@@ -58,7 +58,7 @@ const createReport = async (eventBody, context, requestOrigin) => {
     return buildErrorResponse(400, 'ValidationError', 'Missing required fields: patientId, doctorId, reportContent', requestOrigin);
   }
 
-  const reportId = uuidv4();
+  const reportId = randomUUID();
   const timestamp = new Date().toISOString();
 
   const params = {

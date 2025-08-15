@@ -50,6 +50,7 @@ import MedicalRecordsTab from "../components/patients/MedicalRecordsTab";
 import PersonalInfoTab from "../components/patients/PersonalInfoTab";
 
 import patientService from "../services/patients";
+import { fileToDataUri } from "../utils/fileUtils";
 
 /**
  * PatientDetailPage displays and allows editing of a single patient's details.
@@ -225,13 +226,10 @@ function PatientDetailPage() {
 
     if (name === "profileImageFile" && files && files[0]) {
       const file = files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImagePreview(reader.result); // Set preview for the new image
-        setEditedPatient((prev) => ({ ...prev, profileImage: reader.result })); // Store base64 for upload
-        setDisplayableProfileImageUrl(null); // Hide existing S3 image when new one is chosen
-      };
-      reader.readAsDataURL(file);
+      const dataUri = await fileToDataUri(file);
+      setProfileImagePreview(dataUri); // Set preview for the new image
+      setEditedPatient((prev) => ({ ...prev, profileImage: dataUri })); // Store base64 for upload
+      setDisplayableProfileImageUrl(null); // Hide existing S3 image when new one is chosen
     } else {
       setEditedPatient((prev) => ({ ...prev, [name]: value }));
     }

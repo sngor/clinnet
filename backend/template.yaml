@@ -1333,7 +1333,8 @@ Resources:
         DefaultRootObject: index.html
         Origins:
           - Id: S3Origin
-            DomainName: !GetAtt FrontendBucket.DomainName
+            # Use the regional S3 domain to avoid cross-region redirects that can cause AccessDenied
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
             S3OriginConfig:
               OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CloudFrontOAI}
         DefaultCacheBehavior:

@@ -23,6 +23,7 @@ import {
 import { useAuth } from "../app/providers/AuthProvider";
 import userService from "../services/userService";
 import { getAuthToken } from "../utils/cognito-helpers";
+import { fileToDataUri } from "../utils/fileUtils";
 import {
   PageLayout,
   FormField,
@@ -256,7 +257,7 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
         );
 
         // Fallback to base64 method
-        const base64 = await convertFileToBase64(file);
+  const base64 = await fileToDataUri(file);
         // Do NOT strip the data:image/...;base64, prefix. Send the full data URI string.
         const imageData = base64; // Always send the full data URI string
         // Upload image with proper formatting
@@ -301,21 +302,14 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
     }
   };
 
-  const convertFileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
+  // Removed inline convertFileToBase64; using fileUtils.fileToDataUri
 
   // Alternative direct file upload using JSON
   const uploadFileDirectly = async (file) => {
     const idToken = await getAuthToken();
 
     // Convert file to base64
-    const base64 = await convertFileToBase64(file);
+  const base64 = await fileToDataUri(file);
     // base64 is already the full data URI string (e.g., "data:image/png;base64,...")
     const jsonPayload = JSON.stringify({
       image: base64, // send the full data URI string
