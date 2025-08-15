@@ -1,5 +1,7 @@
 # Clinnet-EMR
 
+[![CI-CD](https://github.com/sngor/Clinnet-EMR/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/sngor/Clinnet-EMR/actions/workflows/ci-cd.yml)
+
 ---
 
 ## 🚀 Features

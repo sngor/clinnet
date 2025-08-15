@@ -123,6 +123,9 @@ jobs:
     needs: deploy-backend
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
+    env:
+      AWS_DEPLOY_ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+      AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-2' }}
     defaults:
       run:
         working-directory: frontend
@@ -137,11 +140,11 @@ jobs:
           node-version: 20
 
       - name: Configure AWS credentials (OIDC)
-        if: ${{ secrets.AWS_DEPLOY_ROLE_ARN != '' }}
+        if: ${{ env.AWS_DEPLOY_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-2' }}
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Create .env file from secrets
         run: |
@@ -179,13 +182,13 @@ jobs:
           npm run build
 
       - name: Deploy frontend to S3 and invalidate CloudFront (via script)
-        if: ${{ secrets.AWS_DEPLOY_ROLE_ARN == '' }}
+        if: ${{ env.AWS_DEPLOY_ROLE_ARN == '' }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-2' }}
+          AWS_REGION: ${{ env.AWS_REGION }}
         run: bash scripts/deploy-frontend.sh ${{ github.event.inputs.environment || 'dev' }}
 
       - name: Deploy frontend to S3 and invalidate CloudFront (OIDC creds)
-        if: ${{ secrets.AWS_DEPLOY_ROLE_ARN != '' }}
+        if: ${{ env.AWS_DEPLOY_ROLE_ARN != '' }}
         run: bash scripts/deploy-frontend.sh ${{ github.event.inputs.environment || 'dev' }}
