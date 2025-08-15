@@ -5,19 +5,19 @@ import {
   AuthenticationDetails,
   CognitoUserAttribute
 } from 'amazon-cognito-identity-js';
-import cognitoConfig from '../../../src/config.js';
+import appConfig from '../services/config.js';
 
 // Use the centralized configuration from config.js
 const poolData = {
-  UserPoolId: cognitoConfig.UserPoolId,
-  ClientId: cognitoConfig.ClientId,
+  UserPoolId: appConfig.COGNITO.USER_POOL_ID,
+  ClientId: appConfig.COGNITO.APP_CLIENT_ID,
 };
 
 // Log configuration for debugging
 console.log('Cognito configuration:', {
   UserPoolId: poolData.UserPoolId ? "✓ Set" : "✗ Missing", 
   ClientId: poolData.ClientId ? "✓ Set" : "✗ Missing",
-  Region: cognitoConfig.Region
+  Region: appConfig.COGNITO.REGION
 });
 
 // Validate the pool data

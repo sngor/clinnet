@@ -1,6 +1,6 @@
 // src/services/adminService.js
 import { getAuthToken } from '../utils/cognito-helpers';
-import cognitoConfig from '../../../src/config.js';
+import appConfig from './config.js';
 import { transformUserForFrontend } from '../utils/user-transformers';
 
 /**

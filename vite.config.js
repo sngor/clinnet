@@ -1,23 +1,7 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react'; // or your framework's plugin
-
-export default defineConfig({
-  plugins: [react()],
-  define: {
-    global: 'window',
-    'process.env': process.env
-  },
-  resolve: {
-    alias: {
-      './runtimeConfig': './runtimeConfig.browser',
-      buffer: 'buffer/'
-    }
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      define: {
-        global: 'globalThis'
-      }
-    }
-  }
-});
+// This repo has a Vite app inside the frontend/ directory.
+// Do not run Vite from the repo root. Use:
+//   npm run dev        # forwards to frontend
+//   npm run build      # forwards to frontend
+//   npm run preview    # forwards to frontend
+// The real Vite config is at frontend/vite.config.js
+export default {};

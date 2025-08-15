@@ -143,7 +143,18 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    checkAuthState();
+    // Safety net: if auth check hangs for any reason, stop loading and go to /login
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn("Auth check timed out; proceeding to /login");
+        setLoading(false);
+        if (window.location.pathname !== "/login") {
+          navigate("/login");
+        }
+      }
+    }, 8000);
+
+    checkAuthState().finally(() => clearTimeout(timeoutId));
   }, [navigate]);
 
   // On mount or after login, sync user info from Cognito

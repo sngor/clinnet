@@ -44,6 +44,8 @@ function AppRouter() {
   return (
     <Suspense fallback={<LoadingIndicator />}>
       <Routes>
+        {/* Root redirect outside protected routes to avoid blank while auth loads */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         {/* Public Route */}
         <Route path="/login" element={<LoginPage />} />
 

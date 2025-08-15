@@ -2,12 +2,12 @@
 
 import { getCognitoUserAttributes, getCognitoUserInfo, getAuthToken } from '../utils/cognito-helpers';
 import { CognitoUserPool, CognitoUser } from 'amazon-cognito-identity-js';
-import cognitoConfig from '../../../src/config.js';
+import appConfig from './config.js';
 
 // Use the centralized configuration
 const poolData = {
-  UserPoolId: cognitoConfig.UserPoolId,
-  ClientId: cognitoConfig.ClientId,
+  UserPoolId: appConfig.COGNITO.USER_POOL_ID,
+  ClientId: appConfig.COGNITO.APP_CLIENT_ID,
 };
 
 const userPool = new CognitoUserPool(poolData);

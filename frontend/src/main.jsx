@@ -42,5 +42,23 @@ console.log("Environment:", {
 ReactDOM.createRoot(document.getElementById("root")).render(
   <AppProviders>
     <App />
+    {import.meta.env.DEV && (
+      <div
+        style={{
+          position: "fixed",
+          bottom: 8,
+          right: 8,
+          background: "#0008",
+          color: "#fff",
+          padding: "6px 8px",
+          borderRadius: 6,
+          fontFamily: "monospace",
+          fontSize: 12,
+          zIndex: 9999,
+        }}
+      >
+        <span>DEV • {location.pathname}</span>
+      </div>
+    )}
   </AppProviders>
 );
