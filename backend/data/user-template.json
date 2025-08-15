@@ -4,20 +4,23 @@
     "username": "admin_user",
     "role": "admin",
     "firstName": "Admin",
-    "lastName": "User"
+    "lastName": "User",
+    "password": "@Khmer@123!"
   },
   {
     "email": "doctor@clinnet.com",
     "username": "doctor_user",
     "role": "doctor",
     "firstName": "Doctor",
-    "lastName": "User"
+    "lastName": "User",
+    "password": "Doctor@123!"
   },
   {
     "email": "frontdesk@clinnet.com",
     "username": "frontdesk_user",
     "role": "frontdesk",
     "firstName": "Frontdesk",
-    "lastName": "User"
+    "lastName": "User",
+    "password": "Frontdesk@123!"
   }
 ]
