@@ -48,6 +48,8 @@ function AppRouter() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         {/* Public Route */}
         <Route path="/login" element={<LoginPage />} />
+        {/* Public Unauthorized route for role/permission failures */}
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         {/* Style Guide Route - accessible without login for development purposes */}
         <Route path="/style-guide" element={<StyleGuidePage />} />
@@ -261,7 +263,7 @@ function AppRouter() {
             }
           />
           {/* Example: Redirect root path to login or a default dashboard */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Removed duplicate root redirect here to prevent conflicting matches with the public '/' route */}
         </Route>
 
         {/* Catch-all for Not Found */}

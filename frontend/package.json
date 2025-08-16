@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Clinnet EMR Frontend Application",
   "scripts": {
-    "start": "vite",
-    "dev": "BROWSER=firefox vite",
+  "start": "vite",
+  "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
