@@ -221,7 +221,7 @@ function PatientDetailPage() {
   };
 
   // Handle form field changes
-  const handleInputChange = (e) => {
+  const handleInputChange = async (e) => {
     const { name, value, files } = e.target;
 
     if (name === "profileImageFile" && files && files[0]) {

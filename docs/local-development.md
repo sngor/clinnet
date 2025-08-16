@@ -59,13 +59,25 @@ How to set up and run Clinnet-EMR locally for rapid development and testing. For
 
 2. **Create environment file**:
 
-   Create a `.env` file in the `frontend` directory:
+   Create a `.env` (or `.env.local`) file in the `frontend` directory. See `.env.example` for all variables.
+
+   Minimum required for local Cognito login:
 
    ```env
-   VITE_API_URL=http://localhost:3001
+   # Backend API (local SAM or deployed API Gateway)
+   VITE_API_ENDPOINT=https://your-api-id.execute-api.us-east-2.amazonaws.com/prod
+
+   # Cognito (required for login)
+   VITE_COGNITO_REGION=us-east-2
+   VITE_USER_POOL_ID=us-east-2_XXXXXXXXX
+   VITE_USER_POOL_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
    ```
 
-   - Set this to your local or deployed API Gateway URL as needed.
+   Notes:
+
+   - These variables are read by `src/services/config.js` and `src/utils/cognito-helpers.js`.
+   - If you run the backend locally via `sam local start-api`, point `VITE_API_ENDPOINT` to that URL.
+   - Ensure the Cognito App Client allows the localhost callback/allowed origins you’ll use (see below).
 
 3. **Start the frontend**:
 
@@ -75,7 +87,23 @@ How to set up and run Clinnet-EMR locally for rapid development and testing. For
 
    The app will be available at [http://localhost:5173](http://localhost:5173)
 
-4. **(Optional) Start the mock API server**:
+4. **Cognito setup for local dev**:
+
+   - In the AWS console, open your User Pool → App integration → App client settings (or App clients)
+   - For the App Client used here (Client ID in `VITE_USER_POOL_CLIENT_ID`):
+     - Allowed callback URLs: add `http://localhost:5173` (and any other local ports you use)
+     - Allowed sign-out URLs: add `http://localhost:5173`
+     - Allowed origins/CORS: add `http://localhost:5173`
+   - If you use a custom domain with hosted UI, ensure it’s configured; this app uses the SDK flow (not hosted UI), but CORS/redirects still matter for assets.
+
+5. **Verify login locally**:
+
+   - Start the app (`npm run dev`) and go to `/login`
+   - Use a Cognito user that exists in the specified User Pool
+   - Open DevTools console; you should see “Cognito configuration: ✓ Set …” from `cognito-helpers.js`
+   - On successful login, requests from `src/services/api.js` will include your Cognito ID token
+
+6. **(Optional) Start the mock API server**:
 
    If you need to use the JSON server for API mocking:
 
@@ -85,7 +113,7 @@ How to set up and run Clinnet-EMR locally for rapid development and testing. For
 
    The mock API will be available at [http://localhost:3001](http://localhost:3001)
 
-5. **Configure API endpoints**:
+7. **Configure API endpoints**:
    - Ensure `src/aws-exports.js` or Amplify config points to your local or deployed API Gateway endpoints.
 
 ---

@@ -17,14 +17,14 @@ export const fileToDataUri = (file) => {
 };
 
 /**
- * Convert a File to a base64 string (without the `data:*/*;base64,` prefix)
+ * Convert a File to a base64 string (without the data:[mime];base64, prefix)
  *
  * @param {File|Blob} file
  * @returns {Promise<string>} base64 only
  */
 export const fileToBase64Only = async (file) => {
   const dataUri = await fileToDataUri(file);
-  const commaIndex = typeof dataUri === 'string' ? dataUri.indexOf(',') : -1;
+  const commaIndex = typeof dataUri === "string" ? dataUri.indexOf(",") : -1;
   return commaIndex > -1 ? dataUri.slice(commaIndex + 1) : dataUri;
 };
 
@@ -35,8 +35,9 @@ export const fileToBase64Only = async (file) => {
  * @returns {string}
  */
 export const extractUsername = (emailOrUsername) => {
-  if (!emailOrUsername) return '';
-  return emailOrUsername.includes('@')
-    ? emailOrUsername.split('@')[0]
+  if (!emailOrUsername) return "";
+  return emailOrUsername.includes("@")
+    ? emailOrUsername.split("@")[0]
     : emailOrUsername;
 };
+
