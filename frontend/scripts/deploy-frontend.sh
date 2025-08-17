@@ -10,6 +10,12 @@ TEMPLATE_FILE="$FRONTEND_DIR/../backend/template.yaml"
 
 cd "$FRONTEND_DIR"
 
+# Check for AWS_REGION
+if [ -z "$AWS_REGION" ]; then
+    echo "❌ AWS_REGION environment variable is not set."
+    exit 1
+fi
+
 # Additional environment checks
 echo "🔍 Validating environment..."
 
@@ -45,8 +51,8 @@ npm run build
 echo "Skipping SAM deploy for frontend. Using existing backend stack resources."
 
 # Use the backend stack to get outputs
-BUCKET=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region us-east-2 --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text)
-DISTRIBUTION=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region us-east-2 --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text)
+BUCKET=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text)
+DISTRIBUTION=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text)
 
 echo "Syncing build output to S3..."
 # Sync all assets with aggressive caching
