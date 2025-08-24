@@ -2,11 +2,11 @@ export const awsConfig = {
   region: 'us-east-2',
   apiGateway: {
     REGION: 'us-east-2',
-    URL: process.env.VITE_API_URL,
+    URL: import.meta.env.VITE_API_ENDPOINT,
   },
   cognito: {
     REGION: 'us-east-2',
-    USER_POOL_ID: process.env.VITE_COGNITO_USER_POOL_ID,
-    APP_CLIENT_ID: process.env.VITE_COGNITO_CLIENT_ID,
+    USER_POOL_ID: import.meta.env.VITE_USER_POOL_ID,
+    USER_POOL_CLIENT_ID: import.meta.env.VITE_USER_POOL_CLIENT_ID,
   }
 };
