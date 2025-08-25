@@ -13,17 +13,19 @@ const poolData = {
   ClientId: appConfig.COGNITO.APP_CLIENT_ID,
 };
 
-// Log configuration for debugging
+// Log configuration for debugging (show partial IDs only)
+const mask = (v) => !v ? '✗ Missing' : `${String(v).slice(0, 6)}…${String(v).slice(-4)}`;
 console.log('Cognito configuration:', {
-  UserPoolId: poolData.UserPoolId ? "✓ Set" : "✗ Missing", 
-  ClientId: poolData.ClientId ? "✓ Set" : "✗ Missing",
-  Region: appConfig.COGNITO.REGION
+  UserPoolId: poolData.UserPoolId ? '✓ Set' : '✗ Missing',
+  ClientId: poolData.ClientId ? '✓ Set' : '✗ Missing',
+  Region: appConfig.COGNITO.REGION,
+  // Helpful masked preview to ensure we didn't bundle hard-coded IDs
+  _preview: { userPoolId: mask(poolData.UserPoolId), clientId: mask(poolData.ClientId) }
 });
 
 // Validate the pool data
 if (!poolData.UserPoolId || !poolData.ClientId) {
-  console.error('Missing Cognito credentials in configuration (utils/cognito-helpers.js)');
-  console.error('Environment variables available:', import.meta.env);
+  console.error('[Cognito] Missing credentials (USER_POOL_ID/APP_CLIENT_ID). Ensure VITE_USER_POOL_ID and VITE_USER_POOL_CLIENT_ID are set.');
 }
 
 // Create a new user pool instance
