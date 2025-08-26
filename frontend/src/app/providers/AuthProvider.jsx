@@ -16,6 +16,7 @@ import {
   cognitoConfirmSignUp,
   cognitoForgotPassword,
   cognitoForgotPasswordSubmit,
+  completeNewPassword,
 } from "../../utils/cognito-helpers";
 import { userService } from "../../services/userService";
 
@@ -204,7 +205,22 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       // Always sign out first to clear any existing session
       cognitoSignOut();
-      const result = await cognitoSignIn(userData.username, userData.password);
+      let result;
+      try {
+        result = await cognitoSignIn(userData.username, userData.password);
+      } catch (err) {
+        // Handle first-login flow requiring password change
+        if (err && err.message === "NEW_PASSWORD_REQUIRED") {
+          return {
+            success: false,
+            requiresNewPassword: true,
+            challengeUser: err.user,
+            requiredAttributes: err.requiredAttributes,
+            error: "A new password is required to complete first-time sign-in.",
+          };
+        }
+        throw err;
+      }
       setAuthToken(result.idToken);
       // Fetch full user info (with role, etc) after login
       const userInfo = await userService.getUserInfo();
@@ -232,6 +248,41 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Error signing in:", error);
       return { success: false, error: error.message || "Failed to sign in" };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Complete new password challenge
+  const finishNewPassword = async (
+    challengeUser,
+    newPassword,
+    attributes = {}
+  ) => {
+    try {
+      setLoading(true);
+      await completeNewPassword(challengeUser, newPassword, attributes);
+      // After completing, fetch session and user info
+      const session = await getCognitoSession();
+      if (!session || !session.isValid()) {
+        throw new Error("Session invalid after password update");
+      }
+      setAuthToken(session.getIdToken().getJwtToken());
+      const userInfo = await userService.getUserInfo();
+      setUser(userInfo);
+      // Redirect by role
+      const role = (userInfo.role || "user").toLowerCase();
+      if (role === "admin") navigate("/admin");
+      else if (role === "doctor") navigate("/doctor");
+      else if (role === "frontdesk") navigate("/frontdesk");
+      else navigate("/");
+      return { success: true };
+    } catch (error) {
+      console.error("Error completing new password challenge:", error);
+      return {
+        success: false,
+        error: error.message || "Failed to set new password",
+      };
     } finally {
       setLoading(false);
     }
@@ -342,6 +393,7 @@ export const AuthProvider = ({ children }) => {
       hasRole,
       updateProfileImage,
       refreshUserData, // Add the new method to the context
+      finishNewPassword, // Expose new-password completion
     }),
     [user, authToken, loading, updateProfileImage, refreshUserData]
   );

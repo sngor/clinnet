@@ -54,13 +54,36 @@ export const cognitoSignIn = (username, password) => {
         reject(err);
       },
       newPasswordRequired: (userAttributes, requiredAttributes) => {
+        // Surface the cognito user so caller can complete the challenge
         reject({
           message: 'NEW_PASSWORD_REQUIRED',
+          user,
           userAttributes,
           requiredAttributes
         });
       }
     });
+  });
+};
+
+/**
+ * Complete the NEW_PASSWORD_REQUIRED challenge
+ * @param {CognitoUser} cognitoUser - The CognitoUser instance from cognitoSignIn
+ * @param {string} newPassword - The new password to set
+ * @param {Object} requiredAttributes - Any required attributes to update
+ * @returns {Promise<Object>} Resolves with the new session on success
+ */
+export const completeNewPassword = (cognitoUser, newPassword, requiredAttributes = {}) => {
+  return new Promise((resolve, reject) => {
+    if (!cognitoUser) return reject(new Error('No Cognito user provided for password challenge.'));
+    cognitoUser.completeNewPasswordChallenge(
+      newPassword,
+      requiredAttributes,
+      {
+        onSuccess: (session) => resolve(session),
+        onFailure: (err) => reject(err),
+      }
+    );
   });
 };
 

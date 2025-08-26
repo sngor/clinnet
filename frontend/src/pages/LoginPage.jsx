@@ -49,11 +49,15 @@ const AnimatedAlert = styled(Alert)(({ theme }) => ({
 function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [requiresNewPassword, setRequiresNewPassword] = useState(false);
+  const [challengeUser, setChallengeUser] = useState(null);
 
-  const { login, loading: authLoading } = useAuth();
+  const { login, finishNewPassword, loading: authLoading } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -66,11 +70,31 @@ function LoginPage() {
       if (loginUsername && !loginUsername.includes("@")) {
         loginUsername = `${loginUsername}@clinnet.com`;
       }
+      // If we're in the new password phase, complete that instead
+      if (requiresNewPassword && challengeUser) {
+        if (!newPassword) {
+          setError("Please enter your new password.");
+          return;
+        }
+        const complete = await finishNewPassword(challengeUser, newPassword);
+        if (!complete.success) {
+          setError(complete.error || "Failed to set new password.");
+        }
+        return;
+      }
+
       const result = await login({ username: loginUsername, password });
       if (!result.success) {
-        setError(
-          result.error || "Login failed. Please check your credentials."
-        );
+        if (result.requiresNewPassword) {
+          setRequiresNewPassword(true);
+          setChallengeUser(result.challengeUser);
+          setShowNewPassword(true);
+          setError("You must set a new password to continue.");
+        } else {
+          setError(
+            result.error || "Login failed. Please check your credentials."
+          );
+        }
       }
     } catch (err) {
       setError(
@@ -89,6 +113,9 @@ function LoginPage() {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+  const toggleNewPasswordVisibility = () => {
+    setShowNewPassword(!showNewPassword);
   };
 
   return (
@@ -298,11 +325,53 @@ function LoginPage() {
                 disabled={isLoading || authLoading}
               />
 
+              {requiresNewPassword && (
+                <StyledTextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="newPassword"
+                  label="New Password"
+                  type={showNewPassword ? "text" : "password"}
+                  id="newPassword"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  sx={{ mb: 3 }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockOutlinedIcon color="action" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <AppIconButton
+                          aria-label="toggle new password visibility"
+                          icon={
+                            showNewPassword ? VisibilityOffIcon : VisibilityIcon
+                          }
+                          onClick={toggleNewPasswordVisibility}
+                          disabled={isLoading || authLoading}
+                        />
+                      </InputAdornment>
+                    ),
+                  }}
+                  disabled={isLoading || authLoading}
+                />
+              )}
+
               <PrimaryButton
                 type="submit"
                 fullWidth
                 size="large"
-                disabled={isLoading || authLoading || !username || !password}
+                disabled={
+                  isLoading ||
+                  authLoading ||
+                  !username ||
+                  !password ||
+                  (requiresNewPassword && !newPassword)
+                }
                 sx={{
                   mt: 1,
                   mb: 3,
@@ -321,7 +390,7 @@ function LoginPage() {
                 }}
               >
                 <span style={{ opacity: isLoading || authLoading ? 0.5 : 1 }}>
-                  Sign In
+                  {requiresNewPassword ? "Set New Password" : "Sign In"}
                 </span>
               </PrimaryButton>
 

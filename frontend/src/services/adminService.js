@@ -31,10 +31,10 @@ export const adminService = {
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
       // Call the API Gateway endpoint with proper authorization
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users?limit=${options.limit || 60}${options.nextToken ? `&nextToken=${options.nextToken}` : ''}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users?limit=${options.limit || 60}${options.nextToken ? `&nextToken=${options.nextToken}` : ''}`, {
         method: 'GET',
         headers: {
-          'Authorization': idToken,
+      'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -106,10 +106,10 @@ export const adminService = {
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
       // Call the API Gateway endpoint with proper authorization
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users`, {
         method: 'POST',
         headers: {
-          'Authorization': idToken,
+      'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json',
           'Origin': 'https://d23hk32py5djal.cloudfront.net'
         },
@@ -182,10 +182,10 @@ export const adminService = {
       if (Object.keys(requestBody).length === 0) {
         throw new Error('No valid fields to update');
       }
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}`, {
         method: 'PUT',
         headers: {
-          'Authorization': idToken,
+      'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json',
           'Origin': 'https://d23hk32py5djal.cloudfront.net'
         },
@@ -218,10 +218,10 @@ export const adminService = {
       }
       console.log(`Deleting user ${cognitoUsername}`);
       const idToken = await getAuthToken();
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': idToken,
+      'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json',
           'Origin': 'https://d23hk32py5djal.cloudfront.net'
         }
@@ -261,10 +261,10 @@ export const adminService = {
       }
       console.log(`Enabling user ${cognitoUsername}`);
       const idToken = await getAuthToken();
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}/enable`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}/enable`, {
         method: 'POST',
         headers: {
-          'Authorization': idToken,
+      'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json',
           'Origin': 'https://d23hk32py5djal.cloudfront.net'
         }
@@ -304,10 +304,10 @@ export const adminService = {
       }
       console.log(`Disabling user ${cognitoUsername}`);
       const idToken = await getAuthToken();
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}/disable`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${encodeURIComponent(cognitoUsername)}/disable`, {
         method: 'POST',
         headers: {
-          'Authorization': idToken,
+      'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json',
           'Origin': 'https://d23hk32py5djal.cloudfront.net'
         }
@@ -351,10 +351,10 @@ export const adminService = {
       console.log(`${enabled ? 'Enabling' : 'Disabling'} user:`, userId);
       
       const idToken = await getAuthToken();
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}/status`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/${userId}/status`, {
         method: 'PUT',
         headers: {
-          'Authorization': idToken,
+      'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json',
           'Origin': 'https://d23hk32py5djal.cloudfront.net'
         },
@@ -388,10 +388,10 @@ export const adminService = {
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
 
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/s3`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/s3`, {
         method: 'GET',
         headers: {
-          'Authorization': idToken, // Raw token
+      'Authorization': `Bearer ${idToken}`, // Bearer token
           'Content-Type': 'application/json'
         }
       });
@@ -429,11 +429,11 @@ export const adminService = {
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
 
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/crud/${serviceName}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/crud/${serviceName}`, {
 
         method: 'GET',
         headers: {
-          'Authorization': idToken, // Raw token
+      'Authorization': `Bearer ${idToken}`, // Bearer token
           'Content-Type': 'application/json'
         }
       });
@@ -470,10 +470,10 @@ export const adminService = {
       const idToken = await getAuthToken();
       if (!idToken) throw new Error('No authentication token available');
 
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/cognito-users`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/diagnostics/cognito-users`, {
         method: 'GET',
         headers: {
-          'Authorization': idToken, // Raw token
+      'Authorization': `Bearer ${idToken}`, // Bearer token
           'Content-Type': 'application/json'
         }
       });
@@ -507,10 +507,10 @@ export const adminService = {
       if (!idToken) throw new Error('No authentication token available');
 
       // Adjust API endpoint as necessary based on actual backend implementation
-      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/reports?type=${reportType}&range=${timeRange}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/reports?type=${reportType}&range=${timeRange}`, {
         method: 'GET',
         headers: {
-          'Authorization': idToken, // Send raw token
+      'Authorization': `Bearer ${idToken}`, // Bearer token
           'Content-Type': 'application/json'
         }
       });
