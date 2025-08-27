@@ -42,6 +42,8 @@ Resources:
   # DynamoDB Table for Patients and Medical Records (hybrid single-table design)
   PatientRecordsTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub clinnet-patient-records-${Environment}
       BillingMode: PAY_PER_REQUEST
@@ -73,14 +75,14 @@ Resources:
       TableName: !Sub clinnet-medical-reports-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-        - AttributeName: reportId
+        - AttributeName: id
           AttributeType: S
         - AttributeName: patientId
           AttributeType: S
         - AttributeName: doctorId
           AttributeType: S
       KeySchema:
-        - AttributeName: reportId
+        - AttributeName: id
           KeyType: HASH
       GlobalSecondaryIndexes:
         - IndexName: PatientIdIndex
@@ -98,6 +100,8 @@ Resources:
 
   UsersTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub clinnet-users-${Environment}
       BillingMode: PAY_PER_REQUEST
@@ -110,6 +114,8 @@ Resources:
 
   ServicesTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub clinnet-services-${Environment}
       BillingMode: PAY_PER_REQUEST
@@ -122,6 +128,8 @@ Resources:
 
   AppointmentsTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub clinnet-appointments-${Environment}
       BillingMode: PAY_PER_REQUEST
@@ -165,7 +173,6 @@ Resources:
   DocumentsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub clinnet-documents-${Environment}-${AWS::AccountId}-${AWS::Region}-${AWS::StackName} # Existing bucket
       PublicAccessBlockConfiguration:
         # Ensure public access is blocked
         BlockPublicAcls: true
@@ -836,116 +843,6 @@ Resources:
             Auth:
               Authorizer: NONE
 
-  # Add explicit OPTIONS handlers for other endpoints
-  ServicesOptions:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/cors/
-      Handler: cors_options.lambda_handler
-      Events:
-        ServicesOptions:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /services
-            Method: options
-            Auth:
-              Authorizer: NONE
-        ServiceByIdOptions:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /services/{id}
-            Method: options
-            Auth:
-              Authorizer: NONE
-
-  PatientsOptions:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/cors/
-      Handler: cors_options.lambda_handler
-      Events:
-        PatientsOptions:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /patients
-            Method: options
-            Auth:
-              Authorizer: NONE
-
-  UsersOptions:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/cors/
-      Handler: cors_options.lambda_handler
-      Events:
-        UsersOptions:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /users
-            Method: options
-            Auth:
-              Authorizer: NONE
-
-  UserByIdOptions:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/cors/
-      Handler: cors_options.lambda_handler
-      Events:
-        UserByIdOptions:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /users/{userId}
-            Method: options
-            Auth:
-              Authorizer: NONE
-
-  DiagnosticsOptions:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/cors/
-      Handler: cors_options.lambda_handler
-      Events:
-        S3DiagnosticsOptions:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /diagnostics/s3
-            Method: options
-            Auth:
-              Authorizer: NONE
-        DynamoDBDiagnosticsOptions:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /diagnostics/dynamodb
-            Method: options
-            Auth:
-              Authorizer: NONE
-        DynamoCrudDiagnosticsOptions:
-          # New OPTIONS for DynamoDB CRUD
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /diagnostics/crud/{serviceName}
-            Method: options
-            Auth:
-              Authorizer: NONE
-        CognitoUsersDiagnosticsOptions:
-          # New OPTIONS for Cognito CRUD
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /diagnostics/cognito-users
-            Method: options
-            Auth:
-              Authorizer: NONE
-
   # Lambda Functions for Diagnostics
   CheckS3ConnectivityFunction:
     Type: AWS::Serverless::Function
@@ -1158,7 +1055,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{reportId}
+            Path: /reports/{id}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1182,7 +1079,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{reportId}
+            Path: /reports/{id}
             Method: put
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1190,7 +1087,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{reportId}
+            Path: /reports/{id}
             Method: delete
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1199,7 +1096,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{reportId}/images
+            Path: /reports/{id}/images
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer # Assuming image uploads should be authenticated
@@ -1216,7 +1113,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{reportId}
+            Path: /reports/{id}
             Method: options
             Auth:
               Authorizer: NONE
@@ -1241,7 +1138,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{reportId}/images # Matches the new POST endpoint
+            Path: /reports/{id}/images # Matches the new POST endpoint
             Method: options
             Auth:
               Authorizer: NONE # OPTIONS should not be auth-protected
@@ -1270,23 +1167,6 @@ Resources:
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
-
-  SummarizeDoctorNoteOptionsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/cors/
-      Handler: cors_options.lambda_handler
-      # Runtime: python3.12 # Inherited from Globals
-      # Layers: # Not strictly necessary for a simple OPTIONS handler unless cors_options needs it
-      Events:
-        SummarizeNoteOptionsApi:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /ai/summarize-note
-            Method: options
-            Auth:
-              Authorizer: NONE
 
   # --- Frontend (S3 + CloudFront) ---
   FrontendBucket:
@@ -1392,11 +1272,7 @@ Resources:
       Description: Shared utils for Clinnet-EMR Lambdas
       ContentUri: lambda_layer/
       CompatibleRuntimes:
-        - python3.13
         - python3.12
-        - python3.11
-        - python3.10
-        - python3.9
 
 Outputs:
   ClinicAPI:

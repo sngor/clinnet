@@ -58,13 +58,13 @@ const createReport = async (eventBody, context, requestOrigin) => {
     return buildErrorResponse(400, 'ValidationError', 'Missing required fields: patientId, doctorId, reportContent', requestOrigin);
   }
 
-  const reportId = randomUUID();
+  const id = randomUUID();
   const timestamp = new Date().toISOString();
 
   const params = {
     TableName: tableName,
     Item: {
-      reportId,
+      id,
       patientId,
       doctorId,
       reportContent,
@@ -88,20 +88,20 @@ const createReport = async (eventBody, context, requestOrigin) => {
 };
 
 // Get Report by ID
-const getReportById = async (reportId, context, requestOrigin) => {
-  if (!reportId) {
-    return buildErrorResponse(400, 'ValidationError', "Missing reportId path parameter", requestOrigin);
+const getReportById = async (id, context, requestOrigin) => {
+  if (!id) {
+    return buildErrorResponse(400, 'ValidationError', "Missing id path parameter", requestOrigin);
   }
 
   const params = {
     TableName: tableName,
-    Key: { reportId },
+    Key: { id },
   };
 
   try {
     const { Item } = await docClient.send(new GetCommand(params));
     if (!Item) {
-      console.log(`Report not found for reportId: ${reportId}`, context.awsRequestId);
+      console.log(`Report not found for id: ${id}`, context.awsRequestId);
       return buildErrorResponse(404, 'NotFound', "Report not found", requestOrigin);
     }
     if (Item.imageReferences && Item.imageReferences.length > 0) {
@@ -185,9 +185,9 @@ const getReportsByDoctorId = async (doctorId, context, requestOrigin) => {
 };
 
 // Update Report
-const updateReport = async (reportId, eventBody, context, requestOrigin) => {
-  if (!reportId) {
-    return buildErrorResponse(400, 'ValidationError', "Missing reportId path parameter", requestOrigin);
+const updateReport = async (id, eventBody, context, requestOrigin) => {
+  if (!id) {
+    return buildErrorResponse(400, 'ValidationError', "Missing id path parameter", requestOrigin);
   }
 
   const { reportContent, doctorNotes } = eventBody;
@@ -211,7 +211,7 @@ const updateReport = async (reportId, eventBody, context, requestOrigin) => {
 
   const params = {
     TableName: tableName,
-    Key: { reportId },
+    Key: { id },
     UpdateExpression: updateExpression,
     ExpressionAttributeValues: expressionAttributeValues,
     ExpressionAttributeNames: Object.keys(expressionAttributeNames).length > 0 ? expressionAttributeNames : undefined,
@@ -220,10 +220,10 @@ const updateReport = async (reportId, eventBody, context, requestOrigin) => {
 
   try {
     // First, check if the item exists
-    const getItemParams = { TableName: tableName, Key: { reportId } };
+    const getItemParams = { TableName: tableName, Key: { id } };
     const { Item: existingItem } = await docClient.send(new GetCommand(getItemParams));
     if (!existingItem) {
-        console.log(`Report not found for update, reportId: ${reportId}`, context.awsRequestId);
+        console.log(`Report not found for update, id: ${id}`, context.awsRequestId);
         return buildErrorResponse(404, 'NotFound', "Report not found, cannot update.", requestOrigin);
     }
 
@@ -243,27 +243,27 @@ const updateReport = async (reportId, eventBody, context, requestOrigin) => {
 };
 
 // Delete Report
-const deleteReport = async (reportId, context, requestOrigin) => {
-  if (!reportId) {
-    return buildErrorResponse(400, 'ValidationError', "Missing reportId path parameter", requestOrigin);
+const deleteReport = async (id, context, requestOrigin) => {
+  if (!id) {
+    return buildErrorResponse(400, 'ValidationError', "Missing id path parameter", requestOrigin);
   }
 
   const params = {
     TableName: tableName,
-    Key: { reportId },
+    Key: { id },
   };
 
   try {
     // First, check if the item exists
-    const getItemParams = { TableName: tableName, Key: { reportId } };
+    const getItemParams = { TableName: tableName, Key: { id } };
     const { Item: existingItem } = await docClient.send(new GetCommand(getItemParams));
     if (!existingItem) {
-        console.log(`Report not found for deletion, reportId: ${reportId}`);
+        console.log(`Report not found for deletion, id: ${id}`);
         return buildErrorResponse(404, 'NotFound', "Report not found, cannot delete.", requestOrigin);
     }
 
     await docClient.send(new DeleteCommand(params));
-    console.log("Report deleted successfully:", reportId);
+    console.log("Report deleted successfully:", id);
     return buildResponse(204, {}, requestOrigin);
   } catch (error) {
     return buildErrorResponse(error.statusCode || 500, error.name || 'OperationFailed', error.message, requestOrigin);
@@ -271,9 +271,9 @@ const deleteReport = async (reportId, context, requestOrigin) => {
 };
 
 // Upload Image to Report
-const uploadImageToReport = async (reportId, event, context, requestOrigin) => {
-  if (!reportId) {
-    return buildErrorResponse(400, 'ValidationError', "Missing reportId path parameter", requestOrigin);
+const uploadImageToReport = async (id, event, context, requestOrigin) => {
+  if (!id) {
+    return buildErrorResponse(400, 'ValidationError', "Missing id path parameter", requestOrigin);
   }
 
   if (!imageBucketName) {
@@ -297,15 +297,15 @@ const uploadImageToReport = async (reportId, event, context, requestOrigin) => {
     }
 
     // 1. Check if the report exists
-    const getItemParams = { TableName: tableName, Key: { reportId } };
+    const getItemParams = { TableName: tableName, Key: { id } };
     const { Item: existingReport } = await docClient.send(new GetCommand(getItemParams));
     if (!existingReport) {
-      console.log(`Report not found for image upload, reportId: ${reportId}`, context.awsRequestId);
+      console.log(`Report not found for image upload, id: ${id}`, context.awsRequestId);
       return buildErrorResponse(404, 'NotFound', "Report not found. Cannot upload image.", requestOrigin);
     }
 
     // 2. Prepare image data and S3 key
-    const s3ObjectKey = `reports/${reportId}/${uuidv4()}-${imageName}`;
+    const s3ObjectKey = `reports/${id}/${uuidv4()}-${imageName}`;
 
     // 3. Upload to S3
     const s3PutParams = {
@@ -320,7 +320,7 @@ const uploadImageToReport = async (reportId, event, context, requestOrigin) => {
     // 4. Update DynamoDB with the image reference
     const updateDynamoParams = {
       TableName: tableName,
-      Key: { reportId },
+      Key: { id },
       UpdateExpression: "SET imageReferences = list_append(if_not_exists(imageReferences, :empty_list), :new_image_ref), updatedAt = :updatedAt",
       ExpressionAttributeValues: {
         ":new_image_ref": [s3ObjectKey], // list_append expects a list
@@ -339,11 +339,11 @@ const uploadImageToReport = async (reportId, event, context, requestOrigin) => {
         updatedReportAttributes.imagePresignedUrls = [];
       }
     }
-    console.log(`Report updated with image reference: ${reportId}, image: ${s3ObjectKey}`, context.awsRequestId);
+    console.log(`Report updated with image reference: ${id}, image: ${s3ObjectKey}`, context.awsRequestId);
     return buildResponse(200, { message: "Image uploaded and report updated successfully", s3ObjectKey, updatedReport: updatedReportAttributes }, requestOrigin);
 
   } catch (error) {
-    console.error(`Error in uploadImageToReport (reportId: ${reportId}, imageName: ${imageName}):`, error, context.awsRequestId);
+    console.error(`Error in uploadImageToReport (id: ${id}, imageName: ${imageName}):`, error, context.awsRequestId);
     if (error.name === 'NoSuchBucket') {
         return buildErrorResponse(500, 'ConfigurationError', 'Internal configuration error: S3 bucket not found.', requestOrigin);
     }
@@ -411,20 +411,20 @@ const handler = async (event, context) => {
   try {
     if (httpMethod === "POST" && path === "/reports") {
       return await createReport(body, context, requestOrigin);
-    } else if (httpMethod === "POST" && path.match(/^\/reports\/[a-zA-Z0-9-]+\/images$/) && pathParameters.reportId) {
-      // New route for image upload: POST /reports/{reportId}/images
+    } else if (httpMethod === "POST" && path.match(/^\/reports\/[a-zA-Z0-9-]+\/images$/) && pathParameters.id) {
+      // New route for image upload: POST /reports/{id}/images
       // Pass the full event here
-      return await uploadImageToReport(pathParameters.reportId, event, context, requestOrigin);
-    } else if (httpMethod === "GET" && pathParameters.reportId && path === `/reports/${pathParameters.reportId}`) {
-      return await getReportById(pathParameters.reportId, context, requestOrigin);
+      return await uploadImageToReport(pathParameters.id, event, context, requestOrigin);
+    } else if (httpMethod === "GET" && pathParameters.id && path === `/reports/${pathParameters.id}`) {
+      return await getReportById(pathParameters.id, context, requestOrigin);
     } else if (httpMethod === "GET" && pathParameters.patientId && path === `/reports/patient/${pathParameters.patientId}`) {
       return await getReportsByPatientId(pathParameters.patientId, context, requestOrigin);
     } else if (httpMethod === "GET" && pathParameters.doctorId && path === `/reports/doctor/${pathParameters.doctorId}`) {
       return await getReportsByDoctorId(pathParameters.doctorId, context, requestOrigin);
-    } else if (httpMethod === "PUT" && pathParameters.reportId && path === `/reports/${pathParameters.reportId}`) {
-      return await updateReport(pathParameters.reportId, body, context, requestOrigin);
-    } else if (httpMethod === "DELETE" && pathParameters.reportId && path === `/reports/${pathParameters.reportId}`) {
-      return await deleteReport(pathParameters.reportId, context, requestOrigin);
+    } else if (httpMethod === "PUT" && pathParameters.id && path === `/reports/${pathParameters.id}`) {
+      return await updateReport(pathParameters.id, body, context, requestOrigin);
+    } else if (httpMethod === "DELETE" && pathParameters.id && path === `/reports/${pathParameters.id}`) {
+      return await deleteReport(pathParameters.id, context, requestOrigin);
     // Note: OPTIONS is already handled at the top of the handler. This else if can be removed if not needed for other specific OPTIONS logic.
     // } else if (httpMethod === "OPTIONS") {
     //   console.log("Handling OPTIONS request (already handled)", context.awsRequestId);
