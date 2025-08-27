@@ -354,7 +354,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /services
+            Path: /api/services
             Method: get
             Auth:
               Authorizer: NONE # Services endpoint is public
@@ -374,7 +374,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /services/{id}
+            Path: /api/services/{id}
             Method: get
             Auth:
               Authorizer: NONE # Getting a specific service is public
@@ -394,7 +394,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /services
+            Path: /api/services
             Method: post
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
@@ -413,7 +413,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /services/{id}
+            Path: /api/services/{id}
             Method: put
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
@@ -432,7 +432,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /services/{id}
+            Path: /api/services/{id}
             Method: delete
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
@@ -455,7 +455,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /patients
+            Path: /api/patients
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer # CHANGED: Protect patient list
@@ -476,7 +476,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /patients/{id}
+            Path: /api/patients/{id}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer # CHANGED: Protect specific patient
@@ -499,7 +499,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /patients
+            Path: /api/patients
             Method: post
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
@@ -522,7 +522,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /patients/{id}
+            Path: /api/patients/{id}
             Method: put
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
@@ -539,7 +539,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /patients/{id}
+            Path: /api/patients/{id}
             Method: delete
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
@@ -563,7 +563,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users
+            Path: /api/users
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -589,7 +589,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users
+            Path: /api/users
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
@@ -617,7 +617,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{userId}
+            Path: /api/users/{userId}
             Method: put
             Auth:
               Authorizer: CognitoAuthorizer
@@ -641,7 +641,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{userId}
+            Path: /api/users/{userId}
             Method: delete
             Auth:
               Authorizer: CognitoAuthorizer
@@ -665,7 +665,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{userId}/enable
+            Path: /api/users/{userId}/enable
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
@@ -689,7 +689,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/{userId}/disable
+            Path: /api/users/{userId}/disable
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
@@ -721,7 +721,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/profile-image
+            Path: /api/users/profile-image
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
@@ -755,7 +755,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/profile-image
+            Path: /api/users/profile-image
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -791,7 +791,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports
+            Path: /api/reports
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -822,7 +822,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/profile-image
+            Path: /api/users/profile-image
             Method: delete
             Auth:
               Authorizer: CognitoAuthorizer
@@ -838,7 +838,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /users/profile-image
+            Path: /api/users/profile-image
             Method: options
             Auth:
               Authorizer: NONE
@@ -862,7 +862,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /diagnostics/s3
+            Path: /api/diagnostics/s3
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -888,7 +888,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /diagnostics/crud/{serviceName}
+            Path: /api/diagnostics/crud/{serviceName}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -917,7 +917,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /diagnostics/cognito-users
+            Path: /api/diagnostics/cognito-users
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -936,7 +936,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /appointments
+            Path: /api/appointments
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer # CHANGED: Protect appointment list
@@ -954,7 +954,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /appointments/{id}
+            Path: /api/appointments/{id}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer # CHANGED: Protect specific appointment
@@ -972,7 +972,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /appointments
+            Path: /api/appointments
             Method: post
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
@@ -989,7 +989,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /appointments/{id}
+            Path: /api/appointments/{id}
             Method: put
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
@@ -1006,7 +1006,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /appointments/{id}
+            Path: /api/appointments/{id}
             Method: delete
             # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
@@ -1047,7 +1047,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports
+            Path: /api/reports
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1055,7 +1055,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{id}
+            Path: /api/reports/{id}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1063,7 +1063,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/patient/{patientId}
+            Path: /api/reports/patient/{patientId}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1071,7 +1071,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/doctor/{doctorId}
+            Path: /api/reports/doctor/{doctorId}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1079,7 +1079,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{id}
+            Path: /api/reports/{id}
             Method: put
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1087,7 +1087,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{id}
+            Path: /api/reports/{id}
             Method: delete
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1096,7 +1096,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{id}/images
+            Path: /api/reports/{id}/images
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer # Assuming image uploads should be authenticated
@@ -1105,7 +1105,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports
+            Path: /api/reports
             Method: options
             Auth:
               Authorizer: NONE # OPTIONS should not be auth-protected
@@ -1113,7 +1113,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{id}
+            Path: /api/reports/{id}
             Method: options
             Auth:
               Authorizer: NONE
@@ -1121,7 +1121,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/patient/{patientId}
+            Path: /api/reports/patient/{patientId}
             Method: options
             Auth:
               Authorizer: NONE
@@ -1129,7 +1129,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/doctor/{doctorId}
+            Path: /api/reports/doctor/{doctorId}
             Method: options
             Auth:
               Authorizer: NONE
@@ -1138,7 +1138,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /reports/{id}/images # Matches the new POST endpoint
+            Path: /api/reports/{id}/images # Matches the new POST endpoint
             Method: options
             Auth:
               Authorizer: NONE # OPTIONS should not be auth-protected
@@ -1163,7 +1163,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /ai/summarize-note
+            Path: /api/ai/summarize-note
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1217,6 +1217,11 @@ Resources:
             DomainName: !GetAtt FrontendBucket.RegionalDomainName
             S3OriginConfig:
               OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CloudFrontOAI}
+          - Id: ApiGatewayOrigin
+            DomainName: !Sub ${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com
+            OriginPath: !Sub /${Environment}
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https
@@ -1237,6 +1242,39 @@ Resources:
           MaxTTL: 31536000 # 1 year max
         # Add a specific cache behavior for index.html
         CacheBehaviors:
+          - PathPattern: /api/*
+            TargetOriginId: ApiGatewayOrigin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            ForwardedValues:
+              QueryString: true
+              Cookies:
+                Forward: all
+              Headers:
+                - Authorization
+                - Content-Type
+                - Origin
+                - Referer
+                - Host
+                - Accept
+                - X-Amz-Date
+                - X-Api-Key
+                - X-Amz-Security-Token
+                - X-Requested-With
+            MinTTL: 0
+            DefaultTTL: 0
+            MaxTTL: 0
           - PathPattern: /index.html
             TargetOriginId: S3Origin
             ViewerProtocolPolicy: redirect-to-https
