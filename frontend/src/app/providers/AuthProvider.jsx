@@ -28,21 +28,12 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [authToken, setAuthToken] = useState(null);
   // Add state for profile image
-  const [profileImage, setProfileImage] = useState(
-    localStorage.getItem("userProfileImage") || null
-  );
+  const [profileImage, setProfileImage] = useState(null);
   const navigate = useNavigate();
 
   // Function to update profile image in user state
   const updateProfileImage = useCallback(
     (imageUrl) => {
-      // Store in local storage to persist across refreshes
-      if (imageUrl) {
-        localStorage.setItem("userProfileImage", imageUrl);
-      } else {
-        localStorage.removeItem("userProfileImage");
-      }
-
       setProfileImage(imageUrl);
 
       // Update user object with profile image
@@ -70,10 +61,6 @@ export const AuthProvider = ({ children }) => {
           userInfo.profileImage = user.profileImage;
         }
 
-        // Store profile image in local storage if available
-        if (userInfo.profileImage) {
-          localStorage.setItem("userProfileImage", userInfo.profileImage);
-        }
 
         setUser(userInfo);
         return userInfo;
@@ -101,22 +88,9 @@ export const AuthProvider = ({ children }) => {
             if (imageResult.success && imageResult.hasImage) {
               userInfo.profileImage = imageResult.imageUrl;
               userInfo.avatar = imageResult.imageUrl; // Add avatar property for consistency
-              // Store in local storage
-              localStorage.setItem("userProfileImage", imageResult.imageUrl);
-            } else if (localStorage.getItem("userProfileImage")) {
-              // Use cached image if available
-              const cachedImage = localStorage.getItem("userProfileImage");
-              userInfo.profileImage = cachedImage;
-              userInfo.avatar = cachedImage; // Add avatar property for consistency
             }
           } catch (imageError) {
             console.warn("Could not fetch profile image:", imageError);
-            // Use cached image if available
-            const storedProfileImage = localStorage.getItem("userProfileImage");
-            if (storedProfileImage) {
-              userInfo.profileImage = storedProfileImage;
-              userInfo.avatar = storedProfileImage; // Add avatar property for consistency
-            }
           }
 
           setAuthToken(session.getIdToken().getJwtToken());
@@ -231,7 +205,6 @@ export const AuthProvider = ({ children }) => {
         if (imageResult.success && imageResult.hasImage) {
           userInfo.profileImage = imageResult.imageUrl;
           userInfo.avatar = imageResult.imageUrl; // Add avatar property for consistency
-          localStorage.setItem("userProfileImage", imageResult.imageUrl);
         }
       } catch (imageError) {
         console.warn("Could not fetch profile image during login:", imageError);
@@ -296,7 +269,6 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setAuthToken(null);
       // Clear profile image data
-      localStorage.removeItem("userProfileImage");
       setProfileImage(null);
       navigate("/login");
     } catch (error) {
