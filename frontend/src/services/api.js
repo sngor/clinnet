@@ -9,9 +9,20 @@ import {
 } from './offlineApiHandler'; // Adjusted path if necessary, assuming it's in the same services directory
 
 // Create an axios instance with base configuration
+// Ensure the base URL has the /api suffix, as backend routes are defined with it
+let baseUrl = import.meta.env.VITE_API_ENDPOINT || '';
+if (baseUrl && !baseUrl.endsWith('/api')) {
+  // To prevent double slashes if the original URL ends with a slash
+  if (baseUrl.endsWith('/')) {
+    baseUrl = `${baseUrl}api`;
+  } else {
+    baseUrl = `${baseUrl}/api`;
+  }
+}
+
 const api = axios.create({
-  // Use the actual API endpoint directly
-  baseURL: import.meta.env.VITE_API_ENDPOINT,
+  // Use the constructed base URL
+  baseURL: baseUrl,
   headers: {
     'Content-Type': 'application/json',
   },

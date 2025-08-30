@@ -64,8 +64,10 @@ How to set up and run Clinnet-EMR locally for rapid development and testing. For
    Minimum required for local Cognito login:
 
    ```env
-   # Backend API (local SAM or deployed API Gateway)
-   VITE_API_ENDPOINT=https://your-api-id.execute-api.us-east-2.amazonaws.com/prod
+   # This should be the API Gateway endpoint URL for your deployed backend stage.
+   # Example: https://xxxxxxxxxx.execute-api.us-east-2.amazonaws.com/dev
+   # The '/api' path segment is handled automatically by the application.
+   VITE_API_ENDPOINT=https://your-api-id.execute-api.us-east-2.amazonaws.com/dev
 
    # Cognito (required for login)
    VITE_COGNITO_REGION=us-east-2
