@@ -764,7 +764,7 @@ Resources:
     Properties:
       FunctionName: GetAggregatedReports # Explicit name
       Handler: handlers/reports/getAggregatedReports.handler
-      Runtime: nodejs22.x
+      Runtime: nodejs20.x
       CodeUri: src/
       Description: Fetches aggregated report data for admin reporting
       Policies:
@@ -1014,7 +1014,7 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: handlers/medical_reports/index.handler # Entry point adjusted for shared CodeUri
-      Runtime: nodejs22.x
+      Runtime: nodejs20.x
       Environment:
         # Add specific environment variables here
         Variables:

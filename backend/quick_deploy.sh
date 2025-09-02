@@ -7,8 +7,11 @@ set -e  # Exit on any error
 echo "🚀 Profile Image System - Quick Deployment"
 echo "=========================================="
 
-# Change to backend directory
-cd /Users/sengngor/Desktop/App/Clinnet-EMR/backend
+# Change to backend directory (fixed path)
+cd /Users/sengngor/Desktop/Apps/clinnet/backend
+
+# Disable AWS CLI pager for clean output
+export AWS_PAGER=""
 
 echo "📍 Current directory: $(pwd)"
 
@@ -37,6 +40,12 @@ fi
 echo "✅ AWS credentials configured"
 
 # Build the application
+echo "� Validating template (lint)..."
+if ! sam validate --lint; then
+    echo "❌ Template validation failed"
+    exit 1
+fi
+
 echo "🔨 Building SAM application..."
 if ! sam build --cached; then
     echo "❌ Build failed"
@@ -46,13 +55,7 @@ fi
 echo "✅ Build successful"
 
 # Validate template
-echo "🔍 Validating template..."
-if ! sam validate; then
-    echo "❌ Template validation failed"
-    exit 1
-fi
-
-echo "✅ Template validation successful"
+echo "✅ Validation successful"
 
 # Deploy
 echo "🚀 Deploying application..."

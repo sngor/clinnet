@@ -4,6 +4,9 @@
 echo "🔍 Monitoring SAM deployment status..."
 echo "=================================================="
 
+# Disable AWS CLI pager for clean output
+export AWS_PAGER=""
+
 STACK_NAME="sam-clinnet"
 REGION="us-east-2"
 MAX_ATTEMPTS=30
