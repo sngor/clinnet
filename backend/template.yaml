@@ -813,7 +813,7 @@ Resources:
                 - s3:DeleteObject
                 - s3:GetObject
                 - s3:HeadObject
-              Resource: !Sub ${DocumentsBucket.Arn}/profile-images/*
+              Resource: !Sub arn:aws:s3:::${DocumentsBucket}/profile-images/*
       Layers:
         - !Ref UtilsLayer
       Events:
