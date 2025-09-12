@@ -157,26 +157,59 @@ jobs:
         run: sam build --cached --parallel
 
       - name: Check and cleanup failed stack
+        continue-on-error: true
         run: |
-          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region ${{ env.AWS_REGION }} --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_EXISTS")
-          echo "Current stack status: $STACK_STATUS"
-          if [ "$STACK_STATUS" = "DELETE_FAILED" ] || [ "$STACK_STATUS" = "CREATE_FAILED" ] || [ "$STACK_STATUS" = "UPDATE_ROLLBACK_FAILED" ]; then
-            echo "Stack is in failed state. Deleting..."
-            aws cloudformation delete-stack --stack-name sam-clinnet --region ${{ env.AWS_REGION }}
-            aws cloudformation wait stack-delete-complete --stack-name sam-clinnet --region ${{ env.AWS_REGION }} || true
+          set +e
+          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region ${{ env.AWS_REGION }} --query 'Stacks[0].StackStatus' --output text 2>/dev/null)
+          EXIT_CODE=$?
+          set -e
+          
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "Current stack status: $STACK_STATUS"
+            if [[ "$STACK_STATUS" == *"FAILED"* ]] || [[ "$STACK_STATUS" == *"ROLLBACK"* ]]; then
+              echo "Stack is in failed state. Force deleting..."
+              aws cloudformation delete-stack --stack-name sam-clinnet --region ${{ env.AWS_REGION }}
+              echo "Waiting for deletion..."
+              timeout 600 aws cloudformation wait stack-delete-complete --stack-name sam-clinnet --region ${{ env.AWS_REGION }} || echo "Deletion timeout or failed"
+            fi
+          else
+            echo "Stack does not exist or cannot be accessed"
           fi
 
-      - name: Deploy
+      - name: Deploy with retry
         env:
           SAM_DEPLOY_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'dev' }}
         run: |
-          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
+          # Try deployment, if it fails due to DELETE_FAILED, force delete and retry
+          if ! sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
             --stack-name sam-clinnet \
             --region ${{ env.AWS_REGION }} \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
             --parameter-overrides Environment=$SAM_DEPLOY_ENV \
             --resolve-s3 \
-            --s3-prefix sam-clinnet
+            --s3-prefix sam-clinnet; then
+            
+            echo "Deployment failed, checking if stack is in failed state..."
+            STACK_STATUS=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region ${{ env.AWS_REGION }} --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_EXISTS")
+            
+            if [[ "$STACK_STATUS" == *"FAILED"* ]]; then
+              echo "Force deleting failed stack..."
+              aws cloudformation delete-stack --stack-name sam-clinnet --region ${{ env.AWS_REGION }}
+              timeout 600 aws cloudformation wait stack-delete-complete --stack-name sam-clinnet --region ${{ env.AWS_REGION }} || echo "Deletion timeout"
+              
+              echo "Retrying deployment..."
+              sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
+                --stack-name sam-clinnet \
+                --region ${{ env.AWS_REGION }} \
+                --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+                --parameter-overrides Environment=$SAM_DEPLOY_ENV \
+                --resolve-s3 \
+                --s3-prefix sam-clinnet
+            else
+              echo "Deployment failed for other reasons"
+              exit 1
+            fi
+          fi
 
   deploy-frontend:
     name: Deploy Frontend (S3 + CloudFront)
