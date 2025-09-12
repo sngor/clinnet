@@ -1,6 +1,6 @@
 version = 0.1
 [default.deploy.parameters]
-stack_name = "sam-clinnet"
+stack_name = "sam-clinnet-v2"
 resolve_s3 = true
 s3_prefix = "sam-clinnet"
 region = "us-east-2"
