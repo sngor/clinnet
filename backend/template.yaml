@@ -69,9 +69,10 @@ Resources:
 
   MedicalReportsTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain # Retaining the table on stack deletion
+    DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
+      TableName: !Sub clinnet-medical-reports-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -172,8 +173,8 @@ Resources:
   DocumentsBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketName: !Sub clinnet-documents-${AWS::AccountId}-${AWS::Region}-${Environment}
       PublicAccessBlockConfiguration:
-        # Ensure public access is blocked
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls: true
@@ -195,7 +196,7 @@ Resources:
         Rules:
           - Id: ExpireTemporaryFiles
             Status: Enabled
-            ExpirationInDays: 30 # Automatically delete objects after 30 days
+            ExpirationInDays: 30
 
   MedicalReportImagesBucket:
     # New S3 bucket for medical report images
@@ -762,7 +763,7 @@ Resources:
   GetAggregatedReportsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: GetAggregatedReports # Explicit name
+      FunctionName: !Sub GetAggregatedReports-${Environment}
       Handler: handlers/reports/getAggregatedReports.handler
       Runtime: nodejs20.x
       CodeUri: src/
@@ -790,7 +791,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports
+            Path: /api/reports/aggregated
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1046,7 +1047,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports
+            Path: /api/medical-reports
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1054,7 +1055,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports/{id}
+            Path: /api/medical-reports/{id}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1062,7 +1063,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports/patient/{patientId}
+            Path: /api/medical-reports/patient/{patientId}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1070,7 +1071,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports/doctor/{doctorId}
+            Path: /api/medical-reports/doctor/{doctorId}
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1078,7 +1079,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports/{id}
+            Path: /api/medical-reports/{id}
             Method: put
             Auth:
               Authorizer: CognitoAuthorizer
@@ -1086,33 +1087,32 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports/{id}
+            Path: /api/medical-reports/{id}
             Method: delete
             Auth:
               Authorizer: CognitoAuthorizer
         UploadReportImage:
-          # New endpoint for uploading images to a report
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports/{id}/images
+            Path: /api/medical-reports/{id}/images
             Method: post
             Auth:
-              Authorizer: CognitoAuthorizer # Assuming image uploads should be authenticated
+              Authorizer: CognitoAuthorizer
         # OPTIONS for CORS preflight
         OptionsReportsBase:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports
+            Path: /api/medical-reports
             Method: options
             Auth:
-              Authorizer: NONE # OPTIONS should not be auth-protected
+              Authorizer: NONE
         OptionsReportsById:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports/{id}
+            Path: /api/medical-reports/{id}
             Method: options
             Auth:
               Authorizer: NONE
@@ -1120,7 +1120,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports/patient/{patientId}
+            Path: /api/medical-reports/patient/{patientId}
             Method: options
             Auth:
               Authorizer: NONE
@@ -1128,19 +1128,18 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports/doctor/{doctorId}
+            Path: /api/medical-reports/doctor/{doctorId}
             Method: options
             Auth:
               Authorizer: NONE
         OptionsReportImageUpload:
-          # OPTIONS for the new image upload endpoint
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
-            Path: /api/reports/{id}/images # Matches the new POST endpoint
+            Path: /api/medical-reports/{id}/images
             Method: options
             Auth:
-              Authorizer: NONE # OPTIONS should not be auth-protected
+              Authorizer: NONE
 
   SummarizeDoctorNoteFunction:
     Type: AWS::Serverless::Function

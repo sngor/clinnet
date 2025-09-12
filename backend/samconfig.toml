@@ -4,6 +4,12 @@ stack_name = "sam-clinnet"
 resolve_s3 = true
 s3_prefix = "sam-clinnet"
 region = "us-east-2"
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+confirm_changeset = false
+fail_on_empty_changeset = false
 image_repositories = []
 parameter_overrides = "Environment=\"dev\""
+
+[default.build.parameters]
+parallel = true
+cached = true

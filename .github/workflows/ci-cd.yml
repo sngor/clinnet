@@ -154,18 +154,19 @@ jobs:
         run: sam validate --lint
 
       - name: Build
-        run: sam build --cached
+        run: sam build --cached --parallel
 
       - name: Deploy
         env:
-          # Use workflow input when dispatched, otherwise default to dev
           SAM_DEPLOY_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'dev' }}
         run: |
           sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
             --stack-name sam-clinnet \
             --region ${{ env.AWS_REGION }} \
-            --capabilities CAPABILITY_IAM \
-            --parameter-overrides Environment=$SAM_DEPLOY_ENV
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+            --parameter-overrides Environment=$SAM_DEPLOY_ENV \
+            --resolve-s3 \
+            --s3-prefix sam-clinnet
 
   deploy-frontend:
     name: Deploy Frontend (S3 + CloudFront)

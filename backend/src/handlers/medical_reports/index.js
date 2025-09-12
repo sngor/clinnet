@@ -305,7 +305,7 @@ const uploadImageToReport = async (id, event, context, requestOrigin) => {
     }
 
     // 2. Prepare image data and S3 key
-    const s3ObjectKey = `reports/${id}/${uuidv4()}-${imageName}`;
+    const s3ObjectKey = `reports/${id}/${randomUUID()}-${imageName}`;
 
     // 3. Upload to S3
     const s3PutParams = {
