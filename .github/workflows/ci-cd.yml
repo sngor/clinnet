@@ -156,6 +156,16 @@ jobs:
       - name: Build
         run: sam build --cached --parallel
 
+      - name: Check and cleanup failed stack
+        run: |
+          STACK_STATUS=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region ${{ env.AWS_REGION }} --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_EXISTS")
+          echo "Current stack status: $STACK_STATUS"
+          if [ "$STACK_STATUS" = "DELETE_FAILED" ] || [ "$STACK_STATUS" = "CREATE_FAILED" ] || [ "$STACK_STATUS" = "UPDATE_ROLLBACK_FAILED" ]; then
+            echo "Stack is in failed state. Deleting..."
+            aws cloudformation delete-stack --stack-name sam-clinnet --region ${{ env.AWS_REGION }}
+            aws cloudformation wait stack-delete-complete --stack-name sam-clinnet --region ${{ env.AWS_REGION }} || true
+          fi
+
       - name: Deploy
         env:
           SAM_DEPLOY_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'dev' }}
