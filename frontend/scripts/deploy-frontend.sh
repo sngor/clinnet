@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 # Deploy the Clinnet-EMR frontend to S3 and invalidate CloudFront
 # Usage: ./deploy-frontend.sh <environment>
 
@@ -55,9 +55,15 @@ BUCKET=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$
 DISTRIBUTION=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text 2>/dev/null || echo "")
 
 echo "Syncing build output to S3..."
-# Sync all assets with aggressive caching
-aws s3 sync dist/ "s3://$BUCKET/" --delete --cache-control "public, max-age=31536000, immutable"
-# Ensure index.html is always fresh
+
+# Sync asset files from dist/assets to s3://$BUCKET/assets
+# These have content hashes in their filenames, so they can be cached indefinitely.
+echo "🔄 Syncing assets..."
+aws s3 sync dist/assets/ "s3://$BUCKET/assets/" --delete --cache-control "public, max-age=31536000, immutable"
+
+# Copy index.html to S3 root.
+# It should not be cached by browsers, so it's always fetched on navigation.
+echo "🔄 Copying index.html..."
 aws s3 cp dist/index.html "s3://$BUCKET/index.html" --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
 
 echo "Invalidating CloudFront cache..."
