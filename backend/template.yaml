@@ -45,7 +45,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub clinnet-patient-records-${Environment}
+      TableName: !Sub clinnet-patient-records-v2-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: PK
@@ -72,7 +72,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub clinnet-medical-reports-${Environment}
+      TableName: !Sub clinnet-medical-reports-v2-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -103,7 +103,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub clinnet-users-${Environment}
+      TableName: !Sub clinnet-users-v2-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -117,7 +117,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub clinnet-services-${Environment}
+      TableName: !Sub clinnet-services-v2-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -131,7 +131,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub clinnet-appointments-${Environment}
+      TableName: !Sub clinnet-appointments-v2-${Environment}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -173,7 +173,7 @@ Resources:
   DocumentsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub clinnet-documents-${AWS::AccountId}-${AWS::Region}-${Environment}
+      BucketName: !Sub clinnet-documents-v2-${AWS::AccountId}-${AWS::Region}-${Environment}
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -202,7 +202,7 @@ Resources:
     # New S3 bucket for medical report images
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub clinnet-emr-report-images-${AWS::AccountId}-${AWS::Region}-${Environment} # Unique bucket name
+      BucketName: !Sub clinnet-emr-report-images-v2-${AWS::AccountId}-${AWS::Region}-${Environment}
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -290,7 +290,7 @@ Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: !Sub clinnet-user-pool-${Environment}
+      UserPoolName: !Sub clinnet-user-pool-v2-${Environment}
       AutoVerifiedAttributes:
         - email
       UsernameAttributes:
@@ -327,7 +327,7 @@ Resources:
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      ClientName: !Sub clinnet-app-client-${Environment}
+      ClientName: !Sub clinnet-app-client-v2-${Environment}
       UserPoolId: !Ref UserPool
       GenerateSecret: false
       ExplicitAuthFlows:
@@ -1170,7 +1170,7 @@ Resources:
   FrontendBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub clinnet-frontend-${Environment}-${AWS::AccountId}-${AWS::Region}
+      BucketName: !Sub clinnet-frontend-v2-${Environment}-${AWS::AccountId}-${AWS::Region}
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: index.html
