@@ -35,8 +35,6 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /api/test
             Method: get
-            Auth:
-              Authorizer: NONE
 
 Outputs:
   ApiEndpoint:
