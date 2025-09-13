@@ -159,13 +159,7 @@ jobs:
         env:
           SAM_DEPLOY_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'dev' }}
         run: |
-          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
-            --stack-name clinnet-emr-backend \
-            --region ${{ env.AWS_REGION }} \
-            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-            --parameter-overrides Environment=$SAM_DEPLOY_ENV \
-            --resolve-s3 \
-            --s3-prefix clinnet-emr-backend
+          ./deploy-minimal.sh
 
   deploy-frontend:
     name: Deploy Frontend (S3 + CloudFront)
