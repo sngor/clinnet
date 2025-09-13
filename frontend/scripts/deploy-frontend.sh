@@ -61,12 +61,16 @@ aws s3 sync dist/ "s3://$BUCKET/" --delete --cache-control "public, max-age=3153
 aws s3 cp dist/index.html "s3://$BUCKET/index.html" --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
 
 echo "Invalidating CloudFront cache..."
-DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?DomainName=='$DISTRIBUTION'].Id" --output text)
-if [ -n "$DISTRIBUTION_ID" ]; then
-  aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
-  echo "CloudFront cache invalidated."
+if [ -n "$DISTRIBUTION" ] && [ "$DISTRIBUTION" != "None" ]; then
+  DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?DomainName=='$DISTRIBUTION'].Id" --output text 2>/dev/null || echo "")
+  if [ -n "$DISTRIBUTION_ID" ]; then
+    aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
+    echo "CloudFront cache invalidated."
+  else
+    echo "Warning: Could not find CloudFront distribution ID for $DISTRIBUTION."
+  fi
 else
-  echo "Warning: Could not find CloudFront distribution ID for $DISTRIBUTION."
+  echo "Skipping CloudFront invalidation - no distribution configured."
 fi
 
 echo "Frontend deployed!"
