@@ -13,6 +13,10 @@ Parameters:
   Environment:
     Type: String
     Default: dev
+  DomainName:
+    Type: String
+    Description: Custom domain name
+    Default: "clinnet.bayoncloud.com"
 
 Resources:
   # Simple API Gateway
@@ -41,14 +45,17 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub clinnet-frontend-minimal-${Environment}-${AWS::AccountId}-${AWS::Region}
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: index.html
       PublicAccessBlockConfiguration:
-        BlockPublicAcls: false
-        BlockPublicPolicy: false
-        IgnorePublicAcls: false
-        RestrictPublicBuckets: false
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  CloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub OAI for Clinnet-EMR frontend ${Environment}
 
   FrontendBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -57,9 +64,71 @@ Resources:
       PolicyDocument:
         Statement:
           - Effect: Allow
-            Principal: '*'
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
             Action: s3:GetObject
             Resource: !Sub ${FrontendBucket.Arn}/*
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Aliases: !If [HasDomainName, [!Ref DomainName], !Ref "AWS::NoValue"]
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CloudFrontOAI}
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        ViewerCertificate: !If
+          - HasDomainName
+          - AcmCertificateArn: !Ref SSLCertificate
+            SslSupportMethod: sni-only
+          - CloudFrontDefaultCertificate: true
+        PriceClass: PriceClass_100
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+  SSLCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Condition: HasDomainName
+    Properties:
+      DomainName: !Ref DomainName
+      ValidationMethod: DNS
+
+  DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: HasDomainName
+    Properties:
+      HostedZoneName: bayoncloud.com.
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt FrontendDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+
+Conditions:
+  HasDomainName: !Not [!Equals [!Ref DomainName, ""]]
 
 Outputs:
   ApiEndpoint:
@@ -68,6 +137,8 @@ Outputs:
     Value: !Ref FrontendBucket
   FrontendWebsiteURL:
     Value: !GetAtt FrontendBucket.WebsiteURL
+  CloudFrontDistributionDomain:
+    Value: !GetAtt FrontendDistribution.DomainName
 EOF
 
 echo "Deploying minimal stack..."
