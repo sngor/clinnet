@@ -36,9 +36,38 @@ Resources:
             Path: /api/test
             Method: get
 
+  # Basic S3 bucket for frontend
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub clinnet-frontend-minimal-${Environment}-${AWS::AccountId}-${AWS::Region}
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+
 Outputs:
   ApiEndpoint:
     Value: !Sub https://${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+  FrontendBucketName:
+    Value: !Ref FrontendBucket
+  FrontendWebsiteURL:
+    Value: !GetAtt FrontendBucket.WebsiteURL
 EOF
 
 echo "Deploying minimal stack..."

@@ -50,11 +50,21 @@ npm run build
 
 echo "Skipping SAM deploy for frontend. Using existing backend stack resources."
 
-# Use the backend stack to get outputs
-BUCKET=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text 2>/dev/null || echo "")
-DISTRIBUTION_DOMAIN=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text 2>/dev/null || echo "")
+# Try to get outputs from the main stack first, then fall back to minimal stack
+BUCKET=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text 2>/dev/null || \
+         aws cloudformation describe-stacks --stack-name clinnet-minimal --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text 2>/dev/null || echo "")
+DISTRIBUTION_DOMAIN=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text 2>/dev/null || \
+                     aws cloudformation describe-stacks --stack-name clinnet-minimal --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text 2>/dev/null || echo "")
 
 echo "Syncing build output to S3..."
+
+if [ -z "$BUCKET" ] || [ "$BUCKET" = "None" ]; then
+  echo "❌ No S3 bucket found. Creating a temporary bucket for deployment..."
+  BUCKET="clinnet-frontend-temp-${ENVIRONMENT}-$(date +%s)"
+  aws s3 mb "s3://$BUCKET" --region "$AWS_REGION"
+  aws s3 website "s3://$BUCKET" --index-document index.html --error-document index.html
+  echo "✅ Created temporary bucket: $BUCKET"
+fi
 
 # Sync asset files from dist/assets to s3://$BUCKET/assets
 # These have content hashes in their filenames, so they can be cached indefinitely.
@@ -68,8 +78,9 @@ aws s3 cp dist/index.html "s3://$BUCKET/index.html" --cache-control "no-cache, n
 
 echo "Invalidating CloudFront cache..."
 if [ -n "$DISTRIBUTION_DOMAIN" ] && [ "$DISTRIBUTION_DOMAIN" != "None" ]; then
-  # Get distribution ID directly from CloudFormation stack resources
-  DISTRIBUTION_ID=$(aws cloudformation describe-stack-resources --stack-name sam-clinnet --region "$AWS_REGION" --query "StackResources[?ResourceType=='AWS::CloudFront::Distribution'].PhysicalResourceId" --output text 2>/dev/null || echo "")
+  # Try to get distribution ID from main stack first, then minimal stack
+  DISTRIBUTION_ID=$(aws cloudformation describe-stack-resources --stack-name sam-clinnet --region "$AWS_REGION" --query "StackResources[?ResourceType=='AWS::CloudFront::Distribution'].PhysicalResourceId" --output text 2>/dev/null || \
+                   aws cloudformation describe-stack-resources --stack-name clinnet-minimal --region "$AWS_REGION" --query "StackResources[?ResourceType=='AWS::CloudFront::Distribution'].PhysicalResourceId" --output text 2>/dev/null || echo "")
   if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
     aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
     echo "CloudFront cache invalidated for distribution: $DISTRIBUTION_ID"
