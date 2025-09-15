@@ -52,7 +52,7 @@ echo "Skipping SAM deploy for frontend. Using existing backend stack resources."
 
 # Use the backend stack to get outputs
 BUCKET=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text 2>/dev/null || echo "")
-DISTRIBUTION=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text 2>/dev/null || echo "")
+DISTRIBUTION_DOMAIN=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text 2>/dev/null || echo "")
 
 echo "Syncing build output to S3..."
 # Sync all assets with aggressive caching
@@ -61,17 +61,18 @@ aws s3 sync dist/ "s3://$BUCKET/" --delete --cache-control "public, max-age=3153
 aws s3 cp dist/index.html "s3://$BUCKET/index.html" --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
 
 echo "Invalidating CloudFront cache..."
-if [ -n "$DISTRIBUTION" ] && [ "$DISTRIBUTION" != "None" ]; then
-  DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?DomainName=='$DISTRIBUTION'].Id" --output text 2>/dev/null || echo "")
-  if [ -n "$DISTRIBUTION_ID" ]; then
+if [ -n "$DISTRIBUTION_DOMAIN" ] && [ "$DISTRIBUTION_DOMAIN" != "None" ]; then
+  # Get distribution ID directly from CloudFormation stack resources
+  DISTRIBUTION_ID=$(aws cloudformation describe-stack-resources --stack-name sam-clinnet --region "$AWS_REGION" --query "StackResources[?ResourceType=='AWS::CloudFront::Distribution'].PhysicalResourceId" --output text 2>/dev/null || echo "")
+  if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
     aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
-    echo "CloudFront cache invalidated."
+    echo "CloudFront cache invalidated for distribution: $DISTRIBUTION_ID"
   else
-    echo "Warning: Could not find CloudFront distribution ID for $DISTRIBUTION."
+    echo "Warning: Could not find CloudFront distribution ID in stack resources."
   fi
 else
   echo "Skipping CloudFront invalidation - no distribution configured."
 fi
 
 echo "Frontend deployed!"
-echo "CloudFront URL: https://$DISTRIBUTION"
+echo "CloudFront URL: https://$DISTRIBUTION_DOMAIN"
