@@ -77,19 +77,27 @@ echo "🔄 Copying index.html..."
 aws s3 cp dist/index.html "s3://$BUCKET/index.html" --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
 
 echo "Invalidating CloudFront cache..."
-if [ -n "$DISTRIBUTION_DOMAIN" ] && [ "$DISTRIBUTION_DOMAIN" != "None" ]; then
+if [ -n "$DISTRIBUTION_DOMAIN" ] && [ "$DISTRIBUTION_DOMAIN" != "None" ] && [ "$DISTRIBUTION_DOMAIN" != "" ]; then
   # Try to get distribution ID from main stack first, then minimal stack
   DISTRIBUTION_ID=$(aws cloudformation describe-stack-resources --stack-name sam-clinnet --region "$AWS_REGION" --query "StackResources[?ResourceType=='AWS::CloudFront::Distribution'].PhysicalResourceId" --output text 2>/dev/null || \
                    aws cloudformation describe-stack-resources --stack-name clinnet-minimal --region "$AWS_REGION" --query "StackResources[?ResourceType=='AWS::CloudFront::Distribution'].PhysicalResourceId" --output text 2>/dev/null || echo "")
-  if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
-    aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
-    echo "CloudFront cache invalidated for distribution: $DISTRIBUTION_ID"
+  if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ] && [ "$DISTRIBUTION_ID" != "" ]; then
+    echo "Found CloudFront distribution: $DISTRIBUTION_ID"
+    if aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*" 2>/dev/null; then
+      echo "✅ CloudFront cache invalidated successfully"
+    else
+      echo "⚠️ CloudFront invalidation failed, but deployment continues"
+    fi
   else
-    echo "Warning: Could not find CloudFront distribution ID in stack resources."
+    echo "ℹ️ No CloudFront distribution found - skipping invalidation"
   fi
 else
-  echo "Skipping CloudFront invalidation - no distribution configured."
+  echo "ℹ️ No CloudFront distribution configured - skipping invalidation"
 fi
 
-echo "Frontend deployed!"
-echo "CloudFront URL: https://$DISTRIBUTION_DOMAIN"
+echo "✅ Frontend deployed successfully!"
+if [ -n "$DISTRIBUTION_DOMAIN" ] && [ "$DISTRIBUTION_DOMAIN" != "None" ] && [ "$DISTRIBUTION_DOMAIN" != "" ]; then
+  echo "🌐 CloudFront URL: https://$DISTRIBUTION_DOMAIN"
+else
+  echo "🌐 S3 Website URL: http://$BUCKET.s3-website-$AWS_REGION.amazonaws.com"
+fi
