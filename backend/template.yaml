@@ -1190,18 +1190,28 @@ Resources:
     Properties:
       Bucket: !Ref FrontendBucket
       PolicyDocument:
+        Version: '2012-10-17'
         Statement:
-          - Effect: Allow
+          - Sid: AllowCloudFrontReadViaOAC
+            Effect: Allow
             Principal:
-              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+              Service: cloudfront.amazonaws.com
             Action: s3:GetObject
             Resource: !Sub ${FrontendBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
 
-  CloudFrontOAI:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+  # New: CloudFront Origin Access Control (OAC)
+  FrontendOAC:
+    Type: AWS::CloudFront::OriginAccessControl
     Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: !Sub OAI for Clinnet-EMR frontend ${Environment}
+      OriginAccessControlConfig:
+        Name: !Sub FrontendOAC-${Environment}
+        Description: !Sub OAC for Clinnet-EMR frontend ${Environment}
+        SigningProtocol: sigv4
+        SigningBehavior: always
+        OriginAccessControlOriginType: s3
 
   FrontendDistribution:
     Type: AWS::CloudFront::Distribution
@@ -1213,8 +1223,8 @@ Resources:
           - Id: S3Origin
             # Use the regional S3 domain to avoid cross-region redirects that can cause AccessDenied
             DomainName: !GetAtt FrontendBucket.RegionalDomainName
-            S3OriginConfig:
-              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CloudFrontOAI}
+            S3OriginConfig: {}
+            OriginAccessControlId: !Ref FrontendOAC
           - Id: ApiGatewayOrigin
             DomainName: !Sub ${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com
             OriginPath: !Sub /${Environment}

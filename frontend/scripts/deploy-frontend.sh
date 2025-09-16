@@ -50,11 +50,30 @@ npm run build
 
 echo "Skipping SAM deploy for frontend. Using existing backend stack resources."
 
-# Try to get outputs from the main stack first, then fall back to minimal stack
-BUCKET=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text 2>/dev/null || \
-         aws cloudformation describe-stacks --stack-name clinnet-minimal --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text 2>/dev/null || echo "")
-DISTRIBUTION_DOMAIN=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text 2>/dev/null || \
-                     aws cloudformation describe-stacks --stack-name clinnet-minimal --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text 2>/dev/null || echo "")
+#!/usr/bin/env bash
+
+# Try to get outputs from minimal and main stacks explicitly, then choose a consistent pair.
+MAIN_BUCKET=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text 2>/dev/null || echo "")
+MAIN_DIST_DOMAIN=$(aws cloudformation describe-stacks --stack-name sam-clinnet --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text 2>/dev/null || echo "")
+MIN_BUCKET=$(aws cloudformation describe-stacks --stack-name clinnet-minimal --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text 2>/dev/null || echo "")
+MIN_DIST_DOMAIN=$(aws cloudformation describe-stacks --stack-name clinnet-minimal --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionDomain'].OutputValue" --output text 2>/dev/null || echo "")
+
+# Prefer pairing bucket with its distribution: if minimal has a distribution domain, use minimal pair; else fall back to main; else create temp bucket.
+if [ -n "$MIN_DIST_DOMAIN" ] && [ "$MIN_DIST_DOMAIN" != "None" ]; then
+  BUCKET="$MIN_BUCKET"
+  DISTRIBUTION_DOMAIN="$MIN_DIST_DOMAIN"
+elif [ -n "$MAIN_DIST_DOMAIN" ] && [ "$MAIN_DIST_DOMAIN" != "None" ]; then
+  BUCKET="$MAIN_BUCKET"
+  DISTRIBUTION_DOMAIN="$MAIN_DIST_DOMAIN"
+else
+  BUCKET=""
+  DISTRIBUTION_DOMAIN=""
+fi
+
+echo "Resolved buckets/domains:"
+echo "  main: bucket=$MAIN_BUCKET domain=$MAIN_DIST_DOMAIN"
+echo "  minimal: bucket=$MIN_BUCKET domain=$MIN_DIST_DOMAIN"
+echo "  selected: bucket=$BUCKET domain=$DISTRIBUTION_DOMAIN"
 
 echo "Syncing build output to S3..."
 
@@ -79,8 +98,8 @@ aws s3 cp dist/index.html "s3://$BUCKET/index.html" --cache-control "no-cache, n
 echo "Invalidating CloudFront cache..."
 if [ -n "$DISTRIBUTION_DOMAIN" ] && [ "$DISTRIBUTION_DOMAIN" != "None" ] && [ "$DISTRIBUTION_DOMAIN" != "" ]; then
   # Try to get distribution ID from main stack first, then minimal stack
-  DISTRIBUTION_ID=$(aws cloudformation describe-stack-resources --stack-name sam-clinnet --region "$AWS_REGION" --query "StackResources[?ResourceType=='AWS::CloudFront::Distribution'].PhysicalResourceId" --output text 2>/dev/null || \
-                   aws cloudformation describe-stack-resources --stack-name clinnet-minimal --region "$AWS_REGION" --query "StackResources[?ResourceType=='AWS::CloudFront::Distribution'].PhysicalResourceId" --output text 2>/dev/null || echo "")
+  DISTRIBUTION_ID=$(aws cloudformation describe-stack-resources --stack-name clinnet-minimal --region "$AWS_REGION" --query "StackResources[?ResourceType=='AWS::CloudFront::Distribution'].PhysicalResourceId" --output text 2>/dev/null || \
+                   aws cloudformation describe-stack-resources --stack-name sam-clinnet --region "$AWS_REGION" --query "StackResources[?ResourceType=='AWS::CloudFront::Distribution'].PhysicalResourceId" --output text 2>/dev/null || echo "")
   if [ -n "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ] && [ "$DISTRIBUTION_ID" != "" ]; then
     echo "Found CloudFront distribution: $DISTRIBUTION_ID"
     if aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*" 2>/dev/null; then
