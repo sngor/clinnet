@@ -44,6 +44,22 @@ npm ls --depth=0 || echo "⚠️  npm ls reported issues (peer/extraneous). Proc
 echo "Using .env file for build:"
 cat .env
 
+# Validate Cognito envs to prevent accidental CLI strings
+if grep -q "aws cloudformation" .env; then
+  echo "❌ .env contains a raw AWS CLI command string. Run ./scripts/generate-env.sh to populate real values."
+  exit 1
+fi
+
+if ! grep -qE '^VITE_USER_POOL_ID=[-_a-z0-9]+_[A-Za-z0-9]+' .env; then
+  echo "❌ VITE_USER_POOL_ID missing or invalid format (expected like 'us-east-2_ABCDefghi')."
+  exit 1
+fi
+
+if ! grep -qE '^VITE_USER_POOL_CLIENT_ID=[A-Za-z0-9]+' .env; then
+  echo "❌ VITE_USER_POOL_CLIENT_ID missing or invalid format."
+  exit 1
+fi
+
 echo "Building frontend..."
 npm install
 npm run build
