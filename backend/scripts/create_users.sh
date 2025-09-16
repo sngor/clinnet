@@ -19,6 +19,32 @@ CFN_STACK_NAME=${CFN_STACK_NAME:-"sam-clinnet"}
 PROMPT_MISSING_PASSWORDS=${PROMPT_MISSING_PASSWORDS:-"true"}
 FORCE_PROMPT=${FORCE_PROMPT:-"false"}
 
+# helper: basic password policy check (aligns with template.yaml policy)
+password_meets_policy() {
+  local p="$1"
+  [[ ${#p} -ge 8 ]] || return 1
+  echo "$p" | grep -q '[A-Z]' || return 1
+  echo "$p" | grep -q '[a-z]' || return 1
+  echo "$p" | grep -q '[0-9]' || return 1
+  echo "$p" | grep -q '[^A-Za-z0-9]' || return 1
+  return 0
+}
+
+# Ensure a Cognito group exists
+ensure_group() {
+  local group_name="$1"
+  aws cognito-idp get-group \
+    --region "$AWS_REGION" \
+    --user-pool-id "$USER_POOL_ID" \
+    --group-name "$group_name" >/dev/null 2>&1 || {
+      echo "  [INFO] Creating group '$group_name'..."
+      aws cognito-idp create-group \
+        --region "$AWS_REGION" \
+        --user-pool-id "$USER_POOL_ID" \
+        --group-name "$group_name" >/dev/null 2>&1 || true
+    }
+}
+
 # --- CLI flags ---
 for arg in "$@"; do
   case "$arg" in
@@ -92,6 +118,11 @@ if [ ! -f "$USER_TEMPLATE_FILE" ]; then
   exit 1
 fi
 
+# Ensure expected groups exist before processing users
+for g in admin doctor frontdesk; do
+  ensure_group "$g"
+done
+
 # --- Loop through the user template and create users ---
 jq -c '.[]' $USER_TEMPLATE_FILE | while read -r user_json; do
   email=$(echo "$user_json" | jq -r '.email')
@@ -129,17 +160,6 @@ jq -c '.[]' $USER_TEMPLATE_FILE | while read -r user_json; do
         ;;
     esac
   fi
-
-  # helper: basic password policy check (aligns with template.yaml policy)
-  password_meets_policy() {
-    local p="$1"
-    [[ ${#p} -ge 8 ]] || return 1
-    echo "$p" | grep -q '[A-Z]' || return 1
-    echo "$p" | grep -q '[a-z]' || return 1
-    echo "$p" | grep -q '[0-9]' || return 1
-    echo "$p" | grep -q '[^A-Za-z0-9]' || return 1
-    return 0
-  }
 
   # Prompt for password if missing and we're in an interactive TTY and prompts are enabled
   if [ -z "$permanentPassword" ]; then
@@ -232,6 +252,18 @@ jq -c '.[]' $USER_TEMPLATE_FILE | while read -r user_json; do
     echo "  [SUCCESS] Permanent password set for $cognito_username."
   else
     echo "  [ERROR] Failed to set permanent password for $cognito_username."
+  fi
+
+  # --- Step 3: Add user to the appropriate group based on role ---
+  if [ -n "$role" ]; then
+    echo "  Adding $cognito_username to group '$role'..."
+    aws cognito-idp admin-add-user-to-group \
+      --region $AWS_REGION \
+      --user-pool-id "$USER_POOL_ID" \
+      --username "$cognito_username" \
+      --group-name "$role" >/dev/null 2>&1 \
+      && echo "  [SUCCESS] Added to group '$role'." \
+      || echo "  [WARN] Could not add to group '$role' (may already be a member)."
   fi
 
   echo "---"
