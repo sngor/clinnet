@@ -114,6 +114,17 @@ Outputs:
     Value: !GetAtt FrontendDistribution.DomainName
 EOF
 
+echo "Checking stack status..."
+STACK_STATUS=$(aws cloudformation describe-stacks --stack-name clinnet-minimal --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+
+if [ "$STACK_STATUS" = "UPDATE_IN_PROGRESS" ] || [ "$STACK_STATUS" = "CREATE_IN_PROGRESS" ]; then
+  echo "Stack is in progress, canceling update..."
+  aws cloudformation cancel-update-stack --stack-name clinnet-minimal 2>/dev/null || true
+  echo "Waiting for stack to stabilize..."
+  aws cloudformation wait stack-update-complete --stack-name clinnet-minimal 2>/dev/null || \
+  aws cloudformation wait stack-rollback-complete --stack-name clinnet-minimal 2>/dev/null || true
+fi
+
 echo "Deploying minimal stack..."
 sam deploy --template-file template-minimal.yaml \
   --stack-name clinnet-minimal \
