@@ -13,10 +13,6 @@ Parameters:
   Environment:
     Type: String
     Default: dev
-  DomainName:
-    Type: String
-    Description: Custom domain name
-    Default: "clinnet.bayoncloud.com"
 
 Resources:
   # Simple API Gateway
@@ -75,7 +71,7 @@ Resources:
       DistributionConfig:
         Enabled: true
         DefaultRootObject: index.html
-        Aliases: !If [HasDomainName, [!Ref DomainName], !Ref "AWS::NoValue"]
+
         Origins:
           - Id: S3Origin
             DomainName: !GetAtt FrontendBucket.RegionalDomainName
@@ -95,11 +91,8 @@ Resources:
             QueryString: false
             Cookies:
               Forward: none
-        ViewerCertificate: !If
-          - HasDomainName
-          - AcmCertificateArn: !Ref SSLCertificate
-            SslSupportMethod: sni-only
-          - CloudFrontDefaultCertificate: true
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
         PriceClass: PriceClass_100
         CustomErrorResponses:
           - ErrorCode: 403
@@ -109,26 +102,6 @@ Resources:
             ResponseCode: 200
             ResponsePagePath: /index.html
 
-  SSLCertificate:
-    Type: AWS::CertificateManager::Certificate
-    Condition: HasDomainName
-    Properties:
-      DomainName: !Ref DomainName
-      ValidationMethod: DNS
-
-  DNSRecord:
-    Type: AWS::Route53::RecordSet
-    Condition: HasDomainName
-    Properties:
-      HostedZoneName: bayoncloud.com.
-      Name: !Ref DomainName
-      Type: A
-      AliasTarget:
-        DNSName: !GetAtt FrontendDistribution.DomainName
-        HostedZoneId: Z2FDTNDATAQYW2
-
-Conditions:
-  HasDomainName: !Not [!Equals [!Ref DomainName, ""]]
 
 Outputs:
   ApiEndpoint:
