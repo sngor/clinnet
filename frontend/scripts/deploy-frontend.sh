@@ -19,10 +19,26 @@ fi
 # Additional environment checks
 echo "🔍 Validating environment..."
 
+# Helper to regenerate .env from stacks
+regen_env() {
+  if [ -x "scripts/generate-env.sh" ]; then
+    echo "🧩 Attempting to regenerate .env from stack outputs..."
+    AWS_REGION="$AWS_REGION" ./scripts/generate-env.sh sam-clinnet || return 1
+    echo "✅ Regenerated .env"
+  else
+    echo "❌ Cannot auto-generate .env: scripts/generate-env.sh is not executable"
+    return 1
+  fi
+}
+
 # Check .env file
 if [ ! -s .env ]; then
-    echo "❌ .env file is missing or empty"
+  echo "❌ .env file is missing or empty"
+  echo "   -> Trying to generate it automatically..."
+  if ! regen_env; then
+    echo "❌ Failed to generate .env automatically. Aborting."
     exit 1
+  fi
 fi
 
 # Validate API URL/endpoint in .env (support both legacy and current var names)
@@ -45,19 +61,26 @@ echo "Using .env file for build:"
 cat .env
 
 # Validate Cognito envs to prevent accidental CLI strings
-if grep -q "aws cloudformation" .env; then
-  echo "❌ .env contains a raw AWS CLI command string. Run ./scripts/generate-env.sh to populate real values."
-  exit 1
-fi
+REVALIDATED="false"
+validate_env() {
+  if grep -q "aws cloudformation" .env; then
+    echo "❌ .env contains a raw AWS CLI command string."
+    return 1
+  fi
+  grep -qE '^VITE_USER_POOL_ID=[-_a-z0-9]+_[A-Za-z0-9]+' .env || return 1
+  grep -qE '^VITE_USER_POOL_CLIENT_ID=[A-Za-z0-9]+' .env || return 1
+  return 0
+}
 
-if ! grep -qE '^VITE_USER_POOL_ID=[-_a-z0-9]+_[A-Za-z0-9]+' .env; then
-  echo "❌ VITE_USER_POOL_ID missing or invalid format (expected like 'us-east-2_ABCDefghi')."
-  exit 1
-fi
-
-if ! grep -qE '^VITE_USER_POOL_CLIENT_ID=[A-Za-z0-9]+' .env; then
-  echo "❌ VITE_USER_POOL_CLIENT_ID missing or invalid format."
-  exit 1
+if ! validate_env; then
+  echo "   -> Attempting automatic .env regeneration..."
+  if regen_env && validate_env; then
+    REVALIDATED="true"
+    echo "✅ .env validated after regeneration"
+  else
+    echo "❌ .env is invalid after regeneration. Please run ./scripts/generate-env.sh manually."
+    exit 1
+  fi
 fi
 
 echo "Building frontend..."
