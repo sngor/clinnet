@@ -39,8 +39,7 @@ import {
   isToday,
   isSameDay,
 } from "date-fns";
-import PageContainer from "../components/ui/PageContainer";
-import PageHeading from "../components/ui/PageHeading";
+import { DashboardPageLayout } from "../components/ui";
 import ContentCard from "../components/ui/ContentCard";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingIndicator from "../components/ui/LoadingIndicator";
@@ -136,32 +135,30 @@ function DoctorSchedulePage() {
   };
 
   return (
-    <PageContainer>
-      <PageHeading
-        title="My Schedule"
-        subtitle="Manage your availability for appointments"
-        action={
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<EventBusyIcon />}
-              onClick={() => handleBulkUpdate(false)}
-            >
-              Mark All Unavailable
-            </Button>
-            <Button
-              variant="outlined"
-              color="success"
-              startIcon={<EventAvailableIcon />}
-              onClick={() => handleBulkUpdate(true)}
-            >
-              Mark All Available
-            </Button>
-          </Box>
-        }
-      />
-
+    <DashboardPageLayout
+      title="Schedule"
+      subtitle="Manage your availability for appointments"
+      action={
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<EventBusyIcon />}
+            onClick={() => handleBulkUpdate(false)}
+          >
+            Mark All Unavailable
+          </Button>
+          <Button
+            variant="outlined"
+            color="success"
+            startIcon={<EventAvailableIcon />}
+            onClick={() => handleBulkUpdate(true)}
+          >
+            Mark All Available
+          </Button>
+        </Box>
+      }
+    >
       <ContentCard>
         {/* Date navigation */}
         <Box
@@ -308,7 +305,9 @@ function DoctorSchedulePage() {
                           alignItems: "center",
                           justifyContent: "center",
                           bgcolor: isToday(day) ? "primary.light" : "grey.100",
-                          color: isToday(day) ? "white" : "inherit",
+                          color: isToday(day)
+                            ? "primary.contrastText"
+                            : "inherit",
                           position: "sticky",
                           top: 0,
                           zIndex: 1,
@@ -473,7 +472,7 @@ function DoctorSchedulePage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </PageContainer>
+    </DashboardPageLayout>
   );
 }
 

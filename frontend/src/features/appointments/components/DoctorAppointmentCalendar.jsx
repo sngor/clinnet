@@ -70,13 +70,13 @@ const mockAppointments = [
 const getAppointmentStatusColor = (status) => {
   switch (status) {
     case "confirmed":
-      return "#4caf50";
+      return "success";
     case "pending":
-      return "#ff9800";
+      return "warning";
     case "cancelled":
-      return "#f44336";
+      return "error";
     default:
-      return "#2196f3";
+      return "primary";
   }
 };
 import { formatTime } from "../../../utils/dateUtils";
@@ -363,7 +363,7 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
             position: "relative",
             width: "100%",
             height: "calc(100vh - 350px)",
-            border: "1px solid #e0e0e0",
+            border: (theme) => `1px solid ${theme.palette.divider}`,
             overflowX: "auto", // Horizontal scroll
             overflowY: "auto", // Vertical scroll
           }}
@@ -382,8 +382,11 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
               sx={{
                 width: "80px",
                 minWidth: "80px", // Prevent shrinking
-                borderRight: "1px solid #e0e0e0",
-                bgcolor: "#f5f5f5",
+                borderRight: (theme) => `1px solid ${theme.palette.divider}`,
+                bgcolor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? theme.palette.grey[800]
+                    : theme.palette.grey[50],
                 position: "sticky",
                 left: 0,
                 zIndex: 1, // Ensure time column stays above other content when scrolling
@@ -392,10 +395,13 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
               <Box
                 sx={{
                   height: "40px",
-                  borderBottom: "1px solid #e0e0e0",
+                  borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                   position: "sticky",
                   top: 0,
-                  bgcolor: "#f5f5f5",
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? theme.palette.grey[800]
+                      : theme.palette.grey[50],
                   zIndex: 2, // Higher z-index for the corner cell
                 }}
               />{" "}
@@ -405,7 +411,8 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
                   key={hour}
                   sx={{
                     height: "60px",
-                    borderBottom: "1px solid #e0e0e0",
+                    borderBottom: (theme) =>
+                      `1px solid ${theme.palette.divider}`,
                     p: 1,
                     display: "flex",
                     alignItems: "flex-start",
@@ -434,7 +441,8 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
                   key={format(day, "yyyy-MM-dd")}
                   sx={{
                     flex: "1 0 150px", // Grow equally, don't shrink, min width 150px
-                    borderRight: "1px solid #e0e0e0",
+                    borderRight: (theme) =>
+                      `1px solid ${theme.palette.divider}`,
                     position: "relative",
                   }}
                 >
@@ -442,13 +450,19 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
                   <Box
                     sx={{
                       height: "40px",
-                      borderBottom: "1px solid #e0e0e0",
+                      borderBottom: (theme) =>
+                        `1px solid ${theme.palette.divider}`,
                       p: 1,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      bgcolor: isToday(day) ? "primary.light" : "#f5f5f5",
-                      color: isToday(day) ? "white" : "inherit",
+                      bgcolor: isToday(day)
+                        ? "primary.light"
+                        : (theme) =>
+                            theme.palette.mode === "dark"
+                              ? theme.palette.grey[800]
+                              : theme.palette.grey[50],
+                      color: isToday(day) ? "primary.contrastText" : "inherit",
                       position: "sticky",
                       top: 0,
                       zIndex: 1,
@@ -465,7 +479,8 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
                       key={hour}
                       sx={{
                         height: "60px",
-                        borderBottom: "1px solid #e0e0e0",
+                        borderBottom: (theme) =>
+                          `1px solid ${theme.palette.divider}`,
                         position: "relative",
                       }}
                     />
@@ -491,8 +506,8 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
                           left: "2px",
                           right: "2px",
                           height: `${height}px`,
-                          backgroundColor: "#fbfbfb",
-                          color: "white",
+                          backgroundColor: "background.paper",
+                          color: "text.primary",
                           borderRadius: 1,
                           p: 0.5,
                           overflow: "hidden",
@@ -549,7 +564,7 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
         <Box
           sx={{
             width: "100%",
-            border: "1px solid #e0e0e0",
+            border: (theme) => `1px solid ${theme.palette.divider}`,
             borderRadius: 1,
             overflow: "hidden",
           }}
@@ -559,8 +574,11 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
             sx={{
               display: "grid",
               gridTemplateColumns: "repeat(7, 1fr)",
-              bgcolor: "#f5f5f5",
-              borderBottom: "1px solid #e0e0e0",
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark"
+                  ? theme.palette.grey[800]
+                  : theme.palette.grey[50],
+              borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
             }}
           >
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
@@ -597,12 +615,16 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
                   key={format(day, "yyyy-MM-dd")}
                   sx={{
                     p: 1,
-                    borderRight: "1px solid #e0e0e0",
+                    borderRight: (theme) =>
+                      `1px solid ${theme.palette.divider}`,
                     borderBottom: "1px solid #e0e0e0",
                     bgcolor: isToday(day)
                       ? "primary.light"
                       : !isCurrentMonth
-                      ? "#f9f9f9"
+                      ? (theme) =>
+                          theme.palette.mode === "dark"
+                            ? theme.palette.grey[900]
+                            : "#f9f9f9"
                       : "background.paper",
                     color: isToday(day)
                       ? "white"
@@ -647,7 +669,7 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
                           backgroundColor:
                             getAppointmentStatusColor(appointment.status) +
                             ".light",
-                          color: "white",
+                          color: "primary.contrastText",
                           borderRadius: 1,
                           p: 0.5,
                           fontSize: "0.75rem",

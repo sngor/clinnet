@@ -78,7 +78,7 @@ const EnhancedDashboardCard = ({
         cursor: onClick ? "pointer" : "default",
         transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         background: gradient ? currentColor.gradient : "background.paper",
-        color: gradient ? "white" : "text.primary",
+        color: gradient ? "primary.contrastText" : "text.primary",
         "&:hover": onClick
           ? {
               transform: "translateY(-4px)",
@@ -145,7 +145,7 @@ const EnhancedDashboardCard = ({
                 variant="h3"
                 sx={{
                   fontWeight: 800,
-                  color: gradient ? "white" : "text.primary",
+                  color: gradient ? "primary.contrastText" : "text.primary",
                   lineHeight: 1,
                   mb: 0.5,
                 }}
@@ -178,7 +178,7 @@ const EnhancedDashboardCard = ({
               backgroundColor: gradient
                 ? "rgba(255,255,255,0.2)"
                 : currentColor.bg,
-              color: gradient ? "white" : currentColor.main,
+              color: gradient ? "primary.contrastText" : currentColor.main,
               flexShrink: 0,
             }}
           >

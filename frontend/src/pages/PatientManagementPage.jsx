@@ -4,8 +4,11 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../app/providers/AuthProvider";
 import { useAppData } from "../app/providers/DataProvider";
-import { ManagementPageLayout, UnifiedButton } from "../components/ui";
-import PatientList from "../features/patients/components/PatientList";
+import {
+  ManagementPageLayout,
+  UnifiedButton,
+  StandardPatientList,
+} from "../components/ui";
 import PatientGrid from "../components/patients/PatientGrid";
 import PatientSearch from "../components/patients/PatientSearch";
 
@@ -92,13 +95,9 @@ function PatientManagementPage() {
       </UnifiedButton>
     ) : null;
 
-  // Determine page title based on user role
-  const pageTitle =
-    user?.role === "doctor" ? "My Patients" : "Patient Management";
-  const pageSubtitle =
-    user?.role === "doctor"
-      ? "View and manage your patient records"
-      : "Search, view, and manage patient records";
+  // Standardized page title and subtitle
+  const pageTitle = "Patients";
+  const pageSubtitle = "View and manage patient information";
 
   return (
     <ManagementPageLayout
@@ -125,9 +124,12 @@ function PatientManagementPage() {
           loading={loading}
         />
       ) : (
-        <PatientList
+        <StandardPatientList
           patients={filteredPatients}
           onPatientSelect={handleViewPatient}
+          loading={loading}
+          userRole={user?.role || "admin"}
+          showActions={true}
         />
       )}
     </ManagementPageLayout>

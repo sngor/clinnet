@@ -31,13 +31,13 @@ import {
 import { useAppData } from "../app/providers/DataProvider";
 import {
   LoadingIndicator,
-  PageLayout,
+  DetailPageLayout,
   PrimaryButton,
   SecondaryButton,
   TextButton,
   AppIconButton,
-  SectionContainer, // Using SectionContainer for larger grouping
-  CardContainer, // Could use for smaller cards if needed
+  UnifiedSection,
+  UnifiedCard,
   PageTitle,
   BodyText,
   SecondaryText,
@@ -280,9 +280,8 @@ function PatientDetailPage() {
 
   // Loading, error, and not-found states using local pageLoading/pageError
   if (pageLoading) {
-    // Using PageLayout to provide consistent structure even for loading state
     return (
-      <PageLayout
+      <DetailPageLayout
         title="Loading Patient..."
         subtitle="Please wait."
         showBackButton
@@ -292,13 +291,13 @@ function PatientDetailPage() {
           size="large"
           message="Loading patient information..."
         />
-      </PageLayout>
+      </DetailPageLayout>
     );
   }
 
   if (pageError) {
     return (
-      <PageLayout
+      <DetailPageLayout
         title="Error"
         subtitle="Could not load patient data."
         showBackButton
@@ -310,13 +309,13 @@ function PatientDetailPage() {
         <PrimaryButton startIcon={<ArrowBackIcon />} onClick={handleBackClick}>
           Return to Patients
         </PrimaryButton>
-      </PageLayout>
+      </DetailPageLayout>
     );
   }
 
   if (!patient) {
     return (
-      <PageLayout
+      <DetailPageLayout
         title="Not Found"
         subtitle="Patient not found."
         showBackButton
@@ -377,7 +376,7 @@ function PatientDetailPage() {
       action={headerActions}
       showBackButton
       onBack={handleBackClick}
-      maxWidth="xl"
+
     >
       {/* Personal Info and Medical Info always visible at the top */}
       <SectionContainer sx={{ mb: 3 }}>

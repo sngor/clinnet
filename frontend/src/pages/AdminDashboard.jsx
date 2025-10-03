@@ -108,22 +108,8 @@ function AdminDashboard() {
 
   return (
     <PageLayout
-      title={`${getTimeBasedGreeting()}, ${
-        user?.firstName || user?.username || "Admin"
-      }!`}
-      subtitle={
-        <>
-          {"Here's what's happening in your clinic today"}
-          <br />
-          <Typography component="span" variant="body2" color="text.secondary">
-            {new Date().toLocaleDateString(undefined, {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </Typography>
-        </>
-      }
+      title="Admin Dashboard"
+      subtitle="Manage clinic operations and view analytics"
       loading={loading}
       error={null} // Don't block UI with error
     >

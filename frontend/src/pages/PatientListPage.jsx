@@ -1,17 +1,24 @@
 // src/pages/PatientListPage.jsx
 import React from "react";
-import PatientList from "../features/patients/components/PatientList"; // Import the new component
-import PageLayout from "../components/ui/PageLayout";
+import { ManagementPageLayout, StandardPatientList } from "../components/ui";
+import { useAppData } from "../app/providers/DataProvider";
 
 function PatientListPage() {
-  // Render the PatientList component which contains the DataGrid and buttons
+  const { patients, loading, error } = useAppData();
+
   return (
-    <PageLayout
+    <ManagementPageLayout
       title="Patients"
-      subtitle="View and manage all patient records in the system."
+      subtitle="View and manage patient information"
     >
-      <PatientList />
-    </PageLayout>
+      <StandardPatientList
+        patients={patients}
+        loading={loading}
+        error={error}
+        userRole="admin"
+        showActions={true}
+      />
+    </ManagementPageLayout>
   );
 }
 

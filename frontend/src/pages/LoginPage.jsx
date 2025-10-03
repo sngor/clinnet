@@ -186,7 +186,10 @@ function LoginPage() {
                 width: 80,
                 height: 80,
                 borderRadius: "50%",
-                backgroundColor: "rgba(255,255,255,0.2)",
+                backgroundColor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "rgba(255, 255, 255, 0.1)"
+                    : "rgba(255, 255, 255, 0.2)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

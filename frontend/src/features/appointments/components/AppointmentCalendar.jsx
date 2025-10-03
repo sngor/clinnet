@@ -30,6 +30,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import TodayIcon from "@mui/icons-material/Today";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+// import { standardCalendarStyles } from "../../../components/ui";
 
 // Mock data (inline to avoid import issues)
 const mockDoctors = [
@@ -213,7 +214,7 @@ function AppointmentCalendar() {
                     right: "5px",
                     height: `${height}px`,
                     backgroundColor: "primary.light",
-                    color: "white",
+                    color: "primary.contrastText",
                     borderRadius: 1,
                     p: 1,
                     overflow: "hidden",
@@ -307,7 +308,7 @@ function AppointmentCalendar() {
                   alignItems: "center",
                   justifyContent: "center",
                   bgcolor: isToday(day) ? "primary.light" : "#f5f5f5",
-                  color: isToday(day) ? "white" : "inherit",
+                  color: isToday(day) ? "primary.contrastText" : "inherit",
                 }}
               >
                 <Typography variant="subtitle2">
@@ -348,7 +349,7 @@ function AppointmentCalendar() {
                       right: "2px",
                       height: `${height}px`,
                       backgroundColor: "primary.light",
-                      color: "white",
+                      color: "primary.contrastText",
                       borderRadius: 1,
                       p: 0.5,
                       overflow: "hidden",
@@ -479,7 +480,7 @@ function AppointmentCalendar() {
                           key={appointment.id}
                           sx={{
                             bgcolor: "primary.main",
-                            color: "white",
+                            color: "primary.contrastText",
                             borderRadius: 0.5,
                             p: 0.5,
                             fontSize: "0.75rem",
@@ -512,28 +513,38 @@ function AppointmentCalendar() {
   };
 
   return (
-    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: "none" }}>
+    <Box
+      sx={{
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: "divider",
+        backgroundColor: "background.paper",
+        overflow: "hidden",
+      }}
+    >
       {/* Calendar header */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 3,
+          p: 2,
+          borderBottom: "1px solid",
+          borderColor: "divider",
         }}
       >
-        <Box>
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: 500, color: "primary.main" }}
-          >
-            Appointment Calendar
-          </Typography>
-        </Box>
+        <Typography
+          sx={{ fontWeight: 600, color: "primary.main", fontSize: "1.25rem" }}
+        >
+          Appointment Calendar
+        </Typography>
 
         <Box sx={{ display: "flex", gap: 2 }}>
           {/* View toggle */}
-          <ButtonGroup size="small" sx={{ mr: 2 }}>
+          <ButtonGroup
+            size="small"
+            sx={{ "& .MuiButton-root": { minWidth: "auto", px: 2 } }}
+          >
             <Button
               variant={view === "day" ? "contained" : "outlined"}
               onClick={() => handleViewChange("day")}
@@ -593,7 +604,7 @@ function AppointmentCalendar() {
       {view === "day" && renderDayView()}
       {view === "week" && renderWeekView()}
       {view === "month" && renderMonthView()}
-    </Paper>
+    </Box>
   );
 }
 

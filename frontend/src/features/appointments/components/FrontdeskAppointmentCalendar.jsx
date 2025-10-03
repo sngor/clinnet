@@ -349,7 +349,7 @@ function FrontdeskAppointmentCalendar() {
                     alignItems: "center",
                     justifyContent: "center",
                     bgcolor: isToday(day) ? "primary.light" : "#f5f5f5",
-                    color: isToday(day) ? "white" : "inherit",
+                    color: isToday(day) ? "primary.contrastText" : "inherit",
                     position: "sticky",
                     top: 0,
                     zIndex: 1,
@@ -395,7 +395,7 @@ function FrontdeskAppointmentCalendar() {
                         backgroundColor:
                           getAppointmentStatusColor(appointment.status) +
                           ".light",
-                        color: "white",
+                        color: "primary.contrastText",
                         borderRadius: 1,
                         p: 0.5,
                         overflow: "hidden",
@@ -556,7 +556,7 @@ function FrontdeskAppointmentCalendar() {
                           backgroundColor:
                             getAppointmentStatusColor(appointment.status) +
                             ".light",
-                          color: "white",
+                          color: "primary.contrastText",
                           borderRadius: 1,
                           p: 0.5,
                           fontSize: "0.75rem",

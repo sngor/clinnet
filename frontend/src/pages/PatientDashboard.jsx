@@ -11,10 +11,10 @@ import { useNavigate } from "react-router-dom";
 
 // Import UI components
 import {
-  PageLayout, // Added PageLayout
+  DashboardPageLayout,
   ContentCard,
   AppointmentList,
-  BodyText, // Added BodyText
+  BodyText,
 } from "../components/ui";
 import DashboardCard from "../components/ui/DashboardCard"; // Updated path
 // Removed BannerWarning - moved to Settings page
@@ -83,11 +83,9 @@ function PatientDashboard() {
   }, []);
 
   return (
-    <PageLayout
-      title={`${getTimeBasedGreeting()}, ${
-        user?.firstName || user?.username || "Patient"
-      }!`}
-      subtitle="Here's what's happening with your health today"
+    <DashboardPageLayout
+      title="Patient Dashboard"
+      subtitle="View your appointments and health information"
       loading={loading}
       error={null} // Don't block UI with error
     >
@@ -127,7 +125,7 @@ function PatientDashboard() {
           showAction={false}
         />
       </ContentCard>
-    </PageLayout>
+    </DashboardPageLayout>
   );
 }
 

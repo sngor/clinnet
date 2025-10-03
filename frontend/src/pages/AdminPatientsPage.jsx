@@ -5,7 +5,7 @@ import { Drawer } from "@mui/material"; // Button removed
 import { PageLayout, PrimaryButton } from "../components/ui"; // PrimaryButton added
 import { useAppData } from "../app/providers/DataProvider";
 import PatientDetailView from "../features/patients/components/PatientDetailView";
-import PatientGrid from "../components/patients/PatientGrid";
+import { StandardPatientList } from "../components/ui";
 import PatientSearch from "../components/patients/PatientSearch";
 import DebugPanel from "../components/DebugPanel";
 
@@ -99,9 +99,7 @@ function AdminPatientsPage() {
       showDebug={showDebug}
       debugPanel={<DebugPanel data={filteredPatients} />}
       action={
-        <PrimaryButton /* Replaced MUI Button */
-          onClick={handleAddNewPatient}
-        >
+        <PrimaryButton /* Replaced MUI Button */ onClick={handleAddNewPatient}>
           Add New Patient
         </PrimaryButton>
       }
@@ -113,10 +111,12 @@ function AdminPatientsPage() {
         onRefresh={refreshPatients}
         loading={loading}
       />
-      <PatientGrid
+      <StandardPatientList
         patients={filteredPatients}
         onPatientSelect={handlePatientSelect}
         loading={loading}
+        userRole="admin"
+        showActions={true}
       />
       {/* Patient Detail View Drawer */}
       <Drawer

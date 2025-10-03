@@ -224,7 +224,7 @@ function MedicalRecordsTab({ patientId }) {
         for (const file of selectedFiles) {
           try {
             const formData = new FormData();
-            formData.append('image', file, file.name);
+            formData.append("image", file, file.name);
             await medicalRecordService.uploadImageToRecord(
               createdRecord.reportId,
               formData
@@ -265,7 +265,7 @@ function MedicalRecordsTab({ patientId }) {
         for (const file of selectedFiles) {
           try {
             const formData = new FormData();
-            formData.append('image', file, file.name);
+            formData.append("image", file, file.name);
             await medicalRecordService.uploadImageToRecord(
               selectedRecord.reportId,
               formData
@@ -586,7 +586,7 @@ function MedicalRecordsTab({ patientId }) {
       ) : error ? (
         <Alert severity="error">{error}</Alert>
       ) : (
-        <Box sx={{ height: 400, width: "100%" }}>
+        <Box sx={{ height: "calc(100vh - 400px)", width: "100%" }}>
           <DataGrid
             rows={records}
             columns={columns}
@@ -604,6 +604,9 @@ function MedicalRecordsTab({ patientId }) {
               ),
             }}
             sx={{
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 1,
               "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within":
                 { outline: "none" },
             }}
@@ -690,7 +693,7 @@ function MedicalRecordsTab({ patientId }) {
                     position="top"
                     actionIcon={
                       <IconButton
-                        sx={{ color: "white" }}
+                        sx={{ color: "primary.contrastText" }}
                         onClick={() => removeSelectedFile(index)}
                         size="small"
                       >
@@ -850,7 +853,7 @@ function MedicalRecordsTab({ patientId }) {
                       position="top"
                       actionIcon={
                         <IconButton
-                          sx={{ color: "white" }}
+                          sx={{ color: "primary.contrastText" }}
                           onClick={() => removeSelectedFile(index)}
                           size="small"
                         >

@@ -467,10 +467,13 @@ function AdminAppointmentCalendar() {
             onClick={handlePrevious}
             size="small"
             sx={{
-              backgroundColor: "white",
-              boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+              backgroundColor: "background.paper",
+              boxShadow: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "0px 1px 3px rgba(255,255,255,0.1)"
+                  : "0px 1px 3px rgba(0,0,0,0.1)",
               mr: 1,
-              "&:hover": { backgroundColor: "grey.100" },
+              "&:hover": { backgroundColor: "action.hover" },
             }}
           >
             <NavigateBeforeIcon />
@@ -479,10 +482,13 @@ function AdminAppointmentCalendar() {
             onClick={handleToday}
             size="small"
             sx={{
-              backgroundColor: "white",
-              boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+              backgroundColor: "background.paper",
+              boxShadow: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "0px 1px 3px rgba(255,255,255,0.1)"
+                  : "0px 1px 3px rgba(0,0,0,0.1)",
               mr: 1,
-              "&:hover": { backgroundColor: "grey.100" },
+              "&:hover": { backgroundColor: "action.hover" },
             }}
           >
             <TodayIcon />
@@ -491,9 +497,12 @@ function AdminAppointmentCalendar() {
             onClick={handleNext}
             size="small"
             sx={{
-              backgroundColor: "white",
-              boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-              "&:hover": { backgroundColor: "grey.100" },
+              backgroundColor: "background.paper",
+              boxShadow: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "0px 1px 3px rgba(255,255,255,0.1)"
+                  : "0px 1px 3px rgba(0,0,0,0.1)",
+              "&:hover": { backgroundColor: "action.hover" },
             }}
           >
             <NavigateNextIcon />
@@ -507,8 +516,11 @@ function AdminAppointmentCalendar() {
             px: 2,
             py: 0.5,
             borderRadius: 1,
-            backgroundColor: "white",
-            boxShadow: "0px 1px 3px rgba(0,0,0,0.05)",
+            backgroundColor: "background.paper",
+            boxShadow: (theme) =>
+              theme.palette.mode === "dark"
+                ? "0px 1px 3px rgba(255,255,255,0.05)"
+                : "0px 1px 3px rgba(0,0,0,0.05)",
             minWidth: 200,
             textAlign: "center",
             lineHeight: 1.5,
@@ -548,8 +560,11 @@ function AdminAppointmentCalendar() {
             borderRadius: 2,
             overflowX: "auto", // Horizontal scroll
             overflowY: "auto", // Vertical scroll
-            boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
-            backgroundColor: "white",
+            boxShadow: (theme) =>
+              theme.palette.mode === "dark"
+                ? "0px 2px 8px rgba(255, 255, 255, 0.05)"
+                : "0px 2px 8px rgba(0, 0, 0, 0.05)",
+            backgroundColor: "background.paper",
             "&::-webkit-scrollbar": {
               width: "8px",
               height: "8px",
@@ -658,7 +673,7 @@ function AdminAppointmentCalendar() {
                       alignItems: "center",
                       justifyContent: "center",
                       bgcolor: isToday(day) ? "primary.main" : "primary.light",
-                      color: "white",
+                      color: "primary.contrastText",
                       position: "sticky",
                       top: 0,
                       zIndex: 1,
@@ -721,7 +736,7 @@ function AdminAppointmentCalendar() {
                           height: `${height}px`,
                           backgroundColor:
                             getStatusColor(appointment.status) + ".light",
-                          color: "white",
+                          color: "primary.contrastText",
                           borderRadius: 1.5,
                           p: 1,
                           overflow: "hidden",
@@ -843,8 +858,11 @@ function AdminAppointmentCalendar() {
             border: "1px solid #e0e0e0",
             borderRadius: 2,
             overflow: "hidden",
-            boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
-            backgroundColor: "white",
+            boxShadow: (theme) =>
+              theme.palette.mode === "dark"
+                ? "0px 2px 8px rgba(255, 255, 255, 0.05)"
+                : "0px 2px 8px rgba(0, 0, 0, 0.05)",
+            backgroundColor: "background.paper",
           }}
         >
           {/* Day headers */}
@@ -867,7 +885,7 @@ function AdminAppointmentCalendar() {
                   variant="subtitle2"
                   sx={{
                     fontWeight: 600,
-                    color: "white",
+                    color: "primary.contrastText",
                     fontSize: "0.875rem",
                   }}
                 >
@@ -984,7 +1002,7 @@ function AdminAppointmentCalendar() {
                               borderRadius: 1,
                               backgroundColor:
                                 getStatusColor(appointment.status) + ".light",
-                              color: "white",
+                              color: "primary.contrastText",
                               fontSize: "0.75rem",
                               cursor: "pointer",
                               whiteSpace: "nowrap",
@@ -1041,7 +1059,9 @@ function AdminAppointmentCalendar() {
                             sx={{
                               display: "block",
                               textAlign: "center",
-                              color: isToday(day) ? "white" : "text.secondary",
+                              color: isToday(day)
+                                ? "primary.contrastText"
+                                : "text.secondary",
                               backgroundColor: isToday(day)
                                 ? "rgba(255,255,255,0.2)"
                                 : "rgba(0,0,0,0.05)",
@@ -1147,7 +1167,7 @@ function AdminAppointmentCalendar() {
             value={selectedDoctorFilter}
             label="Filter by Doctor"
             onChange={(e) => setSelectedDoctorFilter(e.target.value)}
-            sx={{ backgroundColor: "white" }}
+            sx={{ backgroundColor: "background.paper" }}
           >
             <MenuItem value="all">All Doctors</MenuItem>
             {mockDoctors.map((doctor) => (
@@ -1167,7 +1187,7 @@ function AdminAppointmentCalendar() {
             aria-label="view mode"
             size="small"
             sx={{
-              backgroundColor: "white",
+              backgroundColor: "background.paper",
               "& .MuiToggleButton-root": {
                 px: 2,
                 py: 1,
@@ -1262,8 +1282,11 @@ function AdminAppointmentCalendar() {
                 size="small"
                 onClick={handleToday}
                 sx={{
-                  backgroundColor: "white",
-                  boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                  backgroundColor: "background.paper",
+                  boxShadow: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "0px 1px 3px rgba(255,255,255,0.1)"
+                      : "0px 1px 3px rgba(0,0,0,0.1)",
                   mr: 0.5,
                   "&:hover": { backgroundColor: "grey.100" },
                 }}
@@ -1274,9 +1297,12 @@ function AdminAppointmentCalendar() {
                 size="small"
                 onClick={handleNext}
                 sx={{
-                  backgroundColor: "white",
-                  boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-                  "&:hover": { backgroundColor: "grey.100" },
+                  backgroundColor: "background.paper",
+                  boxShadow: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "0px 1px 3px rgba(255,255,255,0.1)"
+                      : "0px 1px 3px rgba(0,0,0,0.1)",
+                  "&:hover": { backgroundColor: "action.hover" },
                 }}
               >
                 <NavigateNextIcon fontSize="small" />
@@ -1312,7 +1338,7 @@ function AdminAppointmentCalendar() {
                       sx={{
                         p: 2,
                         bgcolor: "primary.main",
-                        color: "white",
+                        color: "primary.contrastText",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -1334,8 +1360,11 @@ function AdminAppointmentCalendar() {
                         label={doctor ? doctor.specialty : "Unknown"}
                         size="small"
                         sx={{
-                          bgcolor: "rgba(255,255,255,0.2)",
-                          color: "white",
+                          bgcolor: (theme) =>
+                            theme.palette.mode === "dark"
+                              ? "rgba(255,255,255,0.1)"
+                              : "rgba(255,255,255,0.2)",
+                          color: "primary.contrastText",
                           fontWeight: 500,
                         }}
                       />
@@ -1562,7 +1591,7 @@ function AdminAppointmentCalendar() {
         <DialogTitle
           sx={{
             bgcolor: "primary.main",
-            color: "white",
+            color: "primary.contrastText",
             px: 3,
             py: 2,
             fontWeight: 600,

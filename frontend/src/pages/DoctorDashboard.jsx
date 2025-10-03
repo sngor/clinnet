@@ -142,22 +142,8 @@ function DoctorDashboard() {
 
   return (
     <PageLayout
-      title={`${getTimeBasedGreeting()}, Dr. ${
-        user?.lastName || user?.username || "Smith"
-      }!`}
-      subtitle={
-        <>
-          {`${todaysAppointmentsCount} appointments scheduled for today`}
-          <br />
-          <Typography component="span" variant="body2" color="text.secondary">
-            {new Date().toLocaleDateString(undefined, {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </Typography>
-        </>
-      }
+      title="Doctor Dashboard"
+      subtitle="View your schedule and patient information"
       loading={loading}
       error={null} // Don't block UI with error
     >

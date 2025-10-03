@@ -401,258 +401,261 @@ function PatientList({ onPatientSelect, patients: propPatients }) {
           Add Patient
         </PrimaryButton>
       </FlexBox>
-      <CardContainer>
-        <TableContainer>
-          {apiError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {apiError}
-            </Alert>
-          )}
-          {apiLoading ? (
-            <FlexBox justify="center" sx={{ mt: 4 }}>
-              <CircularProgress />
-            </FlexBox>
-          ) : (
-            <>
-              <Table sx={{ tableLayout: "fixed", minWidth: 800 }}>
-                <TableHead sx={tableHeaderStyle}>
-                  <TableRow>
-                    {columns.map((column) => (
-                      <TableCell
-                        key={column.id}
-                        sortDirection={orderBy === column.id ? order : false}
-                        style={{ width: column.width }}
+      <TableContainer
+        sx={{
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 1,
+        }}
+      >
+        {apiError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {apiError}
+          </Alert>
+        )}
+        {apiLoading ? (
+          <FlexBox justify="center" sx={{ mt: 4 }}>
+            <CircularProgress />
+          </FlexBox>
+        ) : (
+          <>
+            <Table sx={{ tableLayout: "fixed", minWidth: 800 }}>
+              <TableHead sx={tableHeaderStyle}>
+                <TableRow>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      sortDirection={orderBy === column.id ? order : false}
+                      style={{ width: column.width }}
+                    >
+                      <TableSortLabel
+                        active={orderBy === column.id}
+                        direction={orderBy === column.id ? order : "asc"}
+                        onClick={createSortHandler(column.id)}
                       >
-                        <TableSortLabel
-                          active={orderBy === column.id}
-                          direction={orderBy === column.id ? order : "asc"}
-                          onClick={createSortHandler(column.id)}
-                        >
-                          {column.label}
-                        </TableSortLabel>
-                      </TableCell>
-                    ))}
-                    <TableCell align="center" style={{ minWidth: "280px" }}>
-                      Actions
+                        {column.label}
+                      </TableSortLabel>
+                    </TableCell>
+                  ))}
+                  <TableCell align="center" style={{ minWidth: "280px" }}>
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              {/* Virtualized Table Body - This will be contained by the scrolling TableContainer */}
+              {!processedPatients || processedPatients.length === 0 ? (
+                <TableBody>
+                  <TableRow>
+                    <TableCell colSpan={columns.length + 1} align="center">
+                      No patients found
                     </TableCell>
                   </TableRow>
-                </TableHead>
-                {/* Virtualized Table Body - This will be contained by the scrolling TableContainer */}
-                {!processedPatients || processedPatients.length === 0 ? (
-                  <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={columns.length + 1} align="center">
-                        No patients found
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                ) : (
-                  <FixedSizeList
-                    height={400}
-                    itemCount={currentPatients.length}
-                    itemSize={65}
-                    width="100%"
-                    outerElementType={React.forwardRef((props, ref) => (
-                      <TableBody component="div" {...props} ref={ref} />
-                    ))}
-                    innerElementType={React.forwardRef((props, ref) => (
-                      <div role="rowgroup" {...props} ref={ref} />
-                    ))}
-                  >
-                    {({ index, style }) => {
-                      const patient = currentPatients[index];
-                      return patient ? (
-                        <TableRow
+                </TableBody>
+              ) : (
+                <FixedSizeList
+                  height={400}
+                  itemCount={currentPatients.length}
+                  itemSize={65}
+                  width="100%"
+                  outerElementType={React.forwardRef((props, ref) => (
+                    <TableBody component="div" {...props} ref={ref} />
+                  ))}
+                  innerElementType={React.forwardRef((props, ref) => (
+                    <div role="rowgroup" {...props} ref={ref} />
+                  ))}
+                >
+                  {({ index, style }) => {
+                    const patient = currentPatients[index];
+                    return patient ? (
+                      <TableRow
+                        component="div"
+                        style={style}
+                        key={patient.id || index}
+                        sx={{
+                          display: "flex",
+                          width: "100%",
+                          boxSizing: "border-box",
+                        }}
+                        role="row"
+                      >
+                        <TableCell
                           component="div"
-                          style={style}
-                          key={patient.id || index}
-                          sx={{
+                          style={{
+                            width: columns[0].width,
                             display: "flex",
-                            width: "100%",
+                            alignItems: "center",
                             boxSizing: "border-box",
                           }}
-                          role="row"
+                          role="cell"
                         >
-                          <TableCell
-                            component="div"
-                            style={{
-                              width: columns[0].width,
-                              display: "flex",
-                              alignItems: "center",
-                              boxSizing: "border-box",
-                            }}
-                            role="cell"
-                          >
-                            <div>
-                              <Typography variant="body2" fontWeight="medium">
-                                {patient.firstName || ""}{" "}
-                                {patient.lastName || ""}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                DOB: {patient.dob || "N/A"}
-                              </Typography>
-                            </div>
-                          </TableCell>
-                          <TableCell
-                            component="div"
-                            style={{
-                              width: columns[1].width,
-                              display: "flex",
-                              alignItems: "center",
-                              boxSizing: "border-box",
-                            }}
-                            role="cell"
-                          >
-                            <div>
-                              <Typography variant="body2">
-                                {patient.phone || "N/A"}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {patient.email || "N/A"}
-                              </Typography>
-                            </div>
-                          </TableCell>
-                          <TableCell
-                            component="div"
-                            style={{
-                              width: columns[2].width,
-                              display: "flex",
-                              alignItems: "center",
-                              boxSizing: "border-box",
-                            }}
-                            role="cell"
-                          >
-                            <div>
-                              <Typography variant="body2">
-                                {patient.insuranceProvider || "None"}
-                              </Typography>
-                              {patient.insuranceNumber && (
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  #{patient.insuranceNumber}
-                                </Typography>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell
-                            component="div"
-                            style={{
-                              width: columns[3].width,
-                              display: "flex",
-                              alignItems: "center",
-                              boxSizing: "border-box",
-                            }}
-                            role="cell"
-                          >
-                            {patient.lastVisit || "Never"}
-                          </TableCell>
-                          <TableCell
-                            component="div"
-                            style={{
-                              width: columns[4].width,
-                              display: "flex",
-                              alignItems: "center",
-                              boxSizing: "border-box",
-                            }}
-                            role="cell"
-                          >
-                            <Chip
-                              label={patient.status || "Active"}
-                              color={
-                                (patient.status || "Active") === "Active"
-                                  ? "success"
-                                  : "default"
-                              }
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell
-                            component="div"
-                            align="center"
-                            style={{
-                              minWidth: "280px", // Ensure this matches header
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "flex-start", // Align actions to start
-                              boxSizing: "border-box",
-                              flexWrap: "nowrap", // Prevent actions from wrapping within the cell
-                            }}
-                            role="cell"
-                          >
-                            <Tooltip title="Edit Patient">
-                              <AppIconButton
-                                size="small"
-                                color="primary"
-                                onClick={() => handleOpenDialog(patient)}
-                              >
-                                <EditIcon fontSize="small" />
-                              </AppIconButton>
-                            </Tooltip>
-                            <Tooltip title="Delete Patient">
-                              <AppIconButton
-                                size="small"
-                                color="error"
-                                onClick={() => handleDeleteClick(patient)}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </AppIconButton>
-                            </Tooltip>
-                            <Tooltip title="View Patient Details">
-                              <AppIconButton
-                                size="small"
-                                color="secondary"
-                                onClick={() => handleViewPatient(patient)}
-                              >
-                                <VisibilityIcon fontSize="small" />
-                              </AppIconButton>
-                            </Tooltip>
-                            <Tooltip title="Schedule Appointment">
-                              <AppIconButton size="small" color="info">
-                                <EventNoteIcon fontSize="small" />
-                              </AppIconButton>
-                            </Tooltip>
-                            <PrimaryButton
-                              startIcon={<PaymentIcon />}
-                              onClick={() => handleViewPatient(patient)}
-                              size="small"
-                              sx={{ ml: 1, whiteSpace: "nowrap" }}
+                          <div>
+                            <Typography variant="body2" fontWeight="medium">
+                              {patient.firstName || ""} {patient.lastName || ""}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
                             >
-                              Checkout
-                            </PrimaryButton>
-                          </TableCell>
-                        </TableRow>
-                      ) : null;
-                    }}
-                  </FixedSizeList>
-                )}
-              </Table>
-              <TablePagination
-                rowsPerPageOptions={[
-                  5,
-                  10,
-                  25,
-                  { label: "All", value: processedPatients.length },
-                ]}
-                component="div"
-                count={processedPatients.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                sx={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}
-              />
-            </>
-          )}
-        </TableContainer>
-      </CardContainer>
+                              DOB: {patient.dob || "N/A"}
+                            </Typography>
+                          </div>
+                        </TableCell>
+                        <TableCell
+                          component="div"
+                          style={{
+                            width: columns[1].width,
+                            display: "flex",
+                            alignItems: "center",
+                            boxSizing: "border-box",
+                          }}
+                          role="cell"
+                        >
+                          <div>
+                            <Typography variant="body2">
+                              {patient.phone || "N/A"}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {patient.email || "N/A"}
+                            </Typography>
+                          </div>
+                        </TableCell>
+                        <TableCell
+                          component="div"
+                          style={{
+                            width: columns[2].width,
+                            display: "flex",
+                            alignItems: "center",
+                            boxSizing: "border-box",
+                          }}
+                          role="cell"
+                        >
+                          <div>
+                            <Typography variant="body2">
+                              {patient.insuranceProvider || "None"}
+                            </Typography>
+                            {patient.insuranceNumber && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                #{patient.insuranceNumber}
+                              </Typography>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell
+                          component="div"
+                          style={{
+                            width: columns[3].width,
+                            display: "flex",
+                            alignItems: "center",
+                            boxSizing: "border-box",
+                          }}
+                          role="cell"
+                        >
+                          {patient.lastVisit || "Never"}
+                        </TableCell>
+                        <TableCell
+                          component="div"
+                          style={{
+                            width: columns[4].width,
+                            display: "flex",
+                            alignItems: "center",
+                            boxSizing: "border-box",
+                          }}
+                          role="cell"
+                        >
+                          <Chip
+                            label={patient.status || "Active"}
+                            color={
+                              (patient.status || "Active") === "Active"
+                                ? "success"
+                                : "default"
+                            }
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell
+                          component="div"
+                          align="center"
+                          style={{
+                            minWidth: "280px", // Ensure this matches header
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "flex-start", // Align actions to start
+                            boxSizing: "border-box",
+                            flexWrap: "nowrap", // Prevent actions from wrapping within the cell
+                          }}
+                          role="cell"
+                        >
+                          <Tooltip title="Edit Patient">
+                            <AppIconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => handleOpenDialog(patient)}
+                            >
+                              <EditIcon fontSize="small" />
+                            </AppIconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Patient">
+                            <AppIconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDeleteClick(patient)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </AppIconButton>
+                          </Tooltip>
+                          <Tooltip title="View Patient Details">
+                            <AppIconButton
+                              size="small"
+                              color="secondary"
+                              onClick={() => handleViewPatient(patient)}
+                            >
+                              <VisibilityIcon fontSize="small" />
+                            </AppIconButton>
+                          </Tooltip>
+                          <Tooltip title="Schedule Appointment">
+                            <AppIconButton size="small" color="info">
+                              <EventNoteIcon fontSize="small" />
+                            </AppIconButton>
+                          </Tooltip>
+                          <PrimaryButton
+                            startIcon={<PaymentIcon />}
+                            onClick={() => handleViewPatient(patient)}
+                            size="small"
+                            sx={{ ml: 1, whiteSpace: "nowrap" }}
+                          >
+                            Checkout
+                          </PrimaryButton>
+                        </TableCell>
+                      </TableRow>
+                    ) : null;
+                  }}
+                </FixedSizeList>
+              )}
+            </Table>
+            <TablePagination
+              rowsPerPageOptions={[
+                5,
+                10,
+                25,
+                { label: "All", value: processedPatients.length },
+              ]}
+              component="div"
+              count={processedPatients.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              sx={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}
+            />
+          </>
+        )}
+      </TableContainer>
       {/* Patient Form Dialog */}
       <Dialog
         open={isDialogOpen}

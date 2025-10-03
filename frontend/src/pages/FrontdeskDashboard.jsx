@@ -193,22 +193,8 @@ function FrontdeskDashboard() {
 
   return (
     <PageLayout
-      title={`${getTimeBasedGreeting()}, ${
-        user?.firstName || user?.username || "Front Desk"
-      }!`}
-      subtitle={
-        <>
-          {`${todaysAppointmentsCount} appointments scheduled for today`}
-          <br />
-          <Typography component="span" variant="body2" color="text.secondary">
-            {new Date().toLocaleDateString(undefined, {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </Typography>
-        </>
-      }
+      title="Frontdesk Dashboard"
+      subtitle="Manage appointments and patient check-ins"
       loading={loading}
       error={null} // Don't block UI with error
     >

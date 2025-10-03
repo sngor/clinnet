@@ -38,8 +38,7 @@ import { Link } from "react-router-dom"; // Added Link import
 // Import for summarization
 import { summarizeDoctorNotes } from "../services/medicalRecordService";
 
-import PageContainer from "../components/ui/PageContainer";
-import PageHeading from "../components/ui/PageHeading";
+import { ManagementPageLayout } from "../components/ui";
 import ContentCard from "../components/ui/ContentCard";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingIndicator from "../components/ui/LoadingIndicator";
@@ -481,101 +480,98 @@ function DoctorMedicalRecordsPage() {
   ];
 
   return (
-    <PageContainer>
-      <PageHeading
-        title="Medical Records"
-        subtitle="View and manage patient medical records"
-      />
-      <ContentCard>
-        <Box
-          sx={{
-            mb: 3,
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            justifyContent: "space-between",
-            alignItems: { sm: "center" },
-            gap: 2,
-          }}
-        >
-          <Box sx={{ display: "flex", gap: 2, flexGrow: { xs: 1, sm: 0.5 } }}>
-            <TextField
-              placeholder="Search..."
-              variant="outlined"
-              fullWidth
-              size="small"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Filter</InputLabel>
-              <Select
-                value={filterType}
-                label="Filter"
-                onChange={handleFilterChange}
-                startAdornment={
-                  <InputAdornment position="start">
-                    <FilterListIcon />
-                  </InputAdornment>
-                }
-              >
-                <MenuItem value="all">All</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddCircleOutlineIcon />}
-            onClick={handleOpenCreateModal}
-            sx={{ mt: { xs: 2, sm: 0 } }}
-          >
-            Create New Record
-          </Button>
-        </Box>
-
-        {loading ? (
-          <LoadingIndicator message="Loading medical records..." />
-        ) : error ? (
-          <Alert severity="error" sx={{ my: 2 }}>
-            <Typography>Error: {error}</Typography>
-          </Alert>
-        ) : filteredRecords.length > 0 ? (
-          <Box sx={{ height: 500, width: "100%" }}>
-            <DataGrid
-              rows={filteredRecords}
-              columns={columns}
-              pageSize={10}
-              rowsPerPageOptions={[5, 10, 20, 50]}
-              getRowId={(row) => row.reportId}
-              disableSelectionOnClick
-              density="standard"
-              sx={{
-                "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within":
-                  { outline: "none" },
-                "& .MuiDataGrid-row:hover": {
-                  backgroundColor: (theme) => theme.palette.action.hover,
-                },
-              }}
-            />
-          </Box>
-        ) : (
-          <EmptyState
-            icon={<MedicalInformationIcon />}
-            title="No Medical Records Found"
-            description={
-              searchTerm || filterType !== "all"
-                ? "No records match your current search or filter criteria."
-                : "You have not created or been associated with any medical records yet."
-            }
+    <ManagementPageLayout
+      title="Medical Records"
+      subtitle="View and manage patient medical records"
+    >
+      <Box
+        sx={{
+          mb: 3,
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: { sm: "center" },
+          gap: 2,
+        }}
+      >
+        <Box sx={{ display: "flex", gap: 2, flexGrow: { xs: 1, sm: 0.5 } }}>
+          <TextField
+            placeholder="Search..."
+            variant="outlined"
+            fullWidth
+            size="small"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
           />
-        )}
-      </ContentCard>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Filter</InputLabel>
+            <Select
+              value={filterType}
+              label="Filter"
+              onChange={handleFilterChange}
+              startAdornment={
+                <InputAdornment position="start">
+                  <FilterListIcon />
+                </InputAdornment>
+              }
+            >
+              <MenuItem value="all">All</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddCircleOutlineIcon />}
+          onClick={handleOpenCreateModal}
+          sx={{ mt: { xs: 2, sm: 0 } }}
+        >
+          Create New Record
+        </Button>
+      </Box>
+
+      {loading ? (
+        <LoadingIndicator message="Loading medical records..." />
+      ) : error ? (
+        <Alert severity="error" sx={{ my: 2 }}>
+          <Typography>Error: {error}</Typography>
+        </Alert>
+      ) : filteredRecords.length > 0 ? (
+        <Box sx={{ height: "calc(100vh - 300px)", width: "100%" }}>
+          <DataGrid
+            rows={filteredRecords}
+            columns={columns}
+            pageSize={10}
+            rowsPerPageOptions={[5, 10, 20, 50]}
+            getRowId={(row) => row.reportId}
+            disableSelectionOnClick
+            density="standard"
+            sx={{
+              "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within":
+                { outline: "none" },
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: (theme) => theme.palette.action.hover,
+              },
+            }}
+          />
+        </Box>
+      ) : (
+        <EmptyState
+          icon={<MedicalInformationIcon />}
+          title="No Medical Records Found"
+          description={
+            searchTerm || filterType !== "all"
+              ? "No records match your current search or filter criteria."
+              : "You have not created or been associated with any medical records yet."
+          }
+        />
+      )}
 
       {/* Create Record Modal */}
       <Dialog
@@ -695,11 +691,16 @@ function DoctorMedicalRecordsPage() {
                     }}
                   />
                   <ImageListItemBar
-                    sx={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
+                    sx={{
+                      backgroundColor: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? "rgba(0, 0, 0, 0.8)"
+                          : "rgba(0, 0, 0, 0.7)",
+                    }}
                     position="top"
                     actionIcon={
                       <IconButton
-                        sx={{ color: "white" }}
+                        sx={{ color: "primary.contrastText" }}
                         onClick={() => removeSelectedFile(index)}
                         size="small"
                       >
@@ -904,11 +905,16 @@ function DoctorMedicalRecordsPage() {
                       }}
                     />
                     <ImageListItemBar
-                      sx={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
+                      sx={{
+                        backgroundColor: (theme) =>
+                          theme.palette.mode === "dark"
+                            ? "rgba(0, 0, 0, 0.8)"
+                            : "rgba(0, 0, 0, 0.7)",
+                      }}
                       position="top"
                       actionIcon={
                         <IconButton
-                          sx={{ color: "white" }}
+                          sx={{ color: "primary.contrastText" }}
                           onClick={() => removeSelectedFile(index)}
                           size="small"
                         >
@@ -987,7 +993,7 @@ function DoctorMedicalRecordsPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </PageContainer>
+    </ManagementPageLayout>
   );
 }
 

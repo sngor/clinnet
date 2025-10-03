@@ -113,7 +113,10 @@ function BannerWarning({ message, showDiagnosticsLink = true }) {
               orientation="vertical"
               flexItem
               sx={{
-                borderColor: "#ffcdd2",
+                borderColor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? theme.palette.error.dark
+                    : "#ffcdd2",
                 mx: 0,
                 height: 22,
                 display: "none",

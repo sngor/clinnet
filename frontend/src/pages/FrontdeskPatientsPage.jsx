@@ -3,10 +3,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Drawer } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { PageLayout } from "../components/ui";
+import { PageLayout, StandardPatientList } from "../components/ui";
 import { useAppData } from "../app/providers/DataProvider";
 import PatientDetailView from "../components/patients/PatientDetailView";
-import PatientGrid from "../components/patients/PatientGrid";
 import PatientSearch from "../components/patients/PatientSearch";
 import DebugPanel from "../components/DebugPanel";
 
@@ -105,8 +104,8 @@ function FrontdeskPatientsPage() {
 
   return (
     <PageLayout
-      title="Patient Records"
-      subtitle="Manage and view patient information"
+      title="Patients"
+      subtitle="View and manage patient information"
       loading={loading}
       error={error}
       onRetry={() => refreshPatients()}
@@ -130,10 +129,12 @@ function FrontdeskPatientsPage() {
         onRefresh={refreshPatients}
         loading={loading}
       />
-      <PatientGrid
+      <StandardPatientList
         patients={filteredPatients}
         onPatientSelect={handlePatientSelect}
         loading={loading}
+        userRole="frontdesk"
+        showActions={true}
       />
       {/* Patient Detail View Drawer */}
       <Drawer

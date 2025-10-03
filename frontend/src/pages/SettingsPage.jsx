@@ -36,8 +36,7 @@ const SettingsPage = () => {
   return (
     <PageLayout
       title="Settings"
-      subtitle="Customize application appearance and behavior."
-      maxWidth="lg"
+      subtitle="Customize application preferences"
       menuIcon={null}
     >
       <Tabs

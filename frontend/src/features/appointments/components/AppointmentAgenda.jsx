@@ -121,7 +121,7 @@ function AppointmentAgenda() {
           description="No appointments scheduled for today."
         />
       ) : (
-        <List sx={{ width: "100%", bgcolor: "#fbfbfb" }}>
+        <List sx={{ width: "100%", bgcolor: "background.paper" }}>
           {todayAppointments.map((appointment, index) => {
             const timeStatus = getAppointmentStatus(appointment.time);
             const statusColor = getStatusColor(appointment.status, timeStatus);

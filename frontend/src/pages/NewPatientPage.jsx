@@ -156,7 +156,8 @@ function NewPatientPage() {
 
   return (
     <FormPageLayout
-      title="Add New Patient"
+      title="New Patient"
+      subtitle="Add a new patient to the system"
       onBack={handleBackClick}
       showBackButton
     >

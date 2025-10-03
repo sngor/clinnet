@@ -19,8 +19,7 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
-import PageContainer from "../components/ui/PageContainer";
-import PageHeading from "../components/ui/PageHeading";
+import { DashboardPageLayout } from "../components/ui";
 import ContentCard from "../components/ui/ContentCard";
 import EmptyState from "../components/ui/EmptyState";
 import LoadingIndicator from "../components/ui/LoadingIndicator";
@@ -296,28 +295,21 @@ function AdminReportsPage() {
   };
 
   return (
-    <PageContainer>
-      <PageHeading
-        title={
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <AssessmentIcon sx={{ color: "primary.main", fontSize: 32 }} />{" "}
-            Reports & Analytics
-          </Box>
-        }
-        subtitle="View and generate reports for your clinic"
-        action={
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<DownloadIcon />}
-            sx={{ boxShadow: 2, borderRadius: 2, fontWeight: 600 }}
-            onClick={handleExportReport} // Updated onClick handler
-          >
-            Export Report
-          </Button>
-        }
-      />
-
+    <DashboardPageLayout
+      title="Reports"
+      subtitle="View analytics and generate reports"
+      action={
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<DownloadIcon />}
+          sx={{ boxShadow: 2, borderRadius: 2, fontWeight: 600 }}
+          onClick={handleExportReport}
+        >
+          Export Report
+        </Button>
+      }
+    >
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <ContentCard
@@ -530,7 +522,7 @@ function AdminReportsPage() {
           to { opacity: 1; transform: none; }
         }
       `}</style>
-    </PageContainer>
+    </DashboardPageLayout>
   );
 }
 

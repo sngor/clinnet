@@ -291,76 +291,68 @@ function FrontdeskPatientList({ onPatientSelect }) {
         </Box>
       </FlexBox>
 
-      {/* Fix DataGrid container to avoid nesting issues */}
+      {/* DataGrid without container wrapper */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {typeof error === "string" ? error : "An error occurred."}
+        </Alert>
+      )}
+
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder="Search patients by name, phone, or email..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+        }}
+        sx={{ mb: 2 }}
+        size="small"
+      />
+
       <Box
         sx={{
-          bgcolor: "#fbfbfb",
-          borderRadius: 1,
-          boxShadow: 1,
-          p: 2,
+          height: "calc(100vh - 300px)",
           width: "100%",
+          "& .MuiDataGrid-root": {
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 1,
+            "& .MuiDataGrid-cell:focus-within": {
+              outline: "none",
+            },
+          },
         }}
       >
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {typeof error === "string" ? error : "An error occurred."}
-          </Alert>
-        )}
-
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Search patients by name, phone, or email..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 2 }}
-          size="small"
-        />
-
-        <Box
-          sx={{
-            height: 600,
-            width: "100%",
-            "& .MuiDataGrid-root": {
-              border: "none",
-              "& .MuiDataGrid-cell:focus-within": {
-                outline: "none",
-              },
+        <DataGrid
+          rows={filteredPatients || []}
+          columns={columns}
+          pageSizeOptions={[10, 25, 50]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 10 } },
+            sorting: {
+              sortModel: [{ field: "name", sort: "asc" }],
             },
           }}
-        >
-          <DataGrid
-            rows={filteredPatients || []}
-            columns={columns}
-            pageSizeOptions={[10, 25, 50]}
-            initialState={{
-              pagination: { paginationModel: { pageSize: 10 } },
-              sorting: {
-                sortModel: [{ field: "name", sort: "asc" }],
-              },
-            }}
-            loading={loading}
-            getRowId={(row) => row.id || row.PK || Math.random().toString()}
-            autoHeight={false}
-            density="compact"
-            disableRowSelectionOnClick
-            slotProps={{
-              toolbar: {
-                showQuickFilter: false,
-              },
-            }}
-            components={{
-              LoadingOverlay: CustomLoadingOverlay,
-            }}
-          />
-        </Box>
+          loading={loading}
+          getRowId={(row) => row.id || row.PK || Math.random().toString()}
+          autoHeight={false}
+          density="compact"
+          disableRowSelectionOnClick
+          slotProps={{
+            toolbar: {
+              showQuickFilter: false,
+            },
+          }}
+          components={{
+            LoadingOverlay: CustomLoadingOverlay,
+          }}
+        />
       </Box>
 
       {/* Delete Confirmation Dialog (example) */}

@@ -6,8 +6,8 @@ import ServicesList from "../features/services/components/ServicesList";
 function AdminServicesPage() {
   return (
     <ManagementPageLayout
-      title="Services Management"
-      subtitle="Add, edit, and manage medical services offered by the clinic"
+      title="Services"
+      subtitle="Manage medical services and procedures"
     >
       {/* Render ServicesList directly, no outer Box container */}
       <ServicesList />

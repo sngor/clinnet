@@ -37,32 +37,8 @@ const StandardPageLayout = ({
   headerProps = {},
   ...props
 }) => {
-  // Determine the appropriate max width based on page type
-  const getMaxWidth = () => {
-    // Form pages should be narrower
-    if (
-      title?.toLowerCase().includes("new") ||
-      title?.toLowerCase().includes("edit") ||
-      title?.toLowerCase().includes("add") ||
-      title?.toLowerCase().includes("settings")
-    ) {
-      return "md";
-    }
-
-    // Management/list pages should be wider
-    if (
-      title?.toLowerCase().includes("management") ||
-      title?.toLowerCase().includes("list") ||
-      title?.toLowerCase().includes("dashboard")
-    ) {
-      return "xl";
-    }
-
-    // Default to lg for most pages
-    return maxWidth;
-  };
-
-  const finalMaxWidth = getMaxWidth();
+  // Use consistent width for all pages
+  const finalMaxWidth = maxWidth;
 
   return (
     <StyledPageWrapper {...props}>
@@ -109,38 +85,38 @@ const StandardPageLayout = ({
 };
 
 /**
- * Specialized layout for dashboard pages with wider content area
+ * Specialized layout for dashboard pages - now uses consistent width
  */
 export const DashboardPageLayout = (props) => (
-  <StandardPageLayout maxWidth="xl" {...props} />
+  <StandardPageLayout maxWidth="lg" {...props} />
 );
 
 /**
- * Specialized layout for form pages with narrower content area
+ * Specialized layout for form pages - now uses consistent width
  */
 export const FormPageLayout = (props) => (
-  <StandardPageLayout maxWidth="md" {...props} />
+  <StandardPageLayout maxWidth="lg" {...props} />
 );
 
 /**
- * Specialized layout for management/list pages with extra wide content area
+ * Specialized layout for management/list pages - now uses consistent width
  */
 export const ManagementPageLayout = (props) => (
-  <StandardPageLayout maxWidth="xl" {...props} />
+  <StandardPageLayout maxWidth="lg" {...props} />
 );
 
 /**
- * Specialized layout for detail pages with medium content area
+ * Specialized layout for detail pages - now uses consistent width
  */
 export const DetailPageLayout = (props) => (
   <StandardPageLayout maxWidth="lg" {...props} />
 );
 
 /**
- * Specialized layout for settings pages with narrow content area
+ * Specialized layout for settings pages - now uses consistent width
  */
 export const SettingsPageLayout = (props) => (
-  <StandardPageLayout maxWidth="md" {...props} />
+  <StandardPageLayout maxWidth="lg" {...props} />
 );
 
 export default StandardPageLayout;

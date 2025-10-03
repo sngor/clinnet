@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppData } from "../app/providers/DataProvider";
 import { PageLayout } from "../components/ui";
 import PatientDetailView from "../components/patients/PatientDetailView";
-import PatientGrid from "../components/patients/PatientGrid";
+import { StandardPatientList } from "../components/ui";
 import PatientSearch from "../components/patients/PatientSearch";
 import DebugPanel from "../components/DebugPanel";
 
@@ -108,10 +108,12 @@ function DoctorPatientsPage() {
         onRefresh={refreshPatients}
         loading={loading}
       />
-      <PatientGrid
+      <StandardPatientList
         patients={filteredPatients}
         onPatientSelect={handlePatientSelect}
         loading={loading}
+        userRole="doctor"
+        showActions={true}
       />
       {/* Patient Detail View Drawer */}
       <Drawer

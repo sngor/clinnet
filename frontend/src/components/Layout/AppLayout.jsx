@@ -385,7 +385,7 @@ function AppLayout() {
         aria-label="Open menu"
         onClick={handleDrawerToggle}
         sx={{
-          bgcolor: "white",
+          bgcolor: "background.paper",
           boxShadow: "0 4px 16px rgba(67, 97, 238, 0.18)",
           borderRadius: "50%",
           width: 44,
