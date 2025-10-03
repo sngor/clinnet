@@ -32,11 +32,20 @@ jobs:
     name: Deploy to AWS
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'dev' }}
-    if: ${{ secrets.AWS_DEPLOY_ROLE_ARN != '' || (secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '') }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Check AWS credentials
+        run: |
+          if [ -z "${{ secrets.AWS_DEPLOY_ROLE_ARN }}" ] && { [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ] || [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; }; then
+            echo "❌ No AWS credentials configured. Please set either:"
+            echo "   - AWS_DEPLOY_ROLE_ARN (for OIDC)"
+            echo "   - AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY (for access keys)"
+            exit 1
+          fi
+          echo "✅ AWS credentials are configured"
 
       - name: Configure AWS credentials (OIDC)
         if: ${{ secrets.AWS_DEPLOY_ROLE_ARN != '' }}

@@ -48,7 +48,7 @@ jobs:
         run: |
           echo "=== Checking package.json ==="
           cat package.json | grep -A 10 '"scripts"' || echo "No scripts found"
-          
+
       - name: Run linter
         run: |
           echo "=== Checking if linter is available ==="
@@ -105,26 +105,13 @@ jobs:
         run: |
           echo "=== Checking Python syntax ==="
           find src/handlers -name "*.py" -exec python -m py_compile {} \; && echo "✅ All Python files have valid syntax"
-          
+
           echo "=== Testing deployment script ==="
           python deployment/deploy.py --help && echo "✅ Deployment script is functional"
-          
-          echo "=== Testing utility imports ==="
-          python -c "
-import sys
-sys.path.append('src')
-try:
-    from utils.lambda_base import BaseLambdaHandler
-    print('✅ Lambda base handler imports OK')
-except ImportError as e:
-    print(f'⚠️  Lambda base handler import issue: {e}')
 
-try:
-    from utils.db_utils import generate_response
-    print('✅ DB utils imports OK')
-except ImportError as e:
-    print(f'⚠️  DB utils import issue: {e}')
-"
+          echo "=== Testing utility imports ==="
+          python -c "import sys; sys.path.append('src'); from utils.lambda_base import BaseLambdaHandler; print('✅ Lambda base handler imports OK')" || echo "⚠️ Lambda base handler import issue"
+          python -c "import sys; sys.path.append('src'); from utils.db_utils import generate_response; print('✅ DB utils imports OK')" || echo "⚠️ DB utils import issue"
 
       - name: Run basic tests
         run: |
@@ -134,7 +121,7 @@ except ImportError as e:
       - name: Run JavaScript tests
         run: |
           if [ -f package.json ]; then
-            npm test || echo "JavaScript tests not configured, skipping..."
+            npm test || echo "⚠️ JavaScript tests not configured, skipping..."
           else
-            echo "No package.json found, skipping JavaScript tests..."
+            echo "⚠️ No package.json found, skipping JavaScript tests..."
           fi
