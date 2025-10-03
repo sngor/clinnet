@@ -8,12 +8,12 @@ This guide covers common issues, solutions, and monitoring/logs for the Clinnet-
 
 ### 1. CI/CD Deployment Failures
 
-- **Symptom**: GitHub Actions fails with "No such file or directory" for deployment scripts
-- **Solution**: The project has been refactored to use unified deployment scripts. Update any CI/CD workflows to use:
-  ```bash
-  python deployment/deploy.py --backend-only
-  ```
-  instead of deleted scripts like `deploy-minimal.sh`, `quick_deploy.sh`, etc.
+- **Symptom**: GitHub Actions deployment fails
+- **Solution**: Check the following:
+  - AWS credentials are configured in GitHub secrets
+  - `AWS_DEPLOY_ROLE_ARN` is set for OIDC authentication
+  - Environment-specific secrets are configured
+  - Deployment uses the unified script: `python backend/deployment/deploy.py`
 
 ### 2. CORS Errors
 

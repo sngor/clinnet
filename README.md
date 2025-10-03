@@ -64,13 +64,19 @@ clinnet-emr/
 
 ## 🚀 Deployment
 
-### Quick Deployment
+### Local Deployment
 
 ```bash
 npm run deploy              # Deploy everything
 npm run deploy:backend      # Backend only
 npm run deploy:frontend     # Frontend only
 ```
+
+### CI/CD Deployment
+
+- **Automatic**: Push to `main` branch deploys to `dev`
+- **Manual**: Use GitHub Actions "Deploy" workflow with environment selection
+- **Testing**: All PRs run tests automatically
 
 ### Advanced Deployment
 
