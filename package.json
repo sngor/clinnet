@@ -1,45 +1,42 @@
 {
-  "name": "your-package-name",
+  "name": "clinnet-emr",
   "version": "1.0.0",
-  "description": "Your package description",
+  "description": "Clinnet EMR - Electronic Medical Records System",
   "main": "index.js",
   "scripts": {
-  "test": "jest",
-  "dev": "npm -C frontend run dev",
-  "build": "npm -C frontend run build",
-  "preview": "npm -C frontend run preview"
-  },
-  "jest": {
-    "testEnvironment": "jsdom"
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "npm -C frontend run test",
+    "test:backend": "npm -C backend run test",
+    "dev": "npm -C frontend run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "npm -C frontend run build",
+    "build:backend": "cd backend && sam build",
+    "preview": "npm -C frontend run preview",
+    "deploy": "python backend/deployment/deploy.py",
+    "deploy:backend": "python backend/deployment/deploy.py --backend-only",
+    "deploy:frontend": "python backend/deployment/deploy.py --frontend-only",
+    "lint": "npm -C frontend run lint",
+    "clean": "npm -C frontend run clean && cd backend && rm -rf .aws-sam"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/username/repo.git"
+    "url": "git+https://github.com/sngor/Clinnet-EMR.git"
   },
   "keywords": [
-    "keyword1",
-    "keyword2"
+    "emr",
+    "healthcare",
+    "aws",
+    "serverless",
+    "react",
+    "medical-records"
   ],
-  "author": "Your Name",
+  "author": "Clinnet EMR Team",
   "license": "ISC",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   },
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/material": "^7.1.0",
-    "buffer": "^6.0.3"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.27.4",
-    "@babel/preset-env": "^7.27.2",
-    "@babel/preset-react": "^7.27.1",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.3.0",
-    "babel-jest": "^30.0.0-beta.3",
-    "cross-env": "^7.0.3",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^30.0.0-beta.3"
-  }
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
 }

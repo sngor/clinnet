@@ -43,4 +43,4 @@ This guide documents the profile image upload and fetch system, including backen
 
 ---
 
-For deployment and more details, see `docs/deployment.md` and `docs/project-structure.md`.
+For deployment and more details, see `docs/deployment.md` and the [Development Guide](./DEVELOPMENT_GUIDE.md).

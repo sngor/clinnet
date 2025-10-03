@@ -1,15 +1,12 @@
 // backend/src/handlers/reports/getAggregatedReports.js
 'use strict';
 const AWS = require('aws-sdk'); // Import AWS SDK
-// TODO: Remove this SDK import if using AWS SDK v3 in a Lambda Layer
-// For Lambda environment, AWS SDK v2 is available by default.
-// If using a layer with v3, the import mechanism would be different:
-// import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-// import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
-// const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION });
-// const dynamoDb = DynamoDBDocumentClient.from(ddbClient);
+// Using AWS SDK v3 for better performance and smaller bundle size
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, QueryCommand } = require("@aws-sdk/lib-dynamodb");
 
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
+const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION });
+const dynamoDb = DynamoDBDocumentClient.from(ddbClient);
 
 module.exports.handler = async (event, context) => {
   console.log('Received event:', JSON.stringify(event, null, 2));
@@ -53,7 +50,7 @@ module.exports.handler = async (event, context) => {
         };
         
         console.log("DynamoDB Query Params:", JSON.stringify(params)); // Log the new params
-        const result = await dynamoDb.query(params).promise(); // Changed from scan to query
+        const result = await dynamoDb.send(new QueryCommand(params)); // Using AWS SDK v3
         console.log("DynamoDB Query Result Count:", result.Items ? result.Items.length : 0); // Log query results
 
         // 2. Process items

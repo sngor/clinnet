@@ -1,67 +1,87 @@
 # Clinnet-EMR Documentation
 
-Welcome to the Clinnet-EMR documentation. This guide provides comprehensive information about the project structure, development workflow, and best practices.
+Welcome to the comprehensive documentation for Clinnet-EMR, a modern Electronic Medical Records system built with serverless architecture.
 
-## Table of Contents
+## 📚 Documentation Structure
 
-1. [Project Structure](./project-structure.md)
-2. [Local Development Guide](./local-development.md)
-3. [Architecture](./architecture.md)
-4. [Deployment](./deployment.md)
+| Document                                        | Purpose                                | Audience                      |
+| ----------------------------------------------- | -------------------------------------- | ----------------------------- |
+| **[Development Guide](./DEVELOPMENT_GUIDE.md)** | **Complete development documentation** | **All developers**            |
+| [Project Refactoring](./PROJECT_REFACTORING.md) | Refactoring history and patterns       | Developers, Architects        |
+| [Architecture](./architecture.md)               | System design and architecture         | Architects, Senior Developers |
+| [Deployment](./deployment.md)                   | Deployment procedures                  | DevOps, Developers            |
+| [Troubleshooting](./troubleshooting.md)         | Common issues and solutions            | All team members              |
 
-## Overview
+## 🚀 Quick Navigation
 
-Clinnet-EMR is a comprehensive Electronic Medical Records (EMR) system for healthcare providers. It provides interfaces for administrators, doctors, and front desk staff to manage appointments and medical records.
+### For New Developers
 
-## Key Features
+1. Start with the **[Development Guide](./DEVELOPMENT_GUIDE.md)** - your complete resource
+2. Review [Architecture](./architecture.md) for system understanding
+3. Follow [Local Development](./local-development.md) for setup
 
-- **Patient Management**: Track patient information, medical history, and demographics
-- **Appointment Scheduling**: Schedule and manage patient appointments
-- **Role-based Access**: Different interfaces for administrators, doctors, and front desk staff
-- **Dashboard Analytics**: Role-specific dashboards with relevant information
-- **Responsive Design**: Works on desktop and mobile devices
+### For Existing Developers
 
-## Tech Stack
+1. Check [Project Refactoring](./PROJECT_REFACTORING.md) for recent changes
+2. Use [Troubleshooting](./troubleshooting.md) for issue resolution
+3. Reference [Deployment](./deployment.md) for deployment procedures
 
-- **Frontend**: React, Material UI, React Router
-- **State Management**: React Context API
-- **Styling**: Material UI theming system with custom components
-- **Authentication**: AWS Cognito (planned)
-- **API**: REST API with mock data (AWS API Gateway planned)
+### For Architects & Leads
 
-## UI Component System
+1. Review [Architecture](./architecture.md) for system design
+2. Study [Project Refactoring](./PROJECT_REFACTORING.md) for code patterns
+3. Check [Deployment](./deployment.md) for infrastructure details
 
-The application uses a custom UI component library built on top of Material UI:
+## 🎯 Project Overview
 
-- **Consistent Styling**: Theme-based styling with consistent patterns
-- **Reusable Components**: Common UI patterns extracted into reusable components
-- **Responsive Design**: Mobile-first approach with responsive breakpoints
+Clinnet-EMR is a comprehensive Electronic Medical Records system featuring:
 
-Key components include:
+- **Modern Architecture**: Serverless AWS infrastructure with React frontend
+- **Role-based Access**: Admin, Doctor, and Front Desk interfaces
+- **Complete EMR Features**: Patient management, appointments, billing, reports
+- **Scalable Design**: Built for healthcare providers of all sizes
+- **Security First**: AWS Cognito authentication with proper access controls
 
-- Page headers, section headers, and content cards
-- Status indicators and appointment cards
-- Data tables and form dialogs
-- Loading indicators and empty states
+## 🛠️ Tech Stack Summary
 
-## Development Workflow
+- **Frontend**: React 19, Material UI v7, Vite
+- **Backend**: AWS Lambda (Python 3.12, Node.js 20.x)
+- **Database**: DynamoDB with optimized GSI design
+- **Storage**: S3 for documents and images
+- **Authentication**: AWS Cognito with custom attributes
+- **Infrastructure**: AWS SAM (Infrastructure as Code)
 
-1. **Local Development**:
+## 📖 Documentation Philosophy
 
-   - Set up the local development environment following the [Local Development Guide](./local-development.md)
-   - Use centralized mock data for consistent development experience
+This documentation follows these principles:
 
-2. **Component Development**:
+1. **Comprehensive Coverage** - All aspects covered in detail
+2. **Single Source of Truth** - Avoid duplication across documents
+3. **Practical Focus** - Emphasis on actionable information
+4. **Maintainable Structure** - Easy to update and navigate
+5. **Developer-Centric** - Written for the development team
 
-   - Create reusable UI components in `/components/ui/`
-   - Implement feature-specific components in their respective feature folders
-   - Compose page components using UI and feature components
+## 🔄 Recent Improvements
 
-3. **Best Practices**:
-   - Follow consistent naming conventions
-   - Use centralized utilities for common operations
-   - Maintain consistent styling patterns across components
+The project has been refactored for better maintainability:
 
-## Getting Started
+- **Standardized handler patterns** - Base classes eliminate code duplication
+- **Consolidated deployment** - Single script replaces multiple tools
+- **Enhanced utilities** - Centralized validation and database operations
+- **Cleaner codebase** - Removed deprecated files and dead code
 
-To get started with development, follow the [Local Development Guide](./local-development.md).
+See [Project Refactoring](./PROJECT_REFACTORING.md) for technical details.
+
+## 🤝 Contributing to Documentation
+
+When updating documentation:
+
+1. **Use the Development Guide** as the primary comprehensive resource
+2. **Keep specialized docs focused** on their specific topics
+3. **Cross-reference appropriately** to avoid duplication
+4. **Update this index** when adding new documents
+5. **Follow the established structure** and formatting
+
+---
+
+**Start here**: [Development Guide](./DEVELOPMENT_GUIDE.md) - Your complete resource for Clinnet-EMR development.

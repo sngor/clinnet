@@ -1,64 +1,36 @@
 """
-Lambda function to create a new appointment
+Refactored appointment creation handler using the base handler pattern.
 """
-import os
-import json # ensure json is imported
 import uuid
-from datetime import datetime # ensure datetime is imported
-import logging
-from botocore.exceptions import ClientError
-
-from utils.db_utils import create_item, generate_response
-from utils.responser_helper import handle_exception, build_error_response
-
-logger = logging.getLogger(__name__)
+import json
+from datetime import datetime
+from typing import Dict, Any
+from utils.lambda_base import BaseLambdaHandler
+from utils.db_utils import create_item
+from utils.validation import validate_appointment_data
 
 
-def lambda_handler(event, context):
-    """
-    Handle Lambda event for POST /appointments
+class CreateAppointmentHandler(BaseLambdaHandler):
+    """Handler for creating appointments."""
     
-    Args:
-        event (dict): Lambda event
-        context (LambdaContext): Lambda context
-        
-    Returns:
-        dict: API Gateway response
-    """
-    logger.info(f"Received event: %s", json.dumps(event))
+    def __init__(self):
+        super().__init__(
+            table_name_env_var='APPOINTMENTS_TABLE',
+            required_fields=['patientId', 'doctorId', 'date', 'startTime', 'endTime', 'type']
+        )
     
-    table_name = os.environ.get('APPOINTMENTS_TABLE')
-    if not table_name:
-        return build_error_response(500, 'Configuration Error', 'Appointments table name not configured')
+    def _custom_validation(self, body: Dict[str, Any]) -> str:
+        """Custom validation for appointment data."""
+        validation_errors = validate_appointment_data(body)
+        if validation_errors:
+            error_messages = "; ".join([f"{k}: {v}" for k, v in validation_errors.items()])
+            return f'Validation failed: {error_messages}'
+        return None
     
-    try:
-        # Parse request body
-        body = json.loads(event.get('body', '{}'))
-        
-        # Validate required fields
-        required_fields = ['patientId', 'doctorId', 'date', 'startTime', 'endTime', 'type']
-        for field in required_fields:
-            if field not in body:
-                return build_error_response(400, 'Validation Error', f'Missing required field: {field}')
-        
-        # Validate date format (after required field checks)
-        try:
-            datetime.strptime(body['date'], '%Y-%m-%d')
-        except ValueError:
-            return build_error_response(400, 'Validation Error', 'Invalid date format. Expected YYYY-MM-DD.')
-
-        # Validate time format (after required field checks)
-        try:
-            datetime.strptime(body['startTime'], '%H:%M')
-            datetime.strptime(body['endTime'], '%H:%M')
-        except ValueError:
-            return build_error_response(400, 'Validation Error', 'Invalid time format. Expected HH:MM.')
-
-        # Ensure endTime is after startTime (after individual time format checks)
-        if datetime.strptime(body['endTime'], '%H:%M') <= datetime.strptime(body['startTime'], '%H:%M'):
-            return build_error_response(400, 'Validation Error', 'End time must be after start time.')
-
-        # Create appointment record
+    def _process_request(self, table_name: str, body: Dict[str, Any], 
+                        event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+        """Create a new appointment."""
+        # Generate ID and timestamps
         appointment_id = str(uuid.uuid4())
         timestamp = datetime.utcnow().isoformat() + "Z"
         
@@ -74,20 +46,24 @@ def lambda_handler(event, context):
             'notes': body.get('notes', ''),
             'reason': body.get('reason', ''),
             'services': body.get('services', []),
+            'entityType': 'APPOINTMENT_ENTITY',  # For GSI
+            'appointmentDate': body.get('date'),  # For GSI
             'createdAt': timestamp,
             'updatedAt': timestamp
         }
         
-        # Create the appointment record in DynamoDB
         create_item(table_name, appointment_item)
-        
-        # Return the created appointment
-        return generate_response(201, appointment_item)
+        return appointment_item
     
-    except ClientError as e:
-        return handle_exception(e)
-    except Exception as e:
+    def _build_success_response(self, result: Any) -> Dict[str, Any]:
+        """Build success response with 201 status for creation."""
+        return {
+            'statusCode': 201,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps(result)
+        }
 
-        print(f"Error creating appointment: {e}")
-        # Use handle_exception for generic exceptions as well
-        return handle_exception(e)
+
+# Lambda handler entry point
+handler_instance = CreateAppointmentHandler()
+lambda_handler = handler_instance.lambda_handler
