@@ -1,57 +1,60 @@
 """
-Lambda function to get all patients
+Lambda function to get all patients from RDS Aurora
+Uses the PatientService for business logic
 """
-import os
 import json
 import logging
-from botocore.exceptions import ClientError
-from utils.responser_helper import handle_exception, build_error_response # Added for consistency
+from typing import Dict, Any
+from services.patient_service import PatientService
+from utils.rds_utils import build_response, build_error_response
 
-# Import utility functions
-from utils.db_utils import query_by_type, generate_response # Changed query_table to query_by_type
-# DecimalEncoder is used by generate_response in db_utils
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-def lambda_handler(event, context=None):
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Handle Lambda event for GET /patients
+    Handle Lambda event for GET /patients with RDS backend
+    
+    Query Parameters:
+    - limit: Number of records to return (default: 50, max: 100)
+    - offset: Number of records to skip (default: 0)
+    - search: Search term for name or email
+    
+    Args:
+        event: Lambda event
+        context: Lambda context
+        
+    Returns:
+        API Gateway response
     """
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
     logger.info(f"Received event: {json.dumps(event)}")
-
-    headers = event.get('headers', {})
-    request_origin = headers.get('Origin') or headers.get('origin')
-
-    table_name = os.environ.get('PATIENT_RECORDS_TABLE')
-    if not table_name:
-        logger.error('PatientRecords table name not configured')
-        return build_error_response(500, 'Configuration Error', 'PatientRecords table name not configured', request_origin)
-
+    
     try:
-        all_patients = []
-        last_evaluated_key = None
+        # Parse query parameters
+        query_params = event.get('queryStringParameters') or {}
         
-        while True:
-            logger.info(f"Querying for patients. LastEvaluatedKey: {last_evaluated_key}")
-            response_data = query_by_type(
-                table_name,
-                type_value='patient', # Querying for 'patient' type
-                last_evaluated_key=last_evaluated_key
-            )
-            
-            items = response_data.get('Items', [])
-            all_patients.extend(items)
-            
-            last_evaluated_key = response_data.get('LastEvaluatedKey')
-            if not last_evaluated_key:
-                break # Exit loop if no more items to fetch
-                
-        logger.info(f"Fetched {len(all_patients)} patients from DynamoDB using type-index GSI")
-        return generate_response(200, all_patients)
+        # Pagination parameters with validation
+        try:
+            limit = int(query_params.get('limit', 50))
+            offset = int(query_params.get('offset', 0))
+        except ValueError:
+            return build_error_response(400, "Invalid pagination parameters", 
+                                      "limit and offset must be integers")
         
-    except ClientError as ce:
-        logger.error(f"ClientError fetching patients: {ce}", exc_info=True)
-        return handle_exception(ce, request_origin) # Use imported helper
+        search = query_params.get('search', '').strip() if query_params.get('search') else None
+        
+        logger.info(f"Fetching patients: limit={limit}, offset={offset}, search={search}")
+        
+        # Get patients using service layer
+        result = PatientService.get_patients(limit=limit, offset=offset, search=search)
+        
+        logger.info(f"Successfully fetched {len(result['patients'])} patients")
+        return build_response(200, result)
+        
+    except ValueError as e:
+        logger.error(f"Validation error: {str(e)}")
+        return build_error_response(400, "Invalid parameters", str(e))
+        
     except Exception as e:
-        logger.error(f"Error fetching patients: {e}", exc_info=True)
-        return build_error_response(500, 'Internal Server Error', f'Error fetching patients: {str(e)}', request_origin)
+        logger.error(f"Error fetching patients: {str(e)}")
+        return build_error_response(500, "Internal server error", "Failed to fetch patients")

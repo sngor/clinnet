@@ -6,7 +6,7 @@ BACKEND_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 STACK_NAME=${STACK_NAME:-clinnet-auth}
 ENVIRONMENT=${ENVIRONMENT:-dev}
-REGION=${AWS_REGION:-us-east-2}
+REGION=${AWS_REGION:-us-west-2}
 
 echo "Deploying Cognito auth stack: $STACK_NAME in $REGION (env=$ENVIRONMENT)"
 

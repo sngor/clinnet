@@ -17,7 +17,7 @@ import {
   BodyText, // Added BodyText
 } from "../components/ui";
 import DashboardCard from "../components/ui/DashboardCard"; // Updated path
-import BannerWarning from "../components/ui/BannerWarning"; // <-- Add this line
+// Removed BannerWarning - moved to Settings page
 
 // Import mock data from centralized location
 // import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments";
@@ -91,8 +91,7 @@ function PatientDashboard() {
       loading={loading}
       error={null} // Don't block UI with error
     >
-      {/* Show error as a warning if partialErrors exist */}
-      {partialErrors.length > 0 && error && <BannerWarning message={error} />}
+      {/* Error alerts moved to Settings page */}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={0} sx={{ mb: 4 }}>
         <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>

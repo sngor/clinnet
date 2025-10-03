@@ -42,7 +42,7 @@ import {
   StyledTextField, // Added
 } from "../components/ui";
 import DashboardCard from "../components/ui/DashboardCard"; // Updated path
-import BannerWarning from "../components/ui/BannerWarning";
+// Removed BannerWarning - moved to Settings page
 
 // Import mock data from centralized location
 // import { mockTodayAppointments as mockAppointments } from "../mock/mockAppointments"; // Removed
@@ -211,8 +211,7 @@ function FrontdeskDashboard() {
       loading={loading}
       error={null} // Don't block UI with error
     >
-      {/* Show error as a warning if partialErrors exist */}
-      {partialErrors.length > 0 && error && <BannerWarning message={error} />}
+      {/* Error alerts moved to Settings page */}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid

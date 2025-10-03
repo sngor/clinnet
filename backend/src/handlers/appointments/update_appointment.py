@@ -1,110 +1,103 @@
 """
-Lambda function to update an appointment
+Lambda function to update an appointment in RDS Aurora
 """
-import os
-import logging # Added
 import json
-from datetime import datetime # Added
-from botocore.exceptions import ClientError
-
-from utils.db_utils import get_item_by_id, update_item, generate_response
-from utils.responser_helper import handle_exception, build_error_response
+import logging
+from typing import Dict, Any
+from utils.rds_utils import execute_mutation, execute_query, build_response, build_error_response
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-def lambda_handler(event, context):
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Handle Lambda event for PUT /appointments/{id}
+    Handle Lambda event for PUT /appointments/{id} with RDS backend
     
     Args:
-        event (dict): Lambda event
-        context (LambdaContext): Lambda context
+        event: Lambda event
+        context: Lambda context
         
     Returns:
-        dict: API Gateway response
+        API Gateway response
     """
-    logger.info("Received event: %s", json.dumps(event)) # Changed from print to logger.info
-    
-    table_name = os.environ.get('APPOINTMENTS_TABLE')
-    if not table_name:
-        return build_error_response(500, 'Configuration Error: Appointments table name not configured')
-    
-    # Get appointment ID from path parameters
-    appointment_id = event.get('pathParameters', {}).get('id')
-    if not appointment_id:
-        return build_error_response(400, 'Validation Error: Missing appointment ID')
+    logger.info(f"Received event: {json.dumps(event)}")
     
     try:
-        # Parse request body
-        body = json.loads(event.get('body', '{}'))
+        # Get appointment ID from path parameters
+        path_params = event.get('pathParameters', {})
+        appointment_id = path_params.get('id')
         
-        # Get existing appointment
-        existing_appointment = get_item_by_id(table_name, appointment_id)
+        if not appointment_id:
+            return build_error_response(400, "Appointment ID is required")
+        
+        # Parse request body
+        if not event.get('body'):
+            return build_error_response(400, "Request body is required")
+        
+        try:
+            body = json.loads(event['body'])
+        except json.JSONDecodeError:
+            return build_error_response(400, "Invalid JSON in request body")
+        
+        # Check if appointment exists
+        existing_query = "SELECT * FROM appointments WHERE id = %s"
+        existing_appointment = execute_query(existing_query, (appointment_id,), fetch_one=True)
         
         if not existing_appointment:
-            return build_error_response(404, f'Not Found: Appointment with ID {appointment_id} not found')
+            return build_error_response(404, "Appointment not found")
         
-        # Validate date format if 'date' is in body
-        if 'date' in body:
-            try:
-                datetime.strptime(body['date'], '%Y-%m-%d')
-            except ValueError:
-                return build_error_response(400, 'Validation Error: Invalid date format. Expected YYYY-MM-DD.')
-
-        # Validate time format if 'startTime' or 'endTime' is in body
-        if 'startTime' in body or 'endTime' in body:
-            try:
-                if 'startTime' in body:
-                    datetime.strptime(body['startTime'], '%H:%M')
-                if 'endTime' in body:
-                    datetime.strptime(body['endTime'], '%H:%M')
-            except ValueError:
-                return build_error_response(400, 'Validation Error: Invalid time format. Expected HH:MM.')
-
-        # Ensure endTime is after startTime if both are present and valid
-        # This logic needs to handle cases where one might be in existing_appointment and the other in body
-        current_startTime_str = existing_appointment.get('startTime')
-        current_endTime_str = existing_appointment.get('endTime')
-
-        new_startTime_str = body.get('startTime', current_startTime_str)
-        new_endTime_str = body.get('endTime', current_endTime_str)
-
-        # Proceed with this check only if both times are available (either from existing or new)
-        # and at least one of them is being updated to ensure this validation is relevant to the update.
-        if ('startTime' in body or 'endTime' in body) and new_startTime_str and new_endTime_str:
-            try:
-                # Validate format again here in case only one was provided and the other is from DB
-                # This implicitly assumes stored times are valid; ideally, they are.
-                # If one is provided in body, it's already validated above. If not, it's from DB.
-                new_startTime_dt = datetime.strptime(new_startTime_str, '%H:%M')
-                new_endTime_dt = datetime.strptime(new_endTime_str, '%H:%M')
-                if new_endTime_dt <= new_startTime_dt:
-                    return build_error_response(400, 'Validation Error: End time must be after start time.')
-            except ValueError: # Should not happen if stored data is valid and body data was validated
-                 return build_error_response(400, 'Validation Error: Invalid time format for comparison (startTime/endTime).')
-
-        # Fields that can be updated
+        # Build update query dynamically based on provided fields
+        update_fields = []
+        params = []
+        
         updatable_fields = [
-            'patientId', 'doctorId', 'date', 'startTime', 'endTime',
-            'type', 'status', 'notes', 'reason', 'services'
+            'patient_id', 'doctor_id', 'service_id', 'appointment_date',
+            'appointment_time', 'duration_minutes', 'status', 'notes'
         ]
         
-        # Create updates dictionary with only provided fields
-        updates = {}
         for field in updatable_fields:
             if field in body:
-                updates[field] = body[field]
-
-        if not updates:
-            return build_error_response(400, 'Validation Error: No valid fields provided for update.')
+                update_fields.append(f"{field} = %s")
+                params.append(body[field])
         
-        # Update appointment
-        updated_appointment = update_item(table_name, appointment_id, updates)
+        if not update_fields:
+            return build_error_response(400, "No valid fields to update")
         
-        return generate_response(200, updated_appointment)
-    
-    except ClientError as e:
-        return handle_exception(e)
+        # Add updated_at timestamp
+        update_fields.append("updated_at = CURRENT_TIMESTAMP")
+        params.append(appointment_id)
+        
+        # Build and execute update query
+        query = f"""
+            UPDATE appointments 
+            SET {', '.join(update_fields)}
+            WHERE id = %s
+        """
+        
+        logger.info(f"Updating appointment {appointment_id}")
+        affected_rows = execute_mutation(query, tuple(params))
+        
+        if affected_rows == 0:
+            return build_error_response(404, "Appointment not found or no changes made")
+        
+        # Return updated appointment data
+        updated_query = """
+            SELECT a.*, 
+                   CONCAT(p.first_name, ' ', p.last_name) as patient_name,
+                   CONCAT(u.first_name, ' ', u.last_name) as doctor_name,
+                   s.name as service_name
+            FROM appointments a
+            JOIN patients p ON a.patient_id = p.id
+            JOIN users u ON a.doctor_id = u.id
+            LEFT JOIN services s ON a.service_id = s.id
+            WHERE a.id = %s
+        """
+        
+        updated_appointment = execute_query(updated_query, (appointment_id,), fetch_one=True)
+        
+        logger.info(f"Successfully updated appointment: {appointment_id}")
+        return build_response(200, updated_appointment, "Appointment updated successfully")
+        
     except Exception as e:
-        print(f"Error updating appointment: {e}")
-        return handle_exception(e)
+        logger.error(f"Error updating appointment: {str(e)}")
+        return build_error_response(500, "Internal server error", "Failed to update appointment")

@@ -15,7 +15,8 @@ export default defineConfig({
   },
   define: {
     'global': 'window',
-    'process.env': {},
+    // Don't override process.env as it interferes with Vite's env loading
+    // 'process.env': {},
   },
   optimizeDeps: {
     esbuildOptions: {
@@ -36,13 +37,14 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: 'dist',
-    sourcemap: true,
+    outDir: 'build', // Changed from 'dist' to 'build' for consistency with deployment scripts
+    sourcemap: process.env.NODE_ENV !== 'production', // Only generate sourcemaps in development
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           mui: ['@mui/material', '@mui/icons-material'],
+          cognito: ['amazon-cognito-identity-js'],
         },
       },
     },

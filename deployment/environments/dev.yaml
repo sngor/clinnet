@@ -1,0 +1,26 @@
+# Development Environment Configuration
+Environment: dev
+DBUsername: admin
+DBPassword: ClinetEMR2024Dev!
+MinCapacity: 0.5
+MaxCapacity: 4
+DeletionProtection: false
+
+# Lambda Configuration
+LambdaMemorySize: 256
+LambdaTimeout: 30
+
+# Monitoring
+EnableDetailedMonitoring: false
+LogRetentionDays: 7
+
+# Feature Flags
+EnableAISummarization: true
+EnableOfflineMode: true
+EnableDebugLogging: true
+
+# CORS Configuration
+CorsOrigins: "*"
+
+# Backup Configuration
+BackupRetentionDays: 7

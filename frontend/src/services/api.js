@@ -8,10 +8,17 @@ import {
   isCurrentlyOffline
 } from './offlineApiHandler'; // Adjusted path if necessary, assuming it's in the same services directory
 
+// Import config for environment variables
+import config from './config.js';
+
 // Create an axios instance with base configuration
 // Ensure the base URL has the /api suffix, as backend routes are defined with it
-let baseUrl = import.meta.env.VITE_API_ENDPOINT || '';
-if (baseUrl && !baseUrl.endsWith('/api')) {
+let baseUrl = config.API_ENDPOINT || '';
+
+// Handle development proxy
+if (import.meta.env.DEV && !baseUrl) {
+  baseUrl = '/api'; // Use Vite proxy in development
+} else if (baseUrl && !baseUrl.endsWith('/api')) {
   // To prevent double slashes if the original URL ends with a slash
   if (baseUrl.endsWith('/')) {
     baseUrl = `${baseUrl}api`;

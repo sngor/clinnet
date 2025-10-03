@@ -1,140 +1,113 @@
 """
-Lambda function to get all appointments
+Lambda function to get appointments from RDS Aurora
+With advanced filtering and scheduling features
 """
-import os
 import json
 import logging
-import boto3 # Added boto3
-from botocore.exceptions import ClientError
-from boto3.dynamodb.conditions import Key, Attr # Added Key, Attr for safety, though may not be strictly needed for the new code
-
-from utils.db_utils import scan_table, generate_response
-from utils.responser_helper import handle_exception, build_error_response
-from utils.cors import build_cors_preflight_response
+from typing import Dict, Any
+from datetime import datetime, timedelta
+from utils.rds_utils import get_appointments_by_date_range, build_response, build_error_response
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-
-def lambda_handler(event, context):
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Handle Lambda event for GET /appointments
+    Handle Lambda event for GET /appointments with RDS backend
+    
+    Query Parameters:
+    - start_date: Start date (YYYY-MM-DD, default: today)
+    - end_date: End date (YYYY-MM-DD, default: start_date + 7 days)
+    - doctor_id: Filter by specific doctor
+    - patient_id: Filter by specific patient
+    - status: Filter by appointment status
     
     Args:
-        event (dict): Lambda event
-        context (LambdaContext): Lambda context
+        event: Lambda event
+        context: Lambda context
         
     Returns:
-        dict: API Gateway response
+        API Gateway response
     """
-    # Assuming logger is configured elsewhere or using root logger
-    # For explicit logger:
-    # logger = logging.getLogger(__name__)
-    # logger.setLevel(logging.INFO) # Or as configured
-    logging.info("Received event: %s", json.dumps(event))
-    
-    # --- Handle CORS preflight (OPTIONS) requests ---
-    if event.get('httpMethod', '').upper() == 'OPTIONS':
-        return build_cors_preflight_response()
-
-    table_name = os.environ.get('APPOINTMENTS_TABLE')
-    if not table_name:
-        return build_error_response(500, 'Configuration Error: Appointments table name not configured')
+    logger.info(f"Received event: {json.dumps(event)}")
     
     try:
-        # Get query parameters
-        query_params = event.get('queryStringParameters', {}) or {}
-        kwargs = {} # Initialize kwargs for query_table
-
-        # GSI usage
-        if 'patientId' in query_params:
-            kwargs['IndexName'] = 'PatientIdIndex'
-            kwargs['KeyConditionExpression'] = Key('patientId').eq(query_params['patientId'])
-        elif 'doctorId' in query_params:
-            kwargs['IndexName'] = 'DoctorIdIndex'
-            kwargs['KeyConditionExpression'] = Key('doctorId').eq(query_params['doctorId'])
-
-        # Building FilterExpression for remaining parameters
-        filter_expressions = []
+        # Parse query parameters
+        query_params = event.get('queryStringParameters') or {}
         
-        # Create a mutable copy of query_params to remove keys used in GSI
-        active_query_params = dict(query_params)
-
-        if 'patientId' in active_query_params and kwargs.get('IndexName') == 'PatientIdIndex':
-            del active_query_params['patientId']
-        if 'doctorId' in active_query_params and kwargs.get('IndexName') == 'DoctorIdIndex':
-            del active_query_params['doctorId']
-
-        # Now build filter_expressions from active_query_params
-        if 'date' in active_query_params:
-            filter_expressions.append(Attr('date').eq(active_query_params['date']))
-        if 'status' in active_query_params:
-            filter_expressions.append(Attr('status').eq(active_query_params['status']))
-        # Add other potential filterable fields here if needed
-        
-        if filter_expressions:
-            combined_filter_expr = filter_expressions[0]
-            for expr in filter_expressions[1:]:
-                combined_filter_expr = combined_filter_expr & expr
-            kwargs['FilterExpression'] = combined_filter_expr
-
-        appointments = scan_table(table_name, **kwargs)
-
-        # --- Start of Patient Name Enrichment ---
-        enriched_appointments = []
-        patient_records_table_name = os.environ.get('PATIENT_RECORDS_TABLE')
-
-        if not patient_records_table_name:
-            logging.warning("PATIENT_RECORDS_TABLE environment variable not set. Skipping patient name enrichment.")
-            enriched_appointments = appointments # Proceed without enrichment
-        else:
+        # Date range parameters
+        today = datetime.now().date()
+        start_date = query_params.get('start_date')
+        if start_date:
             try:
-                dynamodb_resource = boto3.resource('dynamodb')
-                patient_table = dynamodb_resource.Table(patient_records_table_name)
-
-                for appt in appointments:
-                    new_appt = appt.copy() # Work on a copy
-                    patient_id_from_appt = new_appt.get('patientId')
-
-                    if patient_id_from_appt:
-                        try:
-                            # Construct the key for PatientRecordsTable
-                            # Assumption: patient_id_from_appt is the UUID part, e.g., "123e4567-e89b-12d3-a456-426614174000"
-                            # PatientRecordsTable PK and SK are "PATIENT#<uuid>"
-                            # If patient_id_from_appt already has "PATIENT#" prefix, this logic needs adjustment.
-                            # For now, assuming it's just the UUID.
-                            if not patient_id_from_appt.startswith("PATIENT#"):
-                                pk_value = f"PATIENT#{patient_id_from_appt}"
-                            else:
-                                pk_value = patient_id_from_appt
-
-                            key_for_patient = {'PK': pk_value, 'SK': pk_value}
-
-                            patient_response = patient_table.get_item(Key=key_for_patient)
-                            patient_item = patient_response.get('Item')
-
-                            if patient_item:
-                                firstName = patient_item.get('firstName', '')
-                                lastName = patient_item.get('lastName', '')
-                                patient_name = f"{firstName} {lastName}".strip()
-                                new_appt['patientName'] = patient_name if patient_name else "Name N/A"
-                            else:
-                                new_appt['patientName'] = "Unknown Patient"
-                                logging.warning(f"Patient record not found for patientId: {patient_id_from_appt} (Key used: {key_for_patient})")
-                        except Exception as e:
-                            logging.error(f"Error fetching patient details for patientId {patient_id_from_appt}: {str(e)}")
-                            new_appt['patientName'] = "Error fetching name"
-                    else:
-                        new_appt['patientName'] = "No Patient ID"
-                    enriched_appointments.append(new_appt)
-            except Exception as e:
-                logging.error(f"Error during patient enrichment setup (e.g. accessing table resource): {str(e)}")
-                enriched_appointments = appointments # Fallback to original appointments
-        # --- End of Patient Name Enrichment ---
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            except ValueError:
+                return build_error_response(400, "Invalid start_date format. Use YYYY-MM-DD")
+        else:
+            start_date = today
         
-        return generate_response(200, enriched_appointments) # Use enriched data
-    
-    except ClientError as e:
-        return handle_exception(e)
+        end_date = query_params.get('end_date')
+        if end_date:
+            try:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            except ValueError:
+                return build_error_response(400, "Invalid end_date format. Use YYYY-MM-DD")
+        else:
+            end_date = start_date + timedelta(days=7)  # Default to 1 week
+        
+        # Validate date range
+        if end_date < start_date:
+            return build_error_response(400, "end_date must be after start_date")
+        
+        # Filter parameters
+        doctor_id = query_params.get('doctor_id')
+        patient_id = query_params.get('patient_id')
+        status = query_params.get('status')
+        
+        logger.info(f"Fetching appointments: {start_date} to {end_date}, doctor_id={doctor_id}")
+        
+        # Get appointments from RDS
+        appointments = get_appointments_by_date_range(
+            start_date=str(start_date),
+            end_date=str(end_date),
+            doctor_id=doctor_id
+        )
+        
+        # Additional filtering (if needed)
+        if patient_id:
+            appointments = [apt for apt in appointments if apt['patient_id'] == patient_id]
+        
+        if status:
+            appointments = [apt for apt in appointments if apt['status'] == status]
+        
+        # Group appointments by date for better frontend consumption
+        appointments_by_date = {}
+        for appointment in appointments:
+            date_str = str(appointment['appointment_date'])
+            if date_str not in appointments_by_date:
+                appointments_by_date[date_str] = []
+            appointments_by_date[date_str].append(appointment)
+        
+        # Build response
+        response_data = {
+            'appointments': appointments,
+            'appointments_by_date': appointments_by_date,
+            'filters': {
+                'start_date': str(start_date),
+                'end_date': str(end_date),
+                'doctor_id': doctor_id,
+                'patient_id': patient_id,
+                'status': status
+            },
+            'summary': {
+                'total_appointments': len(appointments),
+                'date_range_days': (end_date - start_date).days + 1
+            }
+        }
+        
+        logger.info(f"Successfully fetched {len(appointments)} appointments")
+        return build_response(200, response_data)
+        
     except Exception as e:
-        print(f"Error fetching appointments: {e}")
-        return handle_exception(e)
+        logger.error(f"Error fetching appointments: {str(e)}")
+        return build_error_response(500, "Internal server error", "Failed to fetch appointments")

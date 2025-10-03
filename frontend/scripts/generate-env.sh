@@ -4,7 +4,7 @@
 set -euo pipefail
 
 STACK_NAME=${1:-sam-clinnet}
-REGION=${2:-${AWS_REGION:-us-east-2}}
+REGION=${2:-${AWS_REGION:-us-west-2}}
 ALT_AUTH_STACK=${ALT_AUTH_STACK:-clinnet-auth}
 ALT_MIN_STACK=${ALT_MIN_STACK:-clinnet-minimal}
 

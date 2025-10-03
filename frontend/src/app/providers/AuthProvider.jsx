@@ -19,6 +19,8 @@ import {
   completeNewPassword,
 } from "../../utils/cognito-helpers";
 import { userService } from "../../services/userService";
+import mockAuthService from "../../services/mockAuthService";
+import config from "../../services/config";
 
 const AuthContext = createContext(null);
 
@@ -61,7 +63,6 @@ export const AuthProvider = ({ children }) => {
           userInfo.profileImage = user.profileImage;
         }
 
-
         setUser(userInfo);
         return userInfo;
       }
@@ -77,6 +78,31 @@ export const AuthProvider = ({ children }) => {
     const checkAuthState = async () => {
       try {
         console.log("Checking auth state...");
+
+        // Use mock authentication in development
+        if (mockAuthService.isMockMode()) {
+          console.log("Using mock authentication for local development");
+          const session = await mockAuthService.getCurrentSession();
+          if (session && session.isValid()) {
+            const userInfo = await mockAuthService.getUserInfo();
+            setAuthToken(session.getIdToken().getJwtToken());
+            setUser(userInfo);
+
+            // Redirect if at login page
+            if (window.location.pathname === "/login") {
+              const role = (userInfo.role || "user").toLowerCase();
+              if (role === "admin") navigate("/admin");
+              else if (role === "doctor") navigate("/doctor");
+              else if (role === "frontdesk") navigate("/frontdesk");
+              else navigate("/");
+            }
+          } else {
+            throw new Error("No valid mock session");
+          }
+          return;
+        }
+
+        // Use real Cognito authentication
         const session = await getCognitoSession();
         if (session && session.isValid()) {
           // Always get full user info from Cognito attributes
@@ -173,10 +199,33 @@ export const AuthProvider = ({ children }) => {
     return () => clearInterval(tokenRefreshInterval);
   }, [user]);
 
-  // Login with Cognito
+  // Login with Cognito or Mock
   const login = async (userData) => {
     try {
       setLoading(true);
+
+      // Use mock authentication in development
+      if (mockAuthService.isMockMode()) {
+        console.log("Using mock authentication for login");
+        const result = await mockAuthService.login(
+          userData.username,
+          userData.password
+        );
+
+        setAuthToken(result.token);
+        setUser(result.user);
+
+        // Redirect based on role
+        const role = (result.user.role || "user").toLowerCase();
+        if (role === "admin") navigate("/admin");
+        else if (role === "doctor") navigate("/doctor");
+        else if (role === "frontdesk") navigate("/frontdesk");
+        else navigate("/");
+
+        return { success: true };
+      }
+
+      // Use real Cognito authentication
       // Always sign out first to clear any existing session
       cognitoSignOut();
       let result;
@@ -261,11 +310,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout with Cognito
+  // Logout with Cognito or Mock
   const logout = async () => {
     try {
       setLoading(true);
-      cognitoSignOut();
+
+      // Use mock authentication in development
+      if (mockAuthService.isMockMode()) {
+        await mockAuthService.logout();
+      } else {
+        cognitoSignOut();
+      }
+
       setUser(null);
       setAuthToken(null);
       // Clear profile image data

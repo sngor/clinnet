@@ -4,13 +4,28 @@ import { getCognitoUserAttributes, getCognitoUserInfo, getAuthToken } from '../u
 import { CognitoUserPool, CognitoUser } from 'amazon-cognito-identity-js';
 import appConfig from './config.js';
 
+// Check if we're in mock mode
+const isMockMode = appConfig.ENVIRONMENT === 'development' && 
+                   (appConfig.COGNITO.USER_POOL_ID === 'local-development' || 
+                    appConfig.API_ENDPOINT.includes('localhost'));
+
 // Use the centralized configuration
-const poolData = {
+const poolData = isMockMode ? {
+  UserPoolId: 'us-west-2_MOCKPOOL', // Valid format for mock
+  ClientId: 'mockclientid123456789012345678901234'  // Valid format for mock
+} : {
   UserPoolId: appConfig.COGNITO.USER_POOL_ID,
   ClientId: appConfig.COGNITO.APP_CLIENT_ID,
 };
 
-const userPool = new CognitoUserPool(poolData);
+let userPool = null;
+if (!isMockMode && poolData.UserPoolId && poolData.ClientId) {
+  try {
+    userPool = new CognitoUserPool(poolData);
+  } catch (error) {
+    console.error('[UserService] Failed to initialize user pool:', error);
+  }
+}
 
 /**
  * Helper to get username from email (before @)

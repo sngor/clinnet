@@ -2,7 +2,7 @@
 
 # Default values for your project
 DEFAULT_STACK_NAME="sam-clinnet"   # Change this to your actual stack name
-DEFAULT_REGION="us-east-2"
+DEFAULT_REGION="us-west-2"
 
 STACK_NAME=${1:-$DEFAULT_STACK_NAME}
 AWS_REGION=${2:-$DEFAULT_REGION}

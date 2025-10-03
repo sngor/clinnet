@@ -13,7 +13,7 @@ fi
 
 # --- Configuration ---
 USER_TEMPLATE_FILE="${USER_TEMPLATE_FILE:-"$BACKEND_DIR/data/user-template.json"}"
-AWS_REGION=${AWS_REGION:-"us-east-2"} # Default region if not set
+AWS_REGION=${AWS_REGION:-"us-west-2"} # Default region if not set
 ENVIRONMENT=${ENVIRONMENT:-"dev"}
 CFN_STACK_NAME=${CFN_STACK_NAME:-"sam-clinnet"}
 PROMPT_MISSING_PASSWORDS=${PROMPT_MISSING_PASSWORDS:-"true"}

@@ -20,6 +20,7 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import adminService from "../services/adminService";
 import ServiceCard from "../components/ServiceCard";
 import PageContainer from "../components/ui/PageContainer"; // Add this import
+import SystemAlertsSection from "../components/SystemAlertsSection";
 
 const initialServicesData = [
   {
@@ -440,6 +441,9 @@ const DiagnosticsPage = () => {
         </Box>
 
         <Divider sx={{ mb: 3 }} />
+
+        {/* System Alerts Section */}
+        <SystemAlertsSection />
 
         {/* Diagnostics List */}
         <Box>

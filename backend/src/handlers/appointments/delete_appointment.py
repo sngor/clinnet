@@ -1,55 +1,54 @@
 """
-Lambda function to delete an appointment
+Lambda function to delete an appointment from RDS Aurora
 """
-import os
-import json # Ensured import
-import logging # Added
-from botocore.exceptions import ClientError
-
-from utils.db_utils import delete_item, get_item_by_id, generate_response
-from utils.responser_helper import handle_exception, build_error_response
+import json
+import logging
+from typing import Dict, Any
+from utils.rds_utils import execute_mutation, execute_query, build_response, build_error_response
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-def lambda_handler(event, context):
+def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Handle Lambda event for DELETE /appointments/{id}
+    Handle Lambda event for DELETE /appointments/{id} with RDS backend
     
     Args:
-        event (dict): Lambda event
-        context (LambdaContext): Lambda context
+        event: Lambda event
+        context: Lambda context
         
     Returns:
-        dict: API Gateway response
+        API Gateway response
     """
-    logger.info("Received event: %s", json.dumps(event)) # Changed from print
-    
-    table_name = os.environ.get('APPOINTMENTS_TABLE')
-    if not table_name:
-        return build_error_response(500, 'Configuration Error: Appointments table name not configured')
-    
-    # Get appointment ID from path parameters
-    path_params = event.get('pathParameters', {})
-    if 'id' not in path_params: # Check if 'id' key itself is missing
-        return build_error_response(400, 'Validation Error: Missing appointment ID path parameter.')
-    appointment_id = path_params.get('id')
-    if not appointment_id: # Check if id is None (already caught if key missing) or an empty string
-        return build_error_response(400, 'Validation Error: Appointment ID must be a non-empty string.')
+    logger.info(f"Received event: {json.dumps(event)}")
     
     try:
+        # Get appointment ID from path parameters
+        path_params = event.get('pathParameters', {})
+        appointment_id = path_params.get('id')
+        
+        if not appointment_id:
+            return build_error_response(400, "Appointment ID is required")
+        
         # Check if appointment exists
-        existing_appointment = get_item_by_id(table_name, appointment_id)
+        existing_query = "SELECT * FROM appointments WHERE id = %s"
+        existing_appointment = execute_query(existing_query, (appointment_id,), fetch_one=True)
         
         if not existing_appointment:
-            return build_error_response(404, f'Not Found: Appointment with ID {appointment_id} not found')
+            return build_error_response(404, "Appointment not found")
+        
+        logger.info(f"Deleting appointment {appointment_id}")
         
         # Delete appointment
-        delete_item(table_name, appointment_id)
+        query = "DELETE FROM appointments WHERE id = %s"
+        affected_rows = execute_mutation(query, (appointment_id,))
         
-        return generate_response(200, {'message': f'Appointment with ID {appointment_id} deleted successfully'})
-    
-    except ClientError as e:
-        return handle_exception(e)
+        if affected_rows == 0:
+            return build_error_response(404, "Appointment not found")
+        
+        logger.info(f"Successfully deleted appointment: {appointment_id}")
+        return build_response(200, {"appointment_id": appointment_id}, "Appointment deleted successfully")
+        
     except Exception as e:
-        print(f"Error deleting appointment: {e}")
-        return handle_exception(e)
+        logger.error(f"Error deleting appointment: {str(e)}")
+        return build_error_response(500, "Internal server error", "Failed to delete appointment")

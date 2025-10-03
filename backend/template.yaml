@@ -1,8 +1,9 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: |
-  Clinnet-EMR
-  SAM Template for Clinnet-EMR backend services
+  Clinnet-EMR Complete Tech Stack
+  SAM Template for the complete Clinnet-EMR healthcare management system
+  Includes: Lambda Functions, API Gateway, Cognito, Aurora Serverless v2, DynamoDB, S3, VPC, Security Groups
 
 Parameters:
   Environment:
@@ -14,59 +15,279 @@ Parameters:
       - prod
     Description: Environment name (dev, test, prod)
 
+  DBUsername:
+    Type: String
+    Default: admin
+    Description: Database administrator username
+    MinLength: 1
+    MaxLength: 16
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters
+
+  DBPassword:
+    Type: String
+    NoEcho: true
+    Description: Database administrator password
+    MinLength: 8
+    MaxLength: 41
+    Default: "ClinetEMR2024!"
+
+Conditions:
+  IsProduction: !Equals [!Ref Environment, prod]
+
 Globals:
   Function:
     Timeout: 30
     Runtime: python3.12
-    MemorySize: 128
+    MemorySize: 256
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref LambdaSecurityGroup
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
     Environment:
       Variables:
-        PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
-        USERS_TABLE: !Ref UsersTable
+        # RDS Configuration
+        DB_HOST: !GetAtt AuroraCluster.Endpoint.Address
+        DB_PORT: !GetAtt AuroraCluster.Endpoint.Port
+        DB_NAME: clinnet_emr
+        DB_USERNAME: !Ref DBUsername
+        DB_PASSWORD: !Ref DBPassword
+        # DynamoDB Tables
+        MEDICAL_REPORTS_TABLE: !Ref MedicalReportsTable
         SERVICES_TABLE: !Ref ServicesTable
-        APPOINTMENTS_TABLE: !Ref AppointmentsTable
+        USERS_TABLE: !Ref UsersTable
+        # S3 Buckets
         DOCUMENTS_BUCKET: !Ref DocumentsBucket
+        MEDICAL_REPORT_IMAGES_BUCKET: !Ref MedicalReportImagesBucket
+        # General Configuration
         ENVIRONMENT: !Ref Environment
         USER_POOL_ID: !Ref UserPool
     Architectures:
       - x86_64
   Api:
     Cors:
-      AllowMethods: '''GET,POST,PUT,DELETE,OPTIONS'''
-      AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
-      AllowOrigin: '''*''' # Allow all origins, Lambda functions will handle specific CORS logic
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
+      AllowOrigin: "'*'"
       AllowCredentials: false
-      MaxAge: '''7200''' # Added for consistency with Lambda OPTIONS handlers
+      MaxAge: "'7200'"
 
 Resources:
-  # DynamoDB Table for Patients and Medical Records (hybrid single-table design)
-  PatientRecordsTable:
-    Type: AWS::DynamoDB::Table
+  # VPC Infrastructure for RDS
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub clinnet-emr-vpc-${Environment}
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub clinnet-emr-igw-${Environment}
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub clinnet-emr-public-subnet-${Environment}
+
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Sub clinnet-emr-private-subnet-1-${Environment}
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Sub clinnet-emr-private-subnet-2-${Environment}
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub clinnet-emr-public-rt-${Environment}
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub clinnet-emr-private-rt-${Environment}
+
+  DefaultPrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
+
+  # Security Groups
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Lambda functions
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Allow HTTPS outbound
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: Allow HTTP outbound
+      Tags:
+        - Key: Name
+          Value: !Sub clinnet-emr-lambda-sg-${Environment}
+
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Aurora Serverless v2
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref LambdaSecurityGroup
+          Description: Allow Lambda access to MySQL
+      Tags:
+        - Key: Name
+          Value: !Sub clinnet-emr-db-sg-${Environment}
+
+  # Add egress rule to Lambda SG after DatabaseSecurityGroup is created
+  LambdaToDBEgressRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref LambdaSecurityGroup
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      DestinationSecurityGroupId: !Ref DatabaseSecurityGroup
+      Description: Allow access to Aurora
+
+  # Aurora Serverless v2
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for Aurora Serverless v2
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub clinnet-emr-db-subnet-group-${Environment}
+
+  AuroraCluster:
+    Type: AWS::RDS::DBCluster
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub clinnet-patient-records-v2-${Environment}
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: PK
-          AttributeType: S
-        - AttributeName: SK
-          AttributeType: S
-        - AttributeName: type
-          AttributeType: S
-      KeySchema:
-        - AttributeName: PK
-          KeyType: HASH
-        - AttributeName: SK
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: type-index
-          KeySchema:
-            - AttributeName: type
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
+      DBClusterIdentifier: !Sub clinnet-emr-${Environment}
+      Engine: aurora-mysql
+      EngineVersion: 8.0.mysql_aurora.3.07.1
+      EngineMode: provisioned
+      ServerlessV2ScalingConfiguration:
+        MinCapacity: 0.5
+        MaxCapacity: 16
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DatabaseName: clinnet_emr
+      BackupRetentionPeriod: 7
+      PreferredBackupWindow: "03:00-04:00"
+      PreferredMaintenanceWindow: "sun:04:00-sun:05:00"
+      VpcSecurityGroupIds:
+        - !Ref DatabaseSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      StorageEncrypted: true
+      EnableCloudwatchLogsExports:
+        - error
+        - general
+        - slowquery
+      DeletionProtection: !If [IsProduction, true, false]
 
+  AuroraInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub clinnet-emr-instance-${Environment}
+      DBClusterIdentifier: !Ref AuroraCluster
+      DBInstanceClass: db.serverless
+      Engine: aurora-mysql
+      PubliclyAccessible: false
+
+  # Keep DynamoDB for Medical Reports (document storage)
   MedicalReportsTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
@@ -98,78 +319,7 @@ Resources:
           Projection:
             ProjectionType: ALL
 
-  UsersTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      TableName: !Sub clinnet-users-v2-${Environment}
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-
-  ServicesTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      TableName: !Sub clinnet-services-v2-${Environment}
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-
-  AppointmentsTable:
-    Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      TableName: !Sub clinnet-appointments-v2-${Environment}
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-        - AttributeName: patientId # Added for GSI
-          AttributeType: S
-        - AttributeName: doctorId # Added for GSI
-          AttributeType: S
-        - AttributeName: appointmentDate # Ensure this is defined for the GSI sort key
-          AttributeType: S
-        - AttributeName: entityType # New attribute for GSI partition key
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: AppointmentDateIndex
-          KeySchema:
-            - AttributeName: entityType
-              KeyType: HASH
-            - AttributeName: appointmentDate
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-        - IndexName: PatientIdIndex
-          KeySchema:
-            - AttributeName: patientId
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-        - IndexName: DoctorIdIndex
-          KeySchema:
-            - AttributeName: doctorId
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-
-  # S3 Bucket for document storage
+  # S3 Buckets
   DocumentsBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -182,7 +332,7 @@ Resources:
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
-              - '*'
+              - "*"
             AllowedMethods:
               - GET
               - PUT
@@ -190,7 +340,7 @@ Resources:
               - DELETE
               - HEAD
             AllowedOrigins:
-              - '*'
+              - "*"
             MaxAge: 3000
       LifecycleConfiguration:
         Rules:
@@ -199,7 +349,6 @@ Resources:
             ExpirationInDays: 30
 
   MedicalReportImagesBucket:
-    # New S3 bucket for medical report images
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub clinnet-emr-report-images-v2-${AWS::AccountId}-${AWS::Region}-${Environment}
@@ -209,24 +358,108 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       CorsConfiguration:
-        # Basic CORS for potential direct browser uploads in future, adjust as needed
         CorsRules:
           - AllowedHeaders:
-              - '*'
+              - "*"
             AllowedMethods:
               - PUT
               - GET
               - DELETE
             AllowedOrigins:
-              # Restrict this if frontend origin is fixed
-              - '*'
+              - "*"
             MaxAge: 3000
-      LifecycleConfiguration:
-        # Optional: Add lifecycle rules if needed, e.g., for non-current versions
-        Rules:
-          - Id: ExpireOldVersions
-            Status: Enabled
-            NoncurrentVersionExpirationInDays: 90
+
+  # Frontend S3 Bucket for Static Website Hosting
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub clinnet-emr-frontend-${AWS::AccountId}-${AWS::Region}-${Environment}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - HEAD
+            AllowedOrigins:
+              - "*"
+            MaxAge: 3000
+
+  # S3 Bucket Policy for CloudFront Access
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${FrontendBucket}/*"
+            Condition:
+              StringEquals:
+                "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  # CloudFront Origin Access Control
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub clinnet-emr-oac-${Environment}
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: !Sub Clinnet EMR Frontend Distribution - ${Environment}
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # Managed-CachingOptimized
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
+          ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03 # Managed-SecurityHeadersPolicy
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+            OriginAccessControlId: !Ref CloudFrontOriginAccessControl
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 300
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 300
+        PriceClass: PriceClass_100 # Use only North America and Europe edge locations for cost optimization
 
   # API Gateway
   ClinicAPI:
@@ -239,52 +472,15 @@ Resources:
           CognitoAuthorizer:
             UserPoolArn: !GetAtt UserPool.Arn
         AddDefaultAuthorizerToCorsPreflight: false
-      # Improve CORS configuration
       BinaryMediaTypes:
         - application/json
         - multipart/form-data
       Cors:
-        AllowMethods: '''GET, POST, PUT, DELETE, OPTIONS'''
-        AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
-        AllowOrigin: '''*''' # Allow all origins, Lambda functions will handle specific CORS logic
-        MaxAge: '''7200'''
+        AllowMethods: "'GET, POST, PUT, DELETE, OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'"
+        AllowOrigin: "'*'"
+        MaxAge: "'7200'"
         AllowCredentials: false
-      GatewayResponses:
-        DEFAULT_4XX:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: '''*'''
-              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
-              Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
-              Access-Control-Max-Age: '''7200'''
-        DEFAULT_5XX:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: '''*'''
-              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
-              Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
-              Access-Control-Max-Age: '''7200'''
-        UNAUTHORIZED:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: '''*'''
-              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
-              Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
-              Access-Control-Max-Age: '''7200'''
-        ACCESS_DENIED:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: '''*'''
-              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
-              Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
-              Access-Control-Max-Age: '''7200'''
-        RESOURCE_NOT_FOUND:
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: '''*'''
-              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept'''
-              Access-Control-Allow-Methods: '''GET,POST,PUT,DELETE,OPTIONS'''
-              Access-Control-Max-Age: '''7200'''
 
   # Cognito User Pool
   UserPool:
@@ -308,11 +504,11 @@ Resources:
           AttributeDataType: String
           Mutable: true
           Required: true
-        - Name: role # Using custom attribute for role
+        - Name: role
           AttributeDataType: String
           Mutable: true
           Required: false
-        - Name: profile_image # Custom attribute for profile image
+        - Name: profile_image
           AttributeDataType: String
           Mutable: true
           Required: false
@@ -338,12 +534,199 @@ Resources:
       SupportedIdentityProviders:
         - COGNITO
 
-  # Lambda Functions for Services
+  # Lambda Layer
+  UtilsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: utils-layer
+      Description: Shared utils for Clinnet-EMR Lambdas including RDS support
+      ContentUri: lambda_layer/
+      CompatibleRuntimes:
+        - python3.12
+
+  # Lambda Functions for Patients (RDS-based)
+  GetPatientsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/patients/
+      Handler: get_patients.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        GetPatients:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/patients
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetPatientByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/patients/
+      Handler: get_patient_by_id.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        GetPatientById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/patients/{id}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CreatePatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/patients/
+      Handler: create_patient.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        CreatePatient:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/patients
+            Method: post
+
+  UpdatePatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/patients/
+      Handler: update_patient.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        UpdatePatient:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/patients/{id}
+            Method: put
+
+  DeletePatientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/patients/
+      Handler: delete_patient.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        DeletePatient:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/patients/{id}
+            Method: delete
+
+  # Lambda Functions for Appointments (RDS-based)
+  GetAppointmentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/appointments/
+      Handler: get_appointments.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        GetAppointments:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/appointments
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  GetAppointmentByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/appointments/
+      Handler: get_appointment_by_id.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        GetAppointmentById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/appointments/{id}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  CreateAppointmentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/appointments/
+      Handler: create_appointment.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        CreateAppointment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/appointments
+            Method: post
+
+  UpdateAppointmentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/appointments/
+      Handler: update_appointment.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        UpdateAppointment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/appointments/{id}
+            Method: put
+
+  DeleteAppointmentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/appointments/
+      Handler: delete_appointment.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        DeleteAppointment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/appointments/{id}
+            Method: delete
+
+  # Lambda Functions for Services (DynamoDB-based)
+  ServicesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub clinnet-services-v2-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
   GetServicesFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/services/
       Handler: get_services.lambda_handler
+      Environment:
+        Variables:
+          SERVICES_TABLE: !Ref ServicesTable
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref ServicesTable
@@ -357,13 +740,16 @@ Resources:
             Path: /api/services
             Method: get
             Auth:
-              Authorizer: NONE # Services endpoint is public
+              Authorizer: NONE
 
   GetServiceByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/services/
       Handler: get_service_by_id.lambda_handler
+      Environment:
+        Variables:
+          SERVICES_TABLE: !Ref ServicesTable
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref ServicesTable
@@ -377,13 +763,16 @@ Resources:
             Path: /api/services/{id}
             Method: get
             Auth:
-              Authorizer: NONE # Getting a specific service is public
+              Authorizer: NONE
 
   CreateServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/services/
       Handler: create_service.lambda_handler
+      Environment:
+        Variables:
+          SERVICES_TABLE: !Ref ServicesTable
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ServicesTable
@@ -396,13 +785,15 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /api/services
             Method: post
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
   UpdateServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/services/
       Handler: update_service.lambda_handler
+      Environment:
+        Variables:
+          SERVICES_TABLE: !Ref ServicesTable
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ServicesTable
@@ -415,13 +806,15 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /api/services/{id}
             Method: put
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
   DeleteServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/services/
       Handler: delete_service.lambda_handler
+      Environment:
+        Variables:
+          SERVICES_TABLE: !Ref ServicesTable
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ServicesTable
@@ -434,128 +827,39 @@ Resources:
             RestApiId: !Ref ClinicAPI
             Path: /api/services/{id}
             Method: delete
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
 
-            # Lambda Functions for Patients
-  GetPatientsFunction:
-    Type: AWS::Serverless::Function
+  # Lambda Functions for Users (Cognito-based)
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      CodeUri: src/ # Changed from src/handlers/patients/
-      Handler: handlers.patients.get_patients.lambda_handler # Adjusted handler path
-      Environment:
-        Variables:
-          PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref PatientRecordsTable
-      Layers:
-        - !Ref UtilsLayer
-      Events:
-        GetPatients:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/patients
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer # CHANGED: Protect patient list
+      TableName: !Sub clinnet-users-v2-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
 
-  GetPatientByIdFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/ # Changed from src/handlers/patients/
-      Handler: handlers.patients.get_patient_by_id.lambda_handler # Adjusted handler path
-      Environment:
-        Variables:
-          PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref PatientRecordsTable
-      Events:
-        GetPatientById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/patients/{id}
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer # CHANGED: Protect specific patient
-
-  CreatePatientFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/ # Changed from src/handlers/patients/
-      Handler: handlers.patients.create_patient.lambda_handler # Adjusted handler path
-      Environment:
-        Variables:
-          PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref PatientRecordsTable
-      Layers:
-        - !Ref UtilsLayer
-      Events:
-        CreatePatient:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/patients
-            Method: post
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
-
-  UpdatePatientFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/ # Changed from src/handlers/patients/
-      Handler: handlers.patients.update_patient.lambda_handler # Adjusted handler path
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref PatientRecordsTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - s3:PutObject
-                - s3:PutObjectAcl
-              Resource: !Sub arn:aws:s3:::${DocumentsBucket}/patients/* # Corrected path
-      Events:
-        UpdatePatient:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/patients/{id}
-            Method: put
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
-
-  DeletePatientFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/ # Changed from src/handlers/patients/
-      Handler: handlers.patients.delete_patient.lambda_handler # Adjusted handler path
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref PatientRecordsTable
-      Events:
-        DeletePatient:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/patients/{id}
-            Method: delete
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
-
-            # Lambda Functions for User Management
   ListUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/users/
       Handler: list_users.lambda_handler
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
       Policies:
-        - Version: '2012-10-17'
+        - Version: "2012-10-17"
           Statement:
             - Effect: Allow
               Action:
                 - cognito-idp:ListUsers
               Resource: !GetAtt UserPool.Arn
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -573,8 +877,11 @@ Resources:
     Properties:
       CodeUri: src/handlers/users/
       Handler: create_cognito_user.lambda_handler
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
       Policies:
-        - Version: '2012-10-17'
+        - Version: "2012-10-17"
           Statement:
             - Effect: Allow
               Action:
@@ -584,6 +891,8 @@ Resources:
               Resource: !GetAtt UserPool.Arn
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
+      Layers:
+        - !Ref UtilsLayer
       Events:
         CreateUser:
           Type: Api
@@ -594,454 +903,30 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  UpdateUserFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/users/
-      Handler: update_user.lambda_handler
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminUpdateUserAttributes
-                - cognito-idp:AdminSetUserPassword
-                - cognito-idp:AdminEnableUser
-                - cognito-idp:AdminDisableUser
-                - cognito-idp:AdminGetUser
-              Resource: !GetAtt UserPool.Arn
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UsersTable
-      Events:
-        UpdateUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/users/{userId}
-            Method: put
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  DeleteUserFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/users/
-      Handler: delete_user.lambda_handler
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminDeleteUser
-              Resource: !GetAtt UserPool.Arn
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UsersTable
-      Events:
-        DeleteUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/users/{userId}
-            Method: delete
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  EnableUserFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/users/
-      Handler: enable_user.lambda_handler
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminEnableUser
-              Resource: !GetAtt UserPool.Arn
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UsersTable
-      Events:
-        EnableUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/users/{userId}/enable
-            Method: post
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  DisableUserFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/users/
-      Handler: disable_user.lambda_handler
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminDisableUser
-              Resource: !GetAtt UserPool.Arn
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UsersTable
-      Events:
-        DisableUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/users/{userId}/disable
-            Method: post
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  # Lambda Functions for Profile Image Management
-  UploadProfileImageFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/users/
-      Handler: upload_profile_image.lambda_handler
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminUpdateUserAttributes
-                - cognito-idp:AdminGetUser
-              Resource: !GetAtt UserPool.Arn
-            - Effect: Allow
-              Action:
-                - s3:PutObject
-                - s3:GetObject
-                - s3:HeadObject
-              Resource: !Sub arn:aws:s3:::${DocumentsBucket}/profile-images/*
-      Layers:
-        - !Ref UtilsLayer
-      Events:
-        UploadProfileImage:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/users/profile-image
-            Method: post
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  GetProfileImageFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/users/
-      Handler: get_profile_image.lambda_handler
-      Environment:
-        # Add Environment Variables
-        Variables:
-          DOCUMENTS_BUCKET: !Ref DocumentsBucket
-          USER_POOL_ID: !Ref UserPool
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminGetUser
-              Resource: !GetAtt UserPool.Arn
-            - Effect: Allow
-              Action:
-                - s3:GetObject
-                - s3:HeadObject
-              Resource: !Sub arn:aws:s3:::${DocumentsBucket}/profile-images/*
-      Layers:
-        - !Ref UtilsLayer
-      Events:
-        GetProfileImage:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/users/profile-image
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  GetAggregatedReportsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub GetAggregatedReports-${Environment}
-      Handler: handlers/reports/getAggregatedReports.handler
-      Runtime: nodejs20.x
-      CodeUri: src/
-      Description: Fetches aggregated report data for admin reporting
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - DynamoDBReadPolicy:
-            TableName: !Ref AppointmentsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref PatientRecordsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref ServicesTable
-      Environment:
-        Variables:
-          PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
-          USERS_TABLE: !Ref UsersTable
-          SERVICES_TABLE: !Ref ServicesTable
-          APPOINTMENTS_TABLE: !Ref AppointmentsTable
-          APPOINTMENTS_TABLE_NAME: !Ref AppointmentsTable
-          DOCUMENTS_BUCKET: !Ref DocumentsBucket
-          ENVIRONMENT: !Ref Environment
-          USER_POOL_ID: !Ref UserPool
-      Events:
-        ApiEvent:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/reports/aggregated
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  RemoveProfileImageFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/users/
-      Handler: remove_profile_image.lambda_handler
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminUpdateUserAttributes
-                - cognito-idp:AdminGetUser
-              Resource: !GetAtt UserPool.Arn
-            - Effect: Allow
-              Action:
-                - s3:DeleteObject
-                - s3:GetObject
-                - s3:HeadObject
-              Resource: !Sub ${DocumentsBucket.Arn}/profile-images/*
-      Layers:
-        - !Ref UtilsLayer
-      Events:
-        RemoveProfileImage:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/users/profile-image
-            Method: delete
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  # Explicit OPTIONS method for /users/profile-image to ensure CORS preflight is not blocked by Cognito
-  GetProfileImageOptions:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/cors/
-      Handler: cors_options.lambda_handler
-      Events:
-        GetProfileImageOptions:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/users/profile-image
-            Method: options
-            Auth:
-              Authorizer: NONE
-
-  # Lambda Functions for Diagnostics
-  CheckS3ConnectivityFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/diagnostics/
-      Handler: check_s3.lambda_handler
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - s3:ListAllMyBuckets
-              Resource: '*'
-      Layers:
-        - !Ref UtilsLayer
-      Events:
-        CheckS3:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/diagnostics/s3
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  CheckDynamoDBCrudFunction:
-    # New DynamoDB CRUD Function
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/diagnostics/
-      Handler: check_dynamodb_crud.lambda_handler
-      Layers:
-        - !Ref UtilsLayer
-
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref PatientRecordsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ServicesTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AppointmentsTable
-      Events:
-        CheckDynamoCrud:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/diagnostics/crud/{serviceName}
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  CheckCognitoUserCrudFunction:
-    # New Cognito User CRUD Function
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/diagnostics/
-      Handler: check_cognito_user_crud.lambda_handler
-      Layers:
-        - !Ref UtilsLayer
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminCreateUser
-                - cognito-idp:AdminGetUser
-                - cognito-idp:AdminUpdateUserAttributes
-                - cognito-idp:AdminDeleteUser
-              Resource: !GetAtt UserPool.Arn
-      # USER_POOL_ID is inherited from Globals
-      Events:
-        CheckCognitoCrud:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/diagnostics/cognito-users
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  # Lambda Functions for Appointments
-  GetAppointmentsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/appointments/
-      Handler: get_appointments.lambda_handler
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref AppointmentsTable
-      Events:
-        GetAppointments:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/appointments
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer # CHANGED: Protect appointment list
-
-  GetAppointmentByIdFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/appointments/
-      Handler: get_appointment_by_id.lambda_handler
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref AppointmentsTable
-      Events:
-        GetAppointmentById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/appointments/{id}
-            Method: get
-            Auth:
-              Authorizer: CognitoAuthorizer # CHANGED: Protect specific appointment
-
-  CreateAppointmentFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/appointments/
-      Handler: create_appointment.lambda_handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AppointmentsTable
-      Events:
-        CreateAppointment:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/appointments
-            Method: post
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
-
-  UpdateAppointmentFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/appointments/
-      Handler: update_appointment.lambda_handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AppointmentsTable
-      Events:
-        UpdateAppointment:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/appointments/{id}
-            Method: put
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
-
-  DeleteAppointmentFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/appointments/
-      Handler: delete_appointment.lambda_handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AppointmentsTable
-      Events:
-        DeleteAppointment:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/appointments/{id}
-            Method: delete
-            # Auth uses DefaultAuthorizer (CognitoAuthorizer)
-
+  # Medical Reports Functions (DynamoDB-based)
   MedicalReportsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/
-      Handler: handlers/medical_reports/index.handler # Entry point adjusted for shared CodeUri
+      FunctionName: !Sub MedicalReports-${Environment}
+      Handler: handlers/medical_reports/index.handler
       Runtime: nodejs20.x
+      CodeUri: src/
+      Description: Medical reports CRUD operations
       Environment:
-        # Add specific environment variables here
         Variables:
-          MEDICAL_REPORTS_TABLE_NAME: !Ref MedicalReportsTable # Already available via Globals, but being explicit
-          MEDICAL_REPORTS_IMAGE_BUCKET_NAME: !Ref MedicalReportImagesBucket # New S3 bucket
-          # Inherit other global vars if not redefining Environment here completely
-          PATIENT_RECORDS_TABLE: !Ref PatientRecordsTable
-          USERS_TABLE: !Ref UsersTable
-          SERVICES_TABLE: !Ref ServicesTable
-          APPOINTMENTS_TABLE: !Ref AppointmentsTable
+          MEDICAL_REPORTS_TABLE: !Ref MedicalReportsTable
+          MEDICAL_REPORT_IMAGES_BUCKET: !Ref MedicalReportImagesBucket
           DOCUMENTS_BUCKET: !Ref DocumentsBucket
           ENVIRONMENT: !Ref Environment
           USER_POOL_ID: !Ref UserPool
       Policies:
+        - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref MedicalReportsTable
-        - Statement:
-            # IAM policy for S3 access
-            - Effect: Allow
-              Action:
-                - s3:PutObject
-                - s3:GetObject
-                - s3:DeleteObject
-              Resource:
-                - !GetAtt MedicalReportImagesBucket.Arn # Bucket level permissions if needed for ListBucket etc.
-                - !Sub ${MedicalReportImagesBucket.Arn}/* # Object level permissions
+        - S3CrudPolicy:
+            BucketName: !Ref MedicalReportImagesBucket
+        - S3CrudPolicy:
+            BucketName: !Ref DocumentsBucket
       Events:
         CreateReport:
           Type: Api
@@ -1051,7 +936,7 @@ Resources:
             Method: post
             Auth:
               Authorizer: CognitoAuthorizer
-        GetReportById:
+        GetReport:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
@@ -1059,7 +944,7 @@ Resources:
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
-        GetReportsByPatientId:
+        GetReportsByPatient:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
@@ -1067,7 +952,7 @@ Resources:
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
-        GetReportsByDoctorId:
+        GetReportsByDoctor:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
@@ -1091,71 +976,27 @@ Resources:
             Method: delete
             Auth:
               Authorizer: CognitoAuthorizer
-        UploadReportImage:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/medical-reports/{id}/images
-            Method: post
-            Auth:
-              Authorizer: CognitoAuthorizer
-        # OPTIONS for CORS preflight
-        OptionsReportsBase:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/medical-reports
-            Method: options
-            Auth:
-              Authorizer: NONE
-        OptionsReportsById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/medical-reports/{id}
-            Method: options
-            Auth:
-              Authorizer: NONE
-        OptionsReportsByPatientId:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/medical-reports/patient/{patientId}
-            Method: options
-            Auth:
-              Authorizer: NONE
-        OptionsReportsByDoctorId:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/medical-reports/doctor/{doctorId}
-            Method: options
-            Auth:
-              Authorizer: NONE
-        OptionsReportImageUpload:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ClinicAPI
-            Path: /api/medical-reports/{id}/images
-            Method: options
-            Auth:
-              Authorizer: NONE
 
-  SummarizeDoctorNoteFunction:
+  # AI Summarization Function
+  SummarizeNoteFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/ai/
       Handler: summarize_note.lambda_handler
-      # Runtime: python3.12 # Inherited from Globals
-      Layers:
-        - !Ref UtilsLayer
+      Environment:
+        Variables:
+          MEDICAL_REPORTS_TABLE: !Ref MedicalReportsTable
       Policies:
-        - Statement:
+        - Version: "2012-10-17"
+          Statement:
             - Effect: Allow
               Action:
                 - bedrock:InvokeModel
-              Resource: '*' # Consider restricting this to specific model ARNs in production
-      # Environment: # Inherits from Globals
+              Resource: "*"
+        - DynamoDBReadPolicy:
+            TableName: !Ref MedicalReportsTable
+      Layers:
+        - !Ref UtilsLayer
       Events:
         SummarizeNoteApi:
           Type: Api
@@ -1166,158 +1007,81 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  # --- Frontend (S3 + CloudFront) ---
-  FrontendBucket:
-    Type: AWS::S3::Bucket
+  # Diagnostic Functions for System Health
+  CheckS3ConnectivityFunction:
+    Type: AWS::Serverless::Function
     Properties:
-      BucketName: !Sub clinnet-frontend-v2-${Environment}-${AWS::AccountId}-${AWS::Region}
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: index.html
-      CorsConfiguration:
-        CorsRules:
-          - AllowedHeaders:
-              - '*'
-            AllowedMethods:
-              - GET
-              - HEAD
-            AllowedOrigins:
-              - '*'
-            MaxAge: 3000
+      CodeUri: src/handlers/diagnostics/
+      Handler: check_s3.lambda_handler
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListAllMyBuckets
+              Resource: "*"
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        CheckS3:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/diagnostics/s3
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
 
-  FrontendBucketPolicy:
-    Type: AWS::S3::BucketPolicy
+  CheckDatabaseConnectivityFunction:
+    Type: AWS::Serverless::Function
     Properties:
-      Bucket: !Ref FrontendBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: AllowCloudFrontReadViaOAC
-            Effect: Allow
-            Principal:
-              Service: cloudfront.amazonaws.com
-            Action: s3:GetObject
-            Resource: !Sub ${FrontendBucket.Arn}/*
-            Condition:
-              StringEquals:
-                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
+      CodeUri: src/handlers/diagnostics/
+      Handler: check_database.lambda_handler
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        CheckDatabase:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/diagnostics/database
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
 
-  # New: CloudFront Origin Access Control (OAC)
-  FrontendOAC:
-    Type: AWS::CloudFront::OriginAccessControl
+  # Aggregated Reports Function
+  GetAggregatedReportsFunction:
+    Type: AWS::Serverless::Function
     Properties:
-      OriginAccessControlConfig:
-        Name: !Sub FrontendOAC-${Environment}
-        Description: !Sub OAC for Clinnet-EMR frontend ${Environment}
-        SigningProtocol: sigv4
-        SigningBehavior: always
-        OriginAccessControlOriginType: s3
-
-  FrontendDistribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Enabled: true
-        DefaultRootObject: index.html
-        Origins:
-          - Id: S3Origin
-            # Use the regional S3 domain to avoid cross-region redirects that can cause AccessDenied
-            DomainName: !GetAtt FrontendBucket.RegionalDomainName
-            S3OriginConfig: {}
-            OriginAccessControlId: !Ref FrontendOAC
-          - Id: ApiGatewayOrigin
-            DomainName: !Sub ${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com
-            OriginPath: !Sub /${Environment}
-            CustomOriginConfig:
-              OriginProtocolPolicy: https-only
-        DefaultCacheBehavior:
-          TargetOriginId: S3Origin
-          ViewerProtocolPolicy: redirect-to-https
-          AllowedMethods:
-            - GET
-            - HEAD
-          CachedMethods:
-            - GET
-            - HEAD
-          Compress: true
-          ForwardedValues:
-            QueryString: false
-            Cookies:
-              Forward: none
-          # Add cache control settings
-          MinTTL: 0
-          DefaultTTL: 86400 # 1 day for most assets
-          MaxTTL: 31536000 # 1 year max
-        # Add a specific cache behavior for index.html
-        CacheBehaviors:
-          - PathPattern: /api/*
-            TargetOriginId: ApiGatewayOrigin
-            ViewerProtocolPolicy: redirect-to-https
-            AllowedMethods:
-              - GET
-              - HEAD
-              - OPTIONS
-              - PUT
-              - POST
-              - PATCH
-              - DELETE
-            CachedMethods:
-              - GET
-              - HEAD
-            Compress: true
-            ForwardedValues:
-              QueryString: true
-              Cookies:
-                Forward: all
-              Headers:
-                - Authorization
-                - Content-Type
-                - Origin
-                - Referer
-                - Host
-                - Accept
-                - X-Api-Key
-                - X-Amz-Security-Token
-                - X-Requested-With
-            MinTTL: 0
-            DefaultTTL: 0
-            MaxTTL: 0
-          - PathPattern: /index.html
-            TargetOriginId: S3Origin
-            ViewerProtocolPolicy: redirect-to-https
-            AllowedMethods:
-              - GET
-              - HEAD
-            CachedMethods:
-              - GET
-              - HEAD
-            Compress: true
-            ForwardedValues:
-              QueryString: false
-              Cookies:
-                Forward: none
-            MinTTL: 0
-            DefaultTTL: 0 # Don't cache index.html
-            MaxTTL: 0 # Always fetch the latest version
-        ViewerCertificate:
-          CloudFrontDefaultCertificate: true
-        PriceClass: PriceClass_100
-        CustomErrorResponses:
-          - ErrorCode: 403 # Add 403 error handling
-            ResponseCode: 200
-            ResponsePagePath: /index.html
-          - ErrorCode: 404 # Keep existing 404 handling
-            ResponseCode: 200
-            ResponsePagePath: /index.html
-
-  UtilsLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: utils-layer
-      Description: Shared utils for Clinnet-EMR Lambdas
-      ContentUri: lambda_layer/
-      CompatibleRuntimes:
-        - python3.12
+      FunctionName: !Sub GetAggregatedReports-${Environment}
+      Handler: handlers/reports/getAggregatedReports.handler
+      Runtime: nodejs20.x
+      CodeUri: src/
+      Description: Fetches aggregated report data for admin reporting
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBReadPolicy:
+            TableName: !Ref MedicalReportsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ServicesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Environment:
+        Variables:
+          MEDICAL_REPORTS_TABLE: !Ref MedicalReportsTable
+          SERVICES_TABLE: !Ref ServicesTable
+          USERS_TABLE: !Ref UsersTable
+          DOCUMENTS_BUCKET: !Ref DocumentsBucket
+          ENVIRONMENT: !Ref Environment
+          USER_POOL_ID: !Ref UserPool
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/reports/aggregated
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
 
 Outputs:
   ClinicAPI:
@@ -1338,28 +1102,92 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-UserPoolClientId
 
+  DatabaseEndpoint:
+    Description: Aurora Serverless v2 endpoint
+    Value: !GetAtt AuroraCluster.Endpoint.Address
+    Export:
+      Name: !Sub ${AWS::StackName}-DatabaseEndpoint
+
+  DatabasePort:
+    Description: Aurora Serverless v2 port
+    Value: !GetAtt AuroraCluster.Endpoint.Port
+    Export:
+      Name: !Sub ${AWS::StackName}-DatabasePort
+
   DocumentsBucket:
-    Description: S3 bucket for document storage
+    Description: S3 bucket for documents
     Value: !Ref DocumentsBucket
     Export:
       Name: !Sub ${AWS::StackName}-DocumentsBucket
 
-  MedicalReportImagesBucketName:
+  MedicalReportImagesBucket:
     Description: S3 bucket for medical report images
     Value: !Ref MedicalReportImagesBucket
     Export:
       Name: !Sub ${AWS::StackName}-MedicalReportImagesBucket
 
-  Region:
-    Description: AWS Region
-    Value: !Ref AWS::Region
+  MedicalReportsTable:
+    Description: DynamoDB table for medical reports
+    Value: !Ref MedicalReportsTable
     Export:
-      Name: !Sub ${AWS::StackName}-Region
+      Name: !Sub ${AWS::StackName}-MedicalReportsTable
 
-  FrontendBucketName:
-    Description: S3 bucket for static frontend hosting
+  ServicesTable:
+    Description: DynamoDB table for services
+    Value: !Ref ServicesTable
+    Export:
+      Name: !Sub ${AWS::StackName}-ServicesTable
+
+  UsersTable:
+    Description: DynamoDB table for users
+    Value: !Ref UsersTable
+    Export:
+      Name: !Sub ${AWS::StackName}-UsersTable
+
+  VPCId:
+    Description: VPC ID
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${AWS::StackName}-VPCId
+
+  PrivateSubnet1Id:
+    Description: Private Subnet 1 ID
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet1Id
+
+  PrivateSubnet2Id:
+    Description: Private Subnet 2 ID
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet2Id
+
+  FrontendBucket:
+    Description: S3 bucket for frontend static website hosting
     Value: !Ref FrontendBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendBucket
 
-  CloudFrontDistributionDomain:
-    Description: CloudFront distribution domain name
-    Value: !GetAtt FrontendDistribution.DomainName
+  FrontendBucketWebsiteURL:
+    Description: S3 bucket website URL
+    Value: !GetAtt FrontendBucket.WebsiteURL
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendBucketWebsiteURL
+
+  CloudFrontDistributionId:
+    Description: CloudFront Distribution ID
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontDistributionId
+
+  CloudFrontDistributionDomainName:
+    Description: CloudFront Distribution Domain Name
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-CloudFrontDistributionDomainName
+
+  FrontendURL:
+    Description: Frontend application URL via CloudFront
+    Value: !Sub https://${CloudFrontDistribution.DomainName}
+    Export:
+      Name: !Sub ${AWS::StackName}-FrontendURL

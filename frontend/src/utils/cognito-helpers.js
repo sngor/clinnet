@@ -7,8 +7,17 @@ import {
 } from 'amazon-cognito-identity-js';
 import appConfig from '../services/config.js';
 
+// Check if we're in mock mode first
+const isMockMode = appConfig.ENVIRONMENT === 'development' && 
+                   (appConfig.COGNITO.USER_POOL_ID === 'local-development' || 
+                    appConfig.API_ENDPOINT.includes('localhost'));
+
 // Use the centralized configuration from config.js
-const poolData = {
+// Only set real values if not in mock mode
+const poolData = isMockMode ? {
+  UserPoolId: 'us-west-2_MOCKPOOL', // Valid format for mock
+  ClientId: 'mockclientid123456789012345678901234'  // Valid format for mock
+} : {
   UserPoolId: appConfig.COGNITO.USER_POOL_ID,
   ClientId: appConfig.COGNITO.APP_CLIENT_ID,
 };
@@ -19,17 +28,24 @@ console.log('Cognito configuration:', {
   UserPoolId: poolData.UserPoolId ? '✓ Set' : '✗ Missing',
   ClientId: poolData.ClientId ? '✓ Set' : '✗ Missing',
   Region: appConfig.COGNITO.REGION,
+  MockMode: isMockMode ? '✓ Enabled' : '✗ Disabled',
   // Helpful masked preview to ensure we didn't bundle hard-coded IDs
   _preview: { userPoolId: mask(poolData.UserPoolId), clientId: mask(poolData.ClientId) }
 });
 
-// Validate the pool data
-if (!poolData.UserPoolId || !poolData.ClientId) {
-  console.error('[Cognito] Missing credentials (USER_POOL_ID/APP_CLIENT_ID). Ensure VITE_USER_POOL_ID and VITE_USER_POOL_CLIENT_ID are set.');
+// Create user pool (but won't be used in mock mode)
+let userPool = null;
+try {
+  userPool = new CognitoUserPool(poolData);
+  if (isMockMode) {
+    console.log('[Cognito] Mock mode enabled - Cognito pool created but will not be used');
+  }
+} catch (error) {
+  console.error('[Cognito] Failed to initialize user pool:', error);
+  if (!isMockMode) {
+    console.error('[Cognito] This will prevent authentication from working');
+  }
 }
-
-// Create a new user pool instance
-const userPool = new CognitoUserPool(poolData);
 
 /**
  * Sign in a user using Cognito
@@ -38,6 +54,15 @@ const userPool = new CognitoUserPool(poolData);
  * @returns {Promise<Object>} The signed-in user and tokens
  */
 export const cognitoSignIn = (username, password) => {
+  if (isMockMode) {
+    console.log('[Cognito] Mock mode - delegating to mock auth service');
+    return Promise.reject(new Error('Use mock auth service in development'));
+  }
+  
+  if (!userPool) {
+    return Promise.reject(new Error('Cognito user pool not initialized'));
+  }
+  
   return new Promise((resolve, reject) => {
     const user = new CognitoUser({ Username: username, Pool: userPool });
     const authDetails = new AuthenticationDetails({ Username: username, Password: password });
@@ -91,6 +116,11 @@ export const completeNewPassword = (cognitoUser, newPassword, requiredAttributes
  * Sign out the current user
  */
 export const cognitoSignOut = () => {
+  if (isMockMode || !userPool) {
+    console.log('[Cognito] Mock mode or no user pool - skipping signOut');
+    return;
+  }
+  
   const user = userPool.getCurrentUser();
   if (user) user.signOut();
 };
@@ -100,6 +130,15 @@ export const cognitoSignOut = () => {
  * @returns {Promise<Object|null>} The Cognito session or null if not authenticated
  */
 export const getCognitoSession = () => {
+  if (isMockMode) {
+    console.log('[Cognito] Mock mode - delegating to mock auth service');
+    return Promise.resolve(null); // Let mock auth service handle this
+  }
+  
+  if (!userPool) {
+    return Promise.resolve(null);
+  }
+  
   return new Promise((resolve, reject) => {
     const cognitoUser = userPool.getCurrentUser();
     if (!cognitoUser) {

@@ -1,0 +1,30 @@
+# Production Environment Configuration
+Environment: prod
+DBUsername: admin
+DBPassword: !Ref ProductionDBPassword # Use Secrets Manager
+MinCapacity: 2
+MaxCapacity: 16
+DeletionProtection: true
+
+# Lambda Configuration
+LambdaMemorySize: 512
+LambdaTimeout: 30
+
+# Monitoring
+EnableDetailedMonitoring: true
+LogRetentionDays: 30
+
+# Feature Flags
+EnableAISummarization: true
+EnableOfflineMode: true
+EnableDebugLogging: false
+
+# CORS Configuration
+CorsOrigins: "https://app.clinnet-emr.com,https://clinnet-emr.com"
+
+# Backup Configuration
+BackupRetentionDays: 30
+
+# Security
+EnableWAF: true
+EnableCloudTrail: true
