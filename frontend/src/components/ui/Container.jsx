@@ -13,6 +13,7 @@
 import React from "react";
 import { Box, Paper } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { designSystem } from "./DesignSystem";
 
 // Legacy page container - use the new PageContainer component instead
 const LegacyPageContainer = styled(Box)(({ theme }) => ({
@@ -41,11 +42,14 @@ export const SectionContainer = styled(Box)(({ theme }) => ({
 // Use for content that needs visual distinction with shadow and border
 export const CardContainer = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
-  borderRadius: theme.shape.borderRadius,
-  background: "#fbfbfb",
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+  borderRadius: theme.spacing(designSystem.borderRadius.lg / 8),
+  backgroundColor: theme.palette.background.paper,
+  boxShadow:
+    theme.palette.mode === "dark"
+      ? "0 4px 6px rgba(0, 0, 0, 0.3)"
+      : theme.shadows[2],
   border: `1px solid ${theme.palette.divider}`,
-  marginBottom: theme.spacing(4), // Added margin bottom like SectionContainer
+  marginBottom: theme.spacing(4),
   [theme.breakpoints.down("sm")]: {
     padding: theme.spacing(1.5),
     marginBottom: theme.spacing(2),

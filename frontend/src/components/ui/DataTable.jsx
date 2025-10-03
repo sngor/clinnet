@@ -29,47 +29,59 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { designSystem } from "./DesignSystem";
 import LoadingIndicator from "./LoadingIndicator";
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-  borderRadius: theme.shape.borderRadius,
-  boxShadow: "0 10px 30px rgba(67, 97, 238, 0.05)",
+  borderRadius: theme.spacing(designSystem.borderRadius.lg / 8),
+  boxShadow: designSystem.shadows.md,
   overflow: "hidden",
-  border: "1px solid rgba(231, 236, 248, 0.8)",
-  transition: "all 0.3s ease",
+  border: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.background.paper,
+  transition: designSystem.transitions.normal,
   // Enhanced mobile support with better scrolling
   [theme.breakpoints.down("sm")]: {
     "-webkit-overflow-scrolling": "touch",
-    borderRadius: theme.shape.borderRadius - 4,
-    boxShadow: "0 6px 16px rgba(67, 97, 238, 0.03)",
+    borderRadius: theme.spacing(designSystem.borderRadius.md / 8),
+    boxShadow: designSystem.shadows.sm,
     "&::-webkit-scrollbar": {
       height: 6,
     },
     "&::-webkit-scrollbar-thumb": {
-      backgroundColor: "#c7d2fe",
+      backgroundColor: theme.palette.primary.light,
       borderRadius: 10,
     },
   },
 }));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  fontWeight: 600,
-  backgroundColor: "rgba(67, 97, 238, 0.03)",
+  fontWeight: designSystem.typography.fontWeights.semibold,
+  backgroundColor:
+    theme.palette.mode === "dark"
+      ? `rgba(79, 70, 229, 0.08)`
+      : `rgba(79, 70, 229, 0.03)`,
   color: theme.palette.primary.main,
-  fontSize: "0.875rem",
-  letterSpacing: "0.01em",
+  fontSize: designSystem.typography.fontSizes.sm,
+  letterSpacing: "0.025em",
   borderBottom: `1px solid ${theme.palette.divider}`,
-  padding: "16px 20px",
+  padding: theme.spacing(2, 2.5),
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
   // Responsive styling for mobile
   [theme.breakpoints.down("sm")]: {
-    padding: "12px 16px",
-    fontSize: "0.8125rem",
+    padding: theme.spacing(1.5, 2),
+    fontSize: designSystem.typography.fontSizes.xs,
     "&:first-of-type": {
       position: "sticky",
       left: 0,
-      backgroundColor: "rgba(67, 97, 238, 0.05)",
+      backgroundColor:
+        theme.palette.mode === "dark"
+          ? `rgba(79, 70, 229, 0.12)`
+          : `rgba(79, 70, 229, 0.05)`,
       zIndex: 2,
-      boxShadow: "2px 0 4px rgba(0, 0, 0, 0.05)",
+      boxShadow:
+        theme.palette.mode === "dark"
+          ? "2px 0 4px rgba(0, 0, 0, 0.3)"
+          : "2px 0 4px rgba(0, 0, 0, 0.05)",
     },
   },
 }));
@@ -145,11 +157,30 @@ function DataTable({
               </TableRow>
             ) : displayedRows.length > 0 ? (
               displayedRows.map((row, index) => (
-                <TableRow hover tabIndex={-1} key={row.id || index}>
+                <TableRow
+                  hover
+                  tabIndex={-1}
+                  key={row.id || index}
+                  sx={{
+                    backgroundColor: (theme) => theme.palette.background.paper,
+                    "&:hover": {
+                      backgroundColor: (theme) => theme.palette.action.hover,
+                    },
+                  }}
+                >
                   {columns.map((column) => {
                     const value = row[column.id];
                     return (
-                      <TableCell key={column.id} align={column.align || "left"}>
+                      <TableCell
+                        key={column.id}
+                        align={column.align || "left"}
+                        sx={{
+                          color: (theme) => theme.palette.text.primary,
+                          fontFamily:
+                            "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+                          fontSize: designSystem.typography.fontSizes.base,
+                        }}
+                      >
                         {column.format ? column.format(value, row) : value}
                       </TableCell>
                     );

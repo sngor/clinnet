@@ -19,7 +19,7 @@ import ListAltIcon from "@mui/icons-material/ListAlt";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import adminService from "../services/adminService";
 import ServiceCard from "../components/ServiceCard";
-import PageContainer from "../components/ui/PageContainer"; // Add this import
+import { StandardPageLayout, UnifiedButton } from "../components/ui";
 import SystemAlertsSection from "../components/SystemAlertsSection";
 
 const initialServicesData = [
@@ -386,82 +386,33 @@ const DiagnosticsPage = () => {
   }, [services, handleTestService]);
 
   return (
-    <PageContainer
-      maxWidth="lg"
-      sx={{ mt: { xs: 2, md: 4 }, mb: { xs: 2, md: 4 } }}
-    >
-      <Paper
-        elevation={2}
-        sx={{
-          borderRadius: 4,
-          p: { xs: 2, sm: 4 },
-          background: theme.palette.background.paper,
-        }}
-      >
-        {/* Header Section */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            justifyContent: "space-between",
-            alignItems: { xs: "flex-start", sm: "center" },
-            mb: 2,
-            gap: 2,
-          }}
+    <StandardPageLayout
+      title="System Diagnostics"
+      subtitle="Check the status and connectivity of all core system services"
+      action={
+        <UnifiedButton
+          variant="contained"
+          onClick={handleTestAll}
+          data-testid="test-all-btn"
         >
-          <Box>
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{ fontWeight: 700, mb: 0.5 }}
-            >
-              System Diagnostics
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 0 }}>
-              Check the status and connectivity of all core system services.
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleTestAll}
-            data-testid="test-all-btn"
-            sx={{
-              minWidth: 140,
-              fontWeight: 600,
-              borderRadius: 50,
-              boxShadow: "none",
-              px: 3,
-              py: 1.2,
-              mt: { xs: 2, sm: 0 },
-            }}
-          >
-            Test All
-          </Button>
-        </Box>
+          Test All
+        </UnifiedButton>
+      }
+    >
+      {/* System Alerts Section */}
+      <SystemAlertsSection />
 
-        <Divider sx={{ mb: 3 }} />
-
-        {/* System Alerts Section */}
-        <SystemAlertsSection />
-
-        {/* Diagnostics List */}
-        <Box>
-          <Stack spacing={3}>
-            {services.map((service) => (
-              <Box key={service.id} sx={{ width: "100%" }}>
-                <ServiceCard
-                  service={service}
-                  onTestService={handleTestService}
-                  sx={{ width: "100%" }}
-                />
-              </Box>
-            ))}
-          </Stack>
-        </Box>
-        {/* End Diagnostics List */}
-      </Paper>
-    </PageContainer>
+      {/* Diagnostics List */}
+      <Stack spacing={3}>
+        {services.map((service) => (
+          <ServiceCard
+            key={service.id}
+            service={service}
+            onTestService={handleTestService}
+          />
+        ))}
+      </Stack>
+    </StandardPageLayout>
   );
 };
 

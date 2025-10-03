@@ -1,11 +1,10 @@
 // src/pages/PatientManagementPage.jsx
 import React, { useState, useMemo } from "react";
-// Button import removed, PrimaryButton will be used
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../app/providers/AuthProvider";
 import { useAppData } from "../app/providers/DataProvider";
-import { PageLayout, PrimaryButton } from "../components/ui"; // Added PrimaryButton
+import { ManagementPageLayout, UnifiedButton } from "../components/ui";
 import PatientList from "../features/patients/components/PatientList";
 import PatientGrid from "../components/patients/PatientGrid";
 import PatientSearch from "../components/patients/PatientSearch";
@@ -29,12 +28,12 @@ function PatientManagementPage() {
   // Filter patients by search term and normalize
   const filteredPatients = useMemo(() => {
     if (!patients || !Array.isArray(patients)) return [];
-    
+
     const searchLower = searchTerm.toLowerCase();
     return patients.map(normalizePatient).filter((p) => {
       if (!searchLower) return true;
-      
-      const fullName = `${p.firstName || ''} ${p.lastName || ''}`.toLowerCase();
+
+      const fullName = `${p.firstName || ""} ${p.lastName || ""}`.toLowerCase();
       return (
         fullName.includes(searchLower) ||
         (p.email && p.email.toLowerCase().includes(searchLower)) ||
@@ -84,13 +83,13 @@ function PatientManagementPage() {
   // Action button for the header - only show for frontdesk role
   const actionButton =
     user?.role === "frontdesk" ? (
-      <PrimaryButton /* Replaced MUI Button */
+      <UnifiedButton
         startIcon={<PersonAddIcon />}
         onClick={handleNewPatient}
-        // sx={{ borderRadius: 1.5 }} // PrimaryButton has its own styling, sx might not be needed
+        variant="contained"
       >
         New Patient
-      </PrimaryButton>
+      </UnifiedButton>
     ) : null;
 
   // Determine page title based on user role
@@ -102,16 +101,15 @@ function PatientManagementPage() {
       : "Search, view, and manage patient records";
 
   return (
-    <PageLayout
+    <ManagementPageLayout
       title={pageTitle}
       subtitle={pageSubtitle}
       loading={loading}
       error={error}
       action={actionButton}
-      maxWidth="xl"
     >
       {/* Search bar */}
-      <PatientSearch 
+      <PatientSearch
         searchTerm={searchTerm}
         onSearchChange={(e) => setSearchTerm(e.target.value)}
         onAddNew={null}
@@ -121,15 +119,18 @@ function PatientManagementPage() {
 
       {/* Patient display area: organized in a grid with consistent width */}
       {viewMode === "card" ? (
-        <PatientGrid 
+        <PatientGrid
           patients={filteredPatients}
           onPatientSelect={handleViewPatient}
           loading={loading}
         />
       ) : (
-        <PatientList patients={filteredPatients} onPatientSelect={handleViewPatient} />
+        <PatientList
+          patients={filteredPatients}
+          onPatientSelect={handleViewPatient}
+        />
       )}
-    </PageLayout>
+    </ManagementPageLayout>
   );
 }
 

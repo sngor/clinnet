@@ -14,24 +14,25 @@ import React from "react";
 import { Card, CardContent, Typography, Box, Button } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import StatusChip from "./StatusChip";
-// Inline function to avoid import issues
-const getAppointmentStatusColor = (status) => {
+// Theme-aware function to get status colors
+const getAppointmentStatusColor = (status, theme) => {
   switch (status) {
     case "confirmed":
-      return "#4caf50";
+      return theme.palette.success.main;
     case "pending":
-      return "#ff9800";
+      return theme.palette.warning.main;
     case "cancelled":
-      return "#f44336";
+      return theme.palette.error.main;
     default:
-      return "#2196f3";
+      return theme.palette.info.main;
   }
 };
 
 const StyledCard = styled(Card)(({ theme, status }) => ({
   height: "100%",
   borderLeft: "5px solid",
-  borderColor: theme.palette[getAppointmentStatusColor(status)].main,
+  borderColor: getAppointmentStatusColor(status, theme),
+  backgroundColor: theme.palette.background.paper,
   transition: "transform 0.2s, box-shadow 0.2s",
   "&:hover": {
     transform: "translateY(-4px)",

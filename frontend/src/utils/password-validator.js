@@ -108,17 +108,17 @@ export const getPasswordStrengthLabel = (strength) => {
 };
 
 /**
- * Gets a color for password strength visualization
+ * Gets a theme color name for password strength visualization
  * @param {number} strength - Password strength score (0-4)
- * @returns {string} - Color code
+ * @returns {string} - Theme color name
  */
 export const getPasswordStrengthColor = (strength) => {
   switch (strength) {
-    case 0: return '#f44336'; // red
-    case 1: return '#ff9800'; // orange
-    case 2: return '#ffeb3b'; // yellow
-    case 3: return '#4caf50'; // green
-    case 4: return '#2e7d32'; // dark green
-    default: return '#e0e0e0'; // grey
+    case 0: return 'error.main'; // red
+    case 1: return 'warning.main'; // orange
+    case 2: return 'warning.light'; // yellow
+    case 3: return 'success.main'; // green
+    case 4: return 'success.dark'; // dark green
+    default: return 'grey.400'; // grey
   }
 };

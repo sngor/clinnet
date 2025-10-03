@@ -38,7 +38,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   transition: "background 0.2s, color 0.2s, box-shadow 0.2s",
   "&:hover": {
-    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.18)",
+    boxShadow: theme.shadows[3],
     backgroundColor: theme.palette.action.hover,
   },
   "&:focus-visible": {

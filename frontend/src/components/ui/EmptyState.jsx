@@ -22,9 +22,9 @@ const StyledBox = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(8),
   textAlign: "center",
   borderRadius: theme.shape.borderRadius * 1.25,
-  background: "linear-gradient(145deg, #f9faff 0%, #f3f6ff 100%)",
-  border: "1px solid rgba(231, 236, 248, 0.8)",
-  boxShadow: "0 8px 40px rgba(67, 97, 238, 0.05)",
+  backgroundColor: theme.palette.background.paper,
+  border: `1px solid ${theme.palette.divider}`,
+  boxShadow: theme.shadows[2],
 }));
 
 /**
@@ -57,7 +57,7 @@ function EmptyState({
           sx={{
             mb: 4,
             color: "primary.main",
-            background: "rgba(67, 97, 238, 0.07)",
+            backgroundColor: "primary.50",
             borderRadius: "50%",
             padding: 3,
             width: 100,
@@ -65,7 +65,7 @@ function EmptyState({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 12px 30px rgba(67, 97, 238, 0.1)",
+            boxShadow: 2,
             "& svg": {
               fontSize: "3.5rem",
               opacity: 0.9,
@@ -82,11 +82,7 @@ function EmptyState({
         sx={{
           mb: description ? 1.5 : 3,
           fontWeight: 600,
-          background: "linear-gradient(90deg, #4361ee, #7209b7)",
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          color: "transparent" /* Fallback */,
+          color: "primary.main",
           letterSpacing: "-0.01em",
         }}
       >
@@ -122,13 +118,11 @@ function EmptyState({
               sx={{
                 px: 4,
                 py: 1.2,
-                boxShadow: "0 8px 20px rgba(67, 97, 238, 0.15)",
                 borderRadius: 50,
                 fontWeight: 600,
                 transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 "&:hover": {
                   transform: "translateY(-3px)",
-                  boxShadow: "0 12px 25px rgba(67, 97, 238, 0.2)",
                 },
               }}
             >

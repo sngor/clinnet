@@ -678,7 +678,11 @@ function DoctorMedicalRecordsPage() {
               {imagePreviews.map((preview, index) => (
                 <ImageListItem
                   key={index}
-                  sx={{ border: "1px solid #ddd", borderRadius: "4px" }}
+                  sx={{
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: "4px",
+                  }}
                 >
                   <img
                     src={preview}
@@ -691,7 +695,7 @@ function DoctorMedicalRecordsPage() {
                     }}
                   />
                   <ImageListItemBar
-                    sx={{ background: "rgba(0, 0, 0, 0.7)" }}
+                    sx={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
                     position="top"
                     actionIcon={
                       <IconButton
@@ -883,7 +887,11 @@ function DoctorMedicalRecordsPage() {
                 {imagePreviews.map((preview, index) => (
                   <ImageListItem
                     key={index}
-                    sx={{ border: "1px solid #ddd", borderRadius: "4px" }}
+                    sx={{
+                      border: "1px solid",
+                      borderColor: "divider",
+                      borderRadius: "4px",
+                    }}
                   >
                     <img
                       src={preview}
@@ -896,7 +904,7 @@ function DoctorMedicalRecordsPage() {
                       }}
                     />
                     <ImageListItemBar
-                      sx={{ background: "rgba(0, 0, 0, 0.7)" }}
+                      sx={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
                       position="top"
                       actionIcon={
                         <IconButton

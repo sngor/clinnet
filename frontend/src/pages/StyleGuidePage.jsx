@@ -205,7 +205,13 @@ function StyleGuidePage() {
         <SectionTitle>Layout Containers</SectionTitle>
         <Grid container spacing={3}>
           <Grid item xs={12} md={4}>
-            <CardContainer sx={{ boxShadow: "none", border: "1px solid #eee" }}>
+            <CardContainer
+              sx={{
+                boxShadow: "none",
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
               <SubsectionTitle>Card Container</SubsectionTitle>
               <SecondaryText>
                 Used for content cards, list items, or any content that should
@@ -215,7 +221,13 @@ function StyleGuidePage() {
             </CardContainer>
           </Grid>
           <Grid item xs={12} md={8}>
-            <CardContainer sx={{ boxShadow: "none", border: "1px solid #eee" }}>
+            <CardContainer
+              sx={{
+                boxShadow: "none",
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
               <SubsectionTitle>
                 Section Container (No Elevation)
               </SubsectionTitle>

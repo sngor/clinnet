@@ -14,7 +14,7 @@ export const FormSection = styled(Box)(({ theme }) => ({
   padding: theme.spacing(3),
   borderRadius: theme.shape.borderRadius,
   border: `1px solid ${theme.palette.divider}`,
-  backgroundColor: "#fbfbfb",
+  backgroundColor: theme.palette.background.default,
   [theme.breakpoints.down("sm")]: {
     padding: theme.spacing(2),
     marginBottom: theme.spacing(3),

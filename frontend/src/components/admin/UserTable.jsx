@@ -111,7 +111,9 @@ const UserTable = ({ users, onEditUser, onToggleUserStatus }) => {
                     sx={{
                       color: "primary.main",
                       visibility: "visible",
-                      "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+                      "&:hover": {
+                        backgroundColor: (theme) => theme.palette.action.hover,
+                      },
                     }}
                   >
                     <EditIcon sx={{ fontSize: 24, display: "block" }} />
@@ -127,7 +129,10 @@ const UserTable = ({ users, onEditUser, onToggleUserStatus }) => {
                       sx={{
                         color: "warning.main",
                         visibility: "visible",
-                        "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+                        "&:hover": {
+                          backgroundColor: (theme) =>
+                            theme.palette.action.hover,
+                        },
                       }}
                     >
                       <BlockIcon sx={{ fontSize: 24, display: "block" }} />
@@ -142,7 +147,10 @@ const UserTable = ({ users, onEditUser, onToggleUserStatus }) => {
                       sx={{
                         color: "success.main",
                         visibility: "visible",
-                        "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+                        "&:hover": {
+                          backgroundColor: (theme) =>
+                            theme.palette.action.hover,
+                        },
                       }}
                     >
                       <CheckCircleIcon

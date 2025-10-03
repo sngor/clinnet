@@ -25,11 +25,11 @@ import userService from "../services/userService";
 import { getAuthToken } from "../utils/cognito-helpers";
 import { fileToDataUri } from "../utils/fileUtils";
 import {
-  PageLayout,
-  FormField,
-  FormLayout,
-  PageHeading,
-} from "../components/ui"; // Added PageHeading
+  SettingsPageLayout,
+  UnifiedFormField,
+  UnifiedButton,
+  UnifiedCard,
+} from "../components/ui";
 import PersonIcon from "@mui/icons-material/Person";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import LockIcon from "@mui/icons-material/Lock";
@@ -257,7 +257,7 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
         );
 
         // Fallback to base64 method
-  const base64 = await fileToDataUri(file);
+        const base64 = await fileToDataUri(file);
         // Do NOT strip the data:image/...;base64, prefix. Send the full data URI string.
         const imageData = base64; // Always send the full data URI string
         // Upload image with proper formatting
@@ -309,7 +309,7 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
     const idToken = await getAuthToken();
 
     // Convert file to base64
-  const base64 = await fileToDataUri(file);
+    const base64 = await fileToDataUri(file);
     // base64 is already the full data URI string (e.g., "data:image/png;base64,...")
     const jsonPayload = JSON.stringify({
       image: base64, // send the full data URI string
@@ -333,197 +333,175 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
   };
 
   return (
-    <PageLayout>
-      {/* Replace Typography header with PageHeading for consistency */}
-      <PageHeading title="Account Settings" divider={false} />
-      <Box p={2}>
-        {/* Removed: <Typography variant="h4" gutterBottom>Account Settings</Typography> */}
+    <SettingsPageLayout
+      title="Account Settings"
+      subtitle="Manage your profile information and security settings"
+    >
+      <UnifiedCard title="Profile Information">
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <UnifiedFormField
+              type="text"
+              label="First Name"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <UnifiedFormField
+              type="text"
+              label="Last Name"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <UnifiedFormField
+              type="email"
+              label="Email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              disabled
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <UnifiedFormField
+              type="tel"
+              label="Phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+        </Grid>
 
-        <Card variant="outlined">
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Profile
-            </Typography>
+        <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+          <UnifiedButton
+            variant="contained"
+            onClick={handleProfileUpdate}
+            disabled={loading}
+            loading={loading}
+            startIcon={!loading && <SaveIcon />}
+          >
+            {loading ? "Updating..." : "Update Profile"}
+          </UnifiedButton>
+        </Box>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <FormField
-                  label="First Name"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormField
-                  label="Last Name"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormField
-                  label="Email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  disabled
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormField
-                  label="Phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                />
-              </Grid>
-            </Grid>
+        {error && (
+          <Alert severity="error" onClose={() => setError(null)} sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+      </UnifiedCard>
 
-            <Box mt={2}>
-              <Button
+      <UnifiedCard title="Change Password" sx={{ mt: 3 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={4}>
+            <UnifiedFormField
+              type="password"
+              label="Current Password"
+              name="currentPassword"
+              value={formData.currentPassword}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <UnifiedFormField
+              type="password"
+              label="New Password"
+              name="newPassword"
+              value={formData.newPassword}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <UnifiedFormField
+              type="password"
+              label="Confirm Password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+        </Grid>
+
+        {passwordError && (
+          <FormHelperText error sx={{ mt: 2 }}>
+            {passwordError}
+          </FormHelperText>
+        )}
+
+        <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+          <UnifiedButton
+            variant="contained"
+            onClick={handlePasswordChange}
+            disabled={passwordLoading}
+            loading={passwordLoading}
+            startIcon={!passwordLoading && <LockIcon />}
+          >
+            {passwordLoading ? "Changing..." : "Change Password"}
+          </UnifiedButton>
+        </Box>
+      </UnifiedCard>
+
+      <UnifiedCard title="Profile Image" sx={{ mt: 3 }}>
+        <Box display="flex" alignItems="center" gap={2}>
+          <Avatar
+            src={profileImage}
+            alt="Profile Image"
+            variant="rounded"
+            sx={{ width: 100, height: 100, borderRadius: 2 }}
+          >
+            {user && !user.profileImage && <PersonIcon fontSize="large" />}
+          </Avatar>
+
+          <Box>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              style={{ display: "none" }}
+            />
+
+            <Box sx={{ display: "flex", gap: 2, mb: 1 }}>
+              <UnifiedButton
                 variant="contained"
-                color="primary"
-                onClick={handleProfileUpdate}
-                disabled={loading}
-                startIcon={loading ? <CircularProgress size={20} /> : null}
-              >
-                {loading ? "Updating..." : "Update Profile"}
-              </Button>
-            </Box>
-
-            {error && (
-              <Alert
-                severity="error"
-                onClose={() => setError(null)}
-                sx={{ mt: 2 }}
-              >
-                {error}
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card variant="outlined" sx={{ mt: 2 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Change Password
-            </Typography>
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
-                <FormField
-                  label="Current Password"
-                  name="currentPassword"
-                  type="password"
-                  value={formData.currentPassword}
-                  onChange={handleChange}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <FormField
-                  label="New Password"
-                  name="newPassword"
-                  type="password"
-                  value={formData.newPassword}
-                  onChange={handleChange}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <FormField
-                  label="Confirm Password"
-                  name="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                />
-              </Grid>
-            </Grid>
-
-            {passwordError && (
-              <FormHelperText error sx={{ mt: 1 }}>
-                {passwordError}
-              </FormHelperText>
-            )}
-
-            <Box mt={2}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handlePasswordChange}
-                disabled={passwordLoading}
-                startIcon={
-                  passwordLoading ? <CircularProgress size={20} /> : null
-                }
-              >
-                {passwordLoading ? "Changing..." : "Change Password"}
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Card variant="outlined" sx={{ mt: 2 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Profile Image
-            </Typography>
-
-            <Box display="flex" alignItems="center">
-              <Avatar
-                src={profileImage}
-                alt="Profile Image"
-                variant="rounded"
-                sx={{ width: 100, height: 100, mr: 2, borderRadius: 2 }}
-              >
-                {user && !user.profileImage && <PersonIcon fontSize="large" />}
-              </Avatar>
-
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleImageChange}
-                style={{ display: "none" }}
-              />
-
-              <Button
-                variant="contained"
-                color="primary"
                 onClick={handleImageClick}
                 startIcon={<PhotoCameraIcon />}
                 disabled={imageLoading}
+                loading={imageLoading}
               >
                 {imageLoading ? "Uploading..." : "Upload Image"}
-              </Button>
+              </UnifiedButton>
 
               {profileImage && (
-                <Button
+                <UnifiedButton
                   variant="outlined"
-                  color="secondary"
                   onClick={handleRemoveProfileImage}
-                  startIcon={<PhotoCameraIcon />}
                   disabled={imageLoading}
-                  sx={{ ml: 2 }}
                 >
                   {imageLoading ? "Removing..." : "Remove Image"}
-                </Button>
+                </UnifiedButton>
               )}
             </Box>
 
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            <Typography variant="body2" color="text.secondary">
               Supported formats: JPEG, PNG, GIF, WEBP. Max size: 5MB.
             </Typography>
-          </CardContent>
-        </Card>
-      </Box>
+          </Box>
+        </Box>
+      </UnifiedCard>
 
       <Snackbar
         open={snackbar.open}
@@ -539,7 +517,7 @@ function AccountSettingsPage({ onProfileImageUpdated }) {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </PageLayout>
+    </SettingsPageLayout>
   );
 }
 

@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { PageLayout, SectionContainer } from "../components/ui";
-import { useFontSize } from "../context/FontSizeContext";
+import { Typography, Box, Tabs, Tab } from "@mui/material";
 import {
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-  Box,
-  Tabs,
-  Tab,
-} from "@mui/material";
+  Settings as SettingsIcon,
+  BugReport as BugReportIcon,
+  Palette as PaletteIcon,
+} from "@mui/icons-material";
 import DiagnosticsPage from "./DiagnosticsPage"; // Import diagnostics page
+import SimpleThemeToggle from "../components/SimpleThemeToggle";
 
 const SettingsPage = () => {
-  const { fontSize, updateFontSize, fontSizes } = useFontSize();
   const [tab, setTab] = useState(0);
 
   // Automatically select tab based on URL query param
@@ -26,21 +23,22 @@ const SettingsPage = () => {
     }
   }, []);
 
-  const handleFontSizeChange = (event, newSize) => {
-    if (newSize !== null) {
-      updateFontSize(newSize);
-    }
-  };
-
   const handleTabChange = (event, newValue) => {
     setTab(newValue);
   };
+
+  const tabs = [
+    { label: "General", icon: <SettingsIcon /> },
+    { label: "Theme", icon: <PaletteIcon /> },
+    { label: "System Diagnostics", icon: <BugReportIcon /> },
+  ];
 
   return (
     <PageLayout
       title="Settings"
       subtitle="Customize application appearance and behavior."
       maxWidth="lg"
+      menuIcon={null}
     >
       <Tabs
         value={tab}
@@ -48,42 +46,31 @@ const SettingsPage = () => {
         sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
         aria-label="settings tabs"
       >
-        <Tab label="System Preferences" />
-        <Tab label="System Diagnostics" />
+        {tabs.map((tabItem, index) => (
+          <Tab key={index} icon={tabItem.icon} label={tabItem.label} />
+        ))}
       </Tabs>
 
       {tab === 0 && (
         <SectionContainer>
           <Box sx={{ mb: 2 }}>
             <Typography variant="h6" gutterBottom>
-              Font Size
+              General Settings
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Adjust the application-wide font size.
+              General application settings will be available here.
             </Typography>
           </Box>
-          <ToggleButtonGroup
-            color="primary"
-            value={fontSize}
-            exclusive
-            onChange={handleFontSizeChange}
-            aria-label="font size"
-          >
-            {Object.keys(fontSizes).map((sizeKey) => (
-              <ToggleButton
-                key={sizeKey}
-                value={sizeKey}
-                aria-label={`${sizeKey} font size`}
-                sx={{ textTransform: "capitalize", minWidth: "100px" }}
-              >
-                {sizeKey}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
         </SectionContainer>
       )}
 
       {tab === 1 && (
+        <Box sx={{ py: 3 }}>
+          <SimpleThemeToggle />
+        </Box>
+      )}
+
+      {tab === 2 && (
         <Box sx={{ mt: 2 }}>
           <Box sx={{ borderRadius: 1, overflow: "hidden" }}>
             <DiagnosticsPage />

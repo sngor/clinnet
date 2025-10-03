@@ -27,14 +27,11 @@ import SaveIcon from "@mui/icons-material/Save";
 import { useAppData } from "../app/providers/DataProvider";
 import {
   LoadingIndicator,
-  PageLayout,
-  PrimaryButton,
-  SecondaryButton,
-  // TextButton, // Or SecondaryButton for Cancel
-  SectionContainer,
-  CardContainer, // For inner form sections
+  FormPageLayout,
+  UnifiedButton,
+  UnifiedCard,
+  UnifiedFormField,
   SectionTitle,
-  StyledTextField,
 } from "../components/ui";
 // Need to get StyledFormControl from the correct path
 import { StyledFormControl } from "../components/ui/FormStyles";
@@ -158,11 +155,10 @@ function NewPatientPage() {
   };
 
   return (
-    <PageLayout
+    <FormPageLayout
       title="Add New Patient"
       onBack={handleBackClick}
       showBackButton
-      maxWidth="md" // Adjusted maxWidth for a form page
     >
       {(submitting || loading) && (
         <Box
@@ -173,7 +169,8 @@ function NewPatientPage() {
             right: 0,
             bottom: 0,
             zIndex: (theme) => theme.zIndex.drawer + 2, // Ensure it's above everything
-            background: "rgba(255,255,255,0.7)",
+            backgroundColor: "background.paper",
+            opacity: 0.9,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -182,85 +179,57 @@ function NewPatientPage() {
           <LoadingIndicator size="large" message="Saving patient..." />
         </Box>
       )}
-      <SectionContainer>
-        {" "}
-        {/* Was Paper */}
-        <form onSubmit={handleSubmit}>
-          {/* Personal Information Section */}
-          <CardContainer sx={{ mb: 4 }}>
-            {" "}
-            {/* Was Paper variant="outlined" */}
-            <SectionTitle sx={{ mb: 1 }}>
-              {" "}
-              {/* Was Typography h6 */}
-              Personal Information
-            </SectionTitle>
-            <Divider sx={{ mb: 3 }} />
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6} lg={4}>
-                <StyledTextField /* Was TextField */
-                  label={
-                    <span>
-                      First Name <span style={{ color: "red" }}>*</span>
-                    </span>
-                  }
-                  name="firstName"
-                  value={patientData.firstName}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                  size="medium"
-                  error={!patientData.firstName && submitting}
-                  helperText={
-                    !patientData.firstName && submitting
-                      ? "First name is required"
-                      : ""
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={6} lg={4}>
-                <StyledTextField /* Was TextField */
-                  label={
-                    <span>
-                      Last Name <span style={{ color: "red" }}>*</span>
-                    </span>
-                  }
-                  name="lastName"
-                  value={patientData.lastName}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                  size="medium"
-                  error={!patientData.lastName && submitting}
-                  helperText={
-                    !patientData.lastName && submitting
-                      ? "Last name is required"
-                      : ""
-                  }
-                />
-              </Grid>
-              <Grid item xs={12} md={6} lg={4}>
-                <StyledFormControl
-                  fullWidth
-                  sx={{ minWidth: 180, maxWidth: 220 }}
-                >
-                  {" "}
-                  {/* Was FormControl */}
-                  <InputLabel id="gender-label">Gender</InputLabel>{" "}
-                  {/* Added id */}
-                  <Select
-                    name="gender"
-                    labelId="gender-label" /* Added labelId */
-                    value={patientData.gender}
-                    onChange={handleInputChange}
-                    label="Gender"
-                  >
-                    <MenuItem value="Male">Male</MenuItem>
-                    <MenuItem value="Female">Female</MenuItem>
-                    <MenuItem value="Other">Other</MenuItem>
-                  </Select>
-                </StyledFormControl>
-              </Grid>
+      <form onSubmit={handleSubmit}>
+        {/* Personal Information Section */}
+        <UnifiedCard title="Personal Information" sx={{ mb: 4 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6} lg={4}>
+              <UnifiedFormField
+                type="text"
+                label="First Name"
+                name="firstName"
+                value={patientData.firstName}
+                onChange={handleInputChange}
+                required
+                error={!patientData.firstName && submitting}
+                helperText={
+                  !patientData.firstName && submitting
+                    ? "First name is required"
+                    : ""
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <UnifiedFormField
+                type="text"
+                label="Last Name"
+                name="lastName"
+                value={patientData.lastName}
+                onChange={handleInputChange}
+                required
+                error={!patientData.lastName && submitting}
+                helperText={
+                  !patientData.lastName && submitting
+                    ? "Last name is required"
+                    : ""
+                }
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <UnifiedFormField
+                type="select"
+                label="Gender"
+                name="gender"
+                value={patientData.gender}
+                onChange={handleInputChange}
+                options={[
+                  { value: "", label: "Select gender..." },
+                  { value: "Male", label: "Male" },
+                  { value: "Female", label: "Female" },
+                  { value: "Other", label: "Other" },
+                ]}
+              />
+            </Grid>
               <Grid item xs={12} md={6} lg={4}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                   <DatePicker
@@ -404,33 +373,26 @@ function NewPatientPage() {
             </Grid>
           </CardContainer>
 
-          {/* Actions */}
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-            <SecondaryButton /* Was Button variant="outlined" */
-              onClick={handleBackClick}
-              sx={{ mr: 2 }}
-              disabled={submitting}
-            >
-              Cancel
-            </SecondaryButton>
-            <PrimaryButton /* Was Button variant="contained" */
-              type="submit"
-              startIcon={
-                submitting ? (
-                  <CircularProgress size={20} color="inherit" />
-                ) : (
-                  <SaveIcon />
-                )
-              }
-              disabled={submitting || loading}
-              loading={submitting} // Use loading prop for PrimaryButton
-              // sx={{ minWidth: 140 }} // PrimaryButton has default sizing
-            >
-              {submitting ? "Saving..." : "Save Patient"}
-            </PrimaryButton>
-          </Box>
-        </form>
-      </SectionContainer>
+        {/* Actions */}
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 4, gap: 2 }}>
+          <UnifiedButton
+            variant="outlined"
+            onClick={handleBackClick}
+            disabled={submitting}
+          >
+            Cancel
+          </UnifiedButton>
+          <UnifiedButton
+            type="submit"
+            variant="contained"
+            startIcon={!submitting && <SaveIcon />}
+            disabled={submitting || loading}
+            loading={submitting}
+          >
+            {submitting ? "Saving..." : "Save Patient"}
+          </UnifiedButton>
+        </Box>
+      </form>
 
       {/* Snackbar for notifications */}
       <Snackbar
@@ -446,7 +408,7 @@ function NewPatientPage() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </PageLayout>
+    </FormPageLayout>
   );
 }
 

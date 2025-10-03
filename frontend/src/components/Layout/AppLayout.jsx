@@ -17,14 +17,15 @@ import {
   Stack,
   Tooltip,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { useTheme as useMuiTheme } from "@mui/material/styles";
+import { useTheme } from "../../context/ThemeContext";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useAuth } from "../../app/providers/AuthProvider";
-import { AppIconButton } from "../ui"; // Added AppIconButton import
+import { AppIconButton, designSystem } from "../ui"; // Added AppIconButton import
 import AdminSidebar from "./AdminSidebar";
 import DoctorSidebar from "./DoctorSidebar";
 import FrontdeskSidebar from "./FrontdeskSidebar";
@@ -43,8 +44,9 @@ function AppLayout() {
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const open = Boolean(anchorEl);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const muiTheme = useMuiTheme();
+  const { theme, isDarkMode } = useTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down("sm"));
   const isOffline = useOfflineStatus(); // Use the hook
 
   const handleDrawerToggle = () => {
@@ -198,13 +200,16 @@ function AppLayout() {
             variant="subtitle2"
             color="primary.main"
             sx={{
-              fontWeight: 600,
+              fontWeight: designSystem.typography.fontWeights.semibold,
+              fontSize: designSystem.typography.fontSizes.sm,
+              fontFamily:
+                "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
               textAlign: "left",
               maxWidth: 140,
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-              lineHeight: 1.2,
+              lineHeight: designSystem.typography.lineHeights.tight,
             }}
           >
             {getUserDisplayName()}
@@ -213,13 +218,16 @@ function AppLayout() {
             variant="caption"
             color="text.secondary"
             sx={{
+              fontSize: designSystem.typography.fontSizes.xs,
+              fontFamily:
+                "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
               textAlign: "left",
               maxWidth: 140,
               opacity: 0.85,
-              fontWeight: 500,
-              mt: 0.2,
-              letterSpacing: "0.03em",
-              lineHeight: 1.2,
+              fontWeight: designSystem.typography.fontWeights.medium,
+              mt: theme.spacing(designSystem.spacing.xs / 8),
+              letterSpacing: "0.025em",
+              lineHeight: designSystem.typography.lineHeights.tight,
             }}
           >
             {getUserRoleLabel()}
@@ -399,28 +407,43 @@ function AppLayout() {
 
   return (
     <MenuIconContext.Provider value={isMobile ? null : menuIconButton}>
-      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}> {/* Ensure main Box is column for banner */}
+      <Box
+        sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      >
+        {" "}
+        {/* Ensure main Box is column for banner */}
         {isOffline && (
           <Box
             sx={{
-              backgroundColor: theme.palette.warning.main, // Or "error.main" for more severity
-              color: theme.palette.warning.contrastText, // Or "error.contrastText"
+              backgroundColor: muiTheme.palette.warning.main,
+              color: muiTheme.palette.warning.contrastText,
               p: 1,
               textAlign: "center",
               width: "100%",
-              position: "sticky", // Or "fixed" if you want it to overlay content
+              position: "sticky",
               top: 0,
-              zIndex: theme.zIndex.snackbar, // Ensure it's above most other elements
-              boxShadow: theme.shadows[4],
+              zIndex: muiTheme.zIndex.snackbar,
+              boxShadow: muiTheme.shadows[4],
             }}
           >
-            <Typography variant="subtitle2" component="p" sx={{ fontWeight: "medium" }}>
+            <Typography
+              variant="subtitle2"
+              component="p"
+              sx={{
+                fontWeight: designSystem.typography.fontWeights.medium,
+                fontSize: designSystem.typography.fontSizes.sm,
+                fontFamily:
+                  "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+              }}
+            >
               You are currently offline. Some functionality may be limited.
             </Typography>
           </Box>
         )}
         {/* Main layout content */}
-        <Box sx={{ display: "flex", flexGrow: 1 }}> {/* This Box now contains the sidebar and main content area */}
+        <Box sx={{ display: "flex", flexGrow: 1 }}>
+          {" "}
+          {/* This Box now contains the sidebar and main content area */}
           {/* Fixed menu icon for mobile */}
           {isMobile && menuIconButton}
           {/* Sidebar navigation */}
@@ -428,154 +451,158 @@ function AppLayout() {
             component="nav"
             sx={{
               width: { sm: currentDrawerWidth + drawerMargin * 2 },
-            flexShrink: { sm: 0 },
-            transition: (theme) =>
-              theme.transitions.create("width", {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
-          }}
-          aria-label="navigation drawer"
-        >
-          {/* Temporary drawer for mobile */}
-          <Drawer
-            variant="temporary"
-            open={mobileOpen}
-            onClose={handleDrawerToggle}
-            ModalProps={{ keepMounted: true }}
-            sx={{
-              display: { xs: "block", sm: "none" },
-              "& .MuiDrawer-paper": {
-                boxSizing: "border-box",
-                width: `calc(100vw - ${drawerMargin * 2}px)`,
-                height: `calc(100vh - ${drawerMargin * 2}px)`,
-                maxWidth: `calc(100vw - ${drawerMargin * 2}px)`,
-                maxHeight: `calc(100vh - ${drawerMargin * 2}px)`,
-                left: drawerMargin,
-                top: drawerMargin,
-                borderRadius: 1, // smaller radius
-                // Remove shadow and add border
-                boxShadow: "none",
-                borderRight: "1px solid #e0e0e0",
-                background: "rgba(255,255,255,0.95)",
-                backdropFilter: "blur(16px)",
-                WebkitBackdropFilter: "blur(16px)",
-                zIndex: 2001,
-                pt: 0,
-                alignItems: "flex-start",
-                overflow: "visible",
-                position: "fixed",
-                transition: (theme) =>
-                  theme.transitions.create(["width", "left"], {
-                    easing: theme.transitions.easing.sharp,
-                    duration: theme.transitions.duration.enteringScreen,
-                  }),
-                margin: 0, // margin handled by left/top
-              },
-              "& .MuiBackdrop-root": {
-                background: "rgba(67,97,238,0.10)",
-                backdropFilter: "blur(8px)",
-                WebkitBackdropFilter: "blur(8px)",
-              },
+              flexShrink: { sm: 0 },
+              transition: (theme) =>
+                theme.transitions.create("width", {
+                  easing: theme.transitions.easing.sharp,
+                  duration: theme.transitions.duration.enteringScreen,
+                }),
             }}
+            aria-label="navigation drawer"
           >
-            <Box sx={{ width: "100%" }}>
-              {/* Remove centering, start from top */}
-              {drawer}
-            </Box>
-          </Drawer>
+            {/* Temporary drawer for mobile */}
+            <Drawer
+              variant="temporary"
+              open={mobileOpen}
+              onClose={handleDrawerToggle}
+              ModalProps={{ keepMounted: true }}
+              sx={{
+                display: { xs: "block", sm: "none" },
+                "& .MuiDrawer-paper": {
+                  boxSizing: "border-box",
+                  width: `calc(100vw - ${drawerMargin * 2}px)`,
+                  height: `calc(100vh - ${drawerMargin * 2}px)`,
+                  maxWidth: `calc(100vw - ${drawerMargin * 2}px)`,
+                  maxHeight: `calc(100vh - ${drawerMargin * 2}px)`,
+                  left: drawerMargin,
+                  top: drawerMargin,
+                  borderRadius: 1, // smaller radius
+                  // Remove shadow and add border
+                  boxShadow: "none",
+                  borderRight: `1px solid ${muiTheme.palette.divider}`,
+                  background: isDarkMode
+                    ? "rgba(30, 41, 59, 0.95)"
+                    : "rgba(255,255,255,0.95)",
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
+                  zIndex: 2001,
+                  pt: 0,
+                  alignItems: "flex-start",
+                  overflow: "visible",
+                  position: "fixed",
+                  transition: (theme) =>
+                    theme.transitions.create(["width", "left", "background"], {
+                      easing: theme.transitions.easing.sharp,
+                      duration: theme.transitions.duration.enteringScreen,
+                    }),
+                  margin: 0, // margin handled by left/top
+                },
+                "& .MuiBackdrop-root": {
+                  background: "rgba(67,97,238,0.10)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                },
+              }}
+            >
+              <Box sx={{ width: "100%" }}>
+                {/* Remove centering, start from top */}
+                {drawer}
+              </Box>
+            </Drawer>
 
-          {/* Permanent drawer for desktop */}
-          <Drawer
-            variant="permanent"
-            sx={{
-              display: { xs: "none", sm: "block" },
-              "& .MuiDrawer-paper": {
-                boxSizing: "border-box",
-                width: currentDrawerWidth,
-                borderRadius: 1, // smaller radius
-                // Remove shadow and add border
-                boxShadow: "none",
-                borderRight: "1px solid #e0e0e0",
-                background: "rgba(255,255,255,0.97)",
-                zIndex: (theme) => theme.zIndex.drawer,
-                transition: (theme) =>
-                  theme.transitions.create("width", {
-                    easing: theme.transitions.easing.sharp,
-                    duration: theme.transitions.duration.enteringScreen,
-                  }),
-                overflowX: "hidden",
-                height: "100vh", // Ensure full height for permanent drawer
-              },
-            }}
-            open
-          >
-            {drawer}
-          </Drawer>
-        </Box>
-        {/* Main content area */}
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            width: "100%",
-            minHeight: "100vh",
-            display: "flex",
-            flexDirection: "column",
-            transition: (theme) =>
-              theme.transitions.create(["width", "margin"], {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
-          }}
-        >
-          {/* Remove the floating menu icon here */}
+            {/* Permanent drawer for desktop */}
+            <Drawer
+              variant="permanent"
+              sx={{
+                display: { xs: "none", sm: "block" },
+                "& .MuiDrawer-paper": {
+                  boxSizing: "border-box",
+                  width: currentDrawerWidth,
+                  borderRadius: 1, // smaller radius
+                  // Remove shadow and add border
+                  boxShadow: "none",
+                  borderRight: `1px solid ${muiTheme.palette.divider}`,
+                  background: isDarkMode
+                    ? "rgba(30, 41, 59, 0.97)"
+                    : "rgba(255,255,255,0.97)",
+                  zIndex: (theme) => theme.zIndex.drawer,
+                  transition: (theme) =>
+                    theme.transitions.create(["width", "background"], {
+                      easing: theme.transitions.easing.sharp,
+                      duration: theme.transitions.duration.enteringScreen,
+                    }),
+                  overflowX: "hidden",
+                  height: "100vh", // Ensure full height for permanent drawer
+                },
+              }}
+              open
+            >
+              {drawer}
+            </Drawer>
+          </Box>
+          {/* Main content area */}
           <Box
+            component="main"
             sx={{
-              flex: 1,
+              flexGrow: 1,
+              width: "100%",
+              minHeight: "100vh",
               display: "flex",
               flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "stretch",
-              width: "100%",
-              overflow: "hidden",
+              transition: (theme) =>
+                theme.transitions.create(["width", "margin"], {
+                  easing: theme.transitions.easing.sharp,
+                  duration: theme.transitions.duration.enteringScreen,
+                }),
             }}
           >
+            {/* Remove the floating menu icon here */}
             <Box
               sx={{
-                width: "100%",
-                height: "100%",
-                overflow: "auto",
                 flex: 1,
-                p: { xs: 2, sm: 3 }, // Added consistent padding
-              }}
-            >
-              <Outlet />
-            </Box>
-            {/* Add footer at the bottom of the page */}
-            <Box
-              component="footer"
-              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "stretch",
                 width: "100%",
-                py: 2,
-                px: 0,
-                mt: "auto", // Pushes footer to bottom if content is short
-                bgcolor: "transparent",
-                textAlign: "center",
-                color: "text.secondary",
-                fontSize: "0.80rem", // smaller text
-                letterSpacing: 0.1,
-                // borderTop: "1px solid #e0e0e0", // hide divider
+                overflow: "hidden",
               }}
             >
-              © {new Date().getFullYear()} Clinnet EMR
-              {/* Placeholder for queue processing notifications */}
-              {/* e.g., <QueueStatusNotifier /> */}
+              <Box
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  overflow: "auto",
+                  flex: 1,
+                  p: { xs: 2, sm: 3 }, // Added consistent padding
+                }}
+              >
+                <Outlet />
+              </Box>
+              {/* Add footer at the bottom of the page */}
+              <Box
+                component="footer"
+                sx={{
+                  width: "100%",
+                  py: 2,
+                  px: 0,
+                  mt: "auto", // Pushes footer to bottom if content is short
+                  bgcolor: "transparent",
+                  textAlign: "center",
+                  color: "text.secondary",
+                  fontSize: "0.80rem", // smaller text
+                  letterSpacing: 0.1,
+                  // borderTop: "1px solid #e0e0e0", // hide divider
+                }}
+              >
+                © {new Date().getFullYear()} Clinnet EMR
+                {/* Placeholder for queue processing notifications */}
+                {/* e.g., <QueueStatusNotifier /> */}
+              </Box>
             </Box>
           </Box>
         </Box>
       </Box>
-    </Box>
     </MenuIconContext.Provider>
   );
 }

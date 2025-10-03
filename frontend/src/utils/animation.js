@@ -82,7 +82,7 @@ export const animationStyles = {
     transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease',
     '&:hover': {
       transform: 'translateY(-5px)',
-      boxShadow: '0 10px 25px rgba(67, 97, 238, 0.15)',
+      boxShadow: 2,
     },
   }
 };

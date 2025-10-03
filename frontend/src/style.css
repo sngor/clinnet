@@ -1,3 +1,6 @@
+/* Import Inter font for consistent typography */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
 /* src/index.css */
 * {
   margin: 0;
@@ -6,7 +9,12 @@
 }
 
 body {
-  /* font-family, -webkit-font-smoothing, -moz-osx-font-smoothing, and background-color were removed as they are now in theme.js */
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-variant-numeric: tabular-nums;
 }
 
 code {
@@ -25,7 +33,6 @@ code {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #fbfbfb; /* Ensure very light grey */
 }
 
 /* Global Styles for Clinnet EMR */
@@ -74,11 +81,11 @@ body {
   transition: opacity 200ms;
 }
 
-/* Animations for elements appearing */
+/* Enhanced Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -86,17 +93,141 @@ body {
   }
 }
 
-.fade-in {
-  animation: fadeIn 0.5s ease forwards;
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-/* Add subtle hover effect to clickable items only */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  53%,
+  80%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%,
+  43% {
+    transform: translate3d(0, -8px, 0);
+  }
+  70% {
+    transform: translate3d(0, -4px, 0);
+  }
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.scale-in {
+  animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.bounce {
+  animation: bounce 1s ease infinite;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Enhanced Hover Effects */
 .hover-lift {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hover-lift:hover {
   transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.hover-scale {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-glow {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(67, 97, 238, 0.3);
+}
+
+.hover-rotate {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-rotate:hover {
+  transform: rotate(5deg);
 }
 
 /* Responsive utilities */
@@ -115,97 +246,151 @@ body {
 */
 
 /* Hide BELOW a breakpoint (element is hidden on smaller screens, visible on breakpoint and up) */
-.hide-below-sm { /* Hidden on xs */
+.hide-below-sm {
+  /* Hidden on xs */
   display: none !important;
 }
-@media (min-width: 600px) { /* sm */
-  .hide-below-sm { display: initial !important; }
+@media (min-width: 600px) {
+  /* sm */
+  .hide-below-sm {
+    display: initial !important;
+  }
 }
 
-.hide-below-md { /* Hidden on xs, sm */
+.hide-below-md {
+  /* Hidden on xs, sm */
   display: none !important;
 }
-@media (min-width: 960px) { /* md */
-  .hide-below-md { display: initial !important; }
+@media (min-width: 960px) {
+  /* md */
+  .hide-below-md {
+    display: initial !important;
+  }
 }
 
-.hide-below-lg { /* Hidden on xs, sm, md */
+.hide-below-lg {
+  /* Hidden on xs, sm, md */
   display: none !important;
 }
-@media (min-width: 1280px) { /* lg */
-  .hide-below-lg { display: initial !important; }
+@media (min-width: 1280px) {
+  /* lg */
+  .hide-below-lg {
+    display: initial !important;
+  }
 }
 
-.hide-below-xl { /* Hidden on xs, sm, md, lg */
+.hide-below-xl {
+  /* Hidden on xs, sm, md, lg */
   display: none !important;
 }
-@media (min-width: 1536px) { /* xl */
-  .hide-below-xl { display: initial !important; }
+@media (min-width: 1536px) {
+  /* xl */
+  .hide-below-xl {
+    display: initial !important;
+  }
 }
-
 
 /* Show ONLY on a specific breakpoint range */
 /* Show only on xs (0px - 599.95px) */
-.show-only-xs { display: none !important; }
-@media (max-width: 599.95px) { /* down('sm') */
-  .show-only-xs { display: initial !important; }
+.show-only-xs {
+  display: none !important;
+}
+@media (max-width: 599.95px) {
+  /* down('sm') */
+  .show-only-xs {
+    display: initial !important;
+  }
 }
 
 /* Show only on sm (600px - 959.95px) */
-.show-only-sm { display: none !important; }
-@media (min-width: 600px) and (max-width: 959.95px) { /* between('sm', 'md') */
-  .show-only-sm { display: initial !important; }
+.show-only-sm {
+  display: none !important;
+}
+@media (min-width: 600px) and (max-width: 959.95px) {
+  /* between('sm', 'md') */
+  .show-only-sm {
+    display: initial !important;
+  }
 }
 
 /* Show only on md (960px - 1279.95px) */
-.show-only-md { display: none !important; }
-@media (min-width: 960px) and (max-width: 1279.95px) { /* between('md', 'lg') */
-  .show-only-md { display: initial !important; }
+.show-only-md {
+  display: none !important;
+}
+@media (min-width: 960px) and (max-width: 1279.95px) {
+  /* between('md', 'lg') */
+  .show-only-md {
+    display: initial !important;
+  }
 }
 
 /* Show only on lg (1280px - 1535.95px) */
-.show-only-lg { display: none !important; }
-@media (min-width: 1280px) and (max-width: 1535.95px) { /* between('lg', 'xl') */
-  .show-only-lg { display: initial !important; }
+.show-only-lg {
+  display: none !important;
+}
+@media (min-width: 1280px) and (max-width: 1535.95px) {
+  /* between('lg', 'xl') */
+  .show-only-lg {
+    display: initial !important;
+  }
 }
 
 /* Show only on xl (1536px and up) */
-.show-only-xl { display: none !important; }
-@media (min-width: 1536px) { /* up('xl') */
-  .show-only-xl { display: initial !important; }
+.show-only-xl {
+  display: none !important;
 }
-
+@media (min-width: 1536px) {
+  /* up('xl') */
+  .show-only-xl {
+    display: initial !important;
+  }
+}
 
 /* Hide ABOVE a breakpoint (element is visible on smaller screens, hidden on breakpoint and up) */
 /* Useful for elements that should only appear on mobile/tablet */
-.hide-above-xs { /* Hidden on sm, md, lg, xl. Visible only on xs */
+.hide-above-xs {
+  /* Hidden on sm, md, lg, xl. Visible only on xs */
   display: initial !important;
 }
-@media (min-width: 600px) { /* sm */
-  .hide-above-xs { display: none !important; }
+@media (min-width: 600px) {
+  /* sm */
+  .hide-above-xs {
+    display: none !important;
+  }
 }
 
-.hide-above-sm { /* Hidden on md, lg, xl. Visible on xs, sm */
+.hide-above-sm {
+  /* Hidden on md, lg, xl. Visible on xs, sm */
   display: initial !important;
 }
-@media (min-width: 960px) { /* md */
-  .hide-above-sm { display: none !important; }
+@media (min-width: 960px) {
+  /* md */
+  .hide-above-sm {
+    display: none !important;
+  }
 }
 
-.hide-above-md { /* Hidden on lg, xl. Visible on xs, sm, md */
+.hide-above-md {
+  /* Hidden on lg, xl. Visible on xs, sm, md */
   display: initial !important;
 }
-@media (min-width: 1280px) { /* lg */
-  .hide-above-md { display: none !important; }
+@media (min-width: 1280px) {
+  /* lg */
+  .hide-above-md {
+    display: none !important;
+  }
 }
 
-.hide-above-lg { /* Hidden on xl. Visible on xs, sm, md, lg */
+.hide-above-lg {
+  /* Hidden on xl. Visible on xs, sm, md, lg */
   display: initial !important;
 }
-@media (min-width: 1536px) { /* xl */
-  .hide-above-lg { display: none !important; }
+@media (min-width: 1536px) {
+  /* xl */
+  .hide-above-lg {
+    display: none !important;
+  }
 }
-
 
 /* Responsive spacing helpers - these are kept as they are, using fixed steps */
 /* They can be useful for quick, consistent spacing adjustments */
@@ -266,10 +451,10 @@ input:-webkit-autofill:active {
 
 /* Glass effect for certain components */
 .glass-effect {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--glass-bg, rgba(255, 255, 255, 0.7));
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
 }
 
@@ -295,12 +480,25 @@ input:-webkit-autofill:active {
   color: transparent; /* Fallback */
 }
 
+/* Theme mode indicators */
+body[data-theme-mode="auto"] {
+  --theme-indicator: "🔄";
+}
+
+body[data-theme-mode="light"] {
+  --theme-indicator: "☀️";
+}
+
+body[data-theme-mode="dark"] {
+  --theme-indicator: "🌙";
+}
+
 /* Sticky page header utility class */
 .sticky-page-header {
   position: sticky;
   top: 0;
   z-index: 1101;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--header-bg, rgba(255, 255, 255, 0.85));
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 2px 8px rgba(67, 97, 238, 0.04);

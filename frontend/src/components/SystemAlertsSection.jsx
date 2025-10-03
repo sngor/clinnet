@@ -16,10 +16,10 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { adminService } from "../services/adminService";
-import { patientService } from "../services/patientService";
-import { appointmentService } from "../services/appointmentService";
-import { userService } from "../services/userService";
+import adminService from "../services/adminService";
+import patientService from "../services/patientService";
+import appointmentService from "../services/appointmentService";
+import userService from "../services/userService";
 
 const SystemAlertsSection = () => {
   const [systemAlerts, setSystemAlerts] = useState([]);

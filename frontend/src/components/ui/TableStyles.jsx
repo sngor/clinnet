@@ -11,9 +11,72 @@
 
 import React from "react";
 import { Paper, TableContainer, Table } from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { designSystem } from "./DesignSystem";
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  borderRadius: theme.spacing(designSystem.borderRadius.lg / 8),
+  overflow: "hidden",
+  border: "1px solid",
+  borderColor: theme.palette.divider,
+  backgroundColor: theme.palette.background.paper,
+}));
+
+const StyledTable = styled(Table)(({ theme }) => ({
+  minWidth: 650,
+  backgroundColor: theme.palette.background.paper,
+
+  "& .MuiTableCell-root": {
+    borderBottom: "none",
+    padding: theme.spacing(designSystem.spacing.md / 8),
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+    color: theme.palette.text.primary,
+  },
+
+  "& tbody tr": {
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    transition: designSystem.transitions.normal,
+    backgroundColor: theme.palette.background.paper,
+
+    "&:hover": {
+      backgroundColor: theme.palette.action.hover,
+    },
+  },
+
+  "& tbody tr:last-child": {
+    border: 0,
+  },
+
+  borderCollapse: "separate",
+  borderSpacing: 0,
+
+  "& thead tr th:first-of-type": {
+    borderRadius: `${theme.spacing(
+      designSystem.borderRadius.sm / 8
+    )} 0 0 ${theme.spacing(designSystem.borderRadius.sm / 8)}`,
+  },
+
+  "& thead tr th:last-of-type": {
+    borderRadius: `0 ${theme.spacing(
+      designSystem.borderRadius.sm / 8
+    )} ${theme.spacing(designSystem.borderRadius.sm / 8)} 0`,
+  },
+
+  "& thead th": {
+    backgroundColor:
+      theme.palette.mode === "dark"
+        ? theme.palette.grey[800]
+        : theme.palette.grey[100],
+    fontWeight: designSystem.typography.fontWeights.semibold,
+    fontSize: designSystem.typography.fontSizes.sm,
+    color: theme.palette.text.primary,
+    textTransform: "uppercase",
+    letterSpacing: "0.025em",
+  },
+}));
 
 /**
- * A consistent table wrapper with standardized styling
+ * A consistent table wrapper with standardized styling using design system
  *
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - The table content
@@ -21,60 +84,34 @@ import { Paper, TableContainer, Table } from "@mui/material";
  * @param {Object} [props.tableSx] - Additional styles to apply to the Table component
  */
 export const StyledTableContainer = ({ children, sx = {}, tableSx = {} }) => (
-  <Paper
-    elevation={0}
-    sx={{
-      borderRadius: 2,
-      overflow: "hidden",
-      border: "1px solid",
-      borderColor: "divider",
-      backgroundColor: "background.paper",
-      ...sx,
-    }}
-  >
-    <TableContainer sx={{ boxShadow: "none", backgroundColor: "#fbfbfb" }}>
-      <Table
-        sx={{
-          minWidth: 650,
-          backgroundColor: "#fbfbfb",
-          "& .MuiTableCell-root": {
-            borderBottom: "none",
-            padding: "16px",
-          },
-          "& tbody tr": {
-            borderBottom: "1px solid rgba(224, 224, 224, 0.4)",
-          },
-          "& tbody tr:last-child": {
-            border: 0,
-          },
-          borderCollapse: "separate",
-          borderSpacing: 0,
-          "& thead tr th:first-of-type": {
-            borderRadius: "8px 0 0 8px",
-          },
-          "& thead tr th:last-of-type": {
-            borderRadius: "0 8px 8px 0",
-          },
-          ...tableSx,
-        }}
-      >
-        {children}
-      </Table>
+  <StyledPaper elevation={0} sx={sx}>
+    <TableContainer sx={{ boxShadow: "none" }}>
+      <StyledTable sx={tableSx}>{children}</StyledTable>
     </TableContainer>
-  </Paper>
+  </StyledPaper>
 );
 
 /**
- * Standard styles for table headers
+ * Standard styles for table headers using design system
  */
-export const tableHeaderStyle = {
-  backgroundColor: "#f5f5f5",
-};
+export const tableHeaderStyle = (theme) => ({
+  backgroundColor:
+    theme.palette.mode === "dark"
+      ? theme.palette.grey[800]
+      : theme.palette.grey[100],
+  fontWeight: designSystem.typography.fontWeights.semibold,
+  fontSize: designSystem.typography.fontSizes.sm,
+  color: theme.palette.text.primary,
+  textTransform: "uppercase",
+  letterSpacing: "0.025em",
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+});
 
 /**
- * Standard styles for action buttons container
+ * Standard styles for action buttons container using design system
  */
-export const actionButtonsStyle = {
+export const actionButtonsStyle = (theme) => ({
   display: "flex",
-  gap: 1,
-};
+  gap: theme.spacing(designSystem.spacing.sm / 8),
+  alignItems: "center",
+});

@@ -12,6 +12,7 @@ import {
   Typography,
   Tabs,
   Tab,
+  useTheme,
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import AssessmentIcon from "@mui/icons-material/Assessment";
@@ -149,7 +150,14 @@ function AdminReportsPage() {
   };
 
   // Colors for charts
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+  // Use theme colors for charts
+  const theme = useTheme();
+  const COLORS = [
+    theme.palette.primary.main,
+    theme.palette.success.main,
+    theme.palette.warning.main,
+    theme.palette.error.main,
+  ];
 
   // Render the appropriate chart based on report type and tab value
   const renderChart = () => {
@@ -165,8 +173,16 @@ function AdminReportsPage() {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Bar dataKey="completed" name="Completed" fill="#4caf50" />
-            <Bar dataKey="cancelled" name="Cancelled" fill="#f44336" />
+            <Bar
+              dataKey="completed"
+              name="Completed"
+              fill={theme.palette.success.main}
+            />
+            <Bar
+              dataKey="cancelled"
+              name="Cancelled"
+              fill={theme.palette.error.main}
+            />
           </BarChart>
         </ResponsiveContainer>
       ) : (
@@ -184,7 +200,7 @@ function AdminReportsPage() {
               type="monotone"
               dataKey="total"
               name="Total Appointments"
-              stroke="#8884d8"
+              stroke={theme.palette.primary.main}
               activeDot={{ r: 8 }}
             />
           </LineChart>
@@ -202,7 +218,11 @@ function AdminReportsPage() {
             <YAxis />
             <Tooltip formatter={(value) => [`$${value}`, "Revenue"]} />
             <Legend />
-            <Bar dataKey="revenue" name="Revenue" fill="#2196f3" />
+            <Bar
+              dataKey="revenue"
+              name="Revenue"
+              fill={theme.palette.primary.main}
+            />
           </BarChart>
         </ResponsiveContainer>
       ) : (
@@ -220,7 +240,7 @@ function AdminReportsPage() {
               type="monotone"
               dataKey="revenue"
               name="Revenue"
-              stroke="#2196f3"
+              stroke={theme.palette.primary.main}
               activeDot={{ r: 8 }}
             />
           </LineChart>
@@ -236,7 +256,7 @@ function AdminReportsPage() {
               cy="50%"
               labelLine={false}
               outerRadius={150}
-              fill="#8884d8"
+              fill={theme.palette.primary.main}
               dataKey="value"
               label={({ name, percent }) =>
                 `${name}: ${(percent * 100).toFixed(0)}%`
@@ -264,7 +284,11 @@ function AdminReportsPage() {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Bar dataKey="value" name="Patients" fill="#9c27b0" />
+            <Bar
+              dataKey="value"
+              name="Patients"
+              fill={theme.palette.secondary.main}
+            />
           </BarChart>
         </ResponsiveContainer>
       );
@@ -299,7 +323,7 @@ function AdminReportsPage() {
           <ContentCard
             sx={{
               p: { xs: 2, sm: 4 },
-              background: "#f7f7f7", // Use light grey for report card background
+              backgroundColor: "grey.50",
               boxShadow: 1,
             }}
           >
@@ -379,7 +403,7 @@ function AdminReportsPage() {
                       textAlign: "center",
                       borderRadius: 2,
                       boxShadow: 1,
-                      bgcolor: "#f5f7fa",
+                      bgcolor: "grey.50",
                       transition: "box-shadow 0.2s",
                       "&:hover": { boxShadow: 4 },
                     }}
@@ -420,7 +444,7 @@ function AdminReportsPage() {
                       textAlign: "center",
                       borderRadius: 2,
                       boxShadow: 1,
-                      bgcolor: "#f5f7fa",
+                      bgcolor: "grey.50",
                       transition: "box-shadow 0.2s",
                       "&:hover": { boxShadow: 4 },
                     }}
@@ -461,7 +485,7 @@ function AdminReportsPage() {
                       textAlign: "center",
                       borderRadius: 2,
                       boxShadow: 1,
-                      bgcolor: "#f5f7fa",
+                      bgcolor: "grey.50",
                       transition: "box-shadow 0.2s",
                       "&:hover": { boxShadow: 4 },
                     }}

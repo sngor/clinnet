@@ -88,7 +88,11 @@ function AnimatedBackground({ children, blur = 30 }) {
     // Animation function
     const animate = () => {
       // Clear canvas with a slight fade effect for smoother transitions
-      ctx.fillStyle = "rgba(245, 247, 250, 0.01)";
+      const bgColor =
+        theme.palette.mode === "dark"
+          ? "rgba(15, 23, 42, 0.01)"
+          : "rgba(245, 247, 250, 0.01)";
+      ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, width, height);
 
       // Move gradient points
@@ -144,7 +148,7 @@ function AnimatedBackground({ children, blur = 30 }) {
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        background: "#fbfbfb", // Ensure very light grey
+        backgroundColor: "background.default",
       }}
     >
       <Box
@@ -158,7 +162,7 @@ function AnimatedBackground({ children, blur = 30 }) {
           height: "100%",
           filter: `blur(${blur}px)`,
           zIndex: -1,
-          background: "#fbfbfb", // Ensure canvas background is very light grey
+          backgroundColor: "background.default",
         }}
       />
       {children}

@@ -78,8 +78,9 @@ function PageHeading({
               borderRadius: 2, // Rounded corners, not pill
               backdropFilter: "blur(8px)",
               WebkitBackdropFilter: "blur(8px)",
-              background: "rgba(255,255,255,0.7)",
-              boxShadow: "0 2px 8px rgba(67,97,238,0.08)",
+              backgroundColor: "background.paper",
+              opacity: 0.9,
+              boxShadow: 2,
             }}
           >
             {menuIcon}

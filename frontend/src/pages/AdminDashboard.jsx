@@ -1,7 +1,7 @@
 // src/pages/AdminDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../app/providers/AuthProvider";
-import { useMediaQuery, useTheme } from "@mui/material";
+import { useMediaQuery, useTheme, Typography } from "@mui/material";
 import adminService from "../services/adminService";
 import patientService from "../services/patientService";
 import { getTodaysAppointments } from "../services/appointmentService";
@@ -14,12 +14,13 @@ import { useNavigate } from "react-router-dom";
 
 // Import UI components
 import {
-  PageLayout, // Added PageLayout
+  PageLayout,
+  EnhancedCard,
   ContentCard,
   AppointmentList,
-  BodyText, // Added BodyText
+  BodyText,
 } from "../components/ui";
-import DashboardCard from "../components/ui/DashboardCard"; // Updated path
+import DashboardCard from "../components/ui/Cards/DashboardCard";
 // Removed BannerWarning - moved to Settings page
 
 // Import mock data from centralized location
@@ -114,13 +115,13 @@ function AdminDashboard() {
         <>
           {"Here's what's happening in your clinic today"}
           <br />
-          <span style={{ color: "#888", fontSize: 16 }}>
+          <Typography component="span" variant="body2" color="text.secondary">
             {new Date().toLocaleDateString(undefined, {
               year: "numeric",
               month: "long",
               day: "numeric",
             })}
-          </span>
+          </Typography>
         </>
       }
       loading={loading}
@@ -128,58 +129,63 @@ function AdminDashboard() {
     >
       {/* Error alerts moved to Settings page */}
       {/* Dashboard Summary Cards */}
-      <Grid container spacing={0} sx={{ mb: 4 }}>
-        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <DashboardCard
-            icon={<PeopleIcon fontSize="large" />}
-            title="Users"
+            icon={PeopleIcon}
+            title="Total Users"
             value={usersCount}
-            linkText="Manage Users"
-            linkTo="/admin/users"
+            subtitle="Active system users"
+            color="primary"
+            loading={loading}
+            onClick={() => navigate("/admin/users")}
           />
         </Grid>
-        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <DashboardCard
-            icon={<EventIcon fontSize="large" />}
+            icon={EventIcon}
             title="Appointments"
             value={appointmentsCount}
-            linkText="View All"
-            linkTo="/admin/appointments"
+            subtitle="Today's appointments"
+            color="secondary"
+            loading={loading}
+            onClick={() => navigate("/admin/appointments")}
           />
         </Grid>
-        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <DashboardCard
-            icon={<PersonIcon fontSize="large" />}
-            title="Patients"
+            icon={PersonIcon}
+            title="Total Patients"
             value={patientsCount}
-            linkText="View All"
-            linkTo="/admin/patients"
+            subtitle="Registered patients"
+            color="success"
+            loading={loading}
+            onClick={() => navigate("/admin/patients")}
           />
         </Grid>
-        <Grid sx={{ width: { xs: "100%", sm: "50%", md: "25%" }, p: 1.5 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <DashboardCard
-            icon={<LocalHospitalIcon fontSize="large" />}
-            title="Doctors"
+            icon={LocalHospitalIcon}
+            title="Active Doctors"
             value={doctorsCount}
-            linkText="View All"
-            linkTo="/admin/users"
+            subtitle="Medical staff"
+            color="warning"
+            loading={loading}
+            onClick={() => navigate("/admin/users")}
           />
         </Grid>
       </Grid>
-      {/* Appointments List */}
-      <ContentCard
+      {/* Recent Appointments */}
+      <EnhancedCard
         title="Recent Appointments"
-        elevation={0}
-        sx={{
-          border: "1px solid",
-          borderColor: "divider",
-        }}
+        subtitle="Latest appointment activity"
+        variant="default"
       >
         <AppointmentList
           appointments={Array.isArray(appointmentsData) ? appointmentsData : []}
           showAction={false}
         />
-      </ContentCard>
+      </EnhancedCard>
     </PageLayout>
   );
 }

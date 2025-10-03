@@ -4,6 +4,8 @@
 // Accessibility & Best Practices:
 // - Use semantic heading levels for hierarchy
 // - Responsive font sizes
+// - Consistent Inter font family
+// - Design system spacing and weights
 //
 // Usage Example:
 // import { PageTitle, SectionTitle, BodyText } from '../components/ui';
@@ -13,6 +15,7 @@ import React from "react";
 import { Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
+import { designSystem } from "./DesignSystem";
 
 // Generic reusable typography component
 /**
@@ -82,13 +85,18 @@ export const PageTitle = styled(
     />
   )
 )(({ theme }) => ({
-  fontSize: "2.25rem",
-  fontWeight: 700,
+  fontSize: designSystem.typography.fontSizes["4xl"],
+  fontWeight: designSystem.typography.fontWeights.bold,
   color: theme.palette.primary.main,
-  marginBottom: theme.spacing(3),
-  lineHeight: 1.2,
+  marginBottom: theme.spacing(designSystem.spacing.lg / 8),
+  lineHeight: designSystem.typography.lineHeights.tight,
+  letterSpacing: "-0.025em",
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
   [theme.breakpoints.down("sm")]: {
-    fontSize: "1.75rem",
+    fontSize: designSystem.typography.fontSizes["3xl"],
+  },
+  [theme.breakpoints.down("xs")]: {
+    fontSize: designSystem.typography.fontSizes["2xl"],
   },
 }));
 
@@ -122,13 +130,15 @@ export const SectionTitle = styled(
     />
   )
 )(({ theme }) => ({
-  fontSize: "1.5rem",
-  fontWeight: 600,
+  fontSize: designSystem.typography.fontSizes["2xl"],
+  fontWeight: designSystem.typography.fontWeights.semibold,
   color: theme.palette.primary.main,
-  marginBottom: theme.spacing(2),
-  lineHeight: 1.25,
+  marginBottom: theme.spacing(designSystem.spacing.md / 8),
+  lineHeight: designSystem.typography.lineHeights.tight,
+  letterSpacing: "-0.02em",
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
   [theme.breakpoints.down("sm")]: {
-    fontSize: "1.25rem",
+    fontSize: designSystem.typography.fontSizes.xl,
   },
 }));
 
@@ -156,13 +166,15 @@ export const SubsectionTitle = styled(
     />
   )
 )(({ theme }) => ({
-  fontSize: "1.15rem",
-  fontWeight: 600,
+  fontSize: designSystem.typography.fontSizes.xl,
+  fontWeight: designSystem.typography.fontWeights.semibold,
   color: theme.palette.text.primary,
-  marginBottom: theme.spacing(1.5),
-  lineHeight: 1.3,
+  marginBottom: theme.spacing(designSystem.spacing.sm / 8),
+  lineHeight: designSystem.typography.lineHeights.normal,
+  letterSpacing: "-0.01em",
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
   [theme.breakpoints.down("sm")]: {
-    fontSize: "1rem",
+    fontSize: designSystem.typography.fontSizes.lg,
   },
 }));
 
@@ -190,10 +202,12 @@ export const BodyText = styled(
     />
   )
 )(({ theme }) => ({
-  fontSize: "1rem",
+  fontSize: designSystem.typography.fontSizes.base,
+  fontWeight: designSystem.typography.fontWeights.normal,
   color: theme.palette.text.primary,
-  marginBottom: theme.spacing(1.5),
-  lineHeight: 1.6,
+  marginBottom: theme.spacing(designSystem.spacing.sm / 8),
+  lineHeight: designSystem.typography.lineHeights.relaxed,
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
 }));
 
 BodyText.propTypes = PageTitle.propTypes;
@@ -220,10 +234,12 @@ export const SecondaryText = styled(
     />
   )
 )(({ theme }) => ({
-  fontSize: "0.92rem",
+  fontSize: designSystem.typography.fontSizes.sm,
+  fontWeight: designSystem.typography.fontWeights.normal,
   color: theme.palette.text.secondary,
-  marginBottom: theme.spacing(1),
-  lineHeight: 1.5,
+  marginBottom: theme.spacing(designSystem.spacing.xs / 8),
+  lineHeight: designSystem.typography.lineHeights.normal,
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
 }));
 
 SecondaryText.propTypes = PageTitle.propTypes;
@@ -250,11 +266,12 @@ export const LabelText = styled(
     />
   )
 )(({ theme }) => ({
-  fontSize: "0.92rem",
-  fontWeight: 500,
+  fontSize: designSystem.typography.fontSizes.sm,
+  fontWeight: designSystem.typography.fontWeights.medium,
   color: theme.palette.text.secondary,
-  marginBottom: theme.spacing(0.5),
-  letterSpacing: 0.2,
+  marginBottom: theme.spacing(designSystem.spacing.xs / 8),
+  letterSpacing: "0.025em",
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
 }));
 
 LabelText.propTypes = PageTitle.propTypes;
@@ -281,10 +298,12 @@ export const Caption = styled(
     />
   )
 )(({ theme }) => ({
-  fontSize: "0.78rem",
+  fontSize: designSystem.typography.fontSizes.xs,
+  fontWeight: designSystem.typography.fontWeights.normal,
   color: theme.palette.text.secondary,
-  marginBottom: theme.spacing(1),
-  lineHeight: 1.4,
+  marginBottom: theme.spacing(designSystem.spacing.xs / 8),
+  lineHeight: designSystem.typography.lineHeights.normal,
+  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
 }));
 
 Caption.propTypes = PageTitle.propTypes;

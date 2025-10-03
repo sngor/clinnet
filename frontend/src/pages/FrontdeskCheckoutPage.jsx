@@ -37,11 +37,12 @@ import { apiPost } from "../utils/api-helper"; // Import for API calls
 import PercentIcon from "@mui/icons-material/Percent";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import PrintIcon from "@mui/icons-material/Print";
-import PageContainer from "../components/ui/PageContainer";
-import PageHeading from "../components/ui/PageHeading";
-import ContentCard from "../components/ui/ContentCard";
-import EmptyState from "../components/ui/EmptyState";
-import LoadingIndicator from "../components/ui/LoadingIndicator";
+import {
+  StandardPageLayout,
+  UnifiedCard,
+  EmptyState,
+  LoadingIndicator,
+} from "../components/ui";
 
 function FrontdeskCheckoutPage() {
   // State hooks for UI and data
@@ -190,16 +191,14 @@ function FrontdeskCheckoutPage() {
   };
 
   return (
-    <PageContainer>
-      <PageHeading
-        title="Patient Checkout"
-        subtitle="Process payments for patient services"
-      />
-
+    <StandardPageLayout
+      title="Patient Checkout"
+      subtitle="Process payments for patient services"
+    >
       <Grid container spacing={3}>
         {/* Patient Selection */}
         <Grid item xs={12} md={6}>
-          <ContentCard title="Select Patient">
+          <UnifiedCard title="Select Patient">
             {loading ? (
               <LoadingIndicator message="Loading patients..." />
             ) : (
@@ -270,12 +269,12 @@ function FrontdeskCheckoutPage() {
                 )}
               </>
             )}
-          </ContentCard>
+          </UnifiedCard>
         </Grid>
 
         {/* Service Selection and Checkout */}
         <Grid item xs={12} md={6}>
-          <ContentCard
+          <UnifiedCard
             title={
               selectedPatient ? `Checkout: ${selectedPatient.name}` : "Checkout"
             }
@@ -524,7 +523,7 @@ function FrontdeskCheckoutPage() {
                 description="Please select a patient from the list to proceed with checkout."
               />
             )}
-          </ContentCard>
+          </UnifiedCard>
         </Grid>
       </Grid>
 
@@ -708,7 +707,7 @@ function FrontdeskCheckoutPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </PageContainer>
+    </StandardPageLayout>
   );
 }
 

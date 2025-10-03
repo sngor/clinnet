@@ -127,7 +127,7 @@ function LoginPage() {
         alignItems: "center",
         justifyContent: "center",
         padding: { xs: 2, sm: 4 },
-        backgroundColor: "transparent", // Use theme background
+        backgroundColor: "background.default",
       }}
     >
       <Box maxWidth="md" sx={{ width: "100%", position: "relative" }}>
@@ -140,12 +140,12 @@ function LoginPage() {
               left: 0,
               width: "100%",
               height: "100%",
-              background: "rgba(255,255,255,0.7)",
+              backgroundColor: "background.paper",
+              opacity: 0.9,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               zIndex: 10,
-              opacity: 1,
               pointerEvents: "all",
               transition: "opacity 0.4s cubic-bezier(0.4,0,0.2,1)",
             }}
@@ -160,9 +160,10 @@ function LoginPage() {
             flexDirection: { xs: "column", md: "row" },
             borderRadius: 3,
             overflow: "hidden",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            boxShadow: 4,
             position: "relative",
             minHeight: 480,
+            backgroundColor: "background.paper",
           }}
         >
           {/* Left side - Brand/Logo section */}
@@ -190,7 +191,7 @@ function LoginPage() {
                 alignItems: "center",
                 justifyContent: "center",
                 mb: 3,
-                boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                boxShadow: 2,
               }}
             >
               <MedicalServicesOutlinedIcon sx={{ fontSize: 40 }} />
@@ -233,7 +234,7 @@ function LoginPage() {
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              backgroundColor: "white",
+              backgroundColor: "background.paper",
             }}
           >
             <SectionTitle sx={{ mb: 1, fontWeight: 600 }}>
@@ -381,12 +382,6 @@ function LoginPage() {
                   borderRadius: 2,
                   boxShadow: 1,
                   transition: "all 0.2s",
-                  background:
-                    "linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)",
-                  "&:hover": {
-                    background:
-                      "linear-gradient(90deg, #1565c0 0%, #42a5f5 100%)",
-                  },
                 }}
               >
                 <span style={{ opacity: isLoading || authLoading ? 0.5 : 1 }}>

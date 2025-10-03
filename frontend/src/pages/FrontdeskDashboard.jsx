@@ -8,7 +8,7 @@ import {
 import patientService from "../services/patientService";
 import {
   Grid,
-  // Typography, // Replaced by UI kit components
+  Typography,
   useMediaQuery,
   useTheme,
   Box,
@@ -33,15 +33,16 @@ import {
   PageLayout, // Added PageLayout
   ContentCard,
   AppointmentList,
-  DialogHeading, // DialogHeading is kept
-  BodyText, // Added
-  SectionTitle, // Added
-  PrimaryButton, // Added
-  SecondaryButton, // Added (for Cancel button)
-  TextButton, // Added (alternative for Cancel)
-  StyledTextField, // Added
+  EnhancedCard,
+  DialogHeading,
+  BodyText,
+  SectionTitle,
+  PrimaryButton,
+  SecondaryButton,
+  TextButton,
+  StyledTextField,
 } from "../components/ui";
-import DashboardCard from "../components/ui/DashboardCard"; // Updated path
+import DashboardCard from "../components/ui/Cards/DashboardCard";
 // Removed BannerWarning - moved to Settings page
 
 // Import mock data from centralized location
@@ -199,13 +200,13 @@ function FrontdeskDashboard() {
         <>
           {`${todaysAppointmentsCount} appointments scheduled for today`}
           <br />
-          <span style={{ color: "#888", fontSize: 16 }}>
+          <Typography component="span" variant="body2" color="text.secondary">
             {new Date().toLocaleDateString(undefined, {
               year: "numeric",
               month: "long",
               day: "numeric",
             })}
-          </span>
+          </Typography>
         </>
       }
       loading={loading}
@@ -214,54 +215,39 @@ function FrontdeskDashboard() {
       {/* Error alerts moved to Settings page */}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          lg={3}
-          sx={{ minWidth: 260, maxWidth: 320 }}
-        >
+        <Grid item xs={12} sm={6} md={4}>
           <DashboardCard
-            icon={<EventIcon fontSize="large" />}
-            title="Appointments"
+            icon={EventIcon}
+            title="Today's Appointments"
             value={todaysAppointmentsCount}
-            linkText="View All"
-            linkTo="/frontdesk/appointments"
+            subtitle="Scheduled for today"
+            color="primary"
+            loading={loading}
+            onClick={() => navigate("/frontdesk/appointments")}
           />
         </Grid>
 
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          lg={3}
-          sx={{ minWidth: 260, maxWidth: 320 }}
-        >
+        <Grid item xs={12} sm={6} md={4}>
           <DashboardCard
-            icon={<PeopleIcon fontSize="large" />}
-            title="Patients"
+            icon={PeopleIcon}
+            title="Total Patients"
             value={totalPatientsCount}
-            linkText="View All"
-            linkTo="/frontdesk/patients"
+            subtitle="Registered patients"
+            color="secondary"
+            loading={loading}
+            onClick={() => navigate("/frontdesk/patients")}
           />
         </Grid>
 
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          lg={3}
-          sx={{ minWidth: 260, maxWidth: 320 }}
-        >
+        <Grid item xs={12} sm={6} md={4}>
           <DashboardCard
-            icon={<CalendarMonthIcon fontSize="large" />}
-            title="Schedule"
+            icon={CalendarMonthIcon}
+            title="All Appointments"
             value={totalAppointmentsCount}
-            linkText="View All"
-            linkTo="/frontdesk/appointments"
+            subtitle="Total scheduled"
+            color="success"
+            loading={loading}
+            onClick={() => navigate("/frontdesk/appointments")}
           />
         </Grid>
       </Grid>

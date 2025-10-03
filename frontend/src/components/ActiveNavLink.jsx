@@ -1,7 +1,12 @@
 // src/components/ActiveNavLink.jsx
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { ListItemButton, ListItemIcon, ListItemText, useTheme } from "@mui/material";
+import {
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  useTheme,
+} from "@mui/material";
 
 /**
  * A component that combines MUI ListItemButton with React Router's NavLink
@@ -63,20 +68,22 @@ function ActiveNavLink({
                   }
                 ),
                 backgroundColor: isActive
-                  ? "rgba(25, 118, 210, 0.12)"
+                  ? "primary.50"
                   : hovered
-                  ? "rgba(25, 118, 210, 0.08)"
+                  ? "action.hover"
                   : undefined,
                 "& .MuiListItemIcon-root": {
                   color:
                     isActive || hovered
                       ? theme.palette.primary.main
                       : theme.palette.text.secondary,
-                  "& .MuiSvgIcon-root": { // Target the SVG icon directly for transform
+                  "& .MuiSvgIcon-root": {
+                    // Target the SVG icon directly for transform
                     transition: "transform 0.2s ease-in-out",
                   },
                 },
-                "&:hover": { // Add hover effect for the icon
+                "&:hover": {
+                  // Add hover effect for the icon
                   "& .MuiSvgIcon-root": {
                     transform: "scale(1.15)",
                   },
@@ -111,7 +118,7 @@ function ActiveNavLink({
                 wordBreak: "break-word",
                 opacity: 0.95,
                 width: "100%",
-                color: "#555",
+                color: (theme) => theme.palette.text.secondary,
                 userSelect: "none",
                 pointerEvents: "none",
                 transition: "font-weight 0.15s",
@@ -156,7 +163,7 @@ function ActiveNavLink({
           }
         ),
         "&:hover": {
-          backgroundColor: "rgba(25, 118, 210, 0.08)",
+          backgroundColor: "action.hover",
           "& .MuiListItemText-primary": {
             color: theme.palette.primary.main,
           },
@@ -168,7 +175,7 @@ function ActiveNavLink({
           },
         },
         "&.active": {
-          backgroundColor: "rgba(25, 118, 210, 0.12)",
+          backgroundColor: "primary.50",
           "& .MuiListItemIcon-root": {
             color: theme.palette.primary.main,
             // No specific transform for active, hover takes precedence if also hovered
@@ -190,7 +197,8 @@ function ActiveNavLink({
             alignItems: "center",
             justifyContent: "center",
             color: "text.secondary",
-            "& .MuiSvgIcon-root": { // Target the SVG icon directly
+            "& .MuiSvgIcon-root": {
+              // Target the SVG icon directly
               transition: "transform 0.2s ease-in-out",
             },
           }}

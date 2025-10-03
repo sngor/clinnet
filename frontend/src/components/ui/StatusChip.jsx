@@ -12,17 +12,24 @@
 import React from "react";
 import { Chip, Box } from "@mui/material";
 import { styled, keyframes } from "@mui/material/styles";
-// Inline function to avoid import issues
+import { designSystem } from "./DesignSystem";
+// Theme-aware function for status colors
 const getAppointmentStatusColor = (status) => {
   switch (status) {
     case "confirmed":
-      return "#4caf50";
+    case "Scheduled":
+    case "Checked-in":
+      return "success";
     case "pending":
-      return "#ff9800";
+    case "In Progress":
+      return "warning";
     case "cancelled":
-      return "#f44336";
+    case "Cancelled":
+      return "error";
+    case "Completed":
+      return "info";
     default:
-      return "#2196f3";
+      return "primary";
   }
 };
 
@@ -34,23 +41,23 @@ const pulsate = keyframes`
 `;
 
 const StyledChip = styled(Chip)(({ theme, animate, color }) => ({
-  fontWeight: 600,
-  borderRadius: 50, // Pill-shaped
-  fontSize: "0.75rem",
-  letterSpacing: "0.02em",
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+  fontWeight: designSystem.typography.fontWeights.semibold,
+  borderRadius: theme.spacing(designSystem.borderRadius.full / 8),
+  fontSize: designSystem.typography.fontSizes.xs,
+  letterSpacing: "0.025em",
+  boxShadow: designSystem.shadows.sm,
   border: "1px solid",
   borderColor: `${
     theme.palette[color]?.light || color || theme.palette.primary.light
   }40`,
-  transition: "all 0.2s ease",
+  transition: designSystem.transitions.normal,
   animation: animate ? `${pulsate} 2s infinite ease-in-out` : "none",
   "&:hover": {
-    transform: "translateY(-2px)",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+    transform: designSystem.hover.lift,
+    boxShadow: designSystem.shadows.md,
   },
   "& .MuiChip-label": {
-    padding: "0 12px",
+    padding: `0 ${theme.spacing(1.5)}`,
   },
 }));
 
