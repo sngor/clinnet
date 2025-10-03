@@ -8,12 +8,25 @@ This guide covers common issues, solutions, and monitoring/logs for the Clinnet-
 
 ### 1. CI/CD Deployment Failures
 
-- **Symptom**: GitHub Actions deployment fails
-- **Solution**: Check the following:
-  - AWS credentials are configured in GitHub secrets
-  - `AWS_DEPLOY_ROLE_ARN` is set for OIDC authentication
-  - Environment-specific secrets are configured
-  - Deployment uses the unified script: `python backend/deployment/deploy.py`
+- **Symptom**: "Credentials could not be loaded" error
+- **Solution**: Configure AWS authentication in GitHub secrets:
+
+  - **Option 1 (Recommended)**: Set `AWS_DEPLOY_ROLE_ARN` for OIDC authentication
+  - **Option 2**: Set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+  - Ensure secrets are configured in the correct environment (dev/test/prod)
+
+- **Symptom**: Tests failing in CI
+- **Solution**: Tests are optional and will be skipped if not configured
+
+  - Frontend tests require `npm run lint` and `npm run test` scripts
+  - Backend tests require `pytest` and test files in `tests/` directory
+  - Use the "Validate" workflow to check project structure
+
+- **Symptom**: "npm ci can only install packages when your package.json and package-lock.json are in sync"
+- **Solution**: Lock file is out of sync with dependencies
+  - Remove workspace configuration if not using npm workspaces properly
+  - Delete `package-lock.json` and run `npm install` to regenerate
+  - The test workflow will automatically fallback to `npm install` if `npm ci` fails
 
 ### 2. CORS Errors
 

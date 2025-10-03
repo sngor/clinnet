@@ -1,0 +1,56 @@
+name: Validate
+
+on:
+    workflow_dispatch:
+    pull_request:
+        branches: [main]
+
+jobs:
+    validate:
+        name: Validate Configuration
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Check file structure
+              run: |
+                  echo "=== Project Structure ==="
+                  ls -la
+                  echo ""
+                  echo "=== Backend Structure ==="
+                  ls -la backend/
+                  echo ""
+                  echo "=== Frontend Structure ==="
+                  ls -la frontend/
+                  echo ""
+                  echo "=== Deployment Script ==="
+                  ls -la backend/deployment/
+                  echo ""
+                  echo "=== Frontend Scripts ==="
+                  ls -la frontend/scripts/ || echo "No frontend scripts directory"
+
+            - name: Check package.json files
+              run: |
+                  echo "=== Root package.json ==="
+                  cat package.json
+                  echo ""
+                  echo "=== Frontend package.json scripts ==="
+                  cat frontend/package.json | grep -A 10 '"scripts"'
+                  echo ""
+                  echo "=== Backend package.json ==="
+                  cat backend/package.json | grep -A 10 '"scripts"' || echo "No backend package.json scripts"
+
+            - name: Check requirements files
+              run: |
+                  echo "=== Backend requirements.txt ==="
+                  cat backend/requirements.txt
+                  echo ""
+                  echo "=== Backend requirements-dev.txt ==="
+                  cat backend/requirements-dev.txt || echo "No requirements-dev.txt"
+
+            - name: Test deployment script
+              run: |
+                  echo "=== Testing deployment script ==="
+                  python backend/deployment/deploy.py --help
