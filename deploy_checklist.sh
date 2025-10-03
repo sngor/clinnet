@@ -53,4 +53,4 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "✅ All deployment checks passed!"
-echo "Run backend/deploy_validation.py to proceed with deployment"
+echo "Run 'npm run deploy' or 'python backend/deployment/deploy.py' to proceed with deployment"

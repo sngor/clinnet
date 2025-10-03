@@ -34,8 +34,8 @@ This guide covers backend-specific setup, deployment, and troubleshooting. For f
 
 ## Key Scripts
 
-- `deploy_validation.py` — Automated deployment and validation (recommended)
-- `quick_deploy.sh` — Quick deploy script
+- `deploy_validation.py` — Automated deployment and validation (legacy)
+- `deployment/deploy.py` — Unified deployment script (recommended)
 - `scripts/seed_data.sh` — Seed DynamoDB with test data
 
 ---

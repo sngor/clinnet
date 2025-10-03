@@ -6,7 +6,16 @@ This guide covers common issues, solutions, and monitoring/logs for the Clinnet-
 
 ## Common Issues & Solutions
 
-### 1. CORS Errors
+### 1. CI/CD Deployment Failures
+
+- **Symptom**: GitHub Actions fails with "No such file or directory" for deployment scripts
+- **Solution**: The project has been refactored to use unified deployment scripts. Update any CI/CD workflows to use:
+  ```bash
+  python deployment/deploy.py --backend-only
+  ```
+  instead of deleted scripts like `deploy-minimal.sh`, `quick_deploy.sh`, etc.
+
+### 2. CORS Errors
 
 - **Symptom**: Browser console shows CORS policy errors
 - **Solution**: Ensure API Gateway and Lambda return proper CORS headers on all responses

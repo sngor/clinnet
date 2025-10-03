@@ -3,21 +3,25 @@
 ## Issues Fixed
 
 ### 1. SAM Template Issues
+
 - **Fixed missing table names**: Added explicit table names for MedicalReportsTable and DocumentsBucket to prevent naming conflicts
 - **Fixed API path conflicts**: Changed `/api/reports` to `/api/medical-reports` to avoid conflicts with aggregated reports endpoint
 - **Fixed function naming**: Added environment suffix to function names to prevent conflicts across environments
 - **Added missing capabilities**: Added `CAPABILITY_NAMED_IAM` to handle IAM resources with custom names
 
 ### 2. CI-CD Workflow Improvements
+
 - **Enhanced deployment parameters**: Added `--parallel` build flag and `--resolve-s3` for better performance
 - **Added proper capabilities**: Included both `CAPABILITY_IAM` and `CAPABILITY_NAMED_IAM`
 - **Improved error handling**: Added better deployment configuration
 
 ### 3. Code Fixes
+
 - **Fixed UUID import**: Corrected `uuidv4()` to `randomUUID()` in medical reports handler
 - **Added Lambda layer requirements**: Created requirements.txt for proper dependency management
 
 ### 4. Configuration Updates
+
 - **Updated samconfig.toml**: Added parallel build and proper capabilities configuration
 - **Created troubleshooting script**: Added deployment diagnostic tool
 
@@ -28,17 +32,19 @@
 3. `backend/samconfig.toml` - Updated deployment parameters
 4. `backend/src/handlers/medical_reports/index.js` - Fixed UUID usage
 5. `backend/lambda_layer/requirements.txt` - Added (new file)
-6. `backend/troubleshoot-deployment.sh` - Added (new file)
+6. `backend/deployment/deploy.py` - Unified deployment script
 
 ## Next Steps
 
-1. **Run the troubleshooting script**:
+1. **Use the unified deployment script**:
+
    ```bash
    cd backend
-   ./troubleshoot-deployment.sh
+   python deployment/deploy.py --backend-only
    ```
 
 2. **If deployment still fails, check CloudFormation events**:
+
    ```bash
    aws cloudformation describe-stack-events --stack-name sam-clinnet --region us-east-2
    ```

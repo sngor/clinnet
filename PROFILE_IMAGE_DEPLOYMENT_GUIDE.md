@@ -79,11 +79,15 @@ source test_env/bin/activate
 python test_end_to_end.py
 ```
 
-### Step 2: Deploy Using Validation Script
+### Step 2: Deploy Using Unified Script
 
 ```bash
-cd /Users/sengngor/Desktop/App/Clinnet-EMR/backend
-python deploy_validation.py
+# From project root
+npm run deploy:backend
+
+# Or directly
+cd backend
+python deployment/deploy.py --backend-only
 ```
 
 This script will:
@@ -98,7 +102,7 @@ This script will:
 ### Step 3: Manual Deployment (Alternative)
 
 ```bash
-cd /Users/sengngor/Desktop/App/Clinnet-EMR/backend
+cd backend
 sam build
 sam validate
 sam deploy
