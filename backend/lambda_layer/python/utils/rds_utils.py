@@ -8,8 +8,6 @@ import logging
 import pymysql
 from typing import Dict, List, Optional, Any, Tuple
 from contextlib import contextmanager
-import boto3
-from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 

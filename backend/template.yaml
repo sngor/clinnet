@@ -39,7 +39,6 @@ Globals:
   Function:
     Timeout: 30
     Runtime: python3.12
-    MemorySize: 256
     VpcConfig:
       SecurityGroupIds:
         - !Ref LambdaSecurityGroup
@@ -65,7 +64,7 @@ Globals:
         ENVIRONMENT: !Ref Environment
         USER_POOL_ID: !Ref UserPool
     Architectures:
-      - x86_64
+      - arm64
   Api:
     Cors:
       AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
@@ -261,11 +260,11 @@ Resources:
       EngineMode: provisioned
       ServerlessV2ScalingConfiguration:
         MinCapacity: 0.5
-        MaxCapacity: 16
+        MaxCapacity: !If [IsProduction, 8, 4]
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Ref DBPassword
       DatabaseName: clinnet_emr
-      BackupRetentionPeriod: 7
+      BackupRetentionPeriod: !If [IsProduction, 7, 1]
       PreferredBackupWindow: "03:00-04:00"
       PreferredMaintenanceWindow: "sun:04:00-sun:05:00"
       VpcSecurityGroupIds:
@@ -344,9 +343,25 @@ Resources:
             MaxAge: 3000
       LifecycleConfiguration:
         Rules:
+          - Id: DocumentsLifecycleOptimization
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: STANDARD_IA
+              - TransitionInDays: 90
+                StorageClass: GLACIER
+              - TransitionInDays: 365
+                StorageClass: DEEP_ARCHIVE
           - Id: ExpireTemporaryFiles
             Status: Enabled
-            ExpirationInDays: 30
+            Prefix: "temp/"
+            ExpirationInDays: 7
+          - Id: IntelligentTiering
+            Status: Enabled
+            Prefix: "documents/"
+            Transitions:
+              - TransitionInDays: 0
+                StorageClass: INTELLIGENT_TIERING
 
   MedicalReportImagesBucket:
     Type: AWS::S3::Bucket
@@ -368,6 +383,27 @@ Resources:
             AllowedOrigins:
               - "*"
             MaxAge: 3000
+      LifecycleConfiguration:
+        Rules:
+          - Id: MedicalImagesLifecycleOptimization
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 7
+                StorageClass: STANDARD_IA
+              - TransitionInDays: 30
+                StorageClass: GLACIER
+              - TransitionInDays: 180
+                StorageClass: DEEP_ARCHIVE
+          - Id: IntelligentTieringForImages
+            Status: Enabled
+            Prefix: "images/"
+            Transitions:
+              - TransitionInDays: 0
+                StorageClass: INTELLIGENT_TIERING
+          - Id: ExpireUploadFailures
+            Status: Enabled
+            Prefix: "uploads/failed/"
+            ExpirationInDays: 1
 
   # Frontend S3 Bucket for Static Website Hosting
   FrontendBucket:
@@ -440,9 +476,90 @@ Resources:
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # Managed-CachingOptimized
           OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
           ResponseHeadersPolicyId: 67f7725c-6f97-4210-82d7-5512b31e9d03 # Managed-SecurityHeadersPolicy
+        CacheBehaviors:
+          # Static Assets - Long cache TTL
+          - PathPattern: "*.js"
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingOptimizedForUncompressedObjects
+            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
+          - PathPattern: "*.css"
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingOptimizedForUncompressedObjects
+            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
+          # Images - Medium cache TTL with compression
+          - PathPattern: "*.png"
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # Managed-CachingOptimized
+            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
+          - PathPattern: "*.jpg"
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # Managed-CachingOptimized
+            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
+          - PathPattern: "*.svg"
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingOptimizedForUncompressedObjects
+            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin
+          # API responses - No caching for dynamic content
+          - PathPattern: "/api/*"
+            TargetOriginId: APIOrigin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingOptimizedForUncompressedObjects
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac # Managed-AllViewerExceptHostHeader
         DefaultRootObject: index.html
         Enabled: true
-        HttpVersion: http2
+        HttpVersion: http2and3
         IPV6Enabled: true
         Origins:
           - Id: S3Origin
@@ -450,6 +567,15 @@ Resources:
             S3OriginConfig:
               OriginAccessIdentity: ""
             OriginAccessControlId: !Ref CloudFrontOriginAccessControl
+          - Id: APIOrigin
+            DomainName: !Sub "${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com"
+            CustomOriginConfig:
+              HTTPPort: 443
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols:
+                - TLSv1.2
+            OriginPath: !Sub "/${Environment}"
         CustomErrorResponses:
           - ErrorCode: 403
             ResponseCode: 200
@@ -459,7 +585,7 @@ Resources:
             ResponseCode: 200
             ResponsePagePath: /index.html
             ErrorCachingMinTTL: 300
-        PriceClass: PriceClass_100 # Use only North America and Europe edge locations for cost optimization
+        PriceClass: !If [IsProduction, PriceClass_All, PriceClass_100] # Environment-specific price class optimization
 
   # API Gateway
   ClinicAPI:
@@ -544,12 +670,13 @@ Resources:
       CompatibleRuntimes:
         - python3.12
 
-  # Lambda Functions for Patients (RDS-based)
-  GetPatientsFunction:
+  # Unified Lambda Function for Patients (RDS-based)
+  UnifiedPatientFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/patients/
-      Handler: get_patients.lambda_handler
+      Handler: unified_patient_handler.lambda_handler
+      MemorySize: 512
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -561,15 +688,6 @@ Resources:
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
-
-  GetPatientByIdFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/patients/
-      Handler: get_patient_by_id.lambda_handler
-      Layers:
-        - !Ref UtilsLayer
-      Events:
         GetPatientById:
           Type: Api
           Properties:
@@ -578,45 +696,18 @@ Resources:
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
-
-  CreatePatientFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/patients/
-      Handler: create_patient.lambda_handler
-      Layers:
-        - !Ref UtilsLayer
-      Events:
         CreatePatient:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
             Path: /api/patients
             Method: post
-
-  UpdatePatientFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/patients/
-      Handler: update_patient.lambda_handler
-      Layers:
-        - !Ref UtilsLayer
-      Events:
         UpdatePatient:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
             Path: /api/patients/{id}
             Method: put
-
-  DeletePatientFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/patients/
-      Handler: delete_patient.lambda_handler
-      Layers:
-        - !Ref UtilsLayer
-      Events:
         DeletePatient:
           Type: Api
           Properties:
@@ -630,6 +721,7 @@ Resources:
     Properties:
       CodeUri: src/handlers/appointments/
       Handler: get_appointments.lambda_handler
+      MemorySize: 512
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -647,6 +739,7 @@ Resources:
     Properties:
       CodeUri: src/handlers/appointments/
       Handler: get_appointment_by_id.lambda_handler
+      MemorySize: 512
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -664,6 +757,7 @@ Resources:
     Properties:
       CodeUri: src/handlers/appointments/
       Handler: create_appointment.lambda_handler
+      MemorySize: 512
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -679,6 +773,7 @@ Resources:
     Properties:
       CodeUri: src/handlers/appointments/
       Handler: update_appointment.lambda_handler
+      MemorySize: 512
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -694,6 +789,7 @@ Resources:
     Properties:
       CodeUri: src/handlers/appointments/
       Handler: delete_appointment.lambda_handler
+      MemorySize: 512
       Layers:
         - !Ref UtilsLayer
       Events:
@@ -719,16 +815,18 @@ Resources:
         - AttributeName: id
           KeyType: HASH
 
-  GetServicesFunction:
+  # Unified Lambda Function for Services (DynamoDB-based)
+  UnifiedServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/services/
-      Handler: get_services.lambda_handler
+      Handler: unified_service_handler.lambda_handler
+      MemorySize: 512
       Environment:
         Variables:
           SERVICES_TABLE: !Ref ServicesTable
       Policies:
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref ServicesTable
       Layers:
         - !Ref UtilsLayer
@@ -741,21 +839,6 @@ Resources:
             Method: get
             Auth:
               Authorizer: NONE
-
-  GetServiceByIdFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/services/
-      Handler: get_service_by_id.lambda_handler
-      Environment:
-        Variables:
-          SERVICES_TABLE: !Ref ServicesTable
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref ServicesTable
-      Layers:
-        - !Ref UtilsLayer
-      Events:
         GetServiceById:
           Type: Api
           Properties:
@@ -764,69 +847,36 @@ Resources:
             Method: get
             Auth:
               Authorizer: NONE
-
-  CreateServiceFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/services/
-      Handler: create_service.lambda_handler
-      Environment:
-        Variables:
-          SERVICES_TABLE: !Ref ServicesTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ServicesTable
-      Layers:
-        - !Ref UtilsLayer
-      Events:
         CreateService:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
             Path: /api/services
             Method: post
-
-  UpdateServiceFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/services/
-      Handler: update_service.lambda_handler
-      Environment:
-        Variables:
-          SERVICES_TABLE: !Ref ServicesTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ServicesTable
-      Layers:
-        - !Ref UtilsLayer
-      Events:
         UpdateService:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
             Path: /api/services/{id}
             Method: put
-
-  DeleteServiceFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/services/
-      Handler: delete_service.lambda_handler
-      Environment:
-        Variables:
-          SERVICES_TABLE: !Ref ServicesTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ServicesTable
-      Layers:
-        - !Ref UtilsLayer
-      Events:
         DeleteService:
           Type: Api
           Properties:
             RestApiId: !Ref ClinicAPI
             Path: /api/services/{id}
             Method: delete
+        OptionsServices:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/services
+            Method: options
+        OptionsServiceById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/services/{id}
+            Method: options
 
   # Lambda Functions for Users (Cognito-based)
   UsersTable:
@@ -848,6 +898,7 @@ Resources:
     Properties:
       CodeUri: src/handlers/users/
       Handler: list_users.lambda_handler
+      MemorySize: 128
       Environment:
         Variables:
           USERS_TABLE: !Ref UsersTable
@@ -877,6 +928,7 @@ Resources:
     Properties:
       CodeUri: src/handlers/users/
       Handler: create_cognito_user.lambda_handler
+      MemorySize: 128
       Environment:
         Variables:
           USERS_TABLE: !Ref UsersTable
@@ -911,6 +963,7 @@ Resources:
       Handler: handlers/medical_reports/index.handler
       Runtime: nodejs20.x
       CodeUri: src/
+      MemorySize: 1024
       Description: Medical reports CRUD operations
       Environment:
         Variables:
@@ -977,12 +1030,85 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  # Optimized Image Upload Function for Medical Reports
+  OptimizedImageUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/medical_reports/
+      Handler: optimized_image_upload.lambda_handler
+      MemorySize: 1024
+      Timeout: 60
+      Description: Optimized image upload with compression and multiple size generation
+      Environment:
+        Variables:
+          MEDICAL_REPORTS_TABLE: !Ref MedicalReportsTable
+          MEDICAL_REPORT_IMAGES_BUCKET: !Ref MedicalReportImagesBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MedicalReportsTable
+        - S3CrudPolicy:
+            BucketName: !Ref MedicalReportImagesBucket
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        UploadOptimizedImage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/medical-reports/{id}/upload-optimized-image
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+        UploadOptimizedImageOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/medical-reports/{id}/upload-optimized-image
+            Method: options
+
+  # Enhanced Image Upload Function for Medical Reports (Python version)
+  EnhancedImageUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/medical_reports/
+      Handler: image_upload_handler.lambda_handler
+      MemorySize: 512
+      Timeout: 30
+      Description: Enhanced image upload with basic optimization (Python version)
+      Environment:
+        Variables:
+          MEDICAL_REPORTS_TABLE: !Ref MedicalReportsTable
+          MEDICAL_REPORT_IMAGES_BUCKET: !Ref MedicalReportImagesBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MedicalReportsTable
+        - S3CrudPolicy:
+            BucketName: !Ref MedicalReportImagesBucket
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        UploadImage:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/medical-reports/{id}/upload-image
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+        UploadImageOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/medical-reports/{id}/upload-image
+            Method: options
+
   # AI Summarization Function
   SummarizeNoteFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/ai/
       Handler: summarize_note.lambda_handler
+      MemorySize: 1024
       Environment:
         Variables:
           MEDICAL_REPORTS_TABLE: !Ref MedicalReportsTable
@@ -1007,21 +1133,56 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  # Diagnostic Functions for System Health
-  CheckS3ConnectivityFunction:
+  # Unified Diagnostic Health Check Function
+  UnifiedHealthCheckFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/handlers/diagnostics/
-      Handler: check_s3.lambda_handler
+      Handler: unified_health_check.lambda_handler
+      MemorySize: 128
+      Environment:
+        Variables:
+          PATIENT_RECORDS_TABLE: !Ref MedicalReportsTable # Using medical reports table as patient records
+          APPOINTMENTS_TABLE: !Ref MedicalReportsTable # Placeholder - adjust if appointments table exists
       Policies:
         - Statement:
             - Effect: Allow
               Action:
                 - s3:ListAllMyBuckets
+                - dynamodb:ListTables
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminGetUser
+                - cognito-idp:AdminUpdateUserAttributes
+                - cognito-idp:AdminDeleteUser
               Resource: "*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ServicesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MedicalReportsTable
       Layers:
         - !Ref UtilsLayer
       Events:
+        HealthCheck:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/diagnostics
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+        HealthCheckWithType:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ClinicAPI
+            Path: /api/diagnostics/{type}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+        # Legacy endpoints for backward compatibility
         CheckS3:
           Type: Api
           Properties:
@@ -1030,15 +1191,6 @@ Resources:
             Method: get
             Auth:
               Authorizer: CognitoAuthorizer
-
-  CheckDatabaseConnectivityFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/handlers/diagnostics/
-      Handler: check_database.lambda_handler
-      Layers:
-        - !Ref UtilsLayer
-      Events:
         CheckDatabase:
           Type: Api
           Properties:
@@ -1056,6 +1208,7 @@ Resources:
       Handler: handlers/reports/getAggregatedReports.handler
       Runtime: nodejs20.x
       CodeUri: src/
+      MemorySize: 1024
       Description: Fetches aggregated report data for admin reporting
       Policies:
         - AWSLambdaBasicExecutionRole
