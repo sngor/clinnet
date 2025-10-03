@@ -1,0 +1,269 @@
+/**
+ * Theme Transition Styles
+ * Global CSS for smooth theme transitions without visual glitches
+ */
+
+/* Theme transition variables */
+:root {
+  --theme-transition-duration: 200ms;
+  --theme-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --theme-transition-delay: 0ms;
+}
+
+/* Global theme transitions */
+*,
+*::before,
+*::after {
+  transition: background-color var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    border-color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    fill var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    stroke var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay);
+}
+
+/* Body and HTML transitions */
+body,
+html {
+  transition: background-color var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay);
+}
+
+/* Prevent layout shifts during theme transitions */
+* {
+  box-sizing: border-box;
+}
+
+/* Optimize text rendering during transitions */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+div,
+a,
+button,
+input,
+textarea,
+select,
+label {
+  text-rendering: optimizeLegibility;
+  font-smooth: always;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent image flicker during theme changes */
+img,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Interactive element transitions */
+button,
+input,
+textarea,
+select,
+a {
+  transition: background-color var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    border-color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay);
+}
+
+/* MUI component transitions */
+.MuiCard-root,
+.MuiPaper-root {
+  transition: background-color var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    border-color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay);
+}
+
+.MuiTypography-root {
+  transition: color var(--theme-transition-duration)
+    var(--theme-transition-easing) var(--theme-transition-delay);
+}
+
+.MuiSvgIcon-root {
+  transition: fill var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay);
+}
+
+.MuiButton-root {
+  transition: background-color var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    border-color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    transform 150ms var(--theme-transition-easing);
+}
+
+.MuiTextField-root .MuiOutlinedInput-root {
+  transition: background-color var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    border-color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay);
+}
+
+.MuiAppBar-root {
+  transition: background-color var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    border-color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay);
+}
+
+.MuiDrawer-paper {
+  transition: background-color var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    border-color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay);
+}
+
+.MuiTableCell-root {
+  transition: background-color var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    border-color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay);
+}
+
+.MuiTableRow-root {
+  transition: background-color var(--theme-transition-duration)
+    var(--theme-transition-easing) var(--theme-transition-delay);
+}
+
+/* Theme loading states */
+.theme-loading {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.theme-loaded {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity var(--theme-transition-duration)
+    var(--theme-transition-easing);
+}
+
+/* Theme transitioning state */
+body.theme-transitioning {
+  /* Prevent user interactions during transition to avoid visual glitches */
+  pointer-events: none;
+}
+
+body.theme-transitioning * {
+  /* Ensure all elements transition smoothly */
+  transition: background-color var(--theme-transition-duration)
+      var(--theme-transition-easing) var(--theme-transition-delay),
+    color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    border-color var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    fill var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay),
+    stroke var(--theme-transition-duration) var(--theme-transition-easing)
+      var(--theme-transition-delay);
+}
+
+/* Re-enable interactions after transition */
+body.theme-loaded {
+  pointer-events: auto;
+}
+
+/* Skeleton loading animation for theme-dependent content */
+.theme-skeleton {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: theme-skeleton-loading 1.5s infinite;
+}
+
+@keyframes theme-skeleton-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .theme-skeleton {
+    animation: none;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --theme-transition-duration: 0ms;
+  }
+}
+
+/* Focus management during theme transitions */
+body.theme-transitioning *:focus {
+  outline: none;
+}
+
+body.theme-loaded *:focus-visible {
+  outline: 2px solid var(--theme-focus-color, #2563eb);
+  outline-offset: 2px;
+}
+
+/* Prevent flash of unstyled content */
+.theme-provider-wrapper {
+  min-height: 100vh;
+  transition: opacity var(--theme-transition-duration)
+    var(--theme-transition-easing);
+}
+
+.theme-provider-wrapper.loading {
+  opacity: 0;
+}
+
+.theme-provider-wrapper.loaded {
+  opacity: 1;
+}

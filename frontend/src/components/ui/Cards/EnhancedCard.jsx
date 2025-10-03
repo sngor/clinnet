@@ -10,46 +10,46 @@ import {
 import { styled } from "@mui/material/styles";
 import { designSystem } from "../DesignSystem";
 
-const StyledCard = styled(Card)(
-  ({ theme, variant = "default", interactive = false }) => {
-    const variants = {
-      default: {
-        borderRadius: theme.spacing(2),
-        boxShadow: theme.shadows[2],
-        border: `1px solid ${theme.palette.divider}`,
-      },
-      elevated: {
-        borderRadius: theme.spacing(2.5),
-        boxShadow: theme.shadows[4],
-        border: "none",
-      },
-      flat: {
-        borderRadius: theme.spacing(1.5),
-        boxShadow: "none",
-        border: `1px solid ${theme.palette.divider}`,
-        backgroundColor: theme.palette.background.paper,
-      },
-      outlined: {
-        borderRadius: theme.spacing(2),
-        boxShadow: "none",
-        border: `2px solid ${theme.palette.divider}`,
-      },
-    };
+const StyledCard = styled(Card, {
+  shouldForwardProp: (prop) => prop !== "interactive",
+})(({ theme, variant = "default", interactive = false }) => {
+  const variants = {
+    default: {
+      borderRadius: theme.spacing(2),
+      boxShadow: theme.shadows[2],
+      border: `1px solid ${theme.palette.divider}`,
+    },
+    elevated: {
+      borderRadius: theme.spacing(2.5),
+      boxShadow: theme.shadows[4],
+      border: "none",
+    },
+    flat: {
+      borderRadius: theme.spacing(1.5),
+      boxShadow: "none",
+      border: `1px solid ${theme.palette.divider}`,
+      backgroundColor: theme.palette.background.paper,
+    },
+    outlined: {
+      borderRadius: theme.spacing(2),
+      boxShadow: "none",
+      border: `2px solid ${theme.palette.divider}`,
+    },
+  };
 
-    return {
-      ...variants[variant],
-      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-      ...(interactive && {
-        cursor: "pointer",
-        "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: theme.shadows[6],
-          borderColor: theme.palette.primary.main,
-        },
-      }),
-    };
-  }
-);
+  return {
+    ...variants[variant],
+    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+    ...(interactive && {
+      cursor: "pointer",
+      "&:hover": {
+        transform: "translateY(-2px)",
+        boxShadow: theme.shadows[6],
+        borderColor: theme.palette.primary.main,
+      },
+    }),
+  };
+});
 
 const StyledCardHeader = styled(CardHeader)(({ theme }) => ({
   paddingBottom: theme.spacing(1),

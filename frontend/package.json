@@ -13,7 +13,12 @@
     "test:run": "vitest --run",
     "clean": "sh ./scripts/clean-install.sh",
     "mock-server": "node mock-server.js",
-    "dev:full": "concurrently \"npm run mock-server\" \"npm run dev\""
+    "dev:full": "concurrently \"npm run mock-server\" \"npm run dev\"",
+    "migration:analyze": "node scripts/cleanup-legacy.js --dry-run --verbose",
+    "migration:cleanup": "node scripts/cleanup-legacy.js --interactive",
+    "migration:validate": "node scripts/validate-migration.js --verbose",
+    "migration:report": "node scripts/validate-migration.js --save-report",
+    "migration:lint": "eslint . --config .eslintrc.migration.js --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

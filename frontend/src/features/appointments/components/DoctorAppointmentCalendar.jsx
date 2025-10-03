@@ -335,18 +335,47 @@ function DoctorAppointmentCalendar({ onAppointmentUpdate }) {
 
   // Get appointments for a specific day
   const getAppointmentsForDay = (day) => {
-    return appointments.filter((appointment) =>
-      isSameDay(new Date(appointment.start), day)
-    );
+    return appointments
+      .filter((appointment) => {
+        const appointmentDate =
+          appointment.start || new Date(appointment.appointmentDate);
+        return isSameDay(appointmentDate, day);
+      })
+      .map((appointment) => ({
+        ...appointment,
+        start: appointment.start || new Date(appointment.appointmentDate),
+        end:
+          appointment.end ||
+          new Date(
+            (
+              appointment.start || new Date(appointment.appointmentDate)
+            ).getTime() +
+              (appointment.durationMinutes || 30) * 60000
+          ),
+      }));
   };
 
   // Group appointments by time for list view
   const groupedAppointments = appointments.reduce((acc, appointment) => {
-    const hour = appointment.start.getHours();
+    // Convert appointmentDate string to Date object if needed
+    const appointmentStart =
+      appointment.start || new Date(appointment.appointmentDate);
+    const hour = appointmentStart.getHours();
     if (!acc[hour]) {
       acc[hour] = [];
     }
-    acc[hour].push(appointment);
+    // Add start and end properties if they don't exist
+    const appointmentWithTimes = {
+      ...appointment,
+      start: appointmentStart,
+      end:
+        appointment.end ||
+        new Date(
+          appointmentStart.getTime() +
+            (appointment.durationMinutes || 30) * 60000
+        ),
+    };
+    acc[hour].push(appointmentWithTimes);
     return acc;
   }, {});
 

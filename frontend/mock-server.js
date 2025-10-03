@@ -44,30 +44,39 @@ const mockPatients = [
   }
 ];
 
+// Create appointments for today and tomorrow with specific times
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+tomorrow.setHours(14, 30, 0, 0); // 2:30 PM
+
+const dayAfterTomorrow = new Date();
+dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+dayAfterTomorrow.setHours(10, 0, 0, 0); // 10:00 AM
+
 const mockAppointments = [
   {
     id: 1,
     patientId: 1,
     doctorId: "doctor-123",
-    appointmentDate: "2024-02-15T14:30:00Z",
+    appointmentDate: tomorrow.toISOString(),
     durationMinutes: 30,
     status: "scheduled",
     appointmentType: "consultation",
     notes: "Regular checkup",
-    createdAt: "2024-01-15T10:30:00Z",
-    updatedAt: "2024-01-15T10:30:00Z"
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     id: 2,
     patientId: 2,
     doctorId: "doctor-456",
-    appointmentDate: "2024-02-16T10:00:00Z",
+    appointmentDate: dayAfterTomorrow.toISOString(),
     durationMinutes: 45,
     status: "confirmed",
     appointmentType: "follow-up",
     notes: "Follow-up consultation",
-    createdAt: "2024-01-16T14:20:00Z",
-    updatedAt: "2024-01-16T14:20:00Z"
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
 ];
 
@@ -116,7 +125,7 @@ const mockUsers = [
 // Mock authentication endpoint
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
-  
+
   // Simple mock authentication
   if (username === 'admin' && password === 'admin') {
     res.json({

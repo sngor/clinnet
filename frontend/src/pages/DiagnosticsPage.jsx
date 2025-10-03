@@ -7,6 +7,8 @@ import {
   Paper,
   Divider,
   Stack,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import LanguageIcon from "@mui/icons-material/Language";
@@ -17,10 +19,13 @@ import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import EventNoteIcon from "@mui/icons-material/EventNote";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 import adminService from "../services/adminService";
 import ServiceCard from "../components/ServiceCard";
 import { StandardPageLayout, UnifiedButton } from "../components/ui";
 import SystemAlertsSection from "../components/SystemAlertsSection";
+import PerformanceDashboard from "../components/ui/PerformanceDashboard.jsx";
+import { usePerformanceMonitoring } from "../hooks/usePerformanceMonitoring.js";
 
 const initialServicesData = [
   {
@@ -144,6 +149,13 @@ const initialServicesData = [
 const DiagnosticsPage = () => {
   const theme = useTheme();
   const [services, setServices] = useState(initialServicesData);
+  const [activeTab, setActiveTab] = useState(0);
+
+  // Performance monitoring for this page
+  usePerformanceMonitoring("DiagnosticsPage", [services, activeTab], {
+    trackMemory: true,
+    estimatedSize: 25,
+  });
 
   const determineOverallStatus = useCallback((crudSt) => {
     if (!crudSt || typeof crudSt !== "object") return "Unknown";
@@ -385,33 +397,70 @@ const DiagnosticsPage = () => {
     });
   }, [services, handleTestService]);
 
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   return (
     <StandardPageLayout
       title="System Diagnostics"
-      subtitle="Check the status and connectivity of all core system services"
+      subtitle="Monitor system health and performance metrics"
       action={
-        <UnifiedButton
-          variant="contained"
-          onClick={handleTestAll}
-          data-testid="test-all-btn"
-        >
-          Test All
-        </UnifiedButton>
+        activeTab === 0 ? (
+          <UnifiedButton
+            variant="contained"
+            onClick={handleTestAll}
+            data-testid="test-all-btn"
+          >
+            Test All
+          </UnifiedButton>
+        ) : null
       }
     >
-      {/* System Alerts Section */}
-      <SystemAlertsSection />
-
-      {/* Diagnostics List */}
-      <Stack spacing={3}>
-        {services.map((service) => (
-          <ServiceCard
-            key={service.id}
-            service={service}
-            onTestService={handleTestService}
+      {/* Tab Navigation */}
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          aria-label="diagnostics tabs"
+        >
+          <Tab
+            icon={<StorageIcon />}
+            label="System Health"
+            iconPosition="start"
           />
-        ))}
-      </Stack>
+          <Tab
+            icon={<DashboardIcon />}
+            label="Performance"
+            iconPosition="start"
+          />
+        </Tabs>
+      </Box>
+
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <Box>
+          {/* System Alerts Section */}
+          <SystemAlertsSection />
+
+          {/* Diagnostics List */}
+          <Stack spacing={3}>
+            {services.map((service) => (
+              <ServiceCard
+                key={service.id}
+                service={service}
+                onTestService={handleTestService}
+              />
+            ))}
+          </Stack>
+        </Box>
+      )}
+
+      {activeTab === 1 && (
+        <Box>
+          <PerformanceDashboard />
+        </Box>
+      )}
     </StandardPageLayout>
   );
 };

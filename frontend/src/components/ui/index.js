@@ -3,19 +3,28 @@ export { default as designSystem } from "./DesignSystem";
 export { createEnhancedTheme } from "./DesignSystem";
 
 // Unified Components (New - Consistent Design)
-export { default as UnifiedCard } from './Cards/UnifiedCard';
-export { default as UnifiedButton, UnifiedIconButton } from './Buttons/UnifiedButton';
+export { default as UnifiedCard } from './UnifiedCard';
+export { default as UnifiedButton } from './UnifiedButton';
 export { default as UnifiedFormField } from './Forms/UnifiedFormField';
-export { 
-  UnifiedPageContainer, 
-  UnifiedPageHeader, 
-  UnifiedSection, 
-  UnifiedGrid, 
-  UnifiedFlex 
-} from './Layout/UnifiedLayout';
+export { default as UnifiedTable } from './UnifiedTable';
+export {
+  UnifiedPageContainer,
+  UnifiedPageHeader,
+  UnifiedSection,
+  UnifiedGrid,
+  UnifiedFlex,
+  UnifiedTypography,
+  Heading,
+  Display,
+  Body,
+  Label,
+  Caption,
+  Code,
+  PageLayouts,
+} from './Layout/index.jsx';
 
 // Standardized Page Layouts
-export { 
+export {
   default as StandardPageLayout,
   DashboardPageLayout,
   FormPageLayout,
@@ -63,7 +72,7 @@ export { SectionContainer, CardContainer, FlexBox } from './Container';
 
 // Existing Components
 export { default as AppButton, PrimaryButton, SecondaryButton, TextButton, DangerButton, AppIconButton } from './AppButton';
-export { PageTitle, SectionTitle, SubsectionTitle, BodyText, SecondaryText, LabelText, Caption } from './Typography';
+export { PageTitle, SectionTitle, SubsectionTitle, BodyText, SecondaryText, LabelText } from './Typography';
 export { default as SectionHeading } from './SectionHeading';
 export { default as DialogHeading } from './DialogHeading';
 export { default as StatusChip } from './StatusChip';
@@ -77,13 +86,13 @@ export { default as LoadingIndicator } from './LoadingIndicator';
 export { StyledTableContainer, tableHeaderStyle, actionButtonsStyle } from './TableStyles';
 export { default as FormField } from './FormField';
 export { default as FormLayout } from './FormLayout';
-export { 
-  FormContainer, 
-  FormSection, 
-  StyledTextField, 
-  StyledFormControl, 
-  formGridProps, 
-  commonFieldProps 
+export {
+  FormContainer,
+  FormSection,
+  StyledTextField,
+  StyledFormControl,
+  formGridProps,
+  commonFieldProps
 } from './FormStyles';
 export { default as TableContainer } from '../TableContainer';
 export { default as ThemeColorAudit } from './ThemeColorAudit';

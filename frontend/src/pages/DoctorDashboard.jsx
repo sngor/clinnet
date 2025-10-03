@@ -150,7 +150,7 @@ function DoctorDashboard() {
       {/* Error alerts moved to Settings page */}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <DashboardCard
             icon={EventIcon}
             title="Today's Appointments"
@@ -162,7 +162,7 @@ function DoctorDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <DashboardCard
             icon={PeopleIcon}
             title="My Patients"
@@ -174,7 +174,7 @@ function DoctorDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <DashboardCard
             icon={AssignmentIcon}
             title="Medical Records"

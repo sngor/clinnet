@@ -201,7 +201,7 @@ function FrontdeskDashboard() {
       {/* Error alerts moved to Settings page */}
       {/* Dashboard Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <DashboardCard
             icon={EventIcon}
             title="Today's Appointments"
@@ -213,7 +213,7 @@ function FrontdeskDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <DashboardCard
             icon={PeopleIcon}
             title="Total Patients"
@@ -225,7 +225,7 @@ function FrontdeskDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <DashboardCard
             icon={CalendarMonthIcon}
             title="All Appointments"
@@ -287,7 +287,7 @@ function FrontdeskDashboard() {
         <DialogContent sx={{ pt: 3 }}>
           <Box>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <StyledTextField /* Was TextField */
                   name="patientName"
                   label="Patient Name"
@@ -297,7 +297,7 @@ function FrontdeskDashboard() {
                   onChange={handleWalkInFormChange}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <FormControl fullWidth>
                   <InputLabel id="walk-in-doctor-label">Doctor</InputLabel>{" "}
                   {/* Added id for label */}
@@ -324,7 +324,7 @@ function FrontdeskDashboard() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <StyledTextField /* Was TextField */
                   name="notes"
                   label="Notes"
