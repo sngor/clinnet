@@ -12,7 +12,19 @@
 import React from "react";
 import { Chip, Box } from "@mui/material";
 import { styled, keyframes } from "@mui/material/styles";
-import { getAppointmentStatusColor } from "../../mock/mockAppointments";
+// Inline function to avoid import issues
+const getAppointmentStatusColor = (status) => {
+  switch (status) {
+    case "confirmed":
+      return "#4caf50";
+    case "pending":
+      return "#ff9800";
+    case "cancelled":
+      return "#f44336";
+    default:
+      return "#2196f3";
+  }
+};
 
 // Add a subtle pulse animation for attention-requiring statuses
 const pulsate = keyframes`

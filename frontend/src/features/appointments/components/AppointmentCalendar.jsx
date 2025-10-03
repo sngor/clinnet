@@ -31,9 +31,33 @@ import TodayIcon from "@mui/icons-material/Today";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
-// Import mock data from centralized location
-import { mockAppointments } from "../../../mock/mockAppointments";
-import { mockDoctors } from "../../../mock/mockDoctors";
+// Mock data (inline to avoid import issues)
+const mockDoctors = [
+  { id: 1, name: "Dr. Smith", specialty: "General Medicine" },
+  { id: 2, name: "Dr. Jones", specialty: "Cardiology" },
+  { id: 3, name: "Dr. Brown", specialty: "Pediatrics" },
+];
+
+const mockAppointments = [
+  {
+    id: 1,
+    patientName: "John Doe",
+    doctorId: 1,
+    date: "2024-01-15",
+    time: "09:00",
+    duration: 30,
+    status: "confirmed",
+  },
+  {
+    id: 2,
+    patientName: "Jane Smith",
+    doctorId: 2,
+    date: "2024-01-15",
+    time: "10:30",
+    duration: 45,
+    status: "pending",
+  },
+];
 import { formatTime, getWeekDays } from "../../../utils/dateUtils";
 
 // Time slots for the calendar

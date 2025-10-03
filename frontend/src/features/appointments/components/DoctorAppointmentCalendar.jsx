@@ -48,12 +48,37 @@ import {
 } from "date-fns";
 import AppointmentDetailModal from "./AppointmentDetailModal";
 
-// Import mock data from centralized location
-import { mockPatients } from "../../../mock/mockPatients";
-import {
-  mockAppointments,
-  getAppointmentStatusColor,
-} from "../../../mock/mockAppointments";
+// Mock data (inline to avoid import issues)
+const mockPatients = [
+  { id: 1, name: "John Doe", firstName: "John", lastName: "Doe" },
+  { id: 2, name: "Jane Smith", firstName: "Jane", lastName: "Smith" },
+  { id: 3, name: "Bob Johnson", firstName: "Bob", lastName: "Johnson" },
+];
+
+const mockAppointments = [
+  {
+    id: 1,
+    patientName: "John Doe",
+    patientId: 1,
+    date: "2024-01-15",
+    time: "09:00",
+    duration: 30,
+    status: "confirmed",
+  },
+];
+
+const getAppointmentStatusColor = (status) => {
+  switch (status) {
+    case "confirmed":
+      return "#4caf50";
+    case "pending":
+      return "#ff9800";
+    case "cancelled":
+      return "#f44336";
+    default:
+      return "#2196f3";
+  }
+};
 import { formatTime } from "../../../utils/dateUtils";
 
 // Time slots for the calendar

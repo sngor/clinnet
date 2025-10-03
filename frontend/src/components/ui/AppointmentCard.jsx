@@ -14,7 +14,19 @@ import React from "react";
 import { Card, CardContent, Typography, Box, Button } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import StatusChip from "./StatusChip";
-import { getAppointmentStatusColor } from "../../mock/mockAppointments";
+// Inline function to avoid import issues
+const getAppointmentStatusColor = (status) => {
+  switch (status) {
+    case "confirmed":
+      return "#4caf50";
+    case "pending":
+      return "#ff9800";
+    case "cancelled":
+      return "#f44336";
+    default:
+      return "#2196f3";
+  }
+};
 
 const StyledCard = styled(Card)(({ theme, status }) => ({
   height: "100%",

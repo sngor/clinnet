@@ -24,9 +24,16 @@ This guide covers common issues, solutions, and monitoring/logs for the Clinnet-
 
 - **Symptom**: "npm ci can only install packages when your package.json and package-lock.json are in sync"
 - **Solution**: Lock file is out of sync with dependencies
+
   - Remove workspace configuration if not using npm workspaces properly
   - Delete `package-lock.json` and run `npm install` to regenerate
   - The test workflow will automatically fallback to `npm install` if `npm ci` fails
+
+- **Symptom**: "Could not resolve '../../../mock/mockAppointments'" build errors
+- **Solution**: Mock files were removed during cleanup but imports still exist
+  - Mock data has been moved inline to components that need it
+  - Check for any remaining imports from `../mock/` directories
+  - Replace with inline mock data or remove if not needed
 
 ### 2. CORS Errors
 

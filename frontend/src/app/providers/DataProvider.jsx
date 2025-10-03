@@ -42,15 +42,26 @@ export const DataProvider = ({ children }) => {
         const patientResult = await patientService.fetchPatients();
         if (patientResult.error) {
           console.warn("API error fetching patients:", patientResult.error);
-          if (process.env.NODE_ENV === 'production') {
-            const errorMsg = patientResult.error.message || 'Failed to load patient data. Please try again later.';
-            console.error("Production: Failed to load patients, setting error state:", errorMsg);
+          if (process.env.NODE_ENV === "production") {
+            const errorMsg =
+              patientResult.error.message ||
+              "Failed to load patient data. Please try again later.";
+            console.error(
+              "Production: Failed to load patients, setting error state:",
+              errorMsg
+            );
             setError(errorMsg);
             setPatients([]); // Set to empty array in production on error
           } else {
             // Development fallback
-            console.log("[DataProvider] Development mode: Falling back to mock data for patients.");
-            const { mockPatients } = await import("../../mock/mockPatients");
+            console.log(
+              "[DataProvider] Development mode: Falling back to mock data for patients."
+            );
+            // Fallback mock data
+            const mockPatients = [
+              { id: 1, firstName: "John", lastName: "Doe", status: "active" },
+              { id: 2, firstName: "Jane", lastName: "Smith", status: "active" },
+            ];
             setPatients(mockPatients || []);
           }
         } else {
@@ -109,12 +120,16 @@ export const DataProvider = ({ children }) => {
 
     if (result.error) {
       const errorMsg = result.error.message || "Failed to add patient";
-      console.error("Error adding patient in DataProvider:", errorMsg, result.error);
+      console.error(
+        "Error adding patient in DataProvider:",
+        errorMsg,
+        result.error
+      );
       setError(errorMsg);
       throw result.error; // Re-throw for the component to catch
     }
 
-    setPatients(prevPatients => [...prevPatients, result.data]);
+    setPatients((prevPatients) => [...prevPatients, result.data]);
     return result.data; // Return data directly on success
   };
 
@@ -126,15 +141,17 @@ export const DataProvider = ({ children }) => {
 
     if (result.error) {
       const errorMsg = result.error.message || `Failed to update patient ${id}`;
-      console.error("Error updating patient in DataProvider:", errorMsg, result.error);
+      console.error(
+        "Error updating patient in DataProvider:",
+        errorMsg,
+        result.error
+      );
       setError(errorMsg);
       throw result.error;
     }
 
-    setPatients(prevPatients =>
-      prevPatients.map((patient) =>
-        patient.id === id ? result.data : patient
-      )
+    setPatients((prevPatients) =>
+      prevPatients.map((patient) => (patient.id === id ? result.data : patient))
     );
     return result.data;
   };
@@ -147,12 +164,18 @@ export const DataProvider = ({ children }) => {
 
     if (result.error) {
       const errorMsg = result.error.message || `Failed to delete patient ${id}`;
-      console.error("Error deleting patient in DataProvider:", errorMsg, result.error);
+      console.error(
+        "Error deleting patient in DataProvider:",
+        errorMsg,
+        result.error
+      );
       setError(errorMsg);
       throw result.error;
     }
 
-    setPatients(prevPatients => prevPatients.filter((patient) => patient.id !== id));
+    setPatients((prevPatients) =>
+      prevPatients.filter((patient) => patient.id !== id)
+    );
     // result.data might contain a success message, e.g., { message: "Patient deleted" }
     return result.data || true; // Return data or true for generic success
   };
@@ -211,7 +234,11 @@ export const DataProvider = ({ children }) => {
 
       if (result.error) {
         const errorMsg = result.error.message || "Failed to refresh patients";
-        console.error("Error refreshing patients in DataProvider:", errorMsg, result.error);
+        console.error(
+          "Error refreshing patients in DataProvider:",
+          errorMsg,
+          result.error
+        );
         setError(errorMsg);
         // Optionally re-throw or return an error indicator if components need to react
         // For now, just setting context error and returning null or empty array for data part
