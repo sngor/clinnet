@@ -441,7 +441,7 @@ Resources:
             Principal:
               Service: cloudfront.amazonaws.com
             Action: s3:GetObject
-            Resource: !Sub "${FrontendBucket}/*"
+            Resource: !Sub "arn:aws:s3:::${FrontendBucket}/*"
             Condition:
               StringEquals:
                 "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
@@ -564,8 +564,6 @@ Resources:
         Origins:
           - Id: S3Origin
             DomainName: !GetAtt FrontendBucket.RegionalDomainName
-            S3OriginConfig:
-              OriginAccessIdentity: ""
             OriginAccessControlId: !Ref CloudFrontOriginAccessControl
           - Id: APIOrigin
             DomainName: !Sub "${ClinicAPI}.execute-api.${AWS::Region}.amazonaws.com"

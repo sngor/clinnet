@@ -1,0 +1,225 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-7.3.1, pluggy-1.6.0 -- /home/jules/.pyenv/versions/3.12.11/bin/python3
+cachedir: .pytest_cache
+rootdir: /app/backend
+configfile: pytest.ini
+plugins: mock-3.10.0
+collecting ... collected 131 items
+
+backend/test_end_to_end.py::test_cors_headers PASSED                     [  0%]
+backend/test_end_to_end.py::test_upload_profile_image_options PASSED     [  1%]
+backend/test_end_to_end.py::test_get_profile_image_options PASSED        [  2%]
+backend/test_end_to_end.py::test_remove_profile_image_options PASSED     [  3%]
+backend/test_end_to_end.py::test_all_error_handling PASSED               [  3%]
+backend/test_end_to_end.py::test_error_response_format PASSED            [  4%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_create_appointment_successful PASSED [  5%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_create_appointment_slot_not_available PASSED [  6%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_validation_missing_field PASSED [  6%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_validation_past_date PASSED [  7%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_validation_invalid_time_format PASSED [  8%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_create_appointment_db_error PASSED [  9%]
+backend/tests/python/handlers/appointments/test_delete_appointment.py::TestDeleteAppointment::test_delete_appointment_successful PASSED [  9%]
+backend/tests/python/handlers/appointments/test_delete_appointment.py::TestDeleteAppointment::test_delete_appointment_non_existent PASSED [ 10%]
+backend/tests/python/handlers/appointments/test_delete_appointment.py::TestDeleteAppointment::test_delete_appointment_invalid_path_id PASSED [ 11%]
+backend/tests/python/handlers/appointments/test_delete_appointment.py::TestDeleteAppointment::test_delete_appointment_db_error PASSED [ 12%]
+backend/tests/python/handlers/appointments/test_get_appointment_by_id.py::TestGetAppointmentById::test_get_appointment_by_existing_id PASSED [ 12%]
+backend/tests/python/handlers/appointments/test_get_appointment_by_id.py::TestGetAppointmentById::test_get_appointment_by_non_existent_id PASSED [ 13%]
+backend/tests/python/handlers/appointments/test_get_appointment_by_id.py::TestGetAppointmentById::test_get_appointment_invalid_path_parameter PASSED [ 14%]
+backend/tests/python/handlers/appointments/test_get_appointment_by_id.py::TestGetAppointmentById::test_get_appointment_db_error PASSED [ 15%]
+backend/tests/python/handlers/appointments/test_get_appointments.py::TestGetAppointments::test_get_appointments_default_date_range PASSED [ 16%]
+backend/tests/python/handlers/appointments/test_get_appointments.py::TestGetAppointments::test_get_appointments_with_filters PASSED [ 16%]
+backend/tests/python/handlers/appointments/test_get_appointments.py::TestGetAppointments::test_invalid_date_format PASSED [ 17%]
+backend/tests/python/handlers/appointments/test_get_appointments.py::TestGetAppointments::test_end_date_before_start_date PASSED [ 18%]
+backend/tests/python/handlers/appointments/test_get_appointments.py::TestGetAppointments::test_get_appointments_db_error PASSED [ 19%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_successful PASSED [ 19%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_non_existent PASSED [ 20%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_invalid_path_id PASSED [ 21%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_no_body PASSED [ 22%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_no_valid_fields PASSED [ 22%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_db_error PASSED [ 23%]
+backend/tests/python/handlers/cors/test_cors_options.py::TestCorsOptions::test_cors_options_handler_returns_correct_headers PASSED [ 24%]
+backend/tests/python/handlers/cors/test_cors_options.py::TestCorsOptions::test_cors_options_handler_with_specific_request_origin PASSED [ 25%]
+backend/tests/python/handlers/cors/test_cors_options.py::TestCorsOptions::test_cors_options_handler_body_content PASSED [ 25%]
+backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py::TestCheckCognitoUserCrud::test_cognito_crud_successful PASSED [ 26%]
+backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py::TestCheckCognitoUserCrud::test_cognito_crud_operation_failure[admin_create_user] PASSED [ 27%]
+backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py::TestCheckCognitoUserCrud::test_cognito_crud_operation_failure[admin_get_user] PASSED [ 28%]
+backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py::TestCheckCognitoUserCrud::test_cognito_crud_operation_failure[admin_update_user_attributes] PASSED [ 29%]
+backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py::TestCheckCognitoUserCrud::test_cognito_crud_operation_failure[admin_delete_user] PASSED [ 29%]
+backend/tests/python/handlers/diagnostics/test_check_s3.py::TestCheckS3Connectivity::test_check_s3_successful PASSED [ 30%]
+backend/tests/python/handlers/diagnostics/test_check_s3.py::TestCheckS3Connectivity::test_check_s3_list_buckets_failure PASSED [ 31%]
+backend/tests/python/handlers/patients/test_create_patient.py::TestCreatePatient::test_create_patient_successful PASSED [ 32%]
+backend/tests/python/handlers/patients/test_create_patient.py::TestCreatePatient::test_validation_missing_required_field PASSED [ 32%]
+backend/tests/python/handlers/patients/test_create_patient.py::TestCreatePatient::test_validation_invalid_email PASSED [ 33%]
+backend/tests/python/handlers/patients/test_create_patient.py::TestCreatePatient::test_create_patient_db_error PASSED [ 34%]
+backend/tests/python/handlers/patients/test_delete_patient.py::TestDeletePatient::test_delete_patient_successful PASSED [ 35%]
+backend/tests/python/handlers/patients/test_delete_patient.py::TestDeletePatient::test_delete_patient_non_existent PASSED [ 35%]
+backend/tests/python/handlers/patients/test_delete_patient.py::TestDeletePatient::test_delete_patient_invalid_path_id PASSED [ 36%]
+backend/tests/python/handlers/patients/test_delete_patient.py::TestDeletePatient::test_delete_patient_db_error PASSED [ 37%]
+backend/tests/python/handlers/patients/test_get_patient_by_id.py::TestGetPatientById::test_get_patient_by_existing_id PASSED [ 38%]
+backend/tests/python/handlers/patients/test_get_patient_by_id.py::TestGetPatientById::test_get_patient_by_non_existent_id PASSED [ 38%]
+backend/tests/python/handlers/patients/test_get_patient_by_id.py::TestGetPatientById::test_get_patient_invalid_path_parameter PASSED [ 39%]
+backend/tests/python/handlers/patients/test_get_patient_by_id.py::TestGetPatientById::test_get_patient_by_id_db_error PASSED [ 40%]
+backend/tests/python/handlers/patients/test_get_patients.py::TestGetPatients::test_get_patients_empty_table PASSED [ 41%]
+backend/tests/python/handlers/patients/test_get_patients.py::TestGetPatients::test_get_patients_with_items PASSED [ 41%]
+backend/tests/python/handlers/patients/test_get_patients.py::TestGetPatients::test_get_patients_pagination PASSED [ 42%]
+backend/tests/python/handlers/patients/test_get_patients.py::TestGetPatients::test_get_patients_db_error PASSED [ 43%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_successful PASSED [ 44%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_non_existent PASSED [ 45%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_invalid_path_id PASSED [ 45%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_no_body PASSED [ 46%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_no_valid_fields PASSED [ 47%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_db_error PASSED [ 48%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_successful PASSED [ 48%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_missing_required_fields PASSED [ 49%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_invalid_price PASSED [ 50%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_no_body PASSED [ 51%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_dynamodb_put_failure PASSED [ 51%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_with_only_required_fields PASSED [ 52%]
+backend/tests/python/handlers/services/test_delete_service.py::TestDeleteService::test_delete_service_successful PASSED [ 53%]
+backend/tests/python/handlers/services/test_delete_service.py::TestDeleteService::test_delete_service_non_existent PASSED [ 54%]
+backend/tests/python/handlers/services/test_delete_service.py::TestDeleteService::test_delete_service_invalid_path_id PASSED [ 54%]
+backend/tests/python/handlers/services/test_delete_service.py::TestDeleteService::test_delete_service_dynamodb_failure PASSED [ 55%]
+backend/tests/python/handlers/services/test_get_service_by_id.py::TestGetServiceById::test_get_service_by_existing_id PASSED [ 56%]
+backend/tests/python/handlers/services/test_get_service_by_id.py::TestGetServiceById::test_get_service_by_non_existent_id PASSED [ 57%]
+backend/tests/python/handlers/services/test_get_service_by_id.py::TestGetServiceById::test_get_service_invalid_path_parameter PASSED [ 58%]
+backend/tests/python/handlers/services/test_get_service_by_id.py::TestGetServiceById::test_get_service_by_id_dynamodb_failure PASSED [ 58%]
+backend/tests/python/handlers/services/test_get_services.py::TestGetServices::test_get_services_empty_table PASSED [ 59%]
+backend/tests/python/handlers/services/test_get_services.py::TestGetServices::test_get_services_with_items PASSED [ 60%]
+backend/tests/python/handlers/services/test_get_services.py::TestGetServices::test_get_services_dynamodb_failure PASSED [ 61%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_successful PASSED [ 61%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_partial_update PASSED [ 62%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_non_existent PASSED [ 63%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_invalid_path_id PASSED [ 64%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_empty_body PASSED [ 64%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_invalid_price_type PASSED [ 65%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_dynamodb_failure PASSED [ 66%]
+backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_delete_user_successful PASSED [ 67%]
+backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_delete_user_not_found PASSED [ 67%]
+backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_missing_username_parameter PASSED [ 68%]
+backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_cognito_delete_failure PASSED [ 69%]
+backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_options_request_for_cors PASSED [ 70%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_successful PASSED [ 70%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_already_disabled PASSED [ 71%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_not_found PASSED [ 72%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_missing_username_parameter PASSED [ 73%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_cognito_disable_failure PASSED [ 74%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_options_request_for_cors PASSED [ 74%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_successful PASSED [ 75%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_already_enabled PASSED [ 76%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_not_found PASSED [ 77%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_missing_username_parameter PASSED [ 77%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_cognito_enable_failure PASSED [ 78%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_options_request_for_cors PASSED [ 79%]
+backend/tests/python/handlers/users/test_get_profile_image.py::TestGetProfileImage::test_get_profile_image_successful PASSED [ 80%]
+backend/tests/python/handlers/users/test_get_profile_image.py::TestGetProfileImage::test_get_profile_image_user_not_found_cognito PASSED [ 80%]
+backend/tests/python/handlers/users/test_get_profile_image.py::TestGetProfileImage::test_get_profile_image_no_profile_image_attribute PASSED [ 81%]
+backend/tests/python/handlers/users/test_get_profile_image.py::TestGetProfileImage::test_get_profile_image_s3_object_not_found PASSED [ 82%]
+backend/tests/python/handlers/users/test_get_profile_image.py::TestGetProfileImage::test_get_profile_image_cognito_get_user_failure PASSED [ 83%]
+backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_list_users_empty_pool PASSED [ 83%]
+backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_list_users_with_multiple_users PASSED [ 84%]
+backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_list_users_pagination PASSED [ 85%]
+backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_cognito_list_users_failure PASSED [ 86%]
+backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_options_request_for_cors PASSED [ 87%]
+backend/tests/python/handlers/users/test_remove_profile_image.py::TestRemoveProfileImage::test_remove_profile_image_successful PASSED [ 87%]
+backend/tests/python/handlers/users/test_remove_profile_image.py::TestRemoveProfileImage::test_remove_profile_image_user_not_found PASSED [ 88%]
+backend/tests/python/handlers/users/test_remove_profile_image.py::TestRemoveProfileImage::test_remove_profile_image_no_image_attribute PASSED [ 89%]
+backend/tests/python/handlers/users/test_remove_profile_image.py::TestRemoveProfileImage::test_remove_profile_image_s3_delete_failure PASSED [ 90%]
+backend/tests/python/handlers/users/test_remove_profile_image.py::TestRemoveProfileImage::test_remove_profile_image_cognito_update_attr_failure PASSED [ 90%]
+backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_attributes_successful PASSED [ 91%]
+backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_status_successful PASSED [ 92%]
+backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_not_found PASSED [ 93%]
+backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_no_body PASSED [ 93%]
+backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_cognito_update_failure PASSED [ 94%]
+backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_options_request_for_cors PASSED [ 95%]
+backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_upload_profile_image_successful PASSED [ 96%]
+backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_user_not_found_in_cognito PASSED [ 96%]
+backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_missing_image_in_body PASSED [ 97%]
+backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_invalid_image_format PASSED [ 98%]
+backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_s3_upload_failure PASSED [ 99%]
+backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_cognito_update_failure PASSED [100%]
+
+=============================== warnings summary ===============================
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:683
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:683
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:683
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:683: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    and isinstance(item.value, ast.Str)
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:685
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:685
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:685: DeprecationWarning: Attribute s is deprecated and will be removed in Python 3.14; use value instead
+    doc = item.value.s
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/config/__init__.py:1302
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/config/__init__.py:1302: PytestConfigWarning: Unknown config option: python_paths
+
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/dateutil/tz/tz.py:37
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/dateutil/tz/tz.py:37: DeprecationWarning: datetime.datetime.utcfromtimestamp() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.fromtimestamp(timestamp, datetime.UTC).
+    EPOCH = datetime.datetime.utcfromtimestamp(0)
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1102: 483 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1102: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    syms.append(ast.Str(sym))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1104: 483 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1104: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    expls.append(ast.Str(expl))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:817: 1511 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:817: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    keys = [ast.Str(key) for key in current.keys()]
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:927: 482 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:927: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    assertmsg = ast.Str("")
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:929: 484 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:929: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    template = ast.BinOp(assertmsg, ast.Add(), ast.Str(explanation))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:941: 485 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:941: DeprecationWarning: ast.NameConstant is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    clear = ast.Assign(variables, ast.NameConstant(None))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:965: 91 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:965: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    inlocs = ast.Compare(ast.Str(name.id), [ast.In()], [locs])
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:968: 91 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:968: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    expr = ast.IfExp(test, self.display(name), ast.Str(name.id))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1004
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1004
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1004: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    expl_format = self.pop_format_context(ast.Str(expl))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1016
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1016
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1016: DeprecationWarning: ast.Num is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    expl_template = self.helper("_format_boolop", expl_list, ast.Num(is_or))
+
+backend/tests/python/handlers/users/test_upload_profile_image.py:103
+  /app/backend/tests/python/handlers/users/test_upload_profile_image.py:103: SyntaxWarning: invalid escape sequence '\.'
+    assert re.match(f"profile-images/{user_sub}/[a-f0-9-]+\.jpg", s3_key)
+
+tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_successful
+tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_non_existent
+tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_db_error
+  /app/backend/src/handlers/patients/update_patient.py:67: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = datetime.utcnow().isoformat() + "Z"
+
+tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_successful
+tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_dynamodb_put_failure
+tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_with_only_required_fields
+  /app/backend/src/handlers/services/create_service.py:36: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = datetime.utcnow().isoformat() + "Z"
+
+tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_dynamodb_failure
+  /app/backend/src/handlers/services/update_service.py:94: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = datetime.utcnow().isoformat() + "Z"
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+===================== 131 passed, 4129 warnings in 36.66s ======================

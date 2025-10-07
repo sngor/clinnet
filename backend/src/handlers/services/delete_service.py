@@ -7,8 +7,8 @@ import logging
 from botocore.exceptions import ClientError
 
 # Import utility functions
-from utils.db_utils import delete_item, get_item_by_id, generate_response
-from utils.responser_helper import handle_exception, build_error_response
+from src.utils.db_utils import delete_item, get_item_by_id, generate_response
+from src.utils.responser_helper import handle_exception, build_error_response
 
 def lambda_handler(event, context):
     """
@@ -46,7 +46,7 @@ def lambda_handler(event, context):
             return build_error_response(404, 'Not Found', f'Service with ID {service_id} not found', request_origin)
         
         # Delete service
-        delete_item(table_name, service_id)
+        delete_item(table_name, {'id': service_id})
         
         return generate_response(200, {'message': f'Service with ID {service_id} deleted successfully'})
     

@@ -3,7 +3,8 @@ import os
 import boto3
 import pytest
 from moto import mock_aws
-from backend.src.handlers.services.delete_service import lambda_handler
+from unittest.mock import patch
+from src.handlers.services.delete_service import lambda_handler
 from decimal import Decimal # For verifying any Decimal data if necessary, though not typical for delete.
 
 # Define the services table name for tests
@@ -67,7 +68,7 @@ class TestDeleteService:
         if response["statusCode"] == 200:
             body = json.loads(response["body"])
             assert "message" in body
-            assert "Service deleted successfully" in body["message"]
+            assert "deleted successfully" in body["message"]
         
         assert response["headers"]["Content-Type"] == "application/json"
 
@@ -83,7 +84,7 @@ class TestDeleteService:
         assert response["statusCode"] == 404
         body = json.loads(response["body"])
         assert "message" in body
-        assert "Service not found" in body["message"] # Or similar, depending on handler logic
+        assert "not found" in body["message"] # Or similar, depending on handler logic
         assert response["headers"]["Content-Type"] == "application/json"
 
     def test_delete_service_invalid_path_id(self, services_table, lambda_environment):
@@ -94,7 +95,7 @@ class TestDeleteService:
         assert response_no_id["statusCode"] == 400
         body_no_id = json.loads(response_no_id["body"])
         assert "message" in body_no_id
-        assert "Service ID is required" in body_no_id["message"] # Or similar message
+        assert "Missing service ID" in body_no_id["message"] # Or similar message
 
         # Test with 'id' being empty string
         event_empty_id = create_api_gateway_event(path_params={"id": ""})
@@ -102,51 +103,23 @@ class TestDeleteService:
         assert response_empty_id["statusCode"] == 400
         body_empty_id = json.loads(response_empty_id["body"])
         assert "message" in body_empty_id
-        assert "Service ID must be a non-empty string" in body_empty_id["message"] # Or similar
+        assert "Missing service ID" in body_empty_id["message"] # Or similar
 
-    def test_delete_service_dynamodb_failure(self, monkeypatch, lambda_environment):
+    def test_delete_service_dynamodb_failure(self, monkeypatch, lambda_environment, services_table):
         service_id_to_fail = "service-fail-delete"
-        # Pre-populate item so the delete operation has something to target before failing
-        # This is relevant if the handler checks for existence before attempting delete,
-        # or if the mock needs to identify the specific item to fail on.
-        # For this test, we are mocking the delete_item call itself to fail.
         
-        original_boto3_resource = boto3.resource
-        def mock_boto3_resource_for_delete_error(service_name, *args, **kwargs):
-            if service_name == 'dynamodb':
-                class MockTableForDeleteError:
-                    def delete_item(self, Key=None, **other_kwargs):
-                        if Key and Key.get("id") == service_id_to_fail:
-                            from botocore.exceptions import ClientError
-                            error_response = {'Error': {'Code': 'InternalServerError', 'Message': 'Simulated DynamoDB DeleteItem Error'}}
-                            raise ClientError(error_response, 'DeleteItem')
-                        return {} # Default success for other items
-                    
-                    # If the handler calls get_item first (e.g., to check existence)
-                    def get_item(self, Key=None, **other_kwargs):
-                        if Key and Key.get("id") == service_id_to_fail:
-                            return {"Item": {"id": service_id_to_fail, "name": "Exists"}} # Simulate item exists
-                        return {}
-
-
-                class MockDynamoDBResourceForError:
-                    def Table(self, table_name):
-                        if table_name == TEST_SERVICES_TABLE_NAME:
-                            return MockTableForDeleteError()
-                        return original_boto3_resource('dynamodb').Table(table_name)
-                return MockDynamoDBResourceForError()
-            return original_boto3_resource(service_name, *args, **kwargs)
-
-        monkeypatch.setattr(boto3, "resource", mock_boto3_resource_for_delete_error)
-
-        event = create_api_gateway_event(path_params={"id": service_id_to_fail})
-        context = {}
-        response = lambda_handler(event, context)
+        from botocore.exceptions import ClientError
+        with patch('src.handlers.services.delete_service.delete_item', side_effect=ClientError({'Error': {'Code': 'InternalServerError', 'Message': 'Simulated DynamoDB DeleteItem Error'}}, 'DeleteItem')):
+            event = create_api_gateway_event(path_params={"id": service_id_to_fail})
+            # Need to put item so the get_item_by_id check passes before the mocked delete_item fails
+            services_table.put_item(Item={"id": service_id_to_fail, "name": "Exists"})
+            response = lambda_handler(event, {})
         
         assert response["statusCode"] == 500
         body = json.loads(response["body"])
-        assert "error" in body or "message" in body
-        assert "Simulated DynamoDB DeleteItem Error" in body.get("error", "") or "Internal server error" in body.get("message", "")
+        assert "error" in body
+        assert "AWS Error" in body["error"]
+        assert "Simulated DynamoDB DeleteItem Error" in body["message"]
         assert response["headers"]["Content-Type"] == "application/json"
 
 # Considerations for delete_service tests:

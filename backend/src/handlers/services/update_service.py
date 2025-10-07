@@ -4,11 +4,13 @@ Lambda function to update a service
 import os
 import json
 import logging
+import decimal
+from datetime import datetime
 from botocore.exceptions import ClientError
 
 # Import utility functions
-from utils.db_utils import get_item_by_id, update_item, generate_response
-from utils.responser_helper import handle_exception, build_error_response
+from src.utils.db_utils import get_item_by_id, update_item, generate_response
+from src.utils.responser_helper import handle_exception, build_error_response
 
 def lambda_handler(event, context):
     """
@@ -56,25 +58,53 @@ def lambda_handler(event, context):
         updates = {}
         for field in updatable_fields:
             if field in body:
-                # Validate types for specific fields
-                if field == 'price' and not isinstance(body[field], (int, float)):
-                    logger.warning("Invalid type for 'price' field in update.")
-                    return build_error_response(400, 'Validation Error', 'price must be a number.', request_origin)
-                if field == 'active' and not isinstance(body[field], bool):
-                    logger.warning("Invalid type for 'active' field in update.")
-                    return build_error_response(400, 'Validation Error', 'active must be a boolean.', request_origin)
-                if field == 'duration' and not isinstance(body[field], (int, float)):
-                    logger.warning("Invalid type for 'duration' field in update.")
-                    return build_error_response(400, 'Validation Error', 'duration must be a number.', request_origin)
-                
-                updates[field] = body[field]
+                value = body[field]
+                # Validate and convert types for specific fields
+                if field in ['price', 'duration']:
+                    if not isinstance(value, (int, float)):
+                        logger.warning(f"Invalid type for '{field}' field in update.")
+                        return build_error_response(400, 'Validation Error', f"'{field}' must be a number.", request_origin)
+                    updates[field] = decimal.Decimal(str(value))
+                elif field == 'active':
+                    if not isinstance(value, bool):
+                        logger.warning("Invalid type for 'active' field in update.")
+                        return build_error_response(400, 'Validation Error', "'active' must be a boolean.", request_origin)
+                    updates[field] = value
+                else:
+                    updates[field] = value
         
         if not updates:
             logger.info(f"No valid or updatable fields provided for service {service_id}.")
             # Return current service state if no valid updates are made
             return generate_response(200, existing_service)
 
-        updated_service = update_item(table_name, service_id, updates)
+        # Construct the update expression
+        update_expression_parts = []
+        expression_attribute_values = {}
+        expression_attribute_names = {}
+
+        for field, value in updates.items():
+            expression_placeholder = f":{field}"
+            attribute_name_placeholder = f"#{field}"
+            update_expression_parts.append(f"{attribute_name_placeholder} = {expression_placeholder}")
+            expression_attribute_values[expression_placeholder] = value
+            expression_attribute_names[attribute_name_placeholder] = field
+
+        # Add updatedAt timestamp
+        timestamp = datetime.utcnow().isoformat() + "Z"
+        update_expression_parts.append("#updatedAt = :updatedAt")
+        expression_attribute_names["#updatedAt"] = "updatedAt"
+        expression_attribute_values[":updatedAt"] = timestamp
+
+        update_expression = "SET " + ", ".join(update_expression_parts)
+
+        updated_service = update_item(
+            table_name,
+            key={'id': service_id},
+            update_expression=update_expression,
+            expression_attribute_values=expression_attribute_values,
+            expression_attribute_names=expression_attribute_names
+        )
         logger.info(f"Service {service_id} updated successfully.")
         return generate_response(200, updated_service)
     except json.JSONDecodeError as je:

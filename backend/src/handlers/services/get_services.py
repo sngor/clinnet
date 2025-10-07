@@ -8,9 +8,9 @@ import time
 from botocore.exceptions import ClientError
 
 # Import utility functions
-from utils.db_utils import scan_table, generate_response
-from utils.responser_helper import handle_exception, build_error_response
-from utils.cors import add_cors_headers, build_cors_preflight_response
+from src.utils.db_utils import scan_table, generate_response
+from src.utils.responser_helper import handle_exception, build_error_response
+from src.utils.cors import add_cors_headers, build_cors_preflight_response
 
 _cache = {}
 _cache_ttl_seconds = 300  # 5 minutes
@@ -27,6 +27,8 @@ def lambda_handler(event, context):
     Returns:
         dict: API Gateway response
     """
+    global _cache, _cache_expiry_time
+
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     logger.info(f"Received event: {json.dumps(event)}")

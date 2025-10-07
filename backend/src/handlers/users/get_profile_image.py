@@ -6,7 +6,7 @@ import json
 import boto3
 import logging
 from botocore.exceptions import ClientError
-from utils.cors import add_cors_headers, build_cors_preflight_response
+from src.utils.cors import add_cors_headers, build_cors_preflight_response
 
 # Setup logging
 logger = logging.getLogger()
@@ -53,7 +53,7 @@ def handle_exception(exception, request_origin=None):
     if isinstance(exception, ClientError):
         error_code = exception.response.get('Error', {}).get('Code', 'UnknownError')
         
-        if error_code == 'ResourceNotFoundException':
+        if error_code in ('ResourceNotFoundException', 'UserNotFoundException'):
             return build_error_response(404, 'Not Found', str(exception), exception, request_origin)
         elif error_code == 'ValidationException':
             return build_error_response(400, 'Validation Error', str(exception), exception, request_origin)
@@ -91,7 +91,7 @@ def lambda_handler(event, context):
     try:
         # Extract username from request context (from Cognito authorizer)
         try:
-            username = event['requestContext']['authorizer']['claims']['email']
+            username = event['requestContext']['authorizer']['claims']['cognito:username']
             logger.info(f"Getting profile image for user: {username}")
         except (KeyError, TypeError):
             # Check if username is provided as a path parameter (for admin access)

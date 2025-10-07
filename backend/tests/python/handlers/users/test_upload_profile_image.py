@@ -5,23 +5,24 @@ import pytest
 from moto import mock_aws
 from src.handlers.users.upload_profile_image import lambda_handler
 import base64
+import re
+from unittest.mock import patch
 
 # Define resource names for tests
-TEST_USER_POOL_NAME = "clinnet-user-pool-test-uploadimg" 
-TEST_DOCUMENTS_BUCKET_NAME = "clinnet-documents-test-bucket" # Simplified for testing
+TEST_USER_POOL_NAME = "clinnet-user-pool-test-uploadimg"
+TEST_DOCUMENTS_BUCKET_NAME = "clinnet-documents-test-bucket"
 
 # Helper function to create a mock API Gateway event
 def create_api_gateway_event(method="POST", body=None, username_claim="testuser.upload", sub_claim="test-sub-upload-123"):
-    # Simulate how API Gateway might pass form data or a JSON payload with base64 content
-    # For this test, assuming JSON payload with base64 encoded file content
     event = {
         "httpMethod": method,
         "requestContext": {
             "requestId": "test-request-id-upload-img",
-            "authorizer": {"claims": {"cognito:username": username_claim, "sub": sub_claim}} 
+            "authorizer": {"claims": {"cognito:username": username_claim, "sub": sub_claim}}
         },
         "headers": {
-            "Content-Type": "application/json" # Or "multipart/form-data" if handler parses that
+            "Content-Type": "application/json",
+            "Origin": "http://localhost:3000"
         }
     }
     if body:
@@ -37,162 +38,160 @@ def aws_credentials():
     os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 
 @pytest.fixture(scope="function")
-def cognito_user_pool_and_id_upload_img(aws_credentials): 
+def mock_aws_resources(aws_credentials):
     with mock_aws():
-        client = boto3.client("cognito-idp", region_name="us-east-1")
-        pool = client.create_user_pool(
+        # Mock S3 Bucket
+        s3 = boto3.client("s3", region_name="us-east-1")
+        s3.create_bucket(Bucket=TEST_DOCUMENTS_BUCKET_NAME)
+
+        # Mock Cognito User Pool
+        cognito = boto3.client("cognito-idp", region_name="us-east-1")
+        pool = cognito.create_user_pool(
             PoolName=TEST_USER_POOL_NAME,
             Schema=[
                 {"Name": "email", "AttributeDataType": "String", "Mutable": True, "Required": True},
-                {"Name": "profile_image", "AttributeDataType": "String", "Mutable": True, "Required": False} # Custom attribute
+                {"Name": "custom:profile_image", "AttributeDataType": "String", "Mutable": True, "Required": False}
             ],
             AutoVerifiedAttributes=['email']
         )
         user_pool_id = pool["UserPool"]["Id"]
-        yield user_pool_id
+
+        yield s3, cognito, user_pool_id
 
 @pytest.fixture(scope="function")
-def s3_bucket_upload_img(aws_credentials):
-    with mock_aws():
-        s3_client = boto3.client("s3", region_name="us-east-1")
-        s3_client.create_bucket(Bucket=TEST_DOCUMENTS_BUCKET_NAME)
-        yield TEST_DOCUMENTS_BUCKET_NAME
-
-
-@pytest.fixture(scope="function")
-def lambda_environment_upload_img(monkeypatch, cognito_user_pool_and_id_upload_img, s3_bucket_upload_img):
-    monkeypatch.setenv("USER_POOL_ID", cognito_user_pool_and_id_upload_img)
-    monkeypatch.setenv("DOCUMENTS_BUCKET", s3_bucket_upload_img)
+def lambda_environment(monkeypatch, mock_aws_resources):
+    _, _, user_pool_id = mock_aws_resources
+    monkeypatch.setenv("USER_POOL_ID", user_pool_id)
+    monkeypatch.setenv("DOCUMENTS_BUCKET", TEST_DOCUMENTS_BUCKET_NAME)
     monkeypatch.setenv("ENVIRONMENT", "test")
 
+@pytest.fixture
+def test_user(mock_aws_resources):
+    _, cognito, user_pool_id = mock_aws_resources
+    username = "imageuploader@example.com"
+    user = cognito.admin_create_user(
+        UserPoolId=user_pool_id,
+        Username=username,
+        UserAttributes=[{"Name": "email", "Value": username}, {"Name": "email_verified", "Value": "true"}],
+        MessageAction='SUPPRESS'
+    )
+    user_sub = next(attr['Value'] for attr in user['User']['Attributes'] if attr['Name'] == 'sub')
+    return username, user_sub
 
 class TestUploadProfileImage:
-    @pytest.fixture(scope="function")
-    def test_user_for_image_upload(self, cognito_user_pool_and_id_upload_img):
-        cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
+    def test_upload_profile_image_successful(self, lambda_environment, mock_aws_resources, test_user):
+        s3_client, cognito_client, user_pool_id = mock_aws_resources
+        username, user_sub = test_user
         
-        username = "imageuploader@example.com"
-        # Create user in Cognito
-        user_result = cognito_client.admin_create_user(
-            UserPoolId=cognito_user_pool_and_id_upload_img,
-            Username=username,
-            UserAttributes=[
-                {"Name": "email", "Value": username}, 
-                {"Name": "email_verified", "Value": "true"}
-            ],
-            MessageAction='SUPPRESS'
-        )
-        # Extract the 'sub' attribute
-        user_sub = None
-        for attr in user_result['User']['Attributes']:
-            if attr['Name'] == 'sub':
-                user_sub = attr['Value']
-                break
-        if user_sub is None:
-             pytest.fail("Could not retrieve sub for test user in TestUploadProfileImage setup.")
-
-        return username, user_sub
-
-    def test_upload_profile_image_successful(self, test_user_for_image_upload, s3_bucket_upload_img, lambda_environment_upload_img, cognito_user_pool_and_id_upload_img):
-        username, user_sub = test_user_for_image_upload
+        image_data = b"fake-jpeg-data"
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        data_uri = f"data:image/jpeg;base64,{image_base64}"
         
-        # Simulate a simple image file
-        file_content = b"fake image data"
-        file_content_base64 = base64.b64encode(file_content).decode('utf-8')
-        filename = "profile.jpg"
-
-        payload = {"filename": filename, "image_data_base64": file_content_base64}
-        # The authorizer claim should match the user being targeted, or an admin.
-        # For self-upload, 'cognito:username' or 'sub' from token would identify the user.
-        event = create_api_gateway_event(body=payload, username_claim=username, sub_claim=user_sub)
+        event = create_api_gateway_event(body={"image": data_uri}, username_claim=username, sub_claim=user_sub)
         
         response = lambda_handler(event, {})
         
         assert response["statusCode"] == 200
         body = json.loads(response["body"])
-        assert "message" in body
+        assert body["success"] is True
         assert "Profile image uploaded successfully" in body["message"]
         assert "imageUrl" in body
-        expected_s3_key = f"profile-images/{user_sub}/{filename}" # Assuming path includes user SUB
-        assert expected_s3_key in body["imageUrl"]
+        assert "imageKey" in body
 
         # Verify S3 object
-        s3_client = boto3.client("s3", region_name="us-east-1")
-        s3_object = s3_client.get_object(Bucket=s3_bucket_upload_img, Key=expected_s3_key)
-        assert s3_object["Body"].read() == file_content
-        assert s3_object["ContentType"] == "image/jpeg" # Or as determined by handler from filename
+        s3_key = body["imageKey"]
+        assert re.match(f"profile-images/{user_sub}/[a-f0-9-]+\.jpg", s3_key)
+
+        s3_object = s3_client.get_object(Bucket=TEST_DOCUMENTS_BUCKET_NAME, Key=s3_key)
+        assert s3_object["Body"].read() == image_data
+        assert s3_object["ContentType"] == "image/jpeg"
 
         # Verify Cognito user attribute
-        cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
-        cognito_user = cognito_client.admin_get_user(UserPoolId=cognito_user_pool_and_id_upload_img, Username=username)
+        cognito_user = cognito_client.admin_get_user(UserPoolId=user_pool_id, Username=username)
         profile_image_attr = next((attr for attr in cognito_user["UserAttributes"] if attr["Name"] == "custom:profile_image"), None)
         assert profile_image_attr is not None
-        assert expected_s3_key in profile_image_attr["Value"] # URL should contain the S3 key
+        assert profile_image_attr["Value"] == s3_key
 
-    def test_upload_profile_image_user_not_found(self, lambda_environment_upload_img):
-        payload = {"filename": "test.jpg", "image_data_base64": base64.b64encode(b"d").decode()}
-        event = create_api_gateway_event(body=payload, username_claim="nosuchuser@example.com", sub_claim="nosuchsub")
-        
+    def test_user_not_found_in_cognito(self, lambda_environment):
+        event = create_api_gateway_event(
+            body={"image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="},
+            username_claim="nonexistent@example.com",
+            sub_claim="non-existent-sub"
+        )
         response = lambda_handler(event, {})
-        assert response["statusCode"] == 404 # Or 403 if auth issue
-        assert "User not found" in json.loads(response["body"])["message"]
+        assert response["statusCode"] == 404
+        body = json.loads(response["body"])
+        assert "Not Found" in body["error"]
 
-
-    def test_upload_profile_image_s3_failure(self, monkeypatch, test_user_for_image_upload, lambda_environment_upload_img):
-        username, user_sub = test_user_for_image_upload
-        payload = {"filename": "s3fail.png", "image_data_base64": base64.b64encode(b"s3fail").decode()}
-        event = create_api_gateway_event(body=payload, username_claim=username, sub_claim=user_sub)
-
-        original_boto3_client = boto3.client
-        def mock_boto3_client_s3_error(service_name, *args, **kwargs):
-            if service_name == 's3':
-                class MockS3ClientError:
-                    def put_object(self, Bucket, Key, Body, ContentType, **other_kwargs):
-                        if Bucket == TEST_DOCUMENTS_BUCKET_NAME and Key.startswith(f"profile-images/{user_sub}/"):
-                            raise Exception("Simulated S3 PutObject Error")
-                        return {} # Mock success for other calls
-                    def __getattr__(self, name): return getattr(original_boto3_client('s3'), name)
-                return MockS3ClientError()
-            return original_boto3_client(service_name, *args, **kwargs)
-        
-        monkeypatch.setattr(boto3, "client", mock_boto3_client_s3_error)
+    def test_missing_image_in_body(self, lambda_environment, test_user):
+        username, user_sub = test_user
+        event = create_api_gateway_event(body={"wrong_key": "some_data"}, username_claim=username, sub_claim=user_sub)
         response = lambda_handler(event, {})
-        assert response["statusCode"] == 500
-        assert "Failed to upload image to S3" in json.loads(response["body"])["message"]
+        assert response["statusCode"] == 400
+        assert "Image data is required" in json.loads(response["body"])["message"]
 
-    def test_upload_profile_image_cognito_update_failure(self, monkeypatch, test_user_for_image_upload, s3_bucket_upload_img, lambda_environment_upload_img):
-        username, user_sub = test_user_for_image_upload
-        payload = {"filename": "cognitofail.gif", "image_data_base64": base64.b64encode(b"cognitofail").decode()}
-        event = create_api_gateway_event(body=payload, username_claim=username, sub_claim=user_sub)
+    def test_invalid_image_format(self, lambda_environment, test_user):
+        username, user_sub = test_user
+        event = create_api_gateway_event(body={"image": "not-a-base64-uri"}, username_claim=username, sub_claim=user_sub)
+        response = lambda_handler(event, {})
+        assert response["statusCode"] == 400
+        assert "Invalid image format" in json.loads(response["body"])["message"]
 
-        # S3 upload should succeed (moto default)
+    @patch('boto3.client')
+    def test_s3_upload_failure(self, mock_boto3_client, lambda_environment, test_user):
+        # Configure the mock to raise an error only for S3's put_object
+        mock_s3 = mock_boto3_client.return_value
+        mock_s3.put_object.side_effect = Exception("Simulated S3 PutObject Error")
+        # Let other boto3 calls (like cognito-idp) pass through to moto
+        mock_boto3_client.side_effect = lambda service, *args, **kwargs: mock_s3 if service == 's3' else boto3.client(service, *args, **kwargs)
+
+        username, user_sub = test_user
+        event = create_api_gateway_event(
+            body={"image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="},
+            username_claim=username,
+            sub_claim=user_sub
+        )
         
-        original_boto3_client = boto3.client
-        def mock_boto3_client_cognito_attr_error(service_name, *args, **kwargs):
-            if service_name == 'cognito-idp':
-                class MockCognitoClientAttrError:
-                    def admin_update_user_attributes(self, UserPoolId, Username, UserAttributes, **other_kwargs):
-                        if Username == username:
-                            raise Exception("Simulated Cognito UpdateUserAttributes Error")
-                        return {}
-                    def admin_get_user(self, UserPoolId, Username, **other_kwargs): # If handler calls this first
-                         if Username == username: return {"Username": username, "UserAttributes": [{"Name":"sub", "Value":user_sub}]}
-                         raise original_boto3_client('cognito-idp').exceptions.UserNotFoundException({'Error':{}},'op')
-
-                    def __getattr__(self, name): return getattr(original_boto3_client('cognito-idp'), name)
-                return MockCognitoClientAttrError()
-            return original_boto3_client(service_name, *args, **kwargs)
-
-        monkeypatch.setattr(boto3, "client", mock_boto3_client_cognito_attr_error)
         response = lambda_handler(event, {})
         assert response["statusCode"] == 500
-        assert "Failed to update user profile_image attribute" in json.loads(response["body"])["message"]
+        body = json.loads(response["body"])
+        assert "Internal Server Error" in body["error"]
+        assert "Simulated S3 PutObject Error" in body["message"]
+
+    @patch('boto3.client')
+    def test_cognito_update_failure(self, mock_boto3_client, lambda_environment, mock_aws_resources, test_user):
+        s3_client, _, _ = mock_aws_resources
+        username, user_sub = test_user
+
+        # Mock Cognito to fail on attribute update, but S3 to succeed
+        mock_cognito = mock_boto3_client.return_value
+        mock_cognito.admin_update_user_attributes.side_effect = Exception("Simulated Cognito Update Error")
+
+        # Use a side effect to return the correct mock for each service
+        def client_side_effect(service, *args, **kwargs):
+            if service == 'cognito-idp':
+                return mock_cognito
+            if service == 's3':
+                return s3_client  # Use the real moto S3 client
+            return boto3.client(service, *args, **kwargs)
         
-        # Optional: Verify S3 object was created but Cognito update failed (potential inconsistency)
-        s3_client = boto3.client("s3", region_name="us-east-1")
-        expected_s3_key = f"profile-images/{user_sub}/{payload['filename']}"
-        try:
-            s3_object = s3_client.get_object(Bucket=s3_bucket_upload_img, Key=expected_s3_key)
-            assert s3_object is not None # File should exist in S3
-        except s3_client.exceptions.NoSuchKey:
-            pytest.fail("S3 object should have been created even if Cognito update failed.")
+        mock_boto3_client.side_effect = client_side_effect
+
+        event = create_api_gateway_event(
+            body={"image": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"},
+            username_claim=username,
+            sub_claim=user_sub
+        )
+
+        response = lambda_handler(event, {})
+        assert response["statusCode"] == 500
+        body = json.loads(response["body"])
+        assert "Internal Server Error" in body["error"]
+        assert "Simulated Cognito Update Error" in body["message"]
+
+        # Verify the image was still uploaded to S3
+        # (This is important for potential cleanup/reconciliation logic)
+        s3_list = s3_client.list_objects_v2(Bucket=TEST_DOCUMENTS_BUCKET_NAME, Prefix=f"profile-images/{user_sub}/")
+        assert 'Contents' in s3_list, "S3 object should have been created even if Cognito update failed"
+        assert len(s3_list['Contents']) == 1, "Expected one object in S3"
+        assert s3_list['Contents'][0]['Key'].endswith('.gif')

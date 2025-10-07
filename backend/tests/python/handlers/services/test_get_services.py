@@ -3,7 +3,9 @@ import os
 import boto3
 import pytest
 from moto import mock_aws
-from backend.src.handlers.services.get_services import lambda_handler
+from unittest.mock import patch
+from src.handlers.services import get_services
+from src.handlers.services.get_services import lambda_handler
 
 # Define the services table name for tests
 TEST_SERVICES_TABLE_NAME = "clinnet-services-test"
@@ -51,6 +53,11 @@ def lambda_environment(monkeypatch):
 
 
 class TestGetServices:
+    def setup_method(self, method):
+        """Reset the cache before each test."""
+        get_services._cache = {}
+        get_services._cache_expiry_time = 0
+
     def test_get_services_empty_table(self, services_table, lambda_environment):
         event = create_api_gateway_event()
         context = {} # Mock context object
@@ -91,59 +98,17 @@ class TestGetServices:
         
         assert response["headers"]["Content-Type"] == "application/json"
 
-    # Test for DynamoDB scan operation failure
-    # This is harder to simulate deterministically with moto's high-level mocks
-    # without deeper patching of boto3 client behavior.
-    # A common approach is to mock the boto3 client itself if this level of testing is needed.
-    # For now, we'll acknowledge this as a more complex scenario.
     def test_get_services_dynamodb_failure(self, monkeypatch, lambda_environment):
-        # Simulate a DynamoDB error by making the table name invalid or mocking the client
-        
-        # More direct way: Mock the specific boto3 call within the handler
-        # This requires knowing the internal structure of the handler or the utils it uses.
-        # For example, if it uses `table.scan()`:
-        
-        # We'll patch the `scan` method of the DynamoDB table resource
-        # This is a simplified example; real implementation might need more robust patching
-        
-        class MockTable:
-            def scan(self, **kwargs):
-                raise Exception("Simulated DynamoDB Scan Error")
-
-        # Assuming the handler gets the table like: table = dynamodb.Table(os.environ['SERVICES_TABLE'])
-        # We need to patch where this `Table` object is created or where `scan` is called.
-        # This is tricky because the actual boto3 client is initialized inside the handler or a utility it calls.
-        
-        # A simpler approach for this test might be to temporarily break the table setup
-        # or use a non-existent table name, but moto might not reflect this as a "scan error"
-        # but rather as a ResourceNotFoundException earlier.
-
-        # For this example, let's assume we can patch the `boto3.resource('dynamodb').Table` call
-        # that happens inside the handler. This is highly dependent on the handler's implementation.
-        
-        original_boto3_resource = boto3.resource
-        def mock_boto3_resource(service_name, *args, **kwargs):
-            if service_name == 'dynamodb':
-                # Return a mock resource that returns our MockTable
-                class MockDynamoDBResource:
-                    def Table(self, table_name):
-                        if table_name == TEST_SERVICES_TABLE_NAME:
-                            return MockTable()
-                        # Fallback for other tables if any (not in this specific test)
-                        return original_boto3_resource('dynamodb').Table(table_name) 
-                return MockDynamoDBResource()
-            return original_boto3_resource(service_name, *args, **kwargs)
-
-        monkeypatch.setattr(boto3, "resource", mock_boto3_resource)
-        
-        event = create_api_gateway_event()
-        context = {}
-        response = lambda_handler(event, context)
+        with patch('src.handlers.services.get_services.scan_table', side_effect=Exception("Simulated DynamoDB Scan Error")):
+            event = create_api_gateway_event()
+            context = {}
+            response = lambda_handler(event, context)
         
         assert response["statusCode"] == 500
         body = json.loads(response["body"])
         assert "error" in body
-        assert "Simulated DynamoDB Scan Error" in body["error"] # Or a more generic message from handler
+        assert "Internal Server Error" in body["error"]
+        assert "Simulated DynamoDB Scan Error" in body["message"]
         assert response["headers"]["Content-Type"] == "application/json"
 
         # It's crucial to restore the original boto3.resource after the test

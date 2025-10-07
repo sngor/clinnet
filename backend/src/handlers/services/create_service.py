@@ -3,11 +3,12 @@ Refactored service creation handler using the base handler pattern.
 """
 import uuid
 import json
+import decimal
 from datetime import datetime
 from typing import Dict, Any
-from utils.lambda_base import BaseLambdaHandler
-from utils.db_utils import create_item
-from utils.validation import validate_service_data
+from src.utils.lambda_base import BaseLambdaHandler
+from src.utils.db_utils import create_item, generate_response
+from src.utils.validation import validate_service_data
 
 
 class CreateServiceHandler(BaseLambdaHandler):
@@ -38,8 +39,8 @@ class CreateServiceHandler(BaseLambdaHandler):
             'id': service_id,
             'name': body.get('name'),
             'description': body.get('description'),
-            'price': body.get('price'),
-            'duration': body.get('duration'),
+            'price': decimal.Decimal(str(body.get('price'))),
+            'duration': decimal.Decimal(str(body.get('duration'))),
             'category': body.get('category', 'General'),
             'active': body.get('active', True),
             'createdAt': timestamp,
@@ -51,11 +52,7 @@ class CreateServiceHandler(BaseLambdaHandler):
     
     def _build_success_response(self, result: Any) -> Dict[str, Any]:
         """Build success response with 201 status for creation."""
-        return {
-            'statusCode': 201,
-            'headers': {'Content-Type': 'application/json'},
-            'body': json.dumps(result)
-        }
+        return generate_response(201, result)
 
 
 # Lambda handler entry point

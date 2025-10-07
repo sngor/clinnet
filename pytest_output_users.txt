@@ -1,0 +1,584 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-7.3.1, pluggy-1.6.0 -- /home/jules/.pyenv/versions/3.12.11/bin/python3
+cachedir: .pytest_cache
+rootdir: /app/backend
+configfile: pytest.ini
+plugins: mock-3.10.0
+collecting ... collected 122 items
+
+backend/test_end_to_end.py::test_cors_headers PASSED                     [  0%]
+backend/test_end_to_end.py::test_upload_profile_image_options PASSED     [  1%]
+backend/test_end_to_end.py::test_get_profile_image_options PASSED        [  2%]
+backend/test_end_to_end.py::test_remove_profile_image_options PASSED     [  3%]
+backend/test_end_to_end.py::test_all_error_handling FAILED               [  4%]
+backend/test_end_to_end.py::test_error_response_format PASSED            [  4%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_create_appointment_successful PASSED [  5%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_create_appointment_slot_not_available PASSED [  6%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_validation_missing_field PASSED [  7%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_validation_past_date PASSED [  8%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_validation_invalid_time_format PASSED [  9%]
+backend/tests/python/handlers/appointments/test_create_appointment.py::TestCreateAppointment::test_create_appointment_db_error PASSED [  9%]
+backend/tests/python/handlers/appointments/test_delete_appointment.py::TestDeleteAppointment::test_delete_appointment_successful PASSED [ 10%]
+backend/tests/python/handlers/appointments/test_delete_appointment.py::TestDeleteAppointment::test_delete_appointment_non_existent PASSED [ 11%]
+backend/tests/python/handlers/appointments/test_delete_appointment.py::TestDeleteAppointment::test_delete_appointment_invalid_path_id PASSED [ 12%]
+backend/tests/python/handlers/appointments/test_delete_appointment.py::TestDeleteAppointment::test_delete_appointment_db_error PASSED [ 13%]
+backend/tests/python/handlers/appointments/test_get_appointment_by_id.py::TestGetAppointmentById::test_get_appointment_by_existing_id PASSED [ 13%]
+backend/tests/python/handlers/appointments/test_get_appointment_by_id.py::TestGetAppointmentById::test_get_appointment_by_non_existent_id PASSED [ 14%]
+backend/tests/python/handlers/appointments/test_get_appointment_by_id.py::TestGetAppointmentById::test_get_appointment_invalid_path_parameter PASSED [ 15%]
+backend/tests/python/handlers/appointments/test_get_appointment_by_id.py::TestGetAppointmentById::test_get_appointment_db_error PASSED [ 16%]
+backend/tests/python/handlers/appointments/test_get_appointments.py::TestGetAppointments::test_get_appointments_default_date_range PASSED [ 17%]
+backend/tests/python/handlers/appointments/test_get_appointments.py::TestGetAppointments::test_get_appointments_with_filters PASSED [ 18%]
+backend/tests/python/handlers/appointments/test_get_appointments.py::TestGetAppointments::test_invalid_date_format PASSED [ 18%]
+backend/tests/python/handlers/appointments/test_get_appointments.py::TestGetAppointments::test_end_date_before_start_date PASSED [ 19%]
+backend/tests/python/handlers/appointments/test_get_appointments.py::TestGetAppointments::test_get_appointments_db_error PASSED [ 20%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_successful PASSED [ 21%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_non_existent PASSED [ 22%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_invalid_path_id PASSED [ 22%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_no_body PASSED [ 23%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_no_valid_fields PASSED [ 24%]
+backend/tests/python/handlers/appointments/test_update_appointment.py::TestUpdateAppointment::test_update_appointment_db_error PASSED [ 25%]
+backend/tests/python/handlers/cors/test_cors_options.py::TestCorsOptions::test_cors_options_handler_returns_correct_headers PASSED [ 26%]
+backend/tests/python/handlers/cors/test_cors_options.py::TestCorsOptions::test_cors_options_handler_with_specific_request_origin PASSED [ 27%]
+backend/tests/python/handlers/cors/test_cors_options.py::TestCorsOptions::test_cors_options_handler_body_content PASSED [ 27%]
+backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py::TestCheckCognitoUserCrud::test_cognito_crud_successful PASSED [ 28%]
+backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py::TestCheckCognitoUserCrud::test_cognito_crud_operation_failure[admin_create_user] PASSED [ 29%]
+backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py::TestCheckCognitoUserCrud::test_cognito_crud_operation_failure[admin_get_user] PASSED [ 30%]
+backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py::TestCheckCognitoUserCrud::test_cognito_crud_operation_failure[admin_update_user_attributes] PASSED [ 31%]
+backend/tests/python/handlers/diagnostics/test_check_cognito_user_crud.py::TestCheckCognitoUserCrud::test_cognito_crud_operation_failure[admin_delete_user] PASSED [ 31%]
+backend/tests/python/handlers/diagnostics/test_check_s3.py::TestCheckS3Connectivity::test_check_s3_successful PASSED [ 32%]
+backend/tests/python/handlers/diagnostics/test_check_s3.py::TestCheckS3Connectivity::test_check_s3_list_buckets_failure PASSED [ 33%]
+backend/tests/python/handlers/patients/test_create_patient.py::TestCreatePatient::test_create_patient_successful PASSED [ 34%]
+backend/tests/python/handlers/patients/test_create_patient.py::TestCreatePatient::test_validation_missing_required_field PASSED [ 35%]
+backend/tests/python/handlers/patients/test_create_patient.py::TestCreatePatient::test_validation_invalid_email PASSED [ 36%]
+backend/tests/python/handlers/patients/test_create_patient.py::TestCreatePatient::test_create_patient_db_error PASSED [ 36%]
+backend/tests/python/handlers/patients/test_delete_patient.py::TestDeletePatient::test_delete_patient_successful PASSED [ 37%]
+backend/tests/python/handlers/patients/test_delete_patient.py::TestDeletePatient::test_delete_patient_non_existent PASSED [ 38%]
+backend/tests/python/handlers/patients/test_delete_patient.py::TestDeletePatient::test_delete_patient_invalid_path_id PASSED [ 39%]
+backend/tests/python/handlers/patients/test_delete_patient.py::TestDeletePatient::test_delete_patient_db_error PASSED [ 40%]
+backend/tests/python/handlers/patients/test_get_patient_by_id.py::TestGetPatientById::test_get_patient_by_existing_id PASSED [ 40%]
+backend/tests/python/handlers/patients/test_get_patient_by_id.py::TestGetPatientById::test_get_patient_by_non_existent_id PASSED [ 41%]
+backend/tests/python/handlers/patients/test_get_patient_by_id.py::TestGetPatientById::test_get_patient_invalid_path_parameter PASSED [ 42%]
+backend/tests/python/handlers/patients/test_get_patient_by_id.py::TestGetPatientById::test_get_patient_by_id_db_error PASSED [ 43%]
+backend/tests/python/handlers/patients/test_get_patients.py::TestGetPatients::test_get_patients_empty_table PASSED [ 44%]
+backend/tests/python/handlers/patients/test_get_patients.py::TestGetPatients::test_get_patients_with_items PASSED [ 45%]
+backend/tests/python/handlers/patients/test_get_patients.py::TestGetPatients::test_get_patients_pagination PASSED [ 45%]
+backend/tests/python/handlers/patients/test_get_patients.py::TestGetPatients::test_get_patients_db_error PASSED [ 46%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_successful PASSED [ 47%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_non_existent PASSED [ 48%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_invalid_path_id PASSED [ 49%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_no_body PASSED [ 50%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_no_valid_fields PASSED [ 50%]
+backend/tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_db_error PASSED [ 51%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_successful PASSED [ 52%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_missing_required_fields PASSED [ 53%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_invalid_price PASSED [ 54%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_no_body PASSED [ 54%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_dynamodb_put_failure PASSED [ 55%]
+backend/tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_with_only_required_fields PASSED [ 56%]
+backend/tests/python/handlers/services/test_delete_service.py::TestDeleteService::test_delete_service_successful PASSED [ 57%]
+backend/tests/python/handlers/services/test_delete_service.py::TestDeleteService::test_delete_service_non_existent PASSED [ 58%]
+backend/tests/python/handlers/services/test_delete_service.py::TestDeleteService::test_delete_service_invalid_path_id PASSED [ 59%]
+backend/tests/python/handlers/services/test_delete_service.py::TestDeleteService::test_delete_service_dynamodb_failure PASSED [ 59%]
+backend/tests/python/handlers/services/test_get_service_by_id.py::TestGetServiceById::test_get_service_by_existing_id PASSED [ 60%]
+backend/tests/python/handlers/services/test_get_service_by_id.py::TestGetServiceById::test_get_service_by_non_existent_id PASSED [ 61%]
+backend/tests/python/handlers/services/test_get_service_by_id.py::TestGetServiceById::test_get_service_invalid_path_parameter PASSED [ 62%]
+backend/tests/python/handlers/services/test_get_service_by_id.py::TestGetServiceById::test_get_service_by_id_dynamodb_failure PASSED [ 63%]
+backend/tests/python/handlers/services/test_get_services.py::TestGetServices::test_get_services_empty_table PASSED [ 63%]
+backend/tests/python/handlers/services/test_get_services.py::TestGetServices::test_get_services_with_items PASSED [ 64%]
+backend/tests/python/handlers/services/test_get_services.py::TestGetServices::test_get_services_dynamodb_failure PASSED [ 65%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_successful PASSED [ 66%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_partial_update PASSED [ 67%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_non_existent PASSED [ 68%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_invalid_path_id PASSED [ 68%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_empty_body PASSED [ 69%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_invalid_price_type PASSED [ 70%]
+backend/tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_dynamodb_failure PASSED [ 71%]
+backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_delete_user_successful FAILED [ 72%]
+backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_delete_user_not_found_cognito FAILED [ 72%]
+backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_delete_user_cognito_failure FAILED [ 73%]
+backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_delete_user_dynamodb_failure FAILED [ 74%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_successful FAILED [ 75%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_already_disabled FAILED [ 76%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_not_found_cognito FAILED [ 77%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_cognito_failure FAILED [ 77%]
+backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_dynamodb_failure FAILED [ 78%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_successful FAILED [ 79%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_already_enabled FAILED [ 80%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_not_found_cognito FAILED [ 81%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_cognito_failure FAILED [ 81%]
+backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_dynamodb_failure FAILED [ 82%]
+backend/tests/python/handlers/users/test_get_profile_image.py::TestGetProfileImage::test_get_profile_image_successful PASSED [ 83%]
+backend/tests/python/handlers/users/test_get_profile_image.py::TestGetProfileImage::test_get_profile_image_user_not_found_cognito PASSED [ 84%]
+backend/tests/python/handlers/users/test_get_profile_image.py::TestGetProfileImage::test_get_profile_image_no_profile_image_attribute PASSED [ 85%]
+backend/tests/python/handlers/users/test_get_profile_image.py::TestGetProfileImage::test_get_profile_image_s3_object_not_found PASSED [ 86%]
+backend/tests/python/handlers/users/test_get_profile_image.py::TestGetProfileImage::test_get_profile_image_cognito_get_user_failure PASSED [ 86%]
+backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_list_users_empty_pool FAILED [ 87%]
+backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_list_users_with_multiple_users FAILED [ 88%]
+backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_list_users_cognito_failure FAILED [ 89%]
+backend/tests/python/handlers/users/test_remove_profile_image.py::TestRemoveProfileImage::test_remove_profile_image_successful PASSED [ 90%]
+backend/tests/python/handlers/users/test_remove_profile_image.py::TestRemoveProfileImage::test_remove_profile_image_user_not_found PASSED [ 90%]
+backend/tests/python/handlers/users/test_remove_profile_image.py::TestRemoveProfileImage::test_remove_profile_image_no_image_attribute PASSED [ 91%]
+backend/tests/python/handlers/users/test_remove_profile_image.py::TestRemoveProfileImage::test_remove_profile_image_s3_delete_failure PASSED [ 92%]
+backend/tests/python/handlers/users/test_remove_profile_image.py::TestRemoveProfileImage::test_remove_profile_image_cognito_update_attr_failure PASSED [ 93%]
+backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_successful FAILED [ 94%]
+backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_not_found_cognito FAILED [ 95%]
+backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_cognito_failure FAILED [ 95%]
+backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_dynamodb_failure FAILED [ 96%]
+backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_upload_profile_image_successful FAILED [ 97%]
+backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_upload_profile_image_user_not_found FAILED [ 98%]
+backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_upload_profile_image_s3_failure FAILED [ 99%]
+backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_upload_profile_image_cognito_update_failure FAILED [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_all_error_handling ____________________________
+backend/test_end_to_end.py:161: in test_all_error_handling
+    assert response['statusCode'] == 500
+E   assert 401 == 500
+----------------------------- Captured stdout call -----------------------------
+🧪 Testing all error handling with CORS...
+✅ Upload error handling with CORS working correctly
+------------------------------ Captured log call -------------------------------
+INFO     root:upload_profile_image.py:112 Received event: {"httpMethod": "POST", "headers": {}, "pathParameters": {"userId": "123"}, "body": "{\"image\": \"data:image/jpeg;base64,ZmFrZSBpbWFnZSBkYXRh\"}", "requestContext": {"authorizer": {"claims": {"sub": "123"}}}}
+INFO     root:upload_profile_image.py:113 Event body: {"image": "data:image/jpeg;base64,ZmFrZSBpbWFnZSBkYXRh"}
+INFO     root:upload_profile_image.py:130 Received event. Method: POST, Path: None
+INFO     root:upload_profile_image.py:134 Request Content-Type: None
+INFO     root:upload_profile_image.py:135 Is body base64 encoded by API Gateway: None
+INFO     root:upload_profile_image.py:148 Processing request for user_sub: 123
+INFO     root:upload_profile_image.py:155 Raw request body (first 200 chars): {"image": "data:image/jpeg;base64,ZmFrZSBpbWFnZSBkYXRh"}
+INFO     root:upload_profile_image.py:168 Request body for JSON parsing (first 200 chars): {"image": "data:image/jpeg;base64,ZmFrZSBpbWFnZSBkYXRh"}
+INFO     root:upload_profile_image.py:216 Uploading image to S3: test-bucket/profile-images/123/469ce5b2-9bbd-4336-87cb-384e92794367.jpg
+ERROR    root:upload_profile_image.py:274 Unexpected error uploading profile image: S3 upload failed
+Traceback (most recent call last):
+  File "/app/backend/src/handlers/users/upload_profile_image.py", line 217, in handler
+    s3.put_object(
+  File "/home/jules/.pyenv/versions/3.12.11/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.11/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jules/.pyenv/versions/3.12.11/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: S3 upload failed
+ERROR    root:upload_profile_image.py:98 Unexpected error: S3 upload failed
+INFO     root:get_profile_image.py:82 Received event: {"httpMethod": "GET", "headers": {}, "pathParameters": {"userId": "123"}, "requestContext": {"authorizer": {"claims": {"sub": "123", "email": "test@example.com"}}}}
+ERROR    root:get_profile_image.py:102 Could not extract username from request context or path parameters
+__________________ TestDeleteUser.test_delete_user_successful __________________
+backend/tests/python/handlers/users/test_delete_user.py:84: in test_delete_user_successful
+    assert "User deleted successfully" in json.loads(response["body"])["message"]
+E   AssertionError: assert 'User deleted successfully' in 'User user.to.delete@example.com deleted successfully'
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:delete_user.py:85 Received event: {"httpMethod": "DELETE", "pathParameters": {"username": "user.to.delete@example.com"}, "requestContext": {"requestId": "test-request-id-delete-user", "authorizer": {"claims": {"cognito:username": "testadmin-deleter"}}}}
+INFO     root:delete_user.py:109 Deleting user: user.to.delete@example.com
+INFO     root:delete_user.py:125 Returning response with status code 200
+______________ TestDeleteUser.test_delete_user_not_found_cognito _______________
+backend/tests/python/handlers/users/test_delete_user.py:100: in test_delete_user_not_found_cognito
+    assert response["statusCode"] == 404
+E   assert 500 == 404
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:delete_user.py:85 Received event: {"httpMethod": "DELETE", "pathParameters": {"username": "nosuchuser.delete@example.com"}, "requestContext": {"requestId": "test-request-id-delete-user", "authorizer": {"claims": {"cognito:username": "testadmin-deleter"}}}}
+INFO     root:delete_user.py:109 Deleting user: nosuchuser.delete@example.com
+ERROR    root:delete_user.py:129 AWS ClientError deleting user: An error occurred (UserNotFoundException) when calling the AdminDeleteUser operation: User does not exist.
+ERROR    root:delete_user.py:68 AWS ClientError: UserNotFoundException - An error occurred (UserNotFoundException) when calling the AdminDeleteUser operation: User does not exist.
+_______________ TestDeleteUser.test_delete_user_cognito_failure ________________
+backend/tests/python/handlers/users/test_delete_user.py:129: in test_delete_user_cognito_failure
+    assert "Failed to delete user from Cognito" in body.get("message", "") or "Simulated Cognito AdminDeleteUser Error" in body.get("error", "")
+E   AssertionError: assert ('Failed to delete user from Cognito' in 'Simulated Cognito AdminDeleteUser Error' or 'Simulated Cognito AdminDeleteUser Error' in 'Internal Server Error')
+E    +  where 'Simulated Cognito AdminDeleteUser Error' = <built-in method get of dict object at 0x7f4c0096e4c0>('message', '')
+E    +    where <built-in method get of dict object at 0x7f4c0096e4c0> = {'error': 'Internal Server Error', 'message': 'Simulated Cognito AdminDeleteUser Error'}.get
+E    +  and   'Internal Server Error' = <built-in method get of dict object at 0x7f4c0096e4c0>('error', '')
+E    +    where <built-in method get of dict object at 0x7f4c0096e4c0> = {'error': 'Internal Server Error', 'message': 'Simulated Cognito AdminDeleteUser Error'}.get
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:delete_user.py:85 Received event: {"httpMethod": "DELETE", "pathParameters": {"username": "user.to.delete@example.com"}, "requestContext": {"requestId": "test-request-id-delete-user", "authorizer": {"claims": {"cognito:username": "testadmin-deleter"}}}}
+INFO     root:delete_user.py:109 Deleting user: user.to.delete@example.com
+ERROR    root:delete_user.py:132 Unexpected error deleting user: Simulated Cognito AdminDeleteUser Error
+Traceback (most recent call last):
+  File "/app/backend/src/handlers/users/delete_user.py", line 110, in lambda_handler
+    cognito.admin_delete_user(**params)
+  File "/app/backend/tests/python/handlers/users/test_delete_user.py", line 112, in admin_delete_user
+    raise Exception("Simulated Cognito AdminDeleteUser Error")
+Exception: Simulated Cognito AdminDeleteUser Error
+ERROR    root:delete_user.py:71 Unexpected error: Simulated Cognito AdminDeleteUser Error
+_______________ TestDeleteUser.test_delete_user_dynamodb_failure _______________
+backend/tests/python/handlers/users/test_delete_user.py:154: in test_delete_user_dynamodb_failure
+    assert response["statusCode"] == 500
+E   assert 200 == 500
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:delete_user.py:85 Received event: {"httpMethod": "DELETE", "pathParameters": {"username": "user.to.delete@example.com"}, "requestContext": {"requestId": "test-request-id-delete-user", "authorizer": {"claims": {"cognito:username": "testadmin-deleter"}}}}
+INFO     root:delete_user.py:109 Deleting user: user.to.delete@example.com
+INFO     root:delete_user.py:125 Returning response with status code 200
+_________________ TestDisableUser.test_disable_user_successful _________________
+backend/tests/python/handlers/users/test_disable_user.py:81: in test_disable_user_successful
+    assert "User disabled successfully" in json.loads(response["body"])["message"]
+E   AssertionError: assert 'User disabled successfully' in 'User user.to.disable@example.com disabled successfully'
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:disable_user.py:78 Received event: {"httpMethod": "POST", "pathParameters": {"username": "user.to.disable@example.com"}, "requestContext": {"requestId": "test-request-id-disable-user", "authorizer": {"claims": {"cognito:username": "testadmin-disabler"}}}}
+INFO     root:disable_user.py:102 Disabling user: user.to.disable@example.com
+INFO     root:disable_user.py:118 Returning response with status code 200
+______________ TestDisableUser.test_disable_user_already_disabled ______________
+backend/tests/python/handlers/users/test_disable_user.py:106: in test_disable_user_already_disabled
+    assert "User already disabled" in json.loads(response["body"])["message"] or "User disabled successfully" in json.loads(response["body"])["message"]
+E   AssertionError: assert ('User already disabled' in 'User already.disabled@example.com disabled successfully' or 'User disabled successfully' in 'User already.disabled@example.com disabled successfully')
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:disable_user.py:78 Received event: {"httpMethod": "POST", "pathParameters": {"username": "already.disabled@example.com"}, "requestContext": {"requestId": "test-request-id-disable-user", "authorizer": {"claims": {"cognito:username": "testadmin-disabler"}}}}
+INFO     root:disable_user.py:102 Disabling user: already.disabled@example.com
+INFO     root:disable_user.py:118 Returning response with status code 200
+_____________ TestDisableUser.test_disable_user_not_found_cognito ______________
+backend/tests/python/handlers/users/test_disable_user.py:116: in test_disable_user_not_found_cognito
+    assert response["statusCode"] == 404
+E   assert 500 == 404
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:disable_user.py:78 Received event: {"httpMethod": "POST", "pathParameters": {"username": "nosuchuser.disable@example.com"}, "requestContext": {"requestId": "test-request-id-disable-user", "authorizer": {"claims": {"cognito:username": "testadmin-disabler"}}}}
+INFO     root:disable_user.py:102 Disabling user: nosuchuser.disable@example.com
+ERROR    root:disable_user.py:122 AWS ClientError disabling user: An error occurred (UserNotFoundException) when calling the AdminDisableUser operation: User does not exist.
+ERROR    root:disable_user.py:61 AWS ClientError: UserNotFoundException - An error occurred (UserNotFoundException) when calling the AdminDisableUser operation: User does not exist.
+______________ TestDisableUser.test_disable_user_cognito_failure _______________
+backend/tests/python/handlers/users/test_disable_user.py:143: in test_disable_user_cognito_failure
+    assert "Failed to disable user in Cognito" in body.get("message", "") or "Simulated Cognito AdminDisableUser Error" in body.get("error", "")
+E   AssertionError: assert ('Failed to disable user in Cognito' in 'Simulated Cognito AdminDisableUser Error' or 'Simulated Cognito AdminDisableUser Error' in 'Internal Server Error')
+E    +  where 'Simulated Cognito AdminDisableUser Error' = <built-in method get of dict object at 0x7f4c03eae0c0>('message', '')
+E    +    where <built-in method get of dict object at 0x7f4c03eae0c0> = {'error': 'Internal Server Error', 'message': 'Simulated Cognito AdminDisableUser Error'}.get
+E    +  and   'Internal Server Error' = <built-in method get of dict object at 0x7f4c03eae0c0>('error', '')
+E    +    where <built-in method get of dict object at 0x7f4c03eae0c0> = {'error': 'Internal Server Error', 'message': 'Simulated Cognito AdminDisableUser Error'}.get
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:disable_user.py:78 Received event: {"httpMethod": "POST", "pathParameters": {"username": "user.to.disable@example.com"}, "requestContext": {"requestId": "test-request-id-disable-user", "authorizer": {"claims": {"cognito:username": "testadmin-disabler"}}}}
+INFO     root:disable_user.py:102 Disabling user: user.to.disable@example.com
+ERROR    root:disable_user.py:125 Unexpected error disabling user: Simulated Cognito AdminDisableUser Error
+Traceback (most recent call last):
+  File "/app/backend/src/handlers/users/disable_user.py", line 103, in lambda_handler
+    cognito.admin_disable_user(**params)
+  File "/app/backend/tests/python/handlers/users/test_disable_user.py", line 128, in admin_disable_user
+    raise Exception("Simulated Cognito AdminDisableUser Error")
+Exception: Simulated Cognito AdminDisableUser Error
+ERROR    root:disable_user.py:64 Unexpected error: Simulated Cognito AdminDisableUser Error
+______________ TestDisableUser.test_disable_user_dynamodb_failure ______________
+backend/tests/python/handlers/users/test_disable_user.py:167: in test_disable_user_dynamodb_failure
+    assert response["statusCode"] == 500
+E   assert 200 == 500
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:disable_user.py:78 Received event: {"httpMethod": "POST", "pathParameters": {"username": "user.to.disable@example.com"}, "requestContext": {"requestId": "test-request-id-disable-user", "authorizer": {"claims": {"cognito:username": "testadmin-disabler"}}}}
+INFO     root:disable_user.py:102 Disabling user: user.to.disable@example.com
+INFO     root:disable_user.py:118 Returning response with status code 200
+__________________ TestEnableUser.test_enable_user_successful __________________
+backend/tests/python/handlers/users/test_enable_user.py:88: in test_enable_user_successful
+    assert "User enabled successfully" in json.loads(response["body"])["message"]
+E   AssertionError: assert 'User enabled successfully' in 'User user.to.enable@example.com enabled successfully'
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:enable_user.py:78 Received event: {"httpMethod": "POST", "pathParameters": {"username": "user.to.enable@example.com"}, "requestContext": {"requestId": "test-request-id-enable-user", "authorizer": {"claims": {"cognito:username": "testadmin-enabler"}}}}
+INFO     root:enable_user.py:102 Enabling user: user.to.enable@example.com
+INFO     root:enable_user.py:118 Returning response with status code 200
+_______________ TestEnableUser.test_enable_user_already_enabled ________________
+backend/tests/python/handlers/users/test_enable_user.py:115: in test_enable_user_already_enabled
+    assert "User already enabled" in json.loads(response["body"])["message"] or "User enabled successfully" in json.loads(response["body"])["message"]
+E   AssertionError: assert ('User already enabled' in 'User already.enabled@example.com enabled successfully' or 'User enabled successfully' in 'User already.enabled@example.com enabled successfully')
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:enable_user.py:78 Received event: {"httpMethod": "POST", "pathParameters": {"username": "already.enabled@example.com"}, "requestContext": {"requestId": "test-request-id-enable-user", "authorizer": {"claims": {"cognito:username": "testadmin-enabler"}}}}
+INFO     root:enable_user.py:102 Enabling user: already.enabled@example.com
+INFO     root:enable_user.py:118 Returning response with status code 200
+______________ TestEnableUser.test_enable_user_not_found_cognito _______________
+backend/tests/python/handlers/users/test_enable_user.py:126: in test_enable_user_not_found_cognito
+    assert response["statusCode"] == 404
+E   assert 500 == 404
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:enable_user.py:78 Received event: {"httpMethod": "POST", "pathParameters": {"username": "nosuchuser.enable@example.com"}, "requestContext": {"requestId": "test-request-id-enable-user", "authorizer": {"claims": {"cognito:username": "testadmin-enabler"}}}}
+INFO     root:enable_user.py:102 Enabling user: nosuchuser.enable@example.com
+ERROR    root:enable_user.py:122 AWS ClientError enabling user: An error occurred (UserNotFoundException) when calling the AdminEnableUser operation: User does not exist.
+ERROR    root:enable_user.py:61 AWS ClientError: UserNotFoundException - An error occurred (UserNotFoundException) when calling the AdminEnableUser operation: User does not exist.
+_______________ TestEnableUser.test_enable_user_cognito_failure ________________
+backend/tests/python/handlers/users/test_enable_user.py:153: in test_enable_user_cognito_failure
+    assert "Failed to enable user in Cognito" in body.get("message", "") or "Simulated Cognito AdminEnableUser Error" in body.get("error", "")
+E   AssertionError: assert ('Failed to enable user in Cognito' in 'Simulated Cognito AdminEnableUser Error' or 'Simulated Cognito AdminEnableUser Error' in 'Internal Server Error')
+E    +  where 'Simulated Cognito AdminEnableUser Error' = <built-in method get of dict object at 0x7f4bfe399a00>('message', '')
+E    +    where <built-in method get of dict object at 0x7f4bfe399a00> = {'error': 'Internal Server Error', 'message': 'Simulated Cognito AdminEnableUser Error'}.get
+E    +  and   'Internal Server Error' = <built-in method get of dict object at 0x7f4bfe399a00>('error', '')
+E    +    where <built-in method get of dict object at 0x7f4bfe399a00> = {'error': 'Internal Server Error', 'message': 'Simulated Cognito AdminEnableUser Error'}.get
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:enable_user.py:78 Received event: {"httpMethod": "POST", "pathParameters": {"username": "user.to.enable@example.com"}, "requestContext": {"requestId": "test-request-id-enable-user", "authorizer": {"claims": {"cognito:username": "testadmin-enabler"}}}}
+INFO     root:enable_user.py:102 Enabling user: user.to.enable@example.com
+ERROR    root:enable_user.py:125 Unexpected error enabling user: Simulated Cognito AdminEnableUser Error
+Traceback (most recent call last):
+  File "/app/backend/src/handlers/users/enable_user.py", line 103, in lambda_handler
+    cognito.admin_enable_user(**params)
+  File "/app/backend/tests/python/handlers/users/test_enable_user.py", line 138, in admin_enable_user
+    raise Exception("Simulated Cognito AdminEnableUser Error")
+Exception: Simulated Cognito AdminEnableUser Error
+ERROR    root:enable_user.py:64 Unexpected error: Simulated Cognito AdminEnableUser Error
+_______________ TestEnableUser.test_enable_user_dynamodb_failure _______________
+backend/tests/python/handlers/users/test_enable_user.py:180: in test_enable_user_dynamodb_failure
+    assert response["statusCode"] == 500
+E   assert 200 == 500
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:enable_user.py:78 Received event: {"httpMethod": "POST", "pathParameters": {"username": "user.to.enable@example.com"}, "requestContext": {"requestId": "test-request-id-enable-user", "authorizer": {"claims": {"cognito:username": "testadmin-enabler"}}}}
+INFO     root:enable_user.py:102 Enabling user: user.to.enable@example.com
+INFO     root:enable_user.py:118 Returning response with status code 200
+___________________ TestListUsers.test_list_users_empty_pool ___________________
+backend/tests/python/handlers/users/test_list_users.py:71: in test_list_users_empty_pool
+    assert body == [] # Expect an empty list
+E   AssertionError: assert {'nextToken':..., 'users': []} == []
+E     Full diff:
+E     - []
+E     + {'nextToken': None, 'users': []}
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:list_users.py:91 Received event: {"httpMethod": "GET", "pathParameters": {}, "requestContext": {"requestId": "test-request-id-list-users", "authorizer": {"claims": {"cognito:username": "testadmin"}}}}
+INFO     root:list_users.py:121 Calling Cognito with params: {'UserPoolId': 'us-east-1_07cc23de78394a21adf67178a3995097', 'Limit': 60}
+INFO     root:list_users.py:123 Cognito returned 0 users
+INFO     root:list_users.py:167 Returning response with status code 200
+______________ TestListUsers.test_list_users_with_multiple_users _______________
+backend/tests/python/handlers/users/test_list_users.py:98: in test_list_users_with_multiple_users
+    assert len(body) == len(users_to_create)
+E   AssertionError: assert 2 == 3
+E    +  where 2 = len({'nextToken': None, 'users': [{'email': 'user1@example.com', 'enabled': True, 'firstName': '', 'lastName': '', ...}, {'email': 'user2@example.com', 'enabled': True, 'firstName': '', 'lastName': '', ...}, {'email': 'user3@example.com', 'enabled': True, 'firstName': '', 'lastName': '', ...}]})
+E    +  and   3 = len([{'UserAttributes': [{'Name': 'email', 'Value': 'user1@example.com'}], 'Username': 'user1@example.com'}, {'UserAttributes': [{'Name': 'email', 'Value': 'user2@example.com'}], 'Username': 'user2@example.com'}, {'UserAttributes': [{'Name': 'email', 'Value': 'user3@example.com'}], 'Username': 'user3@example.com'}])
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:list_users.py:91 Received event: {"httpMethod": "GET", "pathParameters": {}, "requestContext": {"requestId": "test-request-id-list-users", "authorizer": {"claims": {"cognito:username": "testadmin"}}}}
+INFO     root:list_users.py:121 Calling Cognito with params: {'UserPoolId': 'us-east-1_76a745960d3b491eb55150d9ab464951', 'Limit': 60}
+INFO     root:list_users.py:123 Cognito returned 3 users
+INFO     root:list_users.py:167 Returning response with status code 200
+________________ TestListUsers.test_list_users_cognito_failure _________________
+backend/tests/python/handlers/users/test_list_users.py:161: in test_list_users_cognito_failure
+    assert "Simulated Cognito ListUsers Error" in body["error"] or "Internal server error" in body.get("message", "")
+E   AssertionError: assert ('Simulated Cognito ListUsers Error' in 'Internal Server Error' or 'Internal server error' in 'Simulated Cognito ListUsers Error')
+E    +  where 'Simulated Cognito ListUsers Error' = <built-in method get of dict object at 0x7f4c0036d4c0>('message', '')
+E    +    where <built-in method get of dict object at 0x7f4c0036d4c0> = {'error': 'Internal Server Error', 'exception': 'Simulated Cognito ListUsers Error', 'message': 'Simulated Cognito ListUsers Error'}.get
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:list_users.py:91 Received event: {"httpMethod": "GET", "pathParameters": {}, "requestContext": {"requestId": "test-request-id-list-users", "authorizer": {"claims": {"cognito:username": "testadmin"}}}}
+INFO     root:list_users.py:121 Calling Cognito with params: {'UserPoolId': 'us-east-1_021a1f3cb16f424680e8eb0ceac71bdf', 'Limit': 60}
+ERROR    root:list_users.py:174 Unexpected error listing users: Simulated Cognito ListUsers Error
+Traceback (most recent call last):
+  File "/app/backend/src/handlers/users/list_users.py", line 122, in lambda_handler
+    result = cognito.list_users(**params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/backend/tests/python/handlers/users/test_list_users.py", line 122, in list_users
+    raise Exception("Simulated Cognito ListUsers Error")
+Exception: Simulated Cognito ListUsers Error
+ERROR    root:list_users.py:77 Unexpected error: Simulated Cognito ListUsers Error
+__________________ TestUpdateUser.test_update_user_successful __________________
+backend/tests/python/handlers/users/test_update_user.py:125: in test_update_user_successful
+    assert response["statusCode"] == 200
+E   assert 400 == 200
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:update_user.py:83 Received event: {"httpMethod": "PUT", "pathParameters": {"username": "user.to.update@example.com"}, "requestContext": {"requestId": "test-request-id-update-user", "authorizer": {"claims": {"cognito:username": "testadmin-updater"}}}, "body": "{\"given_name\": \"UpdatedGiven\", \"family_name\": \"UpdatedFamily\", \"role\": \"doctor\"}"}
+______________ TestUpdateUser.test_update_user_not_found_cognito _______________
+backend/tests/python/handlers/users/test_update_user.py:160: in test_update_user_not_found_cognito
+    assert response["statusCode"] == 404
+E   assert 400 == 404
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:update_user.py:83 Received event: {"httpMethod": "PUT", "pathParameters": {"username": "nosuchuser@example.com"}, "requestContext": {"requestId": "test-request-id-update-user", "authorizer": {"claims": {"cognito:username": "testadmin-updater"}}}, "body": "{\"given_name\": \"NotFound\"}"}
+_______________ TestUpdateUser.test_update_user_cognito_failure ________________
+backend/tests/python/handlers/users/test_update_user.py:193: in test_update_user_cognito_failure
+    assert response["statusCode"] == 500
+E   assert 400 == 500
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:update_user.py:83 Received event: {"httpMethod": "PUT", "pathParameters": {"username": "user.to.update@example.com"}, "requestContext": {"requestId": "test-request-id-update-user", "authorizer": {"claims": {"cognito:username": "testadmin-updater"}}}, "body": "{\"given_name\": \"CognitoFail\"}"}
+_______________ TestUpdateUser.test_update_user_dynamodb_failure _______________
+backend/tests/python/handlers/users/test_update_user.py:222: in test_update_user_dynamodb_failure
+    assert response["statusCode"] == 500
+E   assert 400 == 500
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:update_user.py:83 Received event: {"httpMethod": "PUT", "pathParameters": {"username": "user.to.update@example.com"}, "requestContext": {"requestId": "test-request-id-update-user", "authorizer": {"claims": {"cognito:username": "testadmin-updater"}}}, "body": "{\"role\": \"admin\"}"}
+_________ TestUploadProfileImage.test_upload_profile_image_successful __________
+backend/tests/python/handlers/users/test_upload_profile_image.py:111: in test_upload_profile_image_successful
+    assert response["statusCode"] == 200
+E   assert 400 == 200
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:upload_profile_image.py:112 Received event: {"httpMethod": "POST", "requestContext": {"requestId": "test-request-id-upload-img", "authorizer": {"claims": {"cognito:username": "imageuploader@example.com", "sub": "c19fb750-1b46-495a-b37a-d889d68dba10"}}}, "headers": {"Content-Type": "application/json"}, "body": "{\"filename\": \"profile.jpg\", \"image_data_base64\": \"ZmFrZSBpbWFnZSBkYXRh\"}"}
+INFO     root:upload_profile_image.py:113 Event body: {"filename": "profile.jpg", "image_data_base64": "ZmFrZSBpbWFnZSBkYXRh"}
+INFO     root:upload_profile_image.py:130 Received event. Method: POST, Path: None
+INFO     root:upload_profile_image.py:134 Request Content-Type: application/json
+INFO     root:upload_profile_image.py:135 Is body base64 encoded by API Gateway: None
+INFO     root:upload_profile_image.py:148 Processing request for user_sub: c19fb750-1b46-495a-b37a-d889d68dba10
+INFO     root:upload_profile_image.py:155 Raw request body (first 200 chars): {"filename": "profile.jpg", "image_data_base64": "ZmFrZSBpbWFnZSBkYXRh"}
+INFO     root:upload_profile_image.py:168 Request body for JSON parsing (first 200 chars): {"filename": "profile.jpg", "image_data_base64": "ZmFrZSBpbWFnZSBkYXRh"}
+_______ TestUploadProfileImage.test_upload_profile_image_user_not_found ________
+backend/tests/python/handlers/users/test_upload_profile_image.py:137: in test_upload_profile_image_user_not_found
+    assert response["statusCode"] == 404 # Or 403 if auth issue
+E   assert 400 == 404
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:upload_profile_image.py:112 Received event: {"httpMethod": "POST", "requestContext": {"requestId": "test-request-id-upload-img", "authorizer": {"claims": {"cognito:username": "nosuchuser@example.com", "sub": "nosuchsub"}}}, "headers": {"Content-Type": "application/json"}, "body": "{\"filename\": \"test.jpg\", \"image_data_base64\": \"ZA==\"}"}
+INFO     root:upload_profile_image.py:113 Event body: {"filename": "test.jpg", "image_data_base64": "ZA=="}
+INFO     root:upload_profile_image.py:130 Received event. Method: POST, Path: None
+INFO     root:upload_profile_image.py:134 Request Content-Type: application/json
+INFO     root:upload_profile_image.py:135 Is body base64 encoded by API Gateway: None
+INFO     root:upload_profile_image.py:148 Processing request for user_sub: nosuchsub
+INFO     root:upload_profile_image.py:155 Raw request body (first 200 chars): {"filename": "test.jpg", "image_data_base64": "ZA=="}
+INFO     root:upload_profile_image.py:168 Request body for JSON parsing (first 200 chars): {"filename": "test.jpg", "image_data_base64": "ZA=="}
+_________ TestUploadProfileImage.test_upload_profile_image_s3_failure __________
+backend/tests/python/handlers/users/test_upload_profile_image.py:160: in test_upload_profile_image_s3_failure
+    assert response["statusCode"] == 500
+E   assert 400 == 500
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:upload_profile_image.py:112 Received event: {"httpMethod": "POST", "requestContext": {"requestId": "test-request-id-upload-img", "authorizer": {"claims": {"cognito:username": "imageuploader@example.com", "sub": "f0572f9b-2726-46ed-8ed8-d4849476ab6c"}}}, "headers": {"Content-Type": "application/json"}, "body": "{\"filename\": \"s3fail.png\", \"image_data_base64\": \"czNmYWls\"}"}
+INFO     root:upload_profile_image.py:113 Event body: {"filename": "s3fail.png", "image_data_base64": "czNmYWls"}
+INFO     root:upload_profile_image.py:130 Received event. Method: POST, Path: None
+INFO     root:upload_profile_image.py:134 Request Content-Type: application/json
+INFO     root:upload_profile_image.py:135 Is body base64 encoded by API Gateway: None
+INFO     root:upload_profile_image.py:148 Processing request for user_sub: f0572f9b-2726-46ed-8ed8-d4849476ab6c
+INFO     root:upload_profile_image.py:155 Raw request body (first 200 chars): {"filename": "s3fail.png", "image_data_base64": "czNmYWls"}
+INFO     root:upload_profile_image.py:168 Request body for JSON parsing (first 200 chars): {"filename": "s3fail.png", "image_data_base64": "czNmYWls"}
+___ TestUploadProfileImage.test_upload_profile_image_cognito_update_failure ____
+backend/tests/python/handlers/users/test_upload_profile_image.py:188: in test_upload_profile_image_cognito_update_failure
+    assert response["statusCode"] == 500
+E   assert 400 == 500
+------------------------------ Captured log setup ------------------------------
+INFO     botocore.credentials:credentials.py:1224 Found credentials in environment variables.
+------------------------------ Captured log call -------------------------------
+INFO     root:upload_profile_image.py:112 Received event: {"httpMethod": "POST", "requestContext": {"requestId": "test-request-id-upload-img", "authorizer": {"claims": {"cognito:username": "imageuploader@example.com", "sub": "be2b8722-7051-4858-9e70-0333a428d696"}}}, "headers": {"Content-Type": "application/json"}, "body": "{\"filename\": \"cognitofail.gif\", \"image_data_base64\": \"Y29nbml0b2ZhaWw=\"}"}
+INFO     root:upload_profile_image.py:113 Event body: {"filename": "cognitofail.gif", "image_data_base64": "Y29nbml0b2ZhaWw="}
+INFO     root:upload_profile_image.py:130 Received event. Method: POST, Path: None
+INFO     root:upload_profile_image.py:134 Request Content-Type: application/json
+INFO     root:upload_profile_image.py:135 Is body base64 encoded by API Gateway: None
+INFO     root:upload_profile_image.py:148 Processing request for user_sub: be2b8722-7051-4858-9e70-0333a428d696
+INFO     root:upload_profile_image.py:155 Raw request body (first 200 chars): {"filename": "cognitofail.gif", "image_data_base64": "Y29nbml0b2ZhaWw="}
+INFO     root:upload_profile_image.py:168 Request body for JSON parsing (first 200 chars): {"filename": "cognitofail.gif", "image_data_base64": "Y29nbml0b2ZhaWw="}
+=============================== warnings summary ===============================
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:683
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:683
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:683: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    and isinstance(item.value, ast.Str)
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:685
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:685: DeprecationWarning: Attribute s is deprecated and will be removed in Python 3.14; use value instead
+    doc = item.value.s
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/config/__init__.py:1302
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/config/__init__.py:1302: PytestConfigWarning: Unknown config option: python_paths
+
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/dateutil/tz/tz.py:37
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/dateutil/tz/tz.py:37: DeprecationWarning: datetime.datetime.utcfromtimestamp() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.fromtimestamp(timestamp, datetime.UTC).
+    EPOCH = datetime.datetime.utcfromtimestamp(0)
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1102: 417 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1102: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    syms.append(ast.Str(sym))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1104: 417 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1104: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    expls.append(ast.Str(expl))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:817: 1392 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:817: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    keys = [ast.Str(key) for key in current.keys()]
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:927: 406 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:927: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    assertmsg = ast.Str("")
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:929: 406 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:929: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    template = ast.BinOp(assertmsg, ast.Add(), ast.Str(explanation))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:941: 407 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:941: DeprecationWarning: ast.NameConstant is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    clear = ast.Assign(variables, ast.NameConstant(None))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:965: 99 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:965: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    inlocs = ast.Compare(ast.Str(name.id), [ast.In()], [locs])
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:968: 99 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:968: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    expr = ast.IfExp(test, self.display(name), ast.Str(name.id))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1004: 24 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1004: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    expl_format = self.pop_format_context(ast.Str(expl))
+
+../home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1016: 13 warnings
+  /home/jules/.pyenv/versions/3.12.11/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:1016: DeprecationWarning: ast.Num is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    expl_template = self.helper("_format_boolop", expl_list, ast.Num(is_or))
+
+tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_successful
+tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_non_existent
+tests/python/handlers/patients/test_update_patient.py::TestUpdatePatient::test_update_patient_db_error
+  /app/backend/src/handlers/patients/update_patient.py:67: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = datetime.utcnow().isoformat() + "Z"
+
+tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_successful
+tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_dynamodb_put_failure
+tests/python/handlers/services/test_create_service.py::TestCreateService::test_create_service_with_only_required_fields
+  /app/backend/src/handlers/services/create_service.py:36: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = datetime.utcnow().isoformat() + "Z"
+
+tests/python/handlers/services/test_update_service.py::TestUpdateService::test_update_service_dynamodb_failure
+  /app/backend/src/handlers/services/update_service.py:94: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = datetime.utcnow().isoformat() + "Z"
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED backend/test_end_to_end.py::test_all_error_handling - assert 401 == 500
+FAILED backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_delete_user_successful
+FAILED backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_delete_user_not_found_cognito
+FAILED backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_delete_user_cognito_failure
+FAILED backend/tests/python/handlers/users/test_delete_user.py::TestDeleteUser::test_delete_user_dynamodb_failure
+FAILED backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_successful
+FAILED backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_already_disabled
+FAILED backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_not_found_cognito
+FAILED backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_cognito_failure
+FAILED backend/tests/python/handlers/users/test_disable_user.py::TestDisableUser::test_disable_user_dynamodb_failure
+FAILED backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_successful
+FAILED backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_already_enabled
+FAILED backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_not_found_cognito
+FAILED backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_cognito_failure
+FAILED backend/tests/python/handlers/users/test_enable_user.py::TestEnableUser::test_enable_user_dynamodb_failure
+FAILED backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_list_users_empty_pool
+FAILED backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_list_users_with_multiple_users
+FAILED backend/tests/python/handlers/users/test_list_users.py::TestListUsers::test_list_users_cognito_failure
+FAILED backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_successful
+FAILED backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_not_found_cognito
+FAILED backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_cognito_failure
+FAILED backend/tests/python/handlers/users/test_update_user.py::TestUpdateUser::test_update_user_dynamodb_failure
+FAILED backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_upload_profile_image_successful
+FAILED backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_upload_profile_image_user_not_found
+FAILED backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_upload_profile_image_s3_failure
+FAILED backend/tests/python/handlers/users/test_upload_profile_image.py::TestUploadProfileImage::test_upload_profile_image_cognito_update_failure
+================ 26 failed, 96 passed, 3692 warnings in 31.81s =================

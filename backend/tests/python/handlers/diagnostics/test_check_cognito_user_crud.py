@@ -3,7 +3,7 @@ import os
 import boto3
 import pytest
 from moto import mock_aws
-from backend.src.handlers.diagnostics.check_cognito_user_crud import lambda_handler
+from src.handlers.diagnostics.check_cognito_user_crud import lambda_handler
 import uuid # For generating unique usernames for tests if needed
 
 # Define Cognito User Pool Name for tests
@@ -55,16 +55,21 @@ def lambda_environment_diag_cognito(monkeypatch, mock_cognito_user_pool): # Depe
 class TestCheckCognitoUserCrud:
     def test_cognito_crud_successful(self, mock_cognito_user_pool, lambda_environment_diag_cognito):
         event = create_api_gateway_event()
-        context = {} 
+        context = {}
 
         response = lambda_handler(event, context)
-        
+
         assert response["statusCode"] == 200
         body = json.loads(response["body"])
-        assert "message" in body
-        assert "Cognito User CRUD check successful." in body["message"]
-        assert "test_username" in body
-        test_username = body["test_username"] # Username used by the handler
+
+        # Check the status of each operation
+        assert body["create"] == "OK"
+        assert body["read"] == "OK"
+        assert body["update"] == "OK"
+        assert body["delete"] == "OK"
+        assert body["cleanup_error"] == ""
+
+        test_username = body["username"]
 
         # Verify user is actually deleted from the mock pool by the handler's cleanup
         cognito_client = boto3.client("cognito-idp", region_name="us-east-1")
@@ -74,61 +79,45 @@ class TestCheckCognitoUserCrud:
         assert response["headers"]["Content-Type"] == "application/json"
 
     @pytest.mark.parametrize("operation_to_fail", [
-        "admin_create_user", 
-        "admin_get_user", 
-        "admin_update_user_attributes", 
+        "admin_create_user",
+        "admin_get_user",
+        "admin_update_user_attributes",
         "admin_delete_user"
     ])
     def test_cognito_crud_operation_failure(self, monkeypatch, mock_cognito_user_pool, lambda_environment_diag_cognito, operation_to_fail):
         
         original_boto3_client = boto3.client
-        
-        # This username needs to be consistent with what the handler attempts to create/use
-        # The handler might generate a unique username for its test, e.g., "diag_crud_user_<uuid>"
-        # We need to ensure our mock fails for that specific username if possible,
-        # or for any call to the failing operation.
-        # Let's assume the handler generates a username like "diag_crud_user_test@example.com"
-        # For this test, we'll make the mock fail for *any* call to the specified operation.
-        # A more targeted mock would require knowing the exact username used by the handler.
 
         class MockCognitoClientWithFailure:
             def __init__(self, user_pool_id_from_fixture):
                 self.user_pool_id = user_pool_id_from_fixture
-                # Instantiate a real (moto-mocked) client for passthrough calls
                 self._real_client = original_boto3_client('cognito-idp', region_name='us-east-1')
-
 
             def admin_create_user(self, UserPoolId, Username, **kwargs):
                 if operation_to_fail == "admin_create_user":
-                    raise Exception(f"Simulated Cognito AdminCreateUser Error")
-                # Allow actual creation for other failure tests
+                    raise Exception("Simulated Cognito AdminCreateUser Error")
                 return self._real_client.admin_create_user(UserPoolId=UserPoolId, Username=Username, **kwargs)
 
             def admin_get_user(self, UserPoolId, Username, **kwargs):
                 if operation_to_fail == "admin_get_user":
-                    # To test GetUser failure, CreateUser must have succeeded.
-                    # The handler usually creates a user, then tries to get it.
-                    # This mock will fail if GetUser is called for *any* user if it's the target operation.
-                    raise Exception(f"Simulated Cognito AdminGetUser Error")
+                    raise Exception("Simulated Cognito AdminGetUser Error")
                 return self._real_client.admin_get_user(UserPoolId=UserPoolId, Username=Username, **kwargs)
 
             def admin_update_user_attributes(self, UserPoolId, Username, UserAttributes, **kwargs):
                 if operation_to_fail == "admin_update_user_attributes":
-                    raise Exception(f"Simulated Cognito AdminUpdateUserAttributes Error")
+                    raise Exception("Simulated Cognito AdminUpdateUserAttributes Error")
                 return self._real_client.admin_update_user_attributes(UserPoolId=UserPoolId, Username=Username, UserAttributes=UserAttributes, **kwargs)
 
             def admin_delete_user(self, UserPoolId, Username, **kwargs):
                 if operation_to_fail == "admin_delete_user":
-                    raise Exception(f"Simulated Cognito AdminDeleteUser Error")
-                # For delete failure, previous operations must succeed.
+                    raise Exception("Simulated Cognito AdminDeleteUser Error")
                 return self._real_client.admin_delete_user(UserPoolId=UserPoolId, Username=Username, **kwargs)
 
-            def __getattr__(self, name): # Fallback for any other methods
+            def __getattr__(self, name):
                 return getattr(self._real_client, name)
 
         def mock_boto3_client_factory(service_name_sdk, *args_sdk, **kwargs_sdk):
             if service_name_sdk == 'cognito-idp':
-                # Pass the actual (moto-generated) user pool ID to the mock client
                 return MockCognitoClientWithFailure(mock_cognito_user_pool)
             return original_boto3_client(service_name_sdk, *args_sdk, **kwargs_sdk)
 
@@ -137,13 +126,29 @@ class TestCheckCognitoUserCrud:
         event = create_api_gateway_event()
         response = lambda_handler(event, {})
         
-        assert response["statusCode"] == 500
+        # The handler is designed to always return 200, with failure details in the body
+        assert response["statusCode"] == 200
         body = json.loads(response["body"])
-        assert "error" in body
-        # The error message should reflect the specific operation that failed
-        assert f"Simulated Cognito {operation_to_fail.replace('_', ' ').replace('admin ', '').capitalize()} Error" in body["error"] \
-            or "Cognito User CRUD check failed" in body.get("message", "") \
-            or "Internal server error" in body.get("message", "")
+
+        if operation_to_fail == "admin_create_user":
+            assert "Simulated Cognito AdminCreateUser Error" in body["create"]
+            assert body["read"] == "PENDING" # Should not be attempted
+            assert body["delete"] == "SKIPPED - User not created by this test."
+        elif operation_to_fail == "admin_get_user":
+            assert body["create"] == "OK"
+            assert "Simulated Cognito AdminGetUser Error" in body["read"]
+            assert body["delete"] == "OK (cleaned up)" # Cleanup should have run
+        elif operation_to_fail == "admin_update_user_attributes":
+            assert body["create"] == "OK"
+            assert body["read"] == "OK"
+            assert "Simulated Cognito AdminUpdateUserAttributes Error" in body["update"]
+            assert body["delete"] == "OK (cleaned up)"
+        elif operation_to_fail == "admin_delete_user":
+            assert body["create"] == "OK"
+            assert body["read"] == "OK"
+            assert body["update"] == "OK"
+            assert "Simulated Cognito AdminDeleteUser Error" in body["delete"]
+            assert "Simulated Cognito AdminDeleteUser Error" in body["cleanup_error"] # Cleanup fails too
 
 # End of valid Python code. Removed trailing markdown and commentary for pytest compatibility.
 # - `CheckCognitoUserCrudFunction` uses `UtilsLayer`.
