@@ -37,9 +37,9 @@ def build_error_response(status_code, error_type, message, exception=None, reque
 def handle_exception(exception, request_origin=None):
     if isinstance(exception, ClientError):
         code = exception.response.get('Error', {}).get('Code', 'UnknownError')
-        if code in ('ResourceNotFoundException', 'NoSuchKey'):
+        if code in ('ResourceNotFoundException', 'NoSuchKey', 'ConditionalCheckFailedException'):
             return build_error_response(404, 'Not Found', str(exception), exception, request_origin)
-        if code in ('ValidationException', 'ConditionalCheckFailedException'):
+        if code in ('ValidationException',):
             return build_error_response(400, 'Validation Error', str(exception), exception, request_origin)
         if code in ('AccessDenied', 'AccessDeniedException'):
             return build_error_response(403, 'Access Denied', str(exception), exception, request_origin)

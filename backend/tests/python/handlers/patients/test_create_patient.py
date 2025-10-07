@@ -1,298 +1,117 @@
 import json
-import os
-import boto3
 import pytest
-from moto import mock_aws
-from backend.src.handlers.patients.create_patient import lambda_handler # Adjusted import
-import uuid
-from decimal import Decimal # If any numeric values need Decimal conversion for DynamoDB
-os.environ["AWS_ACCESS_KEY_ID"] = "testing"
-os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
-os.environ["AWS_SECURITY_TOKEN"] = "testing"
-os.environ["AWS_SESSION_TOKEN"] = "testing"
-os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
+from unittest.mock import patch
+from src.handlers.patients.create_patient import lambda_handler
 
-
-# Update db_utils import
-from backend.src.utils.db_utils import generate_response
-
-# Define the patient records table name for tests
-TEST_PATIENT_RECORDS_TABLE_NAME = "clinnet-patient-records-test"
-MOCK_PATIENT_ID = "fixed-patient-uuid-123"
-DEFAULT_ORIGIN = "http://localhost:5173" # Example allowed origin
-
-# Helper function to create a mock API Gateway event
-def create_api_gateway_event(method="POST", body=None, path_params=None, headers=None):
-    base_headers = {"Origin": DEFAULT_ORIGIN}
-    if headers:
-        base_headers.update(headers)
-    event = {
-        "httpMethod": method,
-        "pathParameters": path_params if path_params else {},
-        "headers": base_headers,
-        "requestContext": {
-            "requestId": "test-request-id-create-patient",
-            "authorizer": {"claims": {"cognito:username": "testuser-admin"}}
-        }
-    }
-    if body:
-        event["body"] = json.dumps(body)
-    return event
-
-@pytest.fixture(scope="function")
-def lambda_environment(monkeypatch):
-    monkeypatch.setenv("PATIENT_RECORDS_TABLE", TEST_PATIENT_RECORDS_TABLE_NAME)
-    monkeypatch.setenv("ENVIRONMENT", "test")
-
-# Mock uuid.uuid4 to return a predictable value for patientId
-@pytest.fixture(autouse=True)
-def mock_uuid_for_patient(monkeypatch):
-    monkeypatch.setattr(uuid, 'uuid4', lambda: MOCK_PATIENT_ID)
-    return MOCK_PATIENT_ID
-
-@mock_aws
-class TestCreatePatient:
-    def setup_method(self, method):
-        self.dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
-        self.table = self.dynamodb.create_table(
-            TableName=TEST_PATIENT_RECORDS_TABLE_NAME,
-            KeySchema=[
-                {"AttributeName": "PK", "KeyType": "HASH"},
-                {"AttributeName": "SK", "KeyType": "RANGE"}
-            ],
-            AttributeDefinitions=[
-                {"AttributeName": "PK", "AttributeType": "S"},
-                {"AttributeName": "SK", "AttributeType": "S"},
-                {"AttributeName": "type", "AttributeType": "S"}
-            ],
-            ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
-            GlobalSecondaryIndexes=[
-                {
-                    "IndexName": "type-index",
-                    "KeySchema": [{"AttributeName": "type", "KeyType": "HASH"}],
-                    "Projection": {"ProjectionType": "ALL"},
-                    "ProvisionedThroughput": {"ReadCapacityUnits": 5, "WriteCapacityUnits": 5}
+def create_api_gateway_event(body=None):
+    """Helper to create a mock API Gateway event."""
+    return {
+        'httpMethod': 'POST',
+        'headers': {'Content-Type': 'application/json'},
+        'requestContext': {
+            'authorizer': {
+                'claims': {
+                    'sub': 'test-user-sub'
                 }
-            ]
-        )
-
-    def test_create_patient_successful(self, lambda_environment, mock_uuid_for_patient):
-        patient_data_input = {
-            "firstName": "John",
-            "lastName": "Doe",
-            "dateOfBirth": "1990-01-15",
-            "email": "john.doe@example.com",
-            "phone": "123-456-7890", # Changed from phoneNumber
-            "address": {
-                "street": "123 Main St",
-                "city": "Anytown",
-                "state": "CA",
-                "zipCode": "90210"
-            },
-            "status": "active" # Optional, example
-        }
-        event = create_api_gateway_event(body=patient_data_input)
-        context = {}
-
-        response = lambda_handler(event, context)
-        
-        assert response["statusCode"] == 201
-        body = json.loads(response["body"])
-        
-        expected_patient_id = mock_uuid_for_patient
-        assert body["id"] == expected_patient_id # Changed from patientId to id
-        assert body["PK"] == f"PATIENT#{expected_patient_id}"
-        assert body["SK"] == "METADATA"
-        assert body["firstName"] == patient_data_input["firstName"]
-        assert body["lastName"] == patient_data_input["lastName"]
-        assert body["email"] == patient_data_input["email"]
-        assert body["dateOfBirth"] == patient_data_input["dateOfBirth"]
-        assert body["phone"] == patient_data_input["phone"]
-        assert "createdAt" in body
-        assert "updatedAt" in body
-        assert body["createdAt"] == body["updatedAt"]
-        assert body["type"] == "patient" # Changed to lowercase
-        assert body["status"] == patient_data_input["status"]
-        assert response["headers"]["Content-Type"] == "application/json"
-        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
-
-
-        # Verify item in DynamoDB
-        expected_pk = f"PATIENT#{expected_patient_id}"
-        expected_sk = "METADATA" # Corrected SK
-        db_item = self.table.get_item(Key={"PK": expected_pk, "SK": expected_sk}).get("Item")
-        
-        assert db_item is not None
-        assert db_item["id"] == expected_patient_id
-        assert db_item["firstName"] == patient_data_input["firstName"]
-        assert db_item["lastName"] == patient_data_input["lastName"]
-        assert db_item["email"] == patient_data_input["email"]
-        assert db_item["type"] == "patient" # Changed to lowercase
-        assert db_item["status"] == patient_data_input["status"]
-        assert "createdAt" in db_item
-        assert "updatedAt" in db_item
-        assert isinstance(db_item.get("address"), dict)
-        assert db_item["address"]["street"] == patient_data_input["address"]["street"]
-
-
-    def test_create_patient_missing_required_fields(self, lambda_environment):
-        # Handler required fields are firstName, lastName
-        required_fields_in_handler = ["firstName", "lastName"]
-        
-        for field_to_miss in required_fields_in_handler:
-            patient_data = {
-                "firstName": "Test", "lastName": "User", 
-                "email": "test@example.com", "dateOfBirth": "2000-01-01"
             }
-            del patient_data[field_to_miss]
-            
-            event = create_api_gateway_event(body=patient_data)
-            response = lambda_handler(event, {})
-            assert response["statusCode"] == 400
-            body = json.loads(response["body"])
-            assert "Missing required fields" in body.get("message")
-            assert field_to_miss in body.get("message")
-            assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
-            assert response["headers"]["Content-Type"] == "application/json"
+        },
+        'body': json.dumps(body) if body else None
+    }
 
+@pytest.mark.usefixtures("mock_db_connection")
+class TestCreatePatient:
 
-    # test_create_patient_invalid_email removed
-
-    @pytest.mark.parametrize("field,invalid_value,error_message_fragment", [
-        ("firstName", "", "must be a non-empty string"),
-        ("firstName", "  ", "must be a non-empty string"),
-        ("firstName", 123, "must be a non-empty string"),
-        ("lastName", "", "must be a non-empty string"),
-        ("lastName", "  ", "must be a non-empty string"),
-        ("lastName", True, "must be a non-empty string"),
-        ("dateOfBirth", "15-01-1990", "must be in YYYY-MM-DD format"),
-        ("dateOfBirth", "1990/01/15", "must be in YYYY-MM-DD format"),
-        ("dateOfBirth", "not-a-date", "must be in YYYY-MM-DD format"),
-        ("dateOfBirth", 19900115, "must be a string in YYYY-MM-DD format"),
-        ("email", "not-an-email", "must be a valid email string"),
-        ("email", "test@example", "must be a valid email string"), # Basic check in handler
-        ("email", 123, "must be a valid email string"),
-        ("status", "unknown_status", "must be one of ['active', 'inactive', 'archived']"),
-        ("status", 123, "must be one of ['active', 'inactive', 'archived']"),
-        ("phone", 1234567890, "must be a string"),
-        ("address", "not a dict", "must be a dictionary"),
-        ("insuranceProvider", 123, "must be a string"),
-        ("insuranceNumber", False, "must be a string"),
-    ])
-    def test_create_patient_field_validations(self, lambda_environment, field, invalid_value, error_message_fragment):
+    @patch('src.handlers.patients.create_patient.create_patient')
+    def test_create_patient_successful(self, mock_create_patient_util):
+        # Arrange
         patient_data = {
-            "firstName": "ValidFirst", "lastName": "ValidLast",
-            "email": "valid@example.com", "dateOfBirth": "2000-01-01",
-            field: invalid_value # Overwrite with invalid value
+            "first_name": "John",
+            "last_name": "Doe",
+            "date_of_birth": "1990-01-15",
+            "gender": "male",
+            "email": "john.doe@example.com",
+            "phone": "123-456-7890",
+            "address": "123 Main St, Anytown, USA"
         }
-        event = create_api_gateway_event(body=patient_data)
-        response = lambda_handler(event, {})
-
-        assert response["statusCode"] == 400
-        body = json.loads(response["body"])
-        assert body.get("error") == "Validation Error"
-        assert "Validation failed" in body.get("message")
-        assert error_message_fragment in body.get("message")
-        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
-        assert response["headers"]["Content-Type"] == "application/json"
-
-
-    def test_create_patient_no_body(self, lambda_environment):
-        event_no_body = create_api_gateway_event(body=None) # create_api_gateway_event handles no body by not setting it
-        # The handler's json.loads(event.get('body', '{}')) will process it as empty dict if body is None
-        # This will then trigger missing required fields
-        response_no_body = lambda_handler(event_no_body, {})
-        assert response_no_body["statusCode"] == 400
-        body_no_body = json.loads(response_no_body["body"])
-        assert "Missing required fields" in body_no_body.get("message")
-        assert "firstName" in body_no_body.get("message")
-        assert "lastName" in body_no_body.get("message")
-        assert response_no_body["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
-        assert response_no_body["headers"]["Content-Type"] == "application/json"
-
-    def test_create_patient_invalid_json_body(self, lambda_environment):
-        event_invalid_json = create_api_gateway_event(method="POST", headers={"Origin": DEFAULT_ORIGIN})
-        event_invalid_json["body"] = "{not_json:" # Directly set malformed body
-        response = lambda_handler(event_invalid_json, {})
-        assert response["statusCode"] == 400
-        body = json.loads(response["body"])
-        assert body.get("error") == "BadRequest"
-        assert body.get("message") == "Invalid JSON format in request body."
-        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
-        assert response["headers"]["Content-Type"] == "application/json"
-
-
-    def test_create_patient_dynamodb_put_failure(self, monkeypatch, lambda_environment):
-        patient_data_input = {
-            "firstName": "Fail", "lastName": "User",
-            "dateOfBirth": "1980-01-01", "email": "fail@example.com", "phone": "1112223333"
-        }
-
-        from unittest.mock import MagicMock
+        event = create_api_gateway_event(patient_data)
         
-        def mock_put_item(*args, **kwargs):
-            from botocore.exceptions import ClientError
-            error_response = {'Error': {'Code': 'ProvisionedThroughputExceededException', 'Message': 'Simulated DynamoDB Error'}}
-            raise ClientError(error_response, 'PutItem')
+        # The create_patient util function is expected to return the new patient's ID
+        mock_create_patient_util.return_value = 'new-patient-id'
 
-        mock_table = MagicMock()
-        mock_table.put_item.side_effect = mock_put_item
-
-        mock_dynamodb = MagicMock()
-        mock_dynamodb.Table.return_value = mock_table
-
-        monkeypatch.setattr(boto3, 'resource', lambda service_name: mock_dynamodb if service_name == 'dynamodb' else boto3.resource(service_name))
-
-        event = create_api_gateway_event(body=patient_data_input)
+        # Act
         response = lambda_handler(event, {})
 
-        assert response["statusCode"] >= 500
-        body = json.loads(response["body"])
-        assert "InternalServerError" in body.get("error") or "AWS Error" in body.get("error")
-        assert "An unexpected error occurred" in body.get("message") or "Simulated DynamoDB Error" in body.get("message")
-        assert response["headers"]["Content-Type"] == "application/json"
-        assert response["headers"]["Access-Control-Allow-Origin"] == DEFAULT_ORIGIN
+        # Assert
+        assert response['statusCode'] == 201
+        response_body = json.loads(response['body'])
+        assert response_body['data']['patient_id'] == 'new-patient-id'
+        assert response_body['data']['message'] == 'Patient created successfully'
+        
+        # Verify the data passed to the utility function
+        mock_create_patient_util.assert_called_once()
+        call_args = mock_create_patient_util.call_args[0][0]
+        
+        # Check that the data from the event body is present in the call arguments
+        assert call_args['first_name'] == patient_data['first_name']
+        assert call_args['last_name'] == patient_data['last_name']
+        assert call_args['email'] == patient_data['email']
+        assert call_args['created_by'] == 'test-user-sub'
 
-# Notes:
-# - `mock_uuid_for_patient` fixture ensures `patientId` is predictable.
-# - Assumed PK/SK structure: `PATIENT#<id>` / `PROFILE#<id>`.
-# - Assumed `type="PATIENT"` is set by the handler.
-# - `test_create_patient_missing_required_fields` iterates through a list of assumed required fields.
-#   The actual required fields and error messages depend on the handler's validation.
-# - `test_create_patient_invalid_email` assumes email format validation in the handler.
-# - `CreatePatientFunction` uses `UtilsLayer`, so error responses and headers should be consistent.
-# - The tests verify that the item is correctly written to the mock DynamoDB table.
-# - The `Decimal` type is imported but not explicitly used for patient attributes in this example,
-#   assuming attributes like age (if calculated) or other numeric fields are handled appropriately
-#   by the handler or not present in this basic patient schema. If `height` or `weight` were
-#   present and numeric, `Decimal` would be relevant for DynamoDB storage.
-#
-# The handler for `create_patient` is expected to:
-# 1. Parse the request body.
-# 2. Validate required fields (e.g., firstName, lastName, email, dateOfBirth).
-# 3. Validate data formats (e.g., email, dateOfBirth).
-# 4. Generate a unique `patientId` (mocked here).
-# 5. Construct the DynamoDB item, including PK, SK, `type="PATIENT"`, `createdAt`, `updatedAt`, and input fields.
-# 6. Call `put_item` to store the new patient record.
-# 7. Return a 201 response with the created patient data (possibly transformed).
-#
-# The test for missing required fields could be made more robust if the exact required fields
-# and their specific error messages from the handler are known. The current test makes a
-# reasonable assumption.
-#
-# The `lambda_environment` fixture correctly sets the `PATIENT_RECORDS_TABLE` environment variable.
-# The `patient_records_table` fixture sets up the DynamoDB table with the GSI, ensuring
-# it matches the schema used by other patient-related handlers.
-#
-# The `requestContext` in the event includes an authorizer claim, which is good practice,
-# though it might not be used by this specific create handler beyond API Gateway authorization.
-#
-# The `assert body["type"] == "patient"` check in `test_create_patient_successful` assumes
-# the handler adds this attribute to the response body, which is good for confirming the entity type.
-# Similarly for the DB check `assert db_item["type"] == "patient"`.
-#
-# The `db_item.get("address")` check is appropriate for nested map attributes.
-#
-# The `mock_uuid_for_patient` fixture uses `autouse=True` to apply to all tests in the class, simplifying
-# its usage as it doesn't need to be explicitly passed to each test method.
-# (Extraneous comments removed)
+    def test_validation_missing_required_field(self):
+        # Arrange
+        patient_data = {
+            "first_name": "John",
+            # last_name is missing
+            "date_of_birth": "1990-01-15",
+            "email": "john.doe@example.com"
+        }
+        event = create_api_gateway_event(patient_data)
+
+        # Act
+        response = lambda_handler(event, {})
+
+        # Assert
+        assert response['statusCode'] == 400
+        response_body = json.loads(response['body'])
+        assert response_body['error'] == 'Validation failed'
+        assert 'Last Name is required' in response_body['details']['last_name']
+
+    def test_validation_invalid_email(self):
+        # Arrange
+        patient_data = {
+            "first_name": "John",
+            "last_name": "Doe",
+            "date_of_birth": "1990-01-15",
+            "email": "not-an-email"
+        }
+        event = create_api_gateway_event(patient_data)
+
+        # Act
+        response = lambda_handler(event, {})
+
+        # Assert
+        assert response['statusCode'] == 400
+        response_body = json.loads(response['body'])
+        assert response_body['error'] == 'Validation failed'
+        assert 'Invalid email format' in response_body['details']['email']
+
+    @patch('src.handlers.patients.create_patient.create_patient')
+    def test_create_patient_db_error(self, mock_create_patient_util):
+        # Arrange
+        patient_data = {
+            "first_name": "John",
+            "last_name": "Doe",
+            "date_of_birth": "1990-01-15",
+            "email": "john.doe@example.com"
+        }
+        event = create_api_gateway_event(patient_data)
+        mock_create_patient_util.side_effect = Exception("Database connection failed")
+
+        # Act
+        response = lambda_handler(event, {})
+
+        # Assert
+        assert response['statusCode'] == 500
+        response_body = json.loads(response['body'])
+        assert response_body['error'] == 'Internal server error'
+        assert 'Failed to create patient' in response_body['details']

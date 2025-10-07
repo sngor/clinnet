@@ -124,7 +124,7 @@ def test_all_error_handling(mock_boto3):
         'headers': {},
         'pathParameters': {'userId': '123'},
         'body': json.dumps({'image': 'data:image/jpeg;base64,' + base64.b64encode(b'fake image data').decode()}),
-        'requestContext': {'authorizer': {'claims': {'sub': '123'}}}
+        'requestContext': {'authorizer': {'claims': {'sub': '123', 'cognito:username': 'testuser'}}}
     }
     
     response = upload_handler(event, {})
@@ -154,7 +154,7 @@ def test_all_error_handling(mock_boto3):
         'httpMethod': 'GET',
         'headers': {},
         'pathParameters': {'userId': '123'},
-        'requestContext': {'authorizer': {'claims': {'sub': '123', 'email': 'test@example.com'}}}
+        'requestContext': {'authorizer': {'claims': {'sub': '123', 'cognito:username': 'test@example.com'}}}
     }
     
     response = get_handler(event, {})
@@ -180,7 +180,7 @@ def test_all_error_handling(mock_boto3):
         'httpMethod': 'DELETE',
         'headers': {},
         'pathParameters': {'userId': '123'},
-        'requestContext': {'authorizer': {'claims': {'sub': '123', 'email': 'test@example.com'}}}
+        'requestContext': {'authorizer': {'claims': {'sub': '123', 'cognito:username': 'test@example.com'}}}
     }
     
     response = remove_handler(event, {})

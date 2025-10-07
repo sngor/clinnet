@@ -3,7 +3,8 @@ import os
 import boto3
 import pytest
 from moto import mock_aws
-from backend.src.handlers.services.get_service_by_id import lambda_handler
+from unittest.mock import patch
+from src.handlers.services.get_service_by_id import lambda_handler
 
 # Define the services table name for tests (consistent with other tests)
 TEST_SERVICES_TABLE_NAME = "clinnet-services-test" 
@@ -74,7 +75,7 @@ class TestGetServiceById:
         assert response["statusCode"] == 404
         body = json.loads(response["body"])
         assert "message" in body
-        assert "Service not found" in body["message"] # Or similar message from your handler
+        assert "not found" in body["message"]
         assert response["headers"]["Content-Type"] == "application/json"
 
     def test_get_service_invalid_path_parameter(self, services_table, lambda_environment):
@@ -87,7 +88,7 @@ class TestGetServiceById:
         assert response["statusCode"] == 400 # Assuming handler checks for 'id'
         body = json.loads(response["body"])
         assert "message" in body
-        assert "Service ID is required" in body["message"] # Or similar message
+        assert "Missing service ID" in body["message"]
         assert response["headers"]["Content-Type"] == "application/json"
 
         # Test with 'id' being None or empty (if handler logic differentiates)
@@ -103,72 +104,17 @@ class TestGetServiceById:
     def test_get_service_by_id_dynamodb_failure(self, monkeypatch, lambda_environment):
         service_id = "service_error_case"
         
-        # Mock the boto3 client's get_item call to raise an exception
-        # This is a more targeted way to simulate DynamoDB errors for a specific operation
-        
-        original_boto3_client = boto3.client
-        
-        class MockDynamoDBClient:
-            def get_item(self, *args, **kwargs):
-                if kwargs.get("TableName") == TEST_SERVICES_TABLE_NAME and \
-                   kwargs.get("Key", {}).get("id", {}).get("S") == service_id:
-                    raise Exception("Simulated DynamoDB GetItem Error")
-                # Fallback to actual client for other calls (if any)
-                # This part is tricky and might need careful handling if other calls are made
-                # For this specific test, we assume only this get_item is problematic
-                # A cleaner mock would be on the specific Table resource's method if possible
-                # or using a library that allows finer-grained mocking of boto3 calls.
-                # For simplicity here, we'll assume this direct patch is sufficient.
-                # This is a placeholder for a more robust boto3 call mock.
-                # A better way would be to patch `boto3.resource('dynamodb').Table('...').get_item`
-                # directly if the handler uses the Table resource.
-                # If it uses client.get_item, then this approach is closer.
-                
-                # This simplified mock might not work perfectly if the handler code is complex.
-                # It's often better to mock at the Table resource level if that's what the handler uses.
-                # e.g. `monkeypatch.setattr(boto3.resource('dynamodb').Table, 'get_item', raising_function)`
-                # However, the Table object is often instantiated inside the handler.
-                
-                # Let's try patching the Table's get_item method
-                # This assumes the handler gets a Table resource and calls get_item on it.
-                pass # This will be tricky, see below.
-
-        # The challenge is that the Table object is often created *inside* the lambda_handler
-        # or a utility function it calls.
-        # A more robust way (similar to test_get_services) is to patch boto3.resource
-        
-        original_boto3_resource = boto3.resource
-        def mock_boto3_resource_for_get_item_error(service_name, *args, **kwargs):
-            if service_name == 'dynamodb':
-                class MockTableForGetItemError:
-                    def get_item(self, Key=None, **other_kwargs):
-                        if Key and Key.get("id") == service_id:
-                             raise Exception("Simulated DynamoDB GetItem Error")
-                        # This is a simplified mock; a real one might need to return valid
-                        # responses for other keys if the test setup involves them.
-                        # Or ensure this mock is specific enough not to interfere.
-                        # For this test, we only care about the error path.
-                        return {} # Default empty response if key doesn't match
-                
-                class MockDynamoDBResourceForError:
-                    def Table(self, table_name):
-                        if table_name == TEST_SERVICES_TABLE_NAME:
-                            return MockTableForGetItemError()
-                        return original_boto3_resource('dynamodb').Table(table_name)
-                return MockDynamoDBResourceForError()
-            return original_boto3_resource(service_name, *args, **kwargs)
-
-        monkeypatch.setattr(boto3, "resource", mock_boto3_resource_for_get_item_error)
-
-        event = create_api_gateway_event(path_params={"id": service_id})
-        context = {}
-        response = lambda_handler(event, context)
+        from unittest.mock import patch
+        with patch('src.handlers.services.get_service_by_id.get_item_by_id', side_effect=Exception("Simulated DynamoDB GetItem Error")):
+            event = create_api_gateway_event(path_params={"id": service_id})
+            context = {}
+            response = lambda_handler(event, context)
         
         assert response["statusCode"] == 500
         body = json.loads(response["body"])
         assert "error" in body
-        # The exact error message might depend on how the handler catches and logs it.
-        assert "Simulated DynamoDB GetItem Error" in body["error"] or "Internal server error" in body.get("message", "")
+        assert "Internal Server Error" in body["error"]
+        assert "Simulated DynamoDB GetItem Error" in body["message"]
         assert response["headers"]["Content-Type"] == "application/json"
         
         # monkeypatch will automatically undo the setattr for boto3.resource

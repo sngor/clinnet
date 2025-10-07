@@ -1,62 +1,49 @@
-# backend/src/utils/response_helper.py
+"""
+Robust response helpers used by Python Lambda handlers.
+Provides CORS-aware error building and exception handling with AWS error mapping.
+"""
 import json
 import logging
 from botocore.exceptions import ClientError
-from utils.cors import add_cors_headers
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-def build_error_response(status_code, error_type, message):
-    """
-    Build a standardized error response
-    
-    Args:
-        status_code (int): HTTP status code
-        error_type (str): Type of error
-        message (str): Error message
-        
-    Returns:
-        dict: API Gateway response with error details
-    """
+def _base_headers():
     return {
-        'statusCode': status_code,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT,DELETE'
-        },
-        'body': json.dumps({
-            'error': error_type,
-            'message': message
-        })
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,X-Requested-With,Origin,Accept',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+        'Access-Control-Max-Age': '7200'
     }
 
-def handle_exception(exception):
-    """
-    Handle exceptions and return appropriate responses
-    
-    Args:
-        exception: The exception to handle
-        
-    Returns:
-        dict: API Gateway response with error details
-    """
+def build_error_response(status_code, error_type, message, exception=None, request_origin=None):
+    headers = _base_headers()
+    if request_origin:
+        headers['Access-Control-Allow-Origin'] = request_origin
+    body = {
+        'error': error_type,
+        'message': message
+    }
+    if exception is not None:
+        body['exception'] = str(exception)
+    return {
+        'statusCode': status_code,
+        'headers': headers,
+        'body': json.dumps(body)
+    }
+
+def handle_exception(exception, request_origin=None):
     if isinstance(exception, ClientError):
-        error_code = exception.response.get('Error', {}).get('Code', 'UnknownError')
-        
-        if error_code == 'ResourceNotFoundException':
-            return build_error_response(404, 'Not Found', str(exception))
-        elif error_code == 'ConditionalCheckFailedException':
-            return build_error_response(400, 'Bad Request', 'Item does not exist or condition check failed')
-        elif error_code == 'ValidationException':
-            return build_error_response(400, 'Validation Error', str(exception))
-        elif error_code == 'AccessDeniedException':
-            return build_error_response(403, 'Access Denied', str(exception))
-        else:
-            logger.error(f"AWS ClientError: {error_code} - {str(exception)}")
-            return build_error_response(500, 'AWS Error', str(exception))
-    else:
-        logger.error(f"Unexpected error: {str(exception)}")
-        return build_error_response(500, 'Internal Server Error', str(exception))
+        code = exception.response.get('Error', {}).get('Code', 'UnknownError')
+        if code in ('ResourceNotFoundException', 'NoSuchKey'):
+            return build_error_response(404, 'Not Found', str(exception), exception, request_origin)
+        if code in ('ValidationException', 'ConditionalCheckFailedException'):
+            return build_error_response(400, 'Validation Error', str(exception), exception, request_origin)
+        if code in ('AccessDenied', 'AccessDeniedException'):
+            return build_error_response(403, 'Access Denied', str(exception), exception, request_origin)
+        logger.error("AWS ClientError %s: %s", code, exception)
+        return build_error_response(500, 'AWS Error', str(exception), exception, request_origin)
+    logger.error("Unhandled exception: %s", exception, exc_info=True)
+    return build_error_response(500, 'Internal Server Error', str(exception), exception, request_origin)

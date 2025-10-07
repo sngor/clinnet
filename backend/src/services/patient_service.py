@@ -5,11 +5,11 @@ Handles all patient-related operations with proper validation and error handling
 import uuid
 from typing import Dict, List, Optional, Any
 from datetime import datetime, date
-from utils.rds_utils import (
+from src.utils.rds_utils import (
     execute_query, execute_mutation, execute_transaction,
     build_response, build_error_response
 )
-from models.patient import Patient, PatientCreate, PatientUpdate
+from src.models.patient import Patient, PatientCreate, PatientUpdate
 import logging
 
 logger = logging.getLogger(__name__)

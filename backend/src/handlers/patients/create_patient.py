@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Dict, Any
 from datetime import datetime
-from utils.rds_utils import create_patient, build_response, build_error_response
+from src.utils.rds_utils import create_patient, build_response, build_error_response
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

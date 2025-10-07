@@ -4,7 +4,7 @@ Lambda function to delete a patient from RDS Aurora
 import json
 import logging
 from typing import Dict, Any
-from utils.rds_utils import execute_mutation, get_patient_by_id, build_response, build_error_response
+from src.utils.rds_utils import execute_mutation, get_patient_by_id, build_response, build_error_response
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

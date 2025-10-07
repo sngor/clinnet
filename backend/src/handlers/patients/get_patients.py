@@ -1,60 +1,62 @@
 """
-Lambda function to get all patients from RDS Aurora
-Uses the PatientService for business logic
+Lambda function to get all patients from DynamoDB
 """
+import os
 import json
 import logging
-from typing import Dict, Any
-from services.patient_service import PatientService
-from utils.rds_utils import build_response, build_error_response
+import boto3
+from botocore.exceptions import ClientError
+from src.utils.db_utils import generate_response
+from src.utils.responser_helper import build_error_response
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+def lambda_handler(event, context):
     """
-    Handle Lambda event for GET /patients with RDS backend
-    
-    Query Parameters:
-    - limit: Number of records to return (default: 50, max: 100)
-    - offset: Number of records to skip (default: 0)
-    - search: Search term for name or email
-    
-    Args:
-        event: Lambda event
-        context: Lambda context
-        
-    Returns:
-        API Gateway response
+    Handle Lambda event for GET /patients with DynamoDB backend
     """
     logger.info(f"Received event: {json.dumps(event)}")
     
     try:
-        # Parse query parameters
+        table_name = os.environ.get("PATIENT_RECORDS_TABLE")
         query_params = event.get('queryStringParameters') or {}
         
-        # Pagination parameters with validation
-        try:
-            limit = int(query_params.get('limit', 50))
-            offset = int(query_params.get('offset', 0))
-        except ValueError:
-            return build_error_response(400, "Invalid pagination parameters", 
-                                      "limit and offset must be integers")
+        limit = int(query_params.get('limit', 50))
+        exclusive_start_key = None
+        if 'last_evaluated_key' in query_params:
+            exclusive_start_key = json.loads(query_params['last_evaluated_key'])
+
+        dynamodb = boto3.resource("dynamodb")
+        table = dynamodb.Table(table_name)
         
-        search = query_params.get('search', '').strip() if query_params.get('search') else None
+        query_kwargs = {
+            'IndexName': 'type-index',
+            'KeyConditionExpression': '#type = :typeVal',
+            'ExpressionAttributeNames': {'#type': 'type'},
+            'ExpressionAttributeValues': {':typeVal': 'patient'},
+            'Limit': limit
+        }
         
-        logger.info(f"Fetching patients: limit={limit}, offset={offset}, search={search}")
+        if exclusive_start_key:
+            query_kwargs['ExclusiveStartKey'] = exclusive_start_key
+
+        response = table.query(**query_kwargs)
         
-        # Get patients using service layer
-        result = PatientService.get_patients(limit=limit, offset=offset, search=search)
+        patients = response.get('Items', [])
+        last_evaluated_key = response.get('LastEvaluatedKey', None)
         
-        logger.info(f"Successfully fetched {len(result['patients'])} patients")
-        return build_response(200, result)
+        result = {
+            'patients': patients,
+            'last_evaluated_key': last_evaluated_key
+        }
         
-    except ValueError as e:
-        logger.error(f"Validation error: {str(e)}")
-        return build_error_response(400, "Invalid parameters", str(e))
+        logger.info(f"Successfully fetched {len(patients)} patients")
+        return generate_response(200, result)
         
+    except ClientError as e:
+        logger.error(f"DynamoDB ClientError: {e}", exc_info=True)
+        return build_error_response(500, "AWS Error", str(e))
     except Exception as e:
-        logger.error(f"Error fetching patients: {str(e)}")
-        return build_error_response(500, "Internal server error", "Failed to fetch patients")
+        logger.error(f"Error fetching patients: {str(e)}", exc_info=True)
+        return build_error_response(500, "Internal Server Error", "Failed to fetch patients")

@@ -2,6 +2,7 @@
 Enhanced DynamoDB utilities with proper implementations.
 """
 import json
+import decimal
 import boto3
 from botocore.exceptions import ClientError
 from typing import Dict, Any, List, Optional
@@ -98,10 +99,16 @@ def query_table(table_name: str, key_condition_expression,
 
 
 def generate_response(status_code: int, body: Any, headers: Dict[str, str] = None) -> Dict[str, Any]:
-    """Generate API Gateway response."""
+    """Generate API Gateway response, handling Decimal types for JSON serialization."""
+    class DecimalEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, decimal.Decimal):
+                return float(o)
+            return super(DecimalEncoder, self).default(o)
+
     response = {
         'statusCode': status_code,
         'headers': headers or {'Content-Type': 'application/json'},
-        'body': json.dumps(body) if not isinstance(body, str) else body
+        'body': json.dumps(body, cls=DecimalEncoder) if body is not None else ''
     }
     return response

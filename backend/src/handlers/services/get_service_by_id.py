@@ -8,8 +8,8 @@ import time
 from botocore.exceptions import ClientError
 
 # Import utility functions
-from utils.db_utils import get_item_by_id, generate_response
-from utils.responser_helper import handle_exception, build_error_response
+from src.utils.db_utils import get_item_by_id, generate_response
+from src.utils.responser_helper import handle_exception, build_error_response
 
 _cache = {}  # Stores {service_id: data}
 _cache_ttl_seconds = 300  # 5 minutes

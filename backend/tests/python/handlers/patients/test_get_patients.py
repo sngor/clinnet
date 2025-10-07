@@ -3,24 +3,18 @@ import os
 import boto3
 import pytest
 from moto import mock_aws
-from backend.src.handlers.patients.get_patients import lambda_handler # Adjusted import path
+from unittest.mock import patch, MagicMock
+from src.handlers.patients.get_patients import lambda_handler
+from botocore.exceptions import ClientError
 
-# Define the patient records table name for tests
 TEST_PATIENT_RECORDS_TABLE_NAME = "clinnet-patient-records-test"
 
-# Helper function to create a mock API Gateway event
-def create_api_gateway_event(method="GET", path_params=None, body=None):
-    event = {
-        "httpMethod": method,
-        "pathParameters": path_params if path_params else {},
-        "requestContext": {
-            "requestId": "test-request-id-get-patients",
-            "authorizer": {"claims": {"cognito:username": "testuser"}} 
-        }
+def create_api_gateway_event(query_params=None):
+    """Helper to create a mock API Gateway event."""
+    return {
+        'httpMethod': 'GET',
+        'queryStringParameters': query_params or {}
     }
-    if body:
-        event["body"] = json.dumps(body)
-    return event
 
 @pytest.fixture(scope="function")
 def aws_credentials():
@@ -36,147 +30,120 @@ def patient_records_table(aws_credentials):
         dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
         table = dynamodb.create_table(
             TableName=TEST_PATIENT_RECORDS_TABLE_NAME,
-            KeySchema=[
-                {"AttributeName": "PK", "KeyType": "HASH"},
-                {"AttributeName": "SK", "KeyType": "RANGE"}
-            ],
+            KeySchema=[{'AttributeName': 'PK', 'KeyType': 'HASH'}, {'AttributeName': 'SK', 'KeyType': 'RANGE'}],
             AttributeDefinitions=[
-                {"AttributeName": "PK", "AttributeType": "S"},
-                {"AttributeName": "SK", "AttributeType": "S"},
-                {"AttributeName": "type", "AttributeType": "S"} # GSI key
+                {'AttributeName': 'PK', 'AttributeType': 'S'},
+                {'AttributeName': 'SK', 'AttributeType': 'S'},
+                {'AttributeName': 'type', 'AttributeType': 'S'}
             ],
-            ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
             GlobalSecondaryIndexes=[
                 {
-                    "IndexName": "type-index",
-                    "KeySchema": [{"AttributeName": "type", "KeyType": "HASH"}],
-                    "Projection": {"ProjectionType": "ALL"},
-                    "ProvisionedThroughput": {"ReadCapacityUnits": 5, "WriteCapacityUnits": 5}
+                    'IndexName': 'type-index',
+                    'KeySchema': [{'AttributeName': 'type', 'KeyType': 'HASH'}],
+                    'Projection': {'ProjectionType': 'ALL'},
+                    'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
                 }
-            ]
+            ],
+            ProvisionedThroughput={'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
         )
         yield table
 
 @pytest.fixture(scope="function")
 def lambda_environment(monkeypatch):
     monkeypatch.setenv("PATIENT_RECORDS_TABLE", TEST_PATIENT_RECORDS_TABLE_NAME)
-    monkeypatch.setenv("ENVIRONMENT", "test")
-
 
 class TestGetPatients:
-    def test_get_patients_empty_table(self, patient_records_table, lambda_environment):
-        event = create_api_gateway_event()
-        context = {} 
 
-        response = lambda_handler(event, context)
-        
-        assert response["statusCode"] == 200
-        body = json.loads(response["body"])
-        assert body == []
-        assert response["headers"]["Content-Type"] == "application/json"
+    def test_get_patients_empty_table(self, patient_records_table, lambda_environment):
+        # Arrange
+        event = create_api_gateway_event()
+
+        # Act
+        response = lambda_handler(event, {})
+
+        # Assert
+        assert response['statusCode'] == 200
+        response_body = json.loads(response['body'])
+        assert response_body['patients'] == []
+        assert response_body['last_evaluated_key'] is None
 
     def test_get_patients_with_items(self, patient_records_table, lambda_environment):
-        # Add patient items to the mock table
-        patient1_id = "patient1"
-        patient_records_table.put_item(Item={
-            "PK": f"PATIENT#{patient1_id}", 
-            "SK": f"PROFILE#{patient1_id}", 
-            "type": "PATIENT", 
-            "name": "John Doe",
-            "patientId": patient1_id # Assuming patientId is also stored as a top-level attribute
-        })
-        patient2_id = "patient2"
-        patient_records_table.put_item(Item={
-            "PK": f"PATIENT#{patient2_id}", 
-            "SK": f"PROFILE#{patient2_id}", 
-            "type": "PATIENT", 
-            "name": "Jane Smith",
-            "patientId": patient2_id
-        })
-        # Add a non-patient item to ensure GSI filtering works
-        patient_records_table.put_item(Item={
-            "PK": "OTHER#data", 
-            "SK": "METADATA#data", 
-            "type": "OTHER_TYPE", 
-            "detail": "Some other data"
-        })
+        # Arrange
+        # Add patient items
+        for i in range(3):
+            patient_id = f"patient-{i}"
+            patient_item = {
+                'PK': f'PATIENT#{patient_id}', 'SK': 'METADATA', 'id': patient_id,
+                'first_name': f'John{i}', 'last_name': 'Doe', 'type': 'patient'
+            }
+            patient_records_table.put_item(Item=patient_item)
 
+        # Add a non-patient item to ensure it's filtered out
+        patient_records_table.put_item(Item={'PK': 'OTHER#1', 'SK': 'OTHER', 'type': 'other_type'})
 
         event = create_api_gateway_event()
-        context = {}
 
-        response = lambda_handler(event, context)
-        
-        assert response["statusCode"] == 200
-        body = json.loads(response["body"])
-        assert len(body) == 2
-        
-        retrieved_patient_ids = {item.get("patientId", item.get("PK").split("#")[1]) for item in body}
-        assert patient1_id in retrieved_patient_ids
-        assert patient2_id in retrieved_patient_ids
-        
-        for item in body:
-            assert item["type"] == "PATIENT"
-            if item.get("patientId", item.get("PK").split("#")[1]) == patient1_id:
-                assert item["name"] == "John Doe"
-            elif item.get("patientId", item.get("PK").split("#")[1]) == patient2_id:
-                assert item["name"] == "Jane Smith"
-        
-        assert response["headers"]["Content-Type"] == "application/json"
+        # Act
+        response = lambda_handler(event, {})
 
-    def test_get_patients_dynamodb_gsi_query_failure(self, monkeypatch, lambda_environment):
-        original_boto3_resource = boto3.resource
-        def mock_boto3_resource_for_query_error(service_name, *args, **kwargs):
-            if service_name == 'dynamodb':
-                class MockTableForQueryError:
-                    def query(self, IndexName=None, KeyConditionExpression=None, ExpressionAttributeValues=None, **other_kwargs):
-                        if IndexName == "type-index" and KeyConditionExpression == "type = :typeVal" and \
-                           ExpressionAttributeValues[":typeVal"] == "PATIENT":
-                            raise Exception("Simulated DynamoDB GSI Query Error")
-                        # Fallback for other queries if any
-                        return {"Items": []} 
-                
-                class MockDynamoDBResourceForError:
-                    def Table(self, table_name):
-                        if table_name == TEST_PATIENT_RECORDS_TABLE_NAME:
-                            return MockTableForQueryError()
-                        return original_boto3_resource('dynamodb').Table(table_name)
-                return MockDynamoDBResourceForError()
-            return original_boto3_resource(service_name, *args, **kwargs)
+        # Assert
+        assert response['statusCode'] == 200
+        response_body = json.loads(response['body'])
+        assert len(response_body['patients']) == 3
+        # Verify all returned items are patients
+        for patient in response_body['patients']:
+            assert patient['type'] == 'patient'
 
-        monkeypatch.setattr(boto3, "resource", mock_boto3_resource_for_query_error)
+    def test_get_patients_pagination(self, patient_records_table, lambda_environment):
+        # Arrange
+        for i in range(5):
+            patient_id = f"patient-{i}"
+            patient_item = {
+                'PK': f'PATIENT#{patient_id}', 'SK': 'METADATA', 'id': patient_id,
+                'first_name': f'John{i}', 'last_name': 'Doe', 'type': 'patient'
+            }
+            patient_records_table.put_item(Item=patient_item)
+
+        # Act - First page
+        event1 = create_api_gateway_event(query_params={"limit": "2"})
+        response1 = lambda_handler(event1, {})
         
+        # Assert - First page
+        assert response1['statusCode'] == 200
+        body1 = json.loads(response1['body'])
+        assert len(body1['patients']) == 2
+        assert body1['last_evaluated_key'] is not None
+
+        # Act - Second page
+        last_key = json.dumps(body1['last_evaluated_key'])
+        event2 = create_api_gateway_event(query_params={"limit": "2", "last_evaluated_key": last_key})
+        response2 = lambda_handler(event2, {})
+
+        # Assert - Second page
+        assert response2['statusCode'] == 200
+        body2 = json.loads(response2['body'])
+        assert len(body2['patients']) == 2
+        assert body2['last_evaluated_key'] is not None
+
+    def test_get_patients_db_error(self, monkeypatch, lambda_environment):
+        # Arrange
         event = create_api_gateway_event()
-        context = {}
-        response = lambda_handler(event, context)
-        
-        assert response["statusCode"] == 500
-        body = json.loads(response["body"])
-        assert "error" in body
-        assert "Simulated DynamoDB GSI Query Error" in body["error"] or "Internal server error" in body.get("message", "")
-        assert response["headers"]["Content-Type"] == "application/json"
 
-# Notes:
-# - The patient_records_table fixture correctly sets up the GSI `type-index`.
-# - `test_get_patients_with_items` puts items with `type="PATIENT"` and one other type
-#   to ensure the GSI query in the handler correctly filters.
-# - It's assumed the handler queries the `type-index` GSI with `KeyConditionExpression="type = :typeVal"`
-#   and `ExpressionAttributeValues={":typeVal": "PATIENT"}`.
-# - The structure of patient items (`PK`, `SK`, `type`, and other attributes like `name`, `patientId`)
-#   is based on common single-table design patterns for such entities. The exact attributes returned
-#   will depend on the handler's projection from the GSI query (assumed "ALL" here).
-# - The test for DynamoDB failure mocks the `query` method to raise an exception when
-#   the specific GSI query is attempted.
-# - The import path `from backend.src.handlers.patients.get_patients import lambda_handler`
-#   is based on the `CodeUri: src/` and `Handler: handlers.patients.get_patients.lambda_handler`
-#   from `template.yaml` for `GetPatientsFunction`.
-# - The `UtilsLayer` is used by this function, so response formatting (headers, error structure)
-#   should be consistent with utilities provided by that layer. The tests verify this.
-# - The assertion `item.get("patientId", item.get("PK").split("#")[1])` is a defensive way
-#   to get the patient ID from the returned item, assuming it might be stored as a top-level
-#   `patientId` attribute or derivable from `PK`. Ideally, the returned item has a consistent `patientId`.
-#
-# The test file for `get_patients.lambda_handler` has been created.
-# # End of valid Python code. Removed markdown and commentary for pytest compatibility.
-#
-# **Step 2.2: Create `backend/tests/python/handlers/patients/test_get_patient_by_id.py`**
+        with patch('boto3.resource') as mock_boto3_resource:
+            mock_table = MagicMock()
+            mock_table.query.side_effect = ClientError(
+                {'Error': {'Code': 'InternalServerError', 'Message': 'A DynamoDB error occurred'}},
+                'Query'
+            )
+            mock_dynamodb = MagicMock()
+            mock_dynamodb.Table.return_value = mock_table
+            mock_boto3_resource.return_value = mock_dynamodb
+
+            # Act
+            response = lambda_handler(event, {})
+
+        # Assert
+        assert response['statusCode'] == 500
+        response_body = json.loads(response['body'])
+        assert response_body['error'] == 'AWS Error'
+        assert "A DynamoDB error occurred" in response_body['message']
